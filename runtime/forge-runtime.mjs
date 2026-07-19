@@ -1,0 +1,8 @@
+import fs from 'node:fs'; import path from 'node:path'; import process from 'node:process';
+const maxBytes=16*1024*1024;
+export function validateTheme(value){if(!value||typeof value!=='object')throw Error('Theme must be an object');if(value.schemaVersion!==1)throw Error('Unsupported schemaVersion');for(const key of ['id','name','palette','background','accessibility','companion'])if(!(key in value))throw Error(`Missing ${key}`);const {dim,taskIntensity}=value.background;if(!Number.isFinite(dim)||dim<0||dim>1||!Number.isFinite(taskIntensity)||taskIntensity<0||taskIntensity>1)throw Error('Background intensity must be 0..1');if(!['left','right'].includes(value.companion.side)||!Number.isFinite(value.companion.size)||value.companion.size<48||value.companion.size>180)throw Error('Unsafe companion configuration');return value}
+export function cssFor(theme,assetUrl=''){validateTheme(theme);return `:root{--forge-bg:url("${assetUrl.replaceAll('"','%22')}");--forge-position:${theme.background.position};--forge-art-intensity:${theme.background.taskIntensity};--forge-companion-size:${theme.companion.size}px}`}
+function readTheme(p){const raw=fs.readFileSync(p,'utf8');if(Buffer.byteLength(raw)>maxBytes)throw Error('Theme exceeds size limit');return validateTheme(JSON.parse(raw))}
+if(process.argv[2]==='--validate'){const theme=readTheme(process.argv[3]);console.log(`VALID: ${theme.name}`)}
+else if(process.argv[2]==='--payload'){const theme=readTheme(process.argv[3]);console.log(cssFor(theme,process.argv[4]||''))}
+else if(import.meta.url===`file:///${process.argv[1]?.replaceAll('\\','/')}`)console.error('Use --validate <theme.json> or --payload <theme.json> [asset-url]');

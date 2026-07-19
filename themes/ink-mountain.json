@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "ink-mountain-forge",
+  "name": "墨山·悟行",
+  "palette": { "ink": "#101412", "stone": "#1c2420", "jade": "#8aa88d", "gold": "#c19a55", "ash": "#d8ddd2" },
+  "background": { "mode": "gallery", "source": "https://www.playstation.com/en-us/games/black-myth-wukong/", "position": "right center", "dim": 0.76, "taskIntensity": 0.18 },
+  "accessibility": { "preset": "workbench", "reducedMotion": false },
+  "companion": { "enabled": true, "side": "right", "anchor": "lower", "size": 92, "motion": "quiet" }
+}
