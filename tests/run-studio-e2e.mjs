@@ -1,0 +1,1 @@
+import {createServer} from 'vite';const server=await createServer({server:{host:'127.0.0.1',port:5192,strictPort:true}});await server.listen();process.env.STUDIO_URL='http://127.0.0.1:5192/studio/';try{await import('./studio.e2e.mjs')}finally{await server.close()}
