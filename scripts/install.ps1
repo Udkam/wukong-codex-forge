@@ -1,2 +1,8 @@
 [CmdletBinding()]param([string]$Destination=(Join-Path $env:LOCALAPPDATA 'WukongCodexForge'))
-$ErrorActionPreference='Stop';$root=Split-Path $PSScriptRoot -Parent;if(Test-Path $Destination){throw "Managed destination already exists: $Destination. Use restore.ps1 -Uninstall or choose -Destination."};New-Item -ItemType Directory -Force -Path $Destination|Out-Null;Copy-Item -LiteralPath $root -Destination (Join-Path $Destination 'app') -Recurse -Force;[pscustomobject]@{installedAt=(Get-Date).ToString('o');source=$root;destination=$Destination;cdpAddress='127.0.0.1';state='not-running'}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $Destination 'state.json') -Encoding utf8;Write-Host "Installed managed copy at $Destination. This does not modify WindowsApps, Wallpaper Engine, Codex config, or shortcuts."
+$ErrorActionPreference='Stop'
+$controlled=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'WukongCodexForge'));$target=[IO.Path]::GetFullPath($Destination)
+if(-not [string]::Equals($target,$controlled,[StringComparison]::OrdinalIgnoreCase)){throw 'Destination must be the managed LOCALAPPDATA WukongCodexForge directory.'}
+if(Test-Path -LiteralPath $target){throw "Managed destination already exists: $target. Restore it first."}
+$source=Split-Path $PSScriptRoot -Parent;New-Item -ItemType Directory -Force -Path $target|Out-Null;Copy-Item -LiteralPath $source -Destination (Join-Path $target 'app') -Recurse -Force
+$stateJson=[pscustomobject]@{managedBy='WukongCodexForge';installedAt=(Get-Date).ToString('o');destination=$target;cdpAddress='127.0.0.1';state='not-running'}|ConvertTo-Json;[IO.File]::WriteAllText((Join-Path $target 'state.json'),$stateJson,[Text.UTF8Encoding]::new($false))
+Write-Host "Installed managed copy at $target. WindowsApps, Codex config, and Wallpaper Engine were not modified."

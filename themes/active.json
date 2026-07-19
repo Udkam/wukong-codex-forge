@@ -5,5 +5,5 @@
   "palette": { "ink": "#101412", "stone": "#1c2420", "jade": "#8aa88d", "gold": "#c19a55", "ash": "#d8ddd2" },
   "background": { "mode": "gallery", "source": "playstation-official", "asset": null, "position": "right center", "dim": 0.76, "taskIntensity": 0.18 },
   "accessibility": { "preset": "workbench", "reducedMotion": false },
-  "companion": { "enabled": true, "side": "right", "anchor": "lower", "size": 92, "motion": "quiet" }
+  "companion": { "enabled": true, "side": "right", "size": 92, "motion": "quiet" }
 }
