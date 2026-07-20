@@ -3,13 +3,13 @@ export const PALETTE_KEYS = ['ink', 'lacquer', 'jade', 'gold', 'paper'];
 export const DEFAULT_THEME = {
   schemaVersion: 2,
   id: 'great-sage-scroll',
-  name: '大圣归来 · 残卷入梦',
+  name: '大圣归来 · 日照云岚',
   palette: {
-    ink: '#090b0a',
-    lacquer: '#211713',
-    jade: '#748b78',
-    gold: '#d2a45d',
-    paper: '#e8dec9'
+    ink: '#2e261c',
+    lacquer: '#8b3e2f',
+    jade: '#627f69',
+    gold: '#b9782d',
+    paper: '#f7eed8'
   },
   background: {
     mode: 'local',
@@ -17,9 +17,9 @@ export const DEFAULT_THEME = {
     asset: 'assets/great-sage-return.jpg',
     position: 'right center',
     landingPosition: 'right center',
-    dim: 0.68,
-    taskIntensity: 0.19,
-    landingIntensity: 0.82
+    dim: 0.48,
+    taskIntensity: 0.32,
+    landingIntensity: 0.92
   },
   accessibility: {
     preset: 'workbench',
@@ -101,13 +101,13 @@ export function cssFor(theme, assetUrl = '') {
   const { background: b, companion: c, accessibility: a, palette: p } = theme;
   const visible = Boolean(assetUrl) && b.mode !== 'solid' && a.preset !== 'high-read';
   const taskWash = visible ? clamp(b.dim + (1 - b.taskIntensity) * 0.16) : 1;
-  const landingWash = visible ? clamp(Math.max(0.28, b.dim - b.landingIntensity * 0.34)) : 1;
+  const landingWash = visible ? clamp(Math.max(0.2, b.dim - b.landingIntensity * 0.34)) : 1;
   return `:root.forge-ink-mountain{` +
     `--forge-ink:${p.ink};--forge-lacquer:${p.lacquer};--forge-jade:${p.jade};` +
     `--forge-gold:${p.gold};--forge-paper:${p.paper};` +
     `--forge-bg:${visible ? cssEscapeUrl(assetUrl) : 'none'};` +
     `--forge-position:${b.position};--forge-landing-position:${b.landingPosition};` +
-    `--forge-task-wash:${rgba(p.ink, taskWash)};--forge-landing-wash:${rgba(p.ink, landingWash)};` +
+    `--forge-task-wash:${rgba(p.paper, taskWash)};--forge-landing-wash:${rgba(p.paper, landingWash)};` +
     `--forge-backdrop-dim:${b.dim};--forge-art-intensity:${b.taskIntensity};` +
     `--forge-landing-intensity:${b.landingIntensity};--forge-companion-size:${c.size}px;` +
     `--forge-motion:${a.reducedMotion || c.motion === 'still' ? '0ms' : '5200ms'}}`;

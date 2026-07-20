@@ -25,6 +25,7 @@ test('runtime restyles native surfaces, follows dynamic thread state, and restor
   assert.equal(await page.locator('body > *').count(), nativeBodyChildren);
   assert.equal(await page.locator('body [data-forge-owned]').count(), 0);
   assert.equal(await page.locator('.forge-workspace').count(), 1);
+  assert.equal(await page.locator('.forge-taskbar').count(), 1);
   assert.equal(await page.locator('.forge-sidebar').count(), 1);
   assert.equal(await page.locator('.forge-new-task').count(), 1);
   assert.equal(await page.locator('.forge-composer').count(), 1);

@@ -31,6 +31,7 @@ test('Wukong style visibly replaces background, navigation and composer without 
   await page.evaluate(makeApplyExpression({ styleSheet, variables: cssFor(makeTheme(), image) }));
 
   const landingStyles = await page.evaluate(() => ({
+    colorScheme: getComputedStyle(document.documentElement).colorScheme,
     bodyBackground: getComputedStyle(document.body).backgroundImage,
     workspaceBackground: getComputedStyle(document.querySelector('.forge-workspace')).backgroundImage,
     composerRadius: getComputedStyle(document.querySelector('.forge-composer')).borderRadius,
@@ -38,10 +39,11 @@ test('Wukong style visibly replaces background, navigation and composer without 
     newTaskShadow: getComputedStyle(document.querySelector('.forge-new-task')).boxShadow,
     sidebarClip: getComputedStyle(document.querySelector('.forge-sidebar-action')).clipPath
   }));
+  assert.equal(landingStyles.colorScheme, 'light');
   assert.match(landingStyles.bodyBackground, /data:image\/jpeg/);
   assert.match(landingStyles.workspaceBackground, /data:image\/jpeg/);
   assert.notEqual(landingStyles.composerBackground, 'none');
-  assert.match(landingStyles.composerRadius, /3px 16px/);
+  assert.match(landingStyles.composerRadius, /3px 18px/);
   assert.notEqual(landingStyles.newTaskShadow, 'none');
   assert.notEqual(landingStyles.sidebarClip, 'none');
   assert.deepEqual(await geometry(page), nativeGeometry);
@@ -57,7 +59,9 @@ test('Wukong style visibly replaces background, navigation and composer without 
   const artBox = { x: 790, y: 110, width: 480, height: 430 };
   const landingLight = averageLuminance(landing, artBox);
   const threadLight = averageLuminance(thread, artBox);
-  assert.ok(landingLight > threadLight + 7, `landing art should be more visible: ${landingLight.toFixed(2)} vs ${threadLight.toFixed(2)}`);
+  assert.ok(landingLight > 155, `landing must stay bright: ${landingLight.toFixed(2)}`);
+  assert.ok(threadLight > 155, `thread must stay bright: ${threadLight.toFixed(2)}`);
+  assert.ok(Math.abs(landingLight - threadLight) > 5, `landing and thread should remain visually distinct: ${landingLight.toFixed(2)} vs ${threadLight.toFixed(2)}`);
 
   await page.evaluate(RESTORE_EXPRESSION);
   const restored = await page.evaluate(() => ({

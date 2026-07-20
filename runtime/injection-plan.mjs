@@ -5,6 +5,7 @@ export const MARK_CLASSES = [
   'forge-new-task',
   'forge-project-active',
   'forge-workspace',
+  'forge-taskbar',
   'forge-landing-hero',
   'forge-landing-title',
   'forge-composer',
@@ -162,6 +163,22 @@ function applyRuntime(payload) {
       ));
     }
     mark(workspace, 'forge-workspace');
+    if (workspace) {
+      const workspaceRect = workspace.getBoundingClientRect();
+      const taskbar = [...workspace.querySelectorAll('header, [role="toolbar"], div')]
+        .filter(element => {
+          if (!visible(element)) return false;
+          const rect = element.getBoundingClientRect();
+          return (
+            Math.abs(rect.top - workspaceRect.top) <= 4 &&
+            rect.width >= workspaceRect.width * .68 &&
+            rect.height >= 28 &&
+            rect.height <= 72
+          );
+        })
+        .sort((left, right) => left.getBoundingClientRect().height - right.getBoundingClientRect().height)[0];
+      mark(taskbar, 'forge-taskbar');
+    }
 
     if (surface === 'landing') {
       const title = workspace?.querySelector('h1, h2') || document.querySelector('h1, h2');

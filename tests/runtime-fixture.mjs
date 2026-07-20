@@ -96,7 +96,7 @@ export const enterThreadState = page => page.evaluate(() => {
       <div data-local-conversation-user-anchor><div data-user-message-bubble>不要只换颜色，要替换背景、侧栏按钮和输入框样式。</div></div>
     </div>
     <div data-virtualized-turn-content data-local-conversation-final-assistant="true">
-      <p>已切换为玄铁古卷运行时样式，并保持原生三栏结构。</p>
+      <p>已切换为日照宣纸运行时样式，并保持原生三栏结构。</p>
       <pre><code>surface: thread\nlayout: native\nstyle: wukong</code></pre>
     </div>`;
   document.querySelector('main').insertBefore(conversation, document.querySelector('form'));
