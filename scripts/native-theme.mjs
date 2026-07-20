@@ -59,6 +59,7 @@ function validateSettings(settings) {
 
 export function applyNativeTheme(configText, settings) {
   const model = textModel(configText);
+  const trailingEmptyLines = [...model.lines].reverse().findIndex(line => line !== '');
   const normalized = validateSettings(settings);
   const managedSections = new Set(normalized.map(setting => setting.section));
   const originalSections = [...new Set(
@@ -90,7 +91,7 @@ export function applyNativeTheme(configText, settings) {
 
   return {
     text: model.bom + model.lines.join(model.newline),
-    state: { originalSections, previous }
+    state: { originalSections, previous, trailingEmptyLines: trailingEmptyLines < 0 ? model.lines.length : trailingEmptyLines }
   };
 }
 
@@ -133,7 +134,26 @@ export function restoreNativeTheme(configText, themeState) {
     }
   }
 
+  if (Number.isInteger(themeState?.trailingEmptyLines) && themeState.trailingEmptyLines >= 0) {
+    let currentTrailing = [...model.lines].reverse().findIndex(line => line !== '');
+    currentTrailing = currentTrailing < 0 ? model.lines.length : currentTrailing;
+    while (currentTrailing > themeState.trailingEmptyLines) {
+      model.lines.pop();
+      currentTrailing -= 1;
+    }
+    while (currentTrailing < themeState.trailingEmptyLines) {
+      model.lines.push('');
+      currentTrailing += 1;
+    }
+  }
+
   return { text: model.bom + model.lines.join(model.newline), warnings };
+}
+
+export function upgradeNativeTheme(configText, themeState, settings) {
+  const restored = restoreNativeTheme(configText, themeState);
+  const applied = applyNativeTheme(restored.text, settings);
+  return { text: applied.text, state: applied.state, warnings: restored.warnings };
 }
 
 export function loadThemeDefinition(file) {
@@ -161,13 +181,18 @@ function writeUtf8(file, text) {
   fs.writeFileSync(file, text, { encoding: 'utf8' });
 }
 
-function install({ config, definition, destination }) {
-  const statePath = path.join(destination, 'state.json');
-  if (fs.existsSync(statePath)) throw new Error('Native Wukong theme is already installed. Remove it before reinstalling.');
-  const theme = loadThemeDefinition(definition);
-  const original = fs.readFileSync(config, 'utf8');
-  const applied = applyNativeTheme(original, theme.settings);
-  const state = {
+function validateManagedState(state, { config, destination }) {
+  if (state.managedBy !== MANAGED_BY) throw new Error('Refusing native theme operation: state marker is invalid.');
+  if (path.resolve(config).toLowerCase() !== path.resolve(state.configPath).toLowerCase()) {
+    throw new Error('Refusing native theme operation: config path does not match the state marker.');
+  }
+  if (path.resolve(destination).toLowerCase() !== path.resolve(state.destination).toLowerCase()) {
+    throw new Error('Refusing native theme operation: destination does not match the state marker.');
+  }
+}
+
+function stateFor({ config, destination, theme, applied }) {
+  return {
     managedBy: MANAGED_BY,
     installedAt: new Date().toISOString(),
     configPath: path.resolve(config),
@@ -175,6 +200,15 @@ function install({ config, definition, destination }) {
     themeId: theme.id,
     ...applied.state
   };
+}
+
+function install({ config, definition, destination }) {
+  const statePath = path.join(destination, 'state.json');
+  if (fs.existsSync(statePath)) throw new Error('Native Wukong theme is already installed. Remove it before reinstalling.');
+  const theme = loadThemeDefinition(definition);
+  const original = fs.readFileSync(config, 'utf8');
+  const applied = applyNativeTheme(original, theme.settings);
+  const state = stateFor({ config, destination, theme, applied });
   writeUtf8(config, applied.text);
   try {
     writeUtf8(statePath, `${JSON.stringify(state, null, 2)}\n`);
@@ -185,16 +219,30 @@ function install({ config, definition, destination }) {
   return state;
 }
 
+function upgrade({ config, definition, destination }) {
+  const statePath = path.join(destination, 'state.json');
+  const originalStateText = fs.readFileSync(statePath, 'utf8');
+  const originalState = JSON.parse(originalStateText);
+  validateManagedState(originalState, { config, destination });
+  const theme = loadThemeDefinition(definition);
+  const originalConfig = fs.readFileSync(config, 'utf8');
+  const upgraded = upgradeNativeTheme(originalConfig, originalState, theme.settings);
+  const state = stateFor({ config, destination, theme, applied: upgraded });
+  writeUtf8(config, upgraded.text);
+  try {
+    writeUtf8(statePath, `${JSON.stringify(state, null, 2)}\n`);
+  } catch (error) {
+    writeUtf8(config, originalConfig);
+    writeUtf8(statePath, originalStateText);
+    throw error;
+  }
+  return { state, warnings: upgraded.warnings };
+}
+
 function restore({ config, destination }) {
   const statePath = path.join(destination, 'state.json');
   const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
-  if (state.managedBy !== MANAGED_BY) throw new Error('Refusing restore: native theme state marker is invalid.');
-  if (path.resolve(config).toLowerCase() !== path.resolve(state.configPath).toLowerCase()) {
-    throw new Error('Refusing restore: config path does not match the state marker.');
-  }
-  if (path.resolve(destination).toLowerCase() !== path.resolve(state.destination).toLowerCase()) {
-    throw new Error('Refusing restore: destination does not match the state marker.');
-  }
+  validateManagedState(state, { config, destination });
   const current = fs.readFileSync(config, 'utf8');
   const restored = restoreNativeTheme(current, state);
   writeUtf8(config, restored.text);
@@ -210,12 +258,16 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToP
     } else if (command === 'install') {
       install(values);
       console.log('INSTALLED: native Codex theme settings');
+    } else if (command === 'upgrade') {
+      const result = upgrade(values);
+      for (const warning of result.warnings) console.warn(`WARNING: ${warning}`);
+      console.log('UPGRADED: native Codex theme settings');
     } else if (command === 'restore') {
       const result = restore(values);
       for (const warning of result.warnings) console.warn(`WARNING: ${warning}`);
       console.log('RESTORED: native Codex theme settings');
     } else {
-      throw new Error('Usage: native-theme.mjs <validate|install|restore> --definition FILE --config FILE --destination DIR');
+      throw new Error('Usage: native-theme.mjs <validate|install|upgrade|restore> --definition FILE --config FILE --destination DIR');
     }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

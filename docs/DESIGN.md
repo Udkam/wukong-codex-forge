@@ -1,83 +1,73 @@
-# 大圣归来 · 玄金 — 原生主题设计
+# 大圣归来 · 日照命簿 — 设计与实现
 
-## 设计决策
+## 视觉母题
 
-0.3.0 将部署机制收敛为 Codex 自身的 Chrome Theme。页面 DOM、三栏结构、菜单、按钮、输入框和环境信息完全由 Codex 维护；主题包只提供原生 token，不再模拟或覆盖宿主布局。
+背景沿用用户指定的 `大圣归来.jpg`。组件不再使用通用暗色或通用浅色卡片，而由三套可重复语言组成：
 
-签名视觉由四个角色构成：
-
-| 角色 | 值 | 目的 |
+| 母题 | 应用位置 | 设计特征 |
 | --- | --- | --- |
-| 玄黑表面 | `#0d100e` | 低反光、统一侧栏与工作区基底 |
-| 暖纸正文 | `#f2e4c8` | 提供古卷感，同时保持长文可读性 |
-| 烬金行动 | `#d6a85f` | 主按钮、焦点和技能语义 |
-| 青绿新增 | `#86a96d` | 与烬金区分的成功和新增语义 |
+| 朱砂签印 | 新建任务、侧栏选中、发送 | 朱砂端条、菱形签印、红漆圆印 |
+| 金箍横卷 | 输入框、任务栏分隔 | 双金线、鎏金端箍、非对称切角、八角工具钮 |
+| 命簿碑刻 | 消息、代码、菜单、环境卡 | 双层细框、朱砂/青玉侧脊、碑帖字体、石刻切角 |
 
-`contrast = 74` 让 Codex 从上述种子色自动派生按钮 hover、选中项、边界、输入面和悬浮表面。颜色生成仍由 Codex 完成，因此不会因主题 CSS 选择器失效而破坏新版本页面。
+明亮基底为 `#f7eed8`，正文深墨 `#2e261c`，朱砂 `#8b3e2f`，鎏金 `#b9782d`，青玉 `#627f69`。代码块保留深褐底以保证长代码对比度，但不主导整页明度。
 
-代码面使用内置 Vesper，UI 使用 Microsoft YaHei UI，代码字体使用 JetBrains Mono；缺失时由系统正常回退，不发起字体网络请求。
+## 双页面状态
 
-## 部署结构
+- `landing`：背景高显影，标题使用朱砂碑帖字与金线下划；输入框在画面底部形成金箍横卷锚点。
+- `thread`：用浅宣纸 wash 降低背景竞争；消息与代码获得命簿层级，输入框保持同一造型。
+
+状态由 Codex 当前数据属性、路由和消息证据判定；MutationObserver 以 110 ms 合并刷新。没有额外主题开关或状态栏。
+
+## 原生 DOM 适配
+
+运行时优先使用当前 Codex 的稳定属性：
+
+- `data-thread-find-target="conversation"`
+- `data-thread-find-composer="true"`
+- `data-virtualized-turn-content`
+- `data-content-search-turn-key`
+- `data-user-message-bubble`
+- `data-local-conversation-user-anchor`
+- `data-local-conversation-final-assistant`
+- `data-vscode-context*="supportsNewChatMenu"`
+
+侧栏、工作区、环境栏和任务栏另有基于可见区域与几何范围的保守 fallback。标记器只给现有节点增加 `forge-*` class 和 `data-forge-mark`；唯一新增元素是 `head` 内的一个受管 `<style>`。
+
+恢复表达式断开 observer、移除 listener/style/class/data 标记，并将 landing/thread 状态清空。测试断言 body 子节点数不增加、清理后受管标记为零。
+
+## 生命周期
 
 ```mermaid
 flowchart LR
-  A["install-theme.cmd"] --> B["scripts/install.ps1"]
-  B --> C["~/.codex/themes/wukong-codex-forge"]
-  B --> D["native-theme.mjs"]
-  D --> E["~/.codex/config.toml 的 appearance 键"]
-  F["remove-theme.cmd"] --> G["scripts/restore.ps1"]
-  G --> H["按 state.json 恢复原值"]
-  H --> I["删除受管主题目录"]
+  A["install-theme.cmd"] --> B["安装明亮原生基线"]
+  B --> C["打包最小 runtime"]
+  C --> D["创建 Codex - Wukong Theme"]
+  D --> E["启动官方 ChatGPT.exe + 随机回环端口"]
+  E --> F["watcher 注入/维持样式"]
+  F --> G["Codex 关闭后 watcher 退出"]
+  H["remove-theme.cmd"] --> I["实时清理样式 + 恢复 TOML 键"]
+  I --> J["删除快捷方式、profile 与受管目录"]
 ```
 
-正式安装目录只包含：
+默认 Chromium profile 会忽略远程调试参数，因此受管入口使用主题目录内的隔离 web profile。官方 Store 包路径在每次启动时通过 `Get-AppxPackage OpenAI.Codex` 解析，更新后无需写死版本路径。
 
-- `theme.json`：原生 token 定义。
-- `preview.jpg`：用户提供的视觉预览素材，不参与运行时绘制。
-- `native-theme.mjs`：值级安装/恢复引擎。
-- `state.json`：被接管键的安装前行值和受控路径。
-- `LICENSE`。
+## 配置恢复
 
-没有常驻进程、端口、observer、CDP、额外 profile、开始菜单入口或 ChatGPT 启动器。
+原生明亮基线用于启动前和非注入表面：`appearanceTheme=light`、`appearanceLightChromeTheme` 暖纸/深墨/朱砂值。0.3.0 暗色安装可原位升级：引擎先按旧 state 精确还原基线，再应用新定义并生成新 state；卸载仍能回到主题安装前的用户值。
 
-## 运行时加载边界
+恢复只操作主题持有的 TOML section/key。若用户安装后改过某键，恢复保留用户值并输出警告，不回滚整份配置。
 
-Codex 26.715.2305.0 的桌面设置存储在主进程启动时读取 `[desktop]`，通过应用内部的受信任 `set-setting` IPC 才会执行实时副作用（包括窗口 backdrop 刷新）。外部安装器直接改写 `config.toml` 不会进入这条 IPC 路径，且当前主进程没有该文件的变更监听。
+## 性能与兼容
 
-应用注册的 `codex://codex-app/apply-config` 深链名称看似可复用，实际只读取 `~/.codex/codex-app/config.json` 的远程连接 schema；它不重新初始化桌面设置。公开深链解析也没有外观赋值或外观刷新路由。因此，在“不重载、不重启、不注入”的约束下，配置文件型主题无法改变已经打开的窗口。详见 [运行时热应用调查](RUNTIME_FINDINGS.md)。
-
-## 配置恢复模型
-
-安装器按 TOML section/key 处理配置，不复制整份 `config.toml` 作为回滚源：
-
-1. 记录每个受管键是否存在及其原始整行。
-2. 写入主题对应的 TOML literal。
-3. 卸载时仅在当前值仍等于主题值时恢复。
-4. 若用户在安装后改过该键，保留用户新值并报告警告。
-5. 与主题无关的模型、MCP、插件、项目和权限配置从不参与恢复。
-
-目标路径必须精确等于 `%USERPROFILE%\.codex\themes\wukong-codex-forge`，且卸载时拒绝 reparse point、缺失 marker 或路径不匹配的状态。
-
-## 当前不实现的视觉
-
-Codex 26.715.2305.0 的原生 schema 没有背景图片、任意 CSS、页面状态变体或宠物插槽。因此以下构想保留在 Studio/素材层，不进入 0.3.0 运行时：
-
-- `大圣归来.jpg` 的 landing/thread 双显影背景。
-- 小悟空宠物。
-- 消息、代码块或输入框的自定义选择器样式。
-
-这不是性能降级开关，而是原生扩展边界。若未来 Codex 提供相应字段，再从预览资产升级，不重新引入 DOM 注入。
-
-## 性能与稳定性
-
-| 项目 | 运行时成本 |
+| 项目 | 设计值 |
 | --- | --- |
-| 常驻进程 | 0 |
-| 监听端口 | 0 |
-| 主题网络请求 | 0 |
-| 新增 DOM | 0 |
-| MutationObserver | 0 |
-| 安装包 | 约 88 KB |
-| 官方包修改 | 0 |
+| 背景网络请求 | 0，本地 JPEG 以内嵌 data URL 使用 |
+| 新增 body 节点 | 0 |
+| 样式节点 | 1，位于 head |
+| observer | 1，110 ms 合并 |
+| watcher | 1 个 Node 进程，1.7 s 存活探测 |
+| 调试端口 | 随机、仅 `127.0.0.1` |
+| 官方文件写入 | 0 |
 
-本方案对 Codex 更新的兼容点是原生设置字段，而不是易变 DOM 类名；但它目前只具备下次启动加载能力，不具备当前窗口热应用能力。
+选择器以稳定属性和角色为主，哈希 class 变化时由几何 fallback 承接；Codex 大版本更新后仍必须执行真实 DOM 截图审计。

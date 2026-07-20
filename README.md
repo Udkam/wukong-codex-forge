@@ -1,10 +1,10 @@
 # Wukong Codex Forge
 
-“大圣归来 · 玄金”是 Windows Codex 桌面端的原生 Chrome Theme 包。它保留当前 Codex 页面、侧栏、输入区、环境栏和全部交互，只通过 Codex 自己的 `desktop.appearance*` 设置生成玄黑、烬金、暖纸与青绿语义色。
+“大圣归来 · 日照命簿”是 Windows Codex 桌面端的《黑神话：悟空》样式层。它保留 Codex 原生顶部栏、侧栏、工作区、输入区和环境栏，不增加主题按钮、侧栏或底栏；在原生 DOM 上替换背景、按钮、输入框、消息、代码块、菜单和环境卡样式。
 
-本版本不再启动第二个 Codex、不使用 CDP、不监听端口、不创建快捷方式，也不向页面添加侧栏、底栏、按钮或宠物节点。
+当前视觉为明亮系：用户提供的 `大圣归来.jpg` 作为主背景，新对话页高显影、进入对话后浅化；侧栏采用朱砂签印与墨刷选中态，输入框采用金箍棒横卷结构，消息和环境卡采用命簿碑刻切角。
 
-## 安装
+## 安装与使用
 
 下载并解压后双击 [install-theme.cmd](install-theme.cmd)，或执行：
 
@@ -12,18 +12,15 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
-安装器执行两件事：
+安装器会：
 
-1. 把约 88 KB 的正式主题包放到 `%USERPROFILE%\.codex\themes\wukong-codex-forge`。
-2. 只更新 `%USERPROFILE%\.codex\config.toml` 中 Codex 原生支持的主题键，并记录这些键的安装前值。
+1. 把最小运行包安装到 `%USERPROFILE%\.codex\themes\wukong-codex-forge`。
+2. 写入明亮原生外观基线，并按键记录安装前值。
+3. 创建开始菜单入口 `Codex - Wukong Theme`。
 
-安装过程不会关闭、重启或另行启动 Codex。需要特别说明：Codex 26.715.2305.0 只在启动阶段读取外部写入的 `desktop.appearance*` 值，已经打开的窗口不会热应用这些变化。若安装时 Codex 正在运行，安装器会明确输出警告；这时只能确认“磁盘配置已安装”，不能宣称“当前窗口已换肤”。当前版本写入的值为：
+若 Codex 已打开，安装器不会强关或修改当前进程。准备审计时，正常关闭当前 Codex，再从 `Codex - Wukong Theme` 启动；主题 watcher 与该次 Codex 同启同停。普通 Codex 入口仍保持官方行为。
 
-- 外观：深色；代码主题：Vesper。
-- 主色：`#d6a85f` 烬金。
-- 表面：`#0d100e` 玄黑；正文：`#f2e4c8` 暖纸。
-- diff：新增 `#86a96d`，删除 `#c86a5a`。
-- UI 字体：Microsoft YaHei UI；代码字体：JetBrains Mono（均为本机回退，无网络字体）。
+该启动方式是当前 Chromium 安全策略下实现自定义背景与 CSS 的稳定边界：默认 profile 会忽略外部远程调试参数，受管启动器因此使用主题目录内的隔离 web profile 和随机回环端口。它不修改 `ChatGPT.exe`、WindowsApps、`app.asar` 或签名文件。
 
 ## 删除与恢复
 
@@ -33,64 +30,45 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\restore.ps1 -Uninstall
 ```
 
-卸载只恢复本主题接管的键，然后删除 `%USERPROFILE%\.codex\themes\wukong-codex-forge`。如果某个接管值在安装后被用户再次修改，卸载器保留该新值并输出警告，不会用旧备份覆盖它。其他 Codex 配置从未进入回滚范围。
+卸载器先移除打开窗口中的样式并按键恢复原生配置，再删除快捷方式和受管目录。若受管 Codex 窗口仍占用 profile，样式会先恢复原生，卸载器会要求关闭该窗口后再运行一次，以避免强杀进程或损坏 profile。
 
-不要只手工删除主题目录：`state.json` 是安全恢复安装前主题值所需的记录。正式卸载入口是 `remove-theme.cmd`。同样，已经打开的 Codex 窗口不会热应用外部恢复的值。
+不要直接删除 `state.json`：它保存精确恢复安装前外观所需的键级记录。用户在安装后再次修改过的受管键会被保留，不会被旧值覆盖。
 
-## 当前验收结论
+## 视觉与运行边界
 
-用户要求的“Codex 已运行时，下载/删除后当前窗口立即切换，且不重载、不重启、不注入”在本机 Codex 26.715.2305.0 上没有可调用的原生入口。当前包只能安全地写入/恢复下一次 Codex 启动会读取的原生配置，因此本轮真实窗口验收为失败，而不是完成。
-
-已核对的 `codex://codex-app/apply-config` 深链只读取 `~/.codex/codex-app/config.json` 中的 SSH/远程连接设置，不会刷新 `~/.codex/config.toml` 的桌面外观。完整证据与决策边界见 [运行时热应用调查](docs/RUNTIME_FINDINGS.md)。
-
-## 原生能力边界
-
-本机 Codex 26.715.2305.0 的原生 Chrome Theme schema 只接受：
-
-- `accent`
-- `contrast`
-- `ink`
-- `surface`
-- `opaqueWindows`
-- `fonts`
-- `semanticColors`
-
-它没有 `backgroundImage`、`customCss` 或 `companion` 字段。因此用户提供的 `大圣归来.jpg` 作为主题包预览与未来能力素材随包保留，但不会伪装成当前原生运行时背景。背景图、landing/thread 双背景和小悟空宠物只有通过 DOM 注入才能实现，而 0.3.0 已明确移除这条不符合“放入对应位置即可用”的交付路线。
-
-## 开发预览
-
-Studio 仅用于视觉构想和素材审查，不是 Codex 运行页，也不会被安装：
-
-```powershell
-npm install
-npm run studio
-```
-
-打开 [http://127.0.0.1:5173/studio/](http://127.0.0.1:5173/studio/)。
+- 页面布局和事件由 Codex 提供；样式层不创建 body 子节点。
+- 运行时只在 `head` 添加一个受管 `<style>`，并为现有元素添加可清理标记类。
+- landing/thread 状态由当前 Codex 数据属性与路由判定，110 ms 合并刷新。
+- 背景图本地内嵌，无主题网络请求；素材大小约 78 KB。
+- watcher 每 1.7 秒进行一次廉价存活/样式探测，Codex 关闭后自动退出。
+- 小悟空宠物本版暂缓，因为用户当前优先要求原生页面无额外节点。
 
 ## 针对性验证
 
 ```powershell
+npm install
 npm run validate
-npm run test:native
+npm run test:theme
+npm run test:lifecycle
+npm run test:managed-package
+npm run test:runtime-states
 ```
 
-- 主题定义只包含当前 Codex 原生字段。
-- 安装和卸载对被管理值精确往返。
-- 卸载不覆盖用户安装后的再次修改。
-- PowerShell 入口可解析，且只能管理固定的 `CODEX_HOME` 主题目录。
-- 任意外部卸载目标会被拒绝。
-- 安装/恢复脚本不会把“磁盘值已写入”误报为“当前窗口已生效”。
+这些测试分别覆盖原生基线升级/恢复、Windows 生命周期与路径边界、最小包独立导入、landing/thread 动态样式、明亮度、无新增 UI、原生槽位几何不变和清理恢复。
 
-全窗口 Studio E2E 只在预览代码变化时运行：`npm run test:e2e`。
+当前两张自动实渲染证据：
+
+- [新对话样式](docs/screenshots/runtime-style-landing.png)
+- [对话中样式](docs/screenshots/runtime-style-thread.png)
+
+它们是生产 DOM 形态 fixture 的浏览器渲染，不冒充当前真实 Codex 窗口截图；真实窗口验收须在受管入口启动后完成。
 
 ## 文档
 
 - [需求与验收](docs/REQUIREMENTS.md)
 - [设计与实现](docs/DESIGN.md)
 - [分工与交付边界](docs/WORKBREAKDOWN.md)
+- [运行时调查](docs/RUNTIME_FINDINGS.md)
 - [素材来源与发布边界](docs/ASSET_SOURCES.md)
 
-过程工作日志保存在本地 `docs/logs/CHANGELOG.md`，按仓库约定不提交。
-
-代码以 [MIT](LICENSE) 发布；游戏名称、截图与官方艺术作品的权利属于其各自权利人。
+过程日志位于本地 `docs/logs/CHANGELOG.md`，按仓库约定不提交。代码以 [MIT](LICENSE) 发布；游戏名称、截图与官方艺术作品的权利属于其各自权利人。

@@ -13,7 +13,8 @@
     "test:lifecycle": "node --test tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs",
     "test:native": "node --test tests/native-theme.test.mjs tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs",
     "test:runtime-states": "node --test tests/injection-fixture.test.mjs tests/runtime-style-visual.test.mjs",
-    "test:runtime-visual": "node --test tests/runtime-style-visual.test.mjs"
+    "test:runtime-visual": "node --test tests/runtime-style-visual.test.mjs",
+    "test:managed-package": "node --test tests/managed-package.test.mjs"
   },
   "dependencies": {
     "ws": "^8.18.3"

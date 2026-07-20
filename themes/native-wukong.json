@@ -1,22 +1,22 @@
 {
   "schemaVersion": 1,
   "id": "wukong-great-sage",
-  "name": "大圣归来 · 玄金",
-  "description": "A native Codex chrome theme using the supported desktop appearance settings.",
+  "name": "大圣归来 · 日照命簿",
+  "description": "A bright native Codex baseline for the managed Wukong relic style layer.",
   "previewAsset": "assets/great-sage-return.jpg",
   "settings": [
-    { "section": "desktop", "key": "appearanceTheme", "value": "dark" },
-    { "section": "desktop", "key": "appearanceDarkCodeThemeId", "value": "vesper" },
-    { "section": "desktop.appearanceDarkChromeTheme", "key": "accent", "value": "#d6a85f" },
-    { "section": "desktop.appearanceDarkChromeTheme", "key": "contrast", "value": 74 },
-    { "section": "desktop.appearanceDarkChromeTheme", "key": "ink", "value": "#f2e4c8" },
-    { "section": "desktop.appearanceDarkChromeTheme", "key": "opaqueWindows", "value": true },
-    { "section": "desktop.appearanceDarkChromeTheme", "key": "surface", "value": "#0d100e" },
-    { "section": "desktop.appearanceDarkChromeTheme.fonts", "key": "code", "value": "\"JetBrains Mono\"" },
-    { "section": "desktop.appearanceDarkChromeTheme.fonts", "key": "ui", "value": "\"Microsoft YaHei UI\"" },
-    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "diffAdded", "value": "#86a96d" },
-    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "diffRemoved", "value": "#c86a5a" },
-    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "skill", "value": "#d6a85f" }
+    { "section": "desktop", "key": "appearanceTheme", "value": "light" },
+    { "section": "desktop", "key": "appearanceLightCodeThemeId", "value": "codex" },
+    { "section": "desktop.appearanceLightChromeTheme", "key": "accent", "value": "#9f5f22" },
+    { "section": "desktop.appearanceLightChromeTheme", "key": "contrast", "value": 58 },
+    { "section": "desktop.appearanceLightChromeTheme", "key": "ink", "value": "#2e261c" },
+    { "section": "desktop.appearanceLightChromeTheme", "key": "opaqueWindows", "value": true },
+    { "section": "desktop.appearanceLightChromeTheme", "key": "surface", "value": "#f7eed8" },
+    { "section": "desktop.appearanceLightChromeTheme.fonts", "key": "code", "value": "\"JetBrains Mono\"" },
+    { "section": "desktop.appearanceLightChromeTheme.fonts", "key": "ui", "value": "\"Microsoft YaHei UI\"" },
+    { "section": "desktop.appearanceLightChromeTheme.semanticColors", "key": "diffAdded", "value": "#557a5d" },
+    { "section": "desktop.appearanceLightChromeTheme.semanticColors", "key": "diffRemoved", "value": "#b94f36" },
+    { "section": "desktop.appearanceLightChromeTheme.semanticColors", "key": "skill", "value": "#9f5f22" }
   ],
   "unsupportedByNativeLoader": ["backgroundImage", "companion", "customCss"]
 }

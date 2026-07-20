@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import process from 'node:process';
 import { getBrowserVersion, getTargets, evaluateTarget, isCodexTarget } from './cdp-client.mjs';
 import { payloadFromThemeFile } from './forge-runtime.mjs';
-import { makeApplyExpression } from './injection-plan.mjs';
+import { makeApplyExpression, RESTORE_EXPRESSION } from './injection-plan.mjs';
 
-const [,, portRaw, providedTheme] = process.argv;
+const [,, portRaw, providedTheme, disableRequest] = process.argv;
 const port = Number(portRaw);
 const themePath = providedTheme || 'themes/active.json';
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw Error('Port must be 1024..65535');
@@ -29,6 +29,11 @@ while (!stopping) {
     startupFailures = 0;
     disconnectFailures = 0;
     const targets = (await getTargets(port)).filter(isCodexTarget);
+    if (disableRequest && fs.existsSync(disableRequest)) {
+      await Promise.all(targets.map(target => evaluateTarget(target, RESTORE_EXPRESSION).catch(() => false)));
+      console.log('Wukong style restored to native surfaces by uninstall request.');
+      break;
+    }
     for (const target of targets) {
       const active = await evaluateTarget(target, probe).catch(() => false);
       if (!active) await evaluateTarget(target, expression);

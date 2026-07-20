@@ -1,34 +1,35 @@
-# Codex 外观热应用调查
+# Codex 样式运行时调查
 
 ## 结论
 
-在 Windows Codex 26.715.2305.0 中，外部程序修改 `%USERPROFILE%\.codex\config.toml` 后，已经打开的 Codex 窗口不会重新读取 `desktop.appearance*`。在同时禁止窗口重载、应用重启和运行时注入时，当前窗口即时换肤不可实现。
+Windows Codex 26.715.2305.0 的原生 Chrome Theme 只能表达颜色、字体和语义色，不能表达背景图、组件切角或 landing/thread 状态。外部修改 `config.toml` 也不会让已打开窗口热加载。因此“深度样式替换”需要受控运行时 CSS；只放置原生主题文件只能得到用户已否决的颜色变化。
 
-本结论解释了用户截图中的“没区别”：磁盘值确实已经写成玄黑/烬金配置，但当前主进程仍持有启动时读入的旧外观。
+## 已确认的本机边界
 
-## 本机只读核对
+1. `desktop.appearance*ChromeTheme` 支持 accent、contrast、ink、surface、opaqueWindows、fonts 和 semanticColors，不支持 backgroundImage/customCss/companion。
+2. `codex://codex-app/apply-config` 只处理远程连接配置，不刷新桌面外观。
+3. 当前主进程没有对外部 `config.toml` 写入的外观 watcher。
+4. 已安装 Chromium 150 会忽略默认用户数据目录上的远程调试参数；受管隔离 profile 可建立随机回环调试通道。
+5. 当前生产 renderer 暴露 conversation/composer/message/new-chat 数据属性，可避免依赖哈希 class。
 
-对已安装 `app.asar` 进行只读提取和字符串级核对，未修改 WindowsApps 中的任何文件：
+## 路线比较
 
-1. 桌面 settings store 在启动流程中初始化一次，从保存配置的 `desktop` 对象建立内存状态。
-2. 应用内部 `set-setting` 请求会更新内存、写回配置并执行外观副作用；外部文件写入没有调用这条路径。
-3. 当前主进程代码没有为 `config.toml` 注册外观文件监听，也没有第二次 settings store 初始化路径。
-4. `codex://codex-app/apply-config` 读取的是 `~/.codex/codex-app/config.json`。其 schema 只有 SSH 超时、重试和远程连接/项目，不包含桌面外观。
-5. 当前公开深链支持设置页导航，但不支持通过参数写入设置或请求外观刷新。
+| 路线 | 背景/组件样式 | 当前窗口热清理 | 风险结论 |
+| --- | --- | --- | --- |
+| 只写原生配置 | 否，只能换色 | 否 | 稳定但不满足需求 |
+| 修改 `app.asar`/WindowsApps | 是 | 需重启 | 破坏签名与更新，不采用 |
+| 任意进程注入 | 是 | 理论可行 | 崩溃与安全风险高，不采用 |
+| 受管随机回环 CSS | 是 | 是 | 官方文件零写入，可清理，当前采用 |
 
-## 可行性边界
+## 为什么需要受管入口
 
-| 路线 | 当前窗口即时可见 | 是否符合现有约束 |
-| --- | --- | --- |
-| 只写 `config.toml` | 否 | 稳定，但不满足即时生效 |
-| Codex 内部设置 IPC | 是 | 外部安装器没有受信任入口 |
-| 窗口重载或应用重启 | 是 | 被用户当前约束禁止 |
-| CDP/DOM/CSS 注入 | 是 | 被当前原生方案和稳定性约束禁止 |
-| 修改 `app.asar` 或进程注入 | 理论可行 | 不可接受，破坏签名/升级兼容并增加崩溃风险 |
+已经运行的普通 Codex 没有调试通道，外部文件复制无法取得 renderer。强行补丁官方包与“使用成本最优、不得导致崩溃”的要求冲突。安装器因此不强关当前窗口，只创建 `Codex - Wukong Theme`：它启动官方 `ChatGPT.exe`，但为 Chromium web 数据使用主题私有 profile，并把调试端口限制在 `127.0.0.1` 的随机端口。
 
-## 验收规则
+watcher 只接受 `app://codex/` 或本地开发页目标；WebSocket URL 必须是 loopback。它检查一个 style/runtime probe，缺失时才重新注入；Codex 退出后两次短暂断连即结束。卸载请求先触发 RESTORE_EXPRESSION，再处理磁盘恢复。
 
-- 磁盘 TOML、安装 marker 和自动测试通过，只能证明“配置已写入”。
-- `computer-use/config.json` 仍保留旧 accent，能够旁证当前主进程未执行外观设置副作用。
-- 只有当前 Codex 窗口的实际视觉变化，才能记为“主题已应用”。
-- 在获得新的约束选择前，不再尝试远程连接深链，也不再把安装成功日志当成视觉验收。
+## 真实验收边界
+
+- TOML、state、包结构和 fixture 自动测试只能证明交付契约。
+- 两张 `runtime-style-*.png` 是生产 DOM 形态 fixture，不是当前 Codex 窗口。
+- 当前普通 Codex 进程没有被重启；在从受管入口完成一次真实启动和截图前，生产视觉认证仍为待完成。
+- 大版本更新若改变数据属性或多窗口结构，必须重新执行真实截图审计；几何 fallback 不是无限兼容承诺。
