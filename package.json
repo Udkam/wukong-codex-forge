@@ -1,6 +1,6 @@
 {
   "name": "wukong-codex-forge",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,12 @@
     "test:e2e": "node tests/run-studio-e2e.mjs",
     "test:theme": "node --test tests/native-theme.test.mjs",
     "test:lifecycle": "node --test tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs",
-    "test:native": "node --test tests/native-theme.test.mjs tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs"
+    "test:native": "node --test tests/native-theme.test.mjs tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs",
+    "test:runtime-states": "node --test tests/injection-fixture.test.mjs tests/runtime-style-visual.test.mjs",
+    "test:runtime-visual": "node --test tests/runtime-style-visual.test.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

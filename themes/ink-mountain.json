@@ -15,16 +15,16 @@
     "asset": "assets/great-sage-return.jpg",
     "position": "right center",
     "landingPosition": "right center",
-    "dim": 0.72,
-    "taskIntensity": 0.13,
-    "landingIntensity": 0.72
+    "dim": 0.68,
+    "taskIntensity": 0.19,
+    "landingIntensity": 0.82
   },
   "accessibility": {
     "preset": "workbench",
     "reducedMotion": false
   },
   "companion": {
-    "enabled": true,
+    "enabled": false,
     "side": "right",
     "size": 96,
     "motion": "quiet"
