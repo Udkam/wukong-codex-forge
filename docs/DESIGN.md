@@ -81,7 +81,7 @@ flowchart LR
 
 ## 生命周期与恢复
 
-`install-theme.cmd` 调用 `install.ps1`，默认在当前用户开始菜单创建受管入口。它指向隐藏 PowerShell 包装器；包装器启动可见的官方 ChatGPT.exe，并显式传入只绑定 `127.0.0.1` 的 CDP 参数。`-NoShortcut` 仅供隔离测试使用。
+`install-theme.cmd` 调用 `install.ps1`，默认在当前用户开始菜单创建受管入口。它指向隐藏 PowerShell 包装器；包装器启动可见的官方 ChatGPT.exe，并显式传入只绑定 `127.0.0.1` 的 CDP 参数。为兼容 Chromium 136+ 的调试限制，入口同时通过 Codex 内建的 `CODEX_ELECTRON_USER_DATA_PATH` 使用受管隔离 profile，不复制原 Codex profile 或凭据。`-NoShortcut` 仅供隔离测试使用。
 
 `watch.mjs` 在启动阶段最多等待约 15 秒。连接后每 1.4 秒用一个布尔表达式探测运行时是否仍存在；只有新 renderer 或页面重载后才重新发送完整主题。CDP 连失三次视为 ChatGPT 退出，watcher 自行结束。
 

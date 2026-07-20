@@ -28,7 +28,7 @@
 | ID | 约束 | 实现边界 |
 | --- | --- | --- |
 | S-01 | 不修改官方程序 | 不修改 WindowsApps、`app.asar`、Codex 配置或任何签名文件。 |
-| S-02 | 仅本机回环 | 调试端点必须是 `127.0.0.1`，并验证监听进程位于注册的 `OpenAI.Codex` 包内。 |
+| S-02 | 仅本机回环 | 调试端点必须是 `127.0.0.1`，并验证监听进程位于注册的 `OpenAI.Codex` 包内；Chromium 数据使用受管隔离 profile，不复制原 Codex 凭据。 |
 | S-03 | 随启随停 | 受管启动器启动 ChatGPT 和 watcher；ChatGPT 的 CDP 端点退出后 watcher 自动退出。 |
 | S-04 | 低运行成本 | 仅一张 78 KB 背景、一个可选宠物；安装时不复制 Studio、测试、Git 数据或开发依赖；无远程字体、无视频、无 WebGL；DOM observer 采用 120 ms 合并刷新，watcher 1.4 s 轻量探测。 |
 | S-05 | 可恢复 | restore 删除样式、受管节点、所有 Forge 标记、observer 与状态属性；卸载只允许精确受控目录。 |

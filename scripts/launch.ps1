@@ -26,6 +26,7 @@ $chatGpt = Join-Path $package.InstallLocation 'app\ChatGPT.exe'
 if (-not (Test-Path -LiteralPath $chatGpt)) { throw 'ChatGPT.exe was not found inside the registered package.' }
 
 $statePath = Join-Path (Split-Path $rootPath -Parent) 'state.json'
+$profilePath = Join-Path (Split-Path $rootPath -Parent) 'profile'
 function Set-ManagedState([string]$value) {
     if (-not (Test-Path -LiteralPath $statePath)) { return }
     $state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -36,10 +37,19 @@ function Set-ManagedState([string]$value) {
 }
 
 Set-ManagedState 'starting'
-Start-Process -FilePath $chatGpt -ArgumentList @(
-    '--remote-debugging-address=127.0.0.1',
-    "--remote-debugging-port=$Port"
-) | Out-Null
+New-Item -ItemType Directory -Force -Path $profilePath | Out-Null
+$previousUserDataPath = $env:CODEX_ELECTRON_USER_DATA_PATH
+try {
+    $env:CODEX_ELECTRON_USER_DATA_PATH = $profilePath
+    Start-Process -FilePath $chatGpt -ArgumentList @(
+        '--remote-debugging-address=127.0.0.1',
+        "--remote-debugging-port=$Port",
+        "--user-data-dir=`"$profilePath`""
+    ) | Out-Null
+}
+finally {
+    $env:CODEX_ELECTRON_USER_DATA_PATH = $previousUserDataPath
+}
 
 Push-Location $rootPath
 try {

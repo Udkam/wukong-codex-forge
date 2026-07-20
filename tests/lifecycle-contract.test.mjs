@@ -32,6 +32,9 @@ test('PowerShell lifecycle scripts parse and keep destructive scope managed', ()
   assert.match(installEntry, /scripts\\install\.ps1/);
   assert.match(removeEntry, /scripts\\restore\.ps1" -Uninstall/);
   assert.match(launch, /--remote-debugging-address=127\.0\.0\.1/);
+  assert.match(launch, /CODEX_ELECTRON_USER_DATA_PATH/);
+  assert.match(launch, /--user-data-dir/);
+  assert.match(launch, /WukongCodexForge\\app/);
   assert.match(launch, /runtime\/watch\.mjs/);
   assert.match(launch, /Get-AppxPackage -Name 'OpenAI\.Codex'/);
   assert.doesNotMatch(launch, /Stop-Process|taskkill/i);

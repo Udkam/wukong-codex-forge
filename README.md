@@ -54,6 +54,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1
 
 实际应用视觉复审使用 `runtime/capture-live.mjs` 通过同一回环 CDP 直接截取 renderer；图片与 DOM 摘要默认写入本地忽略目录 `docs/logs/`，避免把真实对话内容提交到仓库。
 
+Codex 当前使用 Chromium 150。主题入口把 Chromium 数据目录隔离到 `LOCALAPPDATA\WukongCodexForge\profile`，因为 Chromium 136 起会忽略默认数据目录上的远程调试参数；项目不会复制或读取原 Codex 浏览器凭据。删除受管目录时该隔离 profile 一并删除。
+
 这是实现“随 ChatGPT 启动而启动，关闭而关闭”的安全方式。普通 ChatGPT 快捷方式没有 CDP 参数，无法在不修改官方包的前提下注入主题。
 
 安装器只复制运行时、主题、脚本、素材和 `ws`；不会把 `.git`、Studio、测试、截图、Playwright 或 Vite 放进常驻目录。
