@@ -10,6 +10,7 @@ $target = [IO.Path]::GetFullPath($Destination)
 if (-not [string]::Equals($target, $controlled, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'Refusing uninstall: Destination is outside the managed CODEX_HOME Wukong theme directory.'
 }
+$codexWasRunning = @(Get-Process -Name ChatGPT -ErrorAction SilentlyContinue).Count -gt 0
 if (-not (Test-Path -LiteralPath $target)) {
     Write-Host 'No native Wukong theme is installed.'
     return
@@ -34,4 +35,8 @@ if ($Uninstall) {
     Write-Host 'Removed the native Wukong theme and restored its prior Codex appearance values.'
 } else {
     Write-Host 'Restored the prior Codex appearance values; the installed theme files remain.'
+}
+if ($codexWasRunning) {
+    Write-Warning 'Codex was already running and caches desktop appearance in memory. Open Codex windows do not hot-apply the restored disk values.'
+    Write-Warning 'This Codex build has no public appearance reload deep link. A later Codex launch will read the restored values.'
 }

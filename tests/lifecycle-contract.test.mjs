@@ -27,6 +27,10 @@ test('native lifecycle scripts parse and only manage the Codex theme directory',
   assert.match(install, /\.codex\\themes\\wukong-codex-forge/);
   assert.match(install, /native-theme\.mjs/);
   assert.match(install, /native-wukong\.json/);
+  assert.match(install, /caches desktop appearance in memory/);
+  assert.match(install, /no public appearance reload deep link/);
+  assert.match(restore, /caches desktop appearance in memory/);
+  assert.match(restore, /no public appearance reload deep link/);
   assert.doesNotMatch(install, /ChatGPT\.exe|remote-debugging|Start-Process|WScript\.Shell/);
   assert.match(restore, /managed CODEX_HOME Wukong theme directory/);
   assert.match(restore, /Remove-Item -LiteralPath \$target -Recurse -Force/);

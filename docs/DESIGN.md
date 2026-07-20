@@ -40,6 +40,12 @@ flowchart LR
 
 没有常驻进程、端口、observer、CDP、额外 profile、开始菜单入口或 ChatGPT 启动器。
 
+## 运行时加载边界
+
+Codex 26.715.2305.0 的桌面设置存储在主进程启动时读取 `[desktop]`，通过应用内部的受信任 `set-setting` IPC 才会执行实时副作用（包括窗口 backdrop 刷新）。外部安装器直接改写 `config.toml` 不会进入这条 IPC 路径，且当前主进程没有该文件的变更监听。
+
+应用注册的 `codex://codex-app/apply-config` 深链名称看似可复用，实际只读取 `~/.codex/codex-app/config.json` 的远程连接 schema；它不重新初始化桌面设置。公开深链解析也没有外观赋值或外观刷新路由。因此，在“不重载、不重启、不注入”的约束下，配置文件型主题无法改变已经打开的窗口。详见 [运行时热应用调查](RUNTIME_FINDINGS.md)。
+
 ## 配置恢复模型
 
 安装器按 TOML section/key 处理配置，不复制整份 `config.toml` 作为回滚源：
@@ -74,4 +80,4 @@ Codex 26.715.2305.0 的原生 schema 没有背景图片、任意 CSS、页面状
 | 安装包 | 约 88 KB |
 | 官方包修改 | 0 |
 
-本方案对 Codex 更新的兼容点是公开设置字段，而不是易变 DOM 类名。
+本方案对 Codex 更新的兼容点是原生设置字段，而不是易变 DOM 类名；但它目前只具备下次启动加载能力，不具备当前窗口热应用能力。

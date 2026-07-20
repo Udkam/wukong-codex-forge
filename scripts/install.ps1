@@ -16,6 +16,7 @@ if ((Test-Path -LiteralPath $target) -and @(Get-ChildItem -LiteralPath $target -
 $source = Split-Path $PSScriptRoot -Parent
 $configPath = Join-Path $env:USERPROFILE '.codex\config.toml'
 $definition = Join-Path $source 'themes\native-wukong.json'
+$codexWasRunning = @(Get-Process -Name ChatGPT -ErrorAction SilentlyContinue).Count -gt 0
 if (-not (Test-Path -LiteralPath $configPath)) { throw "Codex config was not found: $configPath" }
 if (-not (Test-Path -LiteralPath $definition)) { throw 'Native Wukong theme definition is missing.' }
 
@@ -34,4 +35,10 @@ catch {
 }
 
 Write-Host "Installed native Wukong theme at $target. No launcher, port, watcher, sidebar, or Codex package file was added."
-Write-Host 'Codex reads these desktop appearance settings as its own chrome theme.'
+if ($codexWasRunning) {
+    Write-Warning 'Codex was already running and caches desktop appearance in memory. The files are installed, but open Codex windows do not hot-apply external config changes.'
+    Write-Warning 'This Codex build has no public appearance reload deep link. A later Codex launch will read the installed values.'
+}
+else {
+    Write-Host 'Codex will read these desktop appearance settings when it starts.'
+}

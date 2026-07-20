@@ -17,7 +17,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1
 1. 把约 88 KB 的正式主题包放到 `%USERPROFILE%\.codex\themes\wukong-codex-forge`。
 2. 只更新 `%USERPROFILE%\.codex\config.toml` 中 Codex 原生支持的主题键，并记录这些键的安装前值。
 
-安装过程不会关闭、重启或另行启动 Codex。当前版本的实际活动值为：
+安装过程不会关闭、重启或另行启动 Codex。需要特别说明：Codex 26.715.2305.0 只在启动阶段读取外部写入的 `desktop.appearance*` 值，已经打开的窗口不会热应用这些变化。若安装时 Codex 正在运行，安装器会明确输出警告；这时只能确认“磁盘配置已安装”，不能宣称“当前窗口已换肤”。当前版本写入的值为：
 
 - 外观：深色；代码主题：Vesper。
 - 主色：`#d6a85f` 烬金。
@@ -35,7 +35,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\restore.ps1 -Unins
 
 卸载只恢复本主题接管的键，然后删除 `%USERPROFILE%\.codex\themes\wukong-codex-forge`。如果某个接管值在安装后被用户再次修改，卸载器保留该新值并输出警告，不会用旧备份覆盖它。其他 Codex 配置从未进入回滚范围。
 
-不要只手工删除主题目录：`state.json` 是安全恢复安装前主题值所需的记录。正式的“删除即原生”入口是 `remove-theme.cmd`。
+不要只手工删除主题目录：`state.json` 是安全恢复安装前主题值所需的记录。正式卸载入口是 `remove-theme.cmd`。同样，已经打开的 Codex 窗口不会热应用外部恢复的值。
+
+## 当前验收结论
+
+用户要求的“Codex 已运行时，下载/删除后当前窗口立即切换，且不重载、不重启、不注入”在本机 Codex 26.715.2305.0 上没有可调用的原生入口。当前包只能安全地写入/恢复下一次 Codex 启动会读取的原生配置，因此本轮真实窗口验收为失败，而不是完成。
+
+已核对的 `codex://codex-app/apply-config` 深链只读取 `~/.codex/codex-app/config.json` 中的 SSH/远程连接设置，不会刷新 `~/.codex/config.toml` 的桌面外观。完整证据与决策边界见 [运行时热应用调查](docs/RUNTIME_FINDINGS.md)。
 
 ## 原生能力边界
 
@@ -74,6 +80,7 @@ npm run test:native
 - 卸载不覆盖用户安装后的再次修改。
 - PowerShell 入口可解析，且只能管理固定的 `CODEX_HOME` 主题目录。
 - 任意外部卸载目标会被拒绝。
+- 安装/恢复脚本不会把“磁盘值已写入”误报为“当前窗口已生效”。
 
 全窗口 Studio E2E 只在预览代码变化时运行：`npm run test:e2e`。
 
