@@ -36,7 +36,7 @@ export const getTargets = port => requestJson(port, '/json/list');
 export const isCodexTarget = target => target?.type === 'page' &&
   /^(app:|https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\/)/.test(target.url || '');
 
-export const evaluateTarget = (target, expression) => new Promise((resolve, reject) => {
+export const commandTarget = (target, method, params = {}) => new Promise((resolve, reject) => {
   if (!/^ws:\/\/127\.0\.0\.1(?::\d+)?\//.test(target?.webSocketDebuggerUrl || '')) {
     reject(Error('Refusing non-loopback target WebSocket'));
     return;
@@ -45,8 +45,8 @@ export const evaluateTarget = (target, expression) => new Promise((resolve, reje
   let settled = false;
   const timeout = setTimeout(() => {
     socket.terminate();
-    finish(Error('CDP evaluate timeout'));
-  }, 5000);
+    finish(Error('CDP command timeout'));
+  }, 8000);
   const finish = (error, value) => {
     if (settled) return;
     settled = true;
@@ -57,18 +57,27 @@ export const evaluateTarget = (target, expression) => new Promise((resolve, reje
   };
   socket.on('open', () => socket.send(JSON.stringify({
     id: 1,
-    method: 'Runtime.evaluate',
-    params: { expression, returnByValue: true }
+    method,
+    params
   })));
   socket.on('message', raw => {
     let message;
     try { message = JSON.parse(raw.toString('utf8')); }
     catch (error) { finish(error); return; }
     if (message.id !== 1) return;
-    if (message.error) finish(Error(message.error.message || 'CDP evaluation failed'));
-    else if (message.result?.exceptionDetails) {
-      finish(Error(message.result.exceptionDetails.text || 'Renderer expression failed'));
-    } else finish(null, message.result?.result?.value);
+    if (message.error) finish(Error(message.error.message || 'CDP command failed'));
+    else finish(null, message.result);
   });
   socket.on('error', error => finish(error));
 });
+
+export async function evaluateTarget(target, expression) {
+  const response = await commandTarget(target, 'Runtime.evaluate', {
+    expression,
+    returnByValue: true
+  });
+  if (response?.exceptionDetails) {
+    throw Error(response.exceptionDetails.text || 'Renderer expression failed');
+  }
+  return response?.result?.value;
+}

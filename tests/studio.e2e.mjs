@@ -14,12 +14,14 @@ const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 await page.goto(url, { waitUntil: 'networkidle' });
 
-for (const text of ['Codex', '心有所向', '万行自明', '新建对话', '本地受管主题']) {
+for (const text of ['Codex', '今天想处理什么', '新建任务', '重设计黑神话悟空主题', '环境信息']) {
   if (!await page.getByText(text, { exact: false }).count()) throw Error('Missing preview surface: ' + text);
 }
 
 assert(await page.locator('.controls:visible').count() === 0, 'Theme editor column is still visible');
 assert(await page.locator('#runtimeToggle, #themeEnabled, .source-rail').count() === 0, 'Runtime control or bottom rail is still present');
+assert(await page.getByText('主题状态', { exact: true }).count() === 0, 'Theme status panel is still present');
+assert(await page.getByText('RUNTIME', { exact: true }).count() === 0, 'Runtime status card is still present');
 const stageBox = await page.locator('#preview').boundingBox();
 assert(stageBox.x === 0 && stageBox.width === 1440, 'Preview does not fill the full window after removing the editor column');
 assert(await page.locator('#preview').getAttribute('data-surface') === 'landing', 'Studio did not start in landing state');

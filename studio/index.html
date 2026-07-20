@@ -81,65 +81,55 @@
 
     <section class="stage" id="preview" data-surface="landing" aria-label="Codex 主题预览">
       <header class="appbar">
-        <div class="window-mark"><span>悟</span><b>Codex</b></div>
-        <div class="breadcrumb"><i></i><span>E:\Proj\wukong-codex-forge</span></div>
-        <div class="app-actions"><button aria-label="搜索">⌕</button><button aria-label="更多">•••</button></div>
+        <div class="window-menu"><span>▣</span><span>←</span><span>→</span><span>文件</span><span>编辑</span><span>视图</span><span>帮助</span></div>
+        <div class="app-actions"><button aria-label="最小化">−</button><button aria-label="最大化">□</button><button aria-label="关闭">×</button></div>
       </header>
 
       <div class="app-shell">
         <nav class="sidebar" aria-label="Codex 导航">
-          <button class="new-chat"><span class="seal">启</span><b>新建对话</b><kbd>Ctrl N</kbd></button>
+          <div class="codex-name"><b>Codex⌄</b><span>⌕</span></div>
+          <button class="new-chat"><span>□</span><b>新建任务</b></button>
+          <button class="nav-row"><span>◎</span><b>插件</b></button>
           <p class="nav-label">置顶</p>
-          <button class="nav-row active"><span>◆</span><b>残卷入梦 · 主题验收</b></button>
+          <button class="nav-row"><span>◌</span><b>每日通知与时事汇总</b></button>
           <p class="nav-label">项目</p>
-          <button class="nav-row"><span>⌁</span><b>wukong-codex-forge</b></button>
-          <div class="tree"><span>studio</span><span>runtime</span><span>docs</span></div>
-          <p class="nav-label">功能</p>
-          <button class="nav-row"><span>◇</span><b>代码</b></button>
-          <button class="nav-row"><span>◇</span><b>自动化</b></button>
-          <button class="nav-row"><span>◇</span><b>技能</b></button>
-          <div class="sidebar-foot"><span class="mini-seal">悟</span><div><b>本地受管主题</b><small>Loopback only</small></div></div>
+          <button class="nav-row"><span>▱</span><b>wukong-codex-forge</b></button>
+          <div class="tree"><span class="active">重设计黑神话悟空主题</span><span>reproduction-temple-run</span><span>reproduction-tetris</span><span>personal-web</span></div>
+          <div class="sidebar-foot"><span class="user-avatar">4</span><div><b>4cer</b></div><small>?</small></div>
         </nav>
 
         <section class="workspace">
           <div class="scene landing-scene" aria-label="新建对话主题态">
-            <div class="vertical-title" aria-hidden="true"><span>齐天</span><span>入梦</span></div>
-            <div class="hero-copy">
-              <p class="chapter">卷一 · 启程</p>
-              <h2>心有所向<br><em>万行自明</em></h2>
-              <p>把一个想法交给 Codex，让它穿过山雾、代码与测试，抵达可验证的结果。</p>
-            </div>
-            <div class="starter-grid" aria-label="示例任务">
-              <button><small>检视</small><span>审一遍当前项目</span><i>壹</i></button>
-              <button><small>锻造</small><span>实现下一项功能</span><i>贰</i></button>
-              <button><small>问路</small><span>梳理复杂技术方案</span><i>叁</i></button>
-            </div>
+            <div class="task-bar"><span>▱　重设计黑神话悟空主题　···</span><button>打开位置⌄</button></div>
+            <div class="native-landing"><small>新建任务</small><h2>今天想处理什么？</h2><p>描述目标，Codex 会在当前项目中开始工作。</p></div>
             <div class="composer landing-composer">
-              <textarea aria-label="新建对话输入框" placeholder="此去欲往何方？"></textarea>
+              <textarea aria-label="新建对话输入框" placeholder="随心输入"></textarea>
               <div class="composer-tools"><button aria-label="添加附件">＋</button><button>工具</button><span></span><button class="send" aria-label="发送">↑</button></div>
             </div>
           </div>
 
           <div class="scene thread-scene" aria-label="对话进行中主题态">
-            <div class="thread-head"><div><p>任务 / 主题深度设计</p><h2>残卷入梦 · 实现与验收</h2></div><span>对话态 · 低显影</span></div>
+            <div class="task-bar"><span>▱　重设计黑神话悟空主题　···</span><button>打开位置⌄</button></div>
             <div class="conversation">
-              <article class="message user-message"><div class="avatar">你</div><p>让新建对话有独立封面，进入任务后背景更克制，同时保持原生交互。</p></article>
-              <article class="message assistant-message"><div class="avatar ape">悟</div><div><p>已把同一张图拆成两个视觉状态：启程时突出剪影与夕照，行路后只保留余烬和轮廓。</p><pre><code>surface: landing → thread
-runtime: scoped marks + clean restore</code></pre><div class="chips"><button>读取文件</button><button>针对性测试</button><button>提交并推送</button></div></div></article>
-              <article class="message note-message"><span></span><p>安装即启用主题；卸载后删除全部受管样式与节点，Codex 完整回到原生外观。</p></article>
+              <article class="message user-message"><div><small>你</small><p>页面结构保持 Codex 原生，只替换悟空主题。</p></div></article>
+              <article class="message assistant-message"><div><small>Codex</small><p>已保留原生导航、对话、输入区和环境面板，仅应用背景、色彩与材质。</p><pre><code>layout: native · theme: Wukong</code></pre></div></article>
             </div>
             <div class="composer thread-composer">
-              <textarea aria-label="对话输入框" placeholder="交代下一段行程…"></textarea>
+              <textarea aria-label="对话输入框" placeholder="随心输入"></textarea>
               <div class="composer-tools"><button aria-label="添加附件">＋</button><button>工具</button><span></span><button class="send" aria-label="发送">↑</button></div>
             </div>
           </div>
         </section>
 
-        <aside class="inspector" aria-label="主题状态">
-          <div class="inspector-title"><span>主题状态</span><button aria-label="关闭检查器">×</button></div>
-          <div class="state-orbit"><i></i><b id="previewPreset">工作台预设</b><small id="previewBackground">本地图片 · 已受管</small></div>
-          <dl><div><dt>主色</dt><dd><i class="swatch gold"></i>烬金</dd></div><div><dt>状态</dt><dd><i class="swatch jade"></i>黛玉</dd></div><div><dt>表面</dt><dd id="surfaceLabel">新建对话</dd></div></dl>
-          <div class="runtime-card"><span>RUNTIME</span><b>随 ChatGPT 启停</b><small>127.0.0.1 · managed watcher</small></div>
+        <aside class="inspector" aria-label="环境信息">
+          <div class="inspector-title"><span>环境信息</span><button aria-label="添加">＋</button></div>
+          <div class="environment-card">
+            <div><span>▣　变更</span><small>+0 -0</small></div>
+            <div><span>▱　本地</span><small>⌄</small></div>
+            <div><span>⌘　main</span><small>⌄</small></div>
+            <div><span>◉　提交或推送</span></div>
+            <div><span>◉　比较分支</span><small>↗</small></div>
+          </div>
         </aside>
       </div>
 

@@ -31,7 +31,6 @@ function setSurface(next) {
   $('preview').dataset.surface = next;
   $('showLanding').setAttribute('aria-pressed', String(next === 'landing'));
   $('showThread').setAttribute('aria-pressed', String(next === 'thread'));
-  $('surfaceLabel').textContent = next === 'landing' ? '新建对话' : '对话进行中';
 }
 
 function render() {
@@ -66,15 +65,6 @@ function render() {
     ? 'url("' + localImage.replaceAll('"', '%22') + '")'
     : 'none';
   preview.style.setProperty('--studio-image', image);
-
-  $('previewPreset').textContent = theme.accessibility.preset === 'high-read'
-    ? '高可读性预设'
-    : '工作台预设';
-  $('previewBackground').textContent = theme.background.mode === 'local' && localImage
-    ? '本地图片 · 已受管'
-    : theme.background.mode === 'gallery'
-      ? '官方来源 · 等待导入'
-      : '纯墨 · 无背景';
 
   const wayfarer = $('wayfarer');
   wayfarer.hidden = !theme.companion.enabled;

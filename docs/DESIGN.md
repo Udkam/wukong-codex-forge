@@ -70,6 +70,8 @@ flowchart LR
 
 它不替换 Codex markup，也不使用可能改变几何的 padding、position、display、gap、border-radius 或 transform 覆盖。安装态直接添加根类 `forge-ink-mountain`；完整 restore 删除根类、style、可选宠物和所有标记。
 
+视觉预览同样不展示主题编辑栏、主题状态卡或运行时状态卡。最终复审由 `capture-live.mjs` 对实际受管 Codex renderer 执行 `Page.captureScreenshot`，同时记录 Forge 标记和表面尺寸；真实截图只留在本地忽略目录。
+
 ## 状态判定
 
 - `main` 内不存在 `article`、`role=article` 或 `data-message-author-role`：`landing`。

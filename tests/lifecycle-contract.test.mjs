@@ -43,10 +43,14 @@ test('PowerShell lifecycle scripts parse and keep destructive scope managed', ()
 test('watcher probes cheaply and stops after the loopback lifecycle disappears', () => {
   const watcher = read('runtime/watch.mjs');
   const client = read('runtime/cdp-client.mjs');
+  const capture = read('runtime/capture-live.mjs');
   assert.match(watcher, /Boolean\(document\.getElementById/);
   assert.match(watcher, /await sleep\(1400\)/);
   assert.match(watcher, /disconnectFailures\+\+ < 2/);
   assert.match(client, /Refusing non-loopback CDP endpoint/);
+  assert.match(client, /export const commandTarget/);
+  assert.match(capture, /Page\.captureScreenshot/);
+  assert.match(capture, /docs\/logs\/live-codex-theme\.png/);
   assert.equal(isCodexTarget({ type: 'page', url: 'app://codex/index.html' }), true);
   assert.equal(isCodexTarget({ type: 'page', url: 'http://127.0.0.1:3000/' }), true);
   assert.equal(isCodexTarget({ type: 'page', url: 'https://example.com/' }), false);

@@ -9,7 +9,7 @@
 | Studio | Frontend engineer | schema v2、视觉规范 | 控件、导入导出、主题/状态预览 | Studio E2E |
 | 运行时 | Runtime engineer | ChatGPT 语义 DOM、主题 JSON | 标记、状态识别、原生几何保护、恢复 | mock DOM 与像素测试 |
 | 生命周期 | Windows engineer | OpenAI.Codex 包、受管目录 | 安装、快捷方式、启动、watch、卸载 | 脚本契约测试 |
-| QA | Verification owner | 上述交付 | 针对性测试、截图、风险清单 | 无页面错误、清理无残留 |
+| QA | Verification owner | 上述交付及实际 Codex renderer | 针对性测试、CDP 截图、风险清单 | 无页面错误、原生结构不变、清理无残留 |
 | 发布记录 | Release owner | 精确差异与证据 | 小步 commit、push、工作日志 | 本地/远端 SHA 一致 |
 
 ## 本轮里程碑
