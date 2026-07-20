@@ -202,7 +202,10 @@ function applyRuntime(payload) {
     composer?.querySelectorAll('button, [role="button"]').forEach(button => mark(button, 'forge-composer-button'));
 
     markAll('[data-virtualized-turn-content], [data-content-search-turn-key], [data-message-author-role], main article', 'forge-turn');
-    markAll('[data-user-message-bubble], [data-local-conversation-user-anchor], [data-message-author-role="user"]', 'forge-user-message');
+    markAll('[data-user-message-bubble]', 'forge-user-message');
+    document.querySelectorAll('[data-message-author-role="user"]').forEach(turn => {
+      mark(turn.querySelector('[data-user-message-bubble]') || turn, 'forge-user-message');
+    });
     markAll('[data-local-conversation-final-assistant], [data-message-author-role="assistant"]', 'forge-assistant-message');
     markAll('pre, pre:has(code)', 'forge-code-block');
 

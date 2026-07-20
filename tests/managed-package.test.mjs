@@ -30,6 +30,15 @@ test('minimal managed package imports independently and omits development surfac
   const runtime = await import(pathToFileURL(path.join(target, 'runtime', 'forge-runtime.mjs')));
   const payload = runtime.payloadFromThemeFile(path.join(target, 'themes', 'active.json'));
   assert.match(payload.variables, /data:image\/jpeg;base64/);
+  assert.equal(payload.theme.name, '大圣归来 · 六根墨幕');
+  assert.deepEqual(payload.theme.palette, {
+    ink: '#d6cfbd',
+    lacquer: '#7f352e',
+    jade: '#596b61',
+    gold: '#a68b58',
+    paper: '#20221e'
+  });
+  assert.match(payload.variables, /--forge-paper:#20221e/);
   const client = await import(pathToFileURL(path.join(target, 'runtime', 'cdp-client.mjs')));
   assert.equal(typeof client.getTargets, 'function');
 });

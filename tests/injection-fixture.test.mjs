@@ -4,7 +4,13 @@ import fs from 'node:fs';
 import { chromium } from '@playwright/test';
 import { makeTheme, cssFor } from '../shared/theme-model.mjs';
 import { makeApplyExpression, RESTORE_EXPRESSION } from '../runtime/injection-plan.mjs';
-import { runtimeFixtureHtml, enterThreadState, geometry } from './runtime-fixture.mjs';
+import {
+  runtimeFixtureHtml,
+  enterThreadState,
+  geometry,
+  conversationGeometry,
+  conversationText
+} from './runtime-fixture.mjs';
 
 test('runtime restyles native surfaces, follows dynamic thread state, and restores cleanly', async t => {
   const browser = await chromium.launch({ headless: true });
@@ -30,16 +36,37 @@ test('runtime restyles native surfaces, follows dynamic thread state, and restor
   assert.equal(await page.locator('.forge-new-task').count(), 1);
   assert.equal(await page.locator('.forge-composer').count(), 1);
   assert.equal(await page.locator('.forge-landing-title').count(), 1);
-  assert.notEqual(await page.locator('.forge-sidebar-action').first().evaluate(element => getComputedStyle(element).clipPath), 'none');
+  assert.equal(await page.locator('.forge-sidebar-action').first().evaluate(element => getComputedStyle(element).clipPath), 'none');
+  assert.notEqual(await page.locator('.forge-sidebar-action > :first-child').first().evaluate(element => getComputedStyle(element).boxShadow), 'none');
+  assert.equal(nativeGeometry.composer[2], 736);
 
-  await enterThreadState(page);
+  const authored = await enterThreadState(page);
   await page.waitForTimeout(180);
   assert.equal(await page.locator('html').getAttribute('data-forge-surface'), 'thread');
   assert.equal(await page.locator('.forge-turn').count(), 2);
-  assert.equal(await page.locator('.forge-user-message').count(), 2);
+  assert.equal(await page.locator('.forge-user-message').count(), 1);
   assert.equal(await page.locator('.forge-assistant-message').count(), 1);
   assert.equal(await page.locator('.forge-code-block').count(), 1);
   assert.deepEqual(await geometry(page), nativeGeometry);
+  assert.deepEqual(await conversationGeometry(page), authored.geometry);
+  assert.equal(await conversationText(page), authored.text);
+  assert.equal(await page.locator('[data-local-conversation-user-anchor].forge-user-message').count(), 0);
+
+  const assistantFrame = await page.locator('.forge-assistant-message').evaluate(element => {
+    const style = getComputedStyle(element);
+    return {
+      backgroundImage: style.backgroundImage,
+      backgroundColor: style.backgroundColor,
+      borderColor: style.borderColor,
+      boxShadow: style.boxShadow
+    };
+  });
+  assert.deepEqual(assistantFrame, {
+    backgroundImage: 'none',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    borderColor: 'rgba(0, 0, 0, 0)',
+    boxShadow: 'none'
+  });
 
   await page.evaluate(RESTORE_EXPRESSION);
   await page.waitForTimeout(150);

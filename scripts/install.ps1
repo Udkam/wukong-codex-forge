@@ -93,7 +93,7 @@ try {
     $state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
     $runtimeState = [pscustomobject]@{
         managedBy = 'WukongCodexForgeRuntime'
-        version = '0.4.0'
+        version = '0.5.0'
         installedAt = (Get-Date).ToString('o')
         appPath = $appTarget
         profilePath = $profilePath
@@ -117,7 +117,7 @@ catch {
     throw
 }
 
-Write-Host "Installed the bright Wukong native baseline and managed style runtime at $target."
+Write-Host "Installed the Six Roots ink-veil Wukong baseline and managed style runtime at $target."
 Write-Host 'No app.asar, WindowsApps package file, Codex executable, sidebar, footer, or in-app theme control was added.'
 if (-not $NoShortcut) { Write-Host "Created launcher: $shortcutPath" }
 if ($codexWasRunning) {

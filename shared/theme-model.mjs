@@ -3,13 +3,13 @@ export const PALETTE_KEYS = ['ink', 'lacquer', 'jade', 'gold', 'paper'];
 export const DEFAULT_THEME = {
   schemaVersion: 2,
   id: 'great-sage-scroll',
-  name: '大圣归来 · 日照云岚',
+  name: '大圣归来 · 六根墨幕',
   palette: {
-    ink: '#2e261c',
-    lacquer: '#8b3e2f',
-    jade: '#627f69',
-    gold: '#b9782d',
-    paper: '#f7eed8'
+    ink: '#d6cfbd',
+    lacquer: '#7f352e',
+    jade: '#596b61',
+    gold: '#a68b58',
+    paper: '#20221e'
   },
   background: {
     mode: 'local',
@@ -17,9 +17,9 @@ export const DEFAULT_THEME = {
     asset: 'assets/great-sage-return.jpg',
     position: 'right center',
     landingPosition: 'right center',
-    dim: 0.48,
-    taskIntensity: 0.32,
-    landingIntensity: 0.92
+    dim: 0.34,
+    taskIntensity: 0.55,
+    landingIntensity: 0.7
   },
   accessibility: {
     preset: 'workbench',

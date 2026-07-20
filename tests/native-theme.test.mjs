@@ -14,8 +14,8 @@ test('native definition stays within the current Codex chrome theme schema', () 
   const identities = definition.settings.map(setting => `${setting.section}.${setting.key}`);
   assert.deepEqual(definition.unsupportedByNativeLoader, ['backgroundImage', 'companion', 'customCss']);
   assert.ok(identities.includes('desktop.appearanceTheme'));
-  assert.ok(identities.includes('desktop.appearanceLightChromeTheme.accent'));
-  assert.ok(identities.includes('desktop.appearanceLightChromeTheme.semanticColors.skill'));
+  assert.ok(identities.includes('desktop.appearanceDarkChromeTheme.accent'));
+  assert.ok(identities.includes('desktop.appearanceDarkChromeTheme.semanticColors.skill'));
   assert.equal(fs.statSync('themes/assets/great-sage-return.jpg').size < 100_000, true);
 });
 
@@ -45,8 +45,8 @@ test('install and uninstall round-trip only managed native appearance values', (
     ''
   ].join('\r\n');
   const applied = applyNativeTheme(original, definition.settings);
-  assert.match(applied.text, /appearanceTheme = "light"/);
-  assert.match(applied.text, /accent = "#9f5f22"/);
+  assert.match(applied.text, /appearanceTheme = "dark"/);
+  assert.match(applied.text, /accent = "#a68b58"/);
   assert.match(applied.text, /ui = "\\"Microsoft YaHei UI\\""/);
   assert.match(applied.text, /\[features\]\r\nmemories = true/);
 
@@ -58,10 +58,10 @@ test('install and uninstall round-trip only managed native appearance values', (
 test('uninstall preserves a managed value changed by the user after install', () => {
   const original = '[desktop]\nappearanceTheme = "system"\n';
   const applied = applyNativeTheme(original, definition.settings);
-  const userChanged = applied.text.replace('accent = "#9f5f22"', 'accent = "#ff00aa"');
+  const userChanged = applied.text.replace('accent = "#a68b58"', 'accent = "#ff00aa"');
   const restored = restoreNativeTheme(userChanged, applied.state);
   assert.match(restored.text, /accent = "#ff00aa"/);
-  assert.ok(restored.warnings.some(warning => warning.includes('appearanceLightChromeTheme.accent')));
+  assert.ok(restored.warnings.some(warning => warning.includes('appearanceDarkChromeTheme.accent')));
   assert.match(restored.text, /appearanceTheme = "system"/);
 });
 
@@ -83,8 +83,8 @@ test('upgrade replaces an older managed theme while preserving the pre-theme bas
   const oldApplied = applyNativeTheme(original, legacy);
   const upgraded = upgradeNativeTheme(oldApplied.text, oldApplied.state, definition.settings);
   assert.deepEqual(upgraded.warnings, []);
-  assert.match(upgraded.text, /appearanceTheme = "light"/);
-  assert.match(upgraded.text, /accent = "#9f5f22"/);
+  assert.match(upgraded.text, /appearanceTheme = "dark"/);
+  assert.match(upgraded.text, /accent = "#a68b58"/);
   const restored = restoreNativeTheme(upgraded.text, upgraded.state);
   assert.deepEqual(restored.warnings, []);
   assert.equal(restored.text, original);

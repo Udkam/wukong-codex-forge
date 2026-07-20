@@ -1,72 +1,67 @@
-/* Wukong Codex Forge — bright managed visual layer. No host geometry or controls. */
+/* Wukong Codex Forge — Six Roots ink-veil system. No host geometry or copy changes. */
 :root.forge-ink-mountain {
-  color-scheme: light;
-  --forge-ink: #2e261c;
-  --forge-ink-soft: #514333;
-  --forge-lacquer: #8b3e2f;
-  --forge-jade: #627f69;
-  --forge-gold: #b9782d;
-  --forge-gold-light: #dcad61;
-  --forge-ember: #b94f36;
-  --forge-paper: #f7eed8;
-  --forge-paper-solid: #f2e4c5;
-  --forge-mist: #817462;
-  --forge-line: color-mix(in srgb, var(--forge-gold) 32%, transparent);
-  --forge-hairline: color-mix(in srgb, var(--forge-jade) 24%, transparent);
-  --forge-serif: "STKaiti", "KaiTi", "FangSong", "Noto Serif SC", serif;
-  --forge-sans: "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+  --forge-ink: #d6cfbd;
+  --forge-ink-soft: #a9a18f;
+  --forge-lacquer: #7f352e;
+  --forge-jade: #596b61;
+  --forge-gold: #a68b58;
+  --forge-gold-light: #d1bd8e;
+  --forge-paper: #20221e;
+  --forge-panel: #1b1c18;
+  --forge-panel-soft: #282821;
+  --forge-ash: #77766d;
+  --forge-line: color-mix(in srgb, var(--forge-gold) 34%, transparent);
   --forge-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
 
-  /* Keep native token consumers coherent while the style layer reshapes surfaces. */
-  --color-token-bg-primary: #f6edd9;
-  --color-token-bg-secondary: #efe2c7;
-  --color-token-bg-tertiary: #e7d6b4;
+  --color-token-bg-primary: #20211d;
+  --color-token-bg-secondary: #272821;
+  --color-token-bg-tertiary: #303128;
   --color-token-main-surface-primary: transparent;
-  --color-token-side-bar-background: rgba(246, 237, 216, .96);
-  --color-token-input-background: rgba(255, 251, 239, .96);
-  --color-token-input-border: rgba(158, 101, 35, .38);
-  --color-token-menu-background: #fff9ea;
-  --color-token-menu-border: rgba(158, 101, 35, .28);
-  --color-token-dropdown-background: #fff9ea;
-  --color-token-border: rgba(100, 88, 66, .2);
-  --color-token-border-default: rgba(100, 88, 66, .2);
-  --color-token-border-light: rgba(100, 88, 66, .12);
-  --color-token-border-heavy: rgba(158, 101, 35, .34);
+  --color-token-side-bar-background: rgba(27, 28, 24, .96);
+  --color-token-input-background: rgba(28, 29, 25, .96);
+  --color-token-input-border: transparent;
+  --color-token-menu-background: #24251f;
+  --color-token-menu-border: rgba(166, 139, 88, .2);
+  --color-token-dropdown-background: #24251f;
+  --color-token-border: rgba(166, 157, 135, .16);
+  --color-token-border-default: rgba(166, 157, 135, .16);
+  --color-token-border-light: rgba(166, 157, 135, .09);
+  --color-token-border-heavy: rgba(166, 139, 88, .28);
   --color-token-foreground: var(--forge-ink);
   --color-token-text-primary: var(--forge-ink);
-  --color-token-text-secondary: #665a49;
-  --color-token-text-tertiary: #8a7b67;
-  --color-token-description-foreground: #756957;
-  --color-token-conversation-body: #352d23;
-  --color-token-conversation-header: #2a231b;
-  --color-token-text-code-block-background: #2e2a24;
-  --color-token-text-preformat-background: rgba(185, 120, 45, .12);
-  --color-token-list-hover-background: rgba(185, 120, 45, .11);
-  --color-token-list-active-selection-background: rgba(98, 127, 105, .18);
-  --color-token-toolbar-hover-background: rgba(185, 120, 45, .12);
-  --color-token-focus-border: var(--forge-gold);
-  --color-token-link: #8d501f;
-  --color-token-scrollbar-slider-background: rgba(98, 127, 105, .3);
-  --color-token-scrollbar-slider-hover-background: rgba(185, 120, 45, .44);
+  --color-token-text-secondary: #aaa391;
+  --color-token-text-tertiary: #79796f;
+  --color-token-description-foreground: #8b897d;
+  --color-token-conversation-body: #d0cab9;
+  --color-token-conversation-header: #ddd5c1;
+  --color-token-text-code-block-background: rgba(15, 16, 14, .9);
+  --color-token-text-preformat-background: rgba(166, 139, 88, .1);
+  --color-token-list-hover-background: rgba(214, 207, 189, .055);
+  --color-token-list-active-selection-background: rgba(166, 139, 88, .1);
+  --color-token-toolbar-hover-background: rgba(166, 139, 88, .1);
+  --color-token-focus-border: var(--forge-gold-light);
+  --color-token-link: #c7ad78;
+  --color-token-scrollbar-slider-background: rgba(89, 107, 97, .38);
+  --color-token-scrollbar-slider-hover-background: rgba(166, 139, 88, .46);
 }
 
 :root.forge-ink-mountain,
 :root.forge-ink-mountain body,
 :root.forge-ink-mountain #root {
-  background-color: #ecddbd !important;
+  background-color: #20211d !important;
   color: var(--forge-ink) !important;
 }
 
 :root.forge-ink-mountain body {
   background-image:
-    radial-gradient(circle at 74% 88%, rgba(185, 79, 54, .1), transparent 26%),
+    radial-gradient(circle at 72% 88%, rgba(127, 53, 46, .12), transparent 28%),
     linear-gradient(var(--forge-task-wash), var(--forge-task-wash)),
     var(--forge-bg) !important;
   background-position: center, center, var(--forge-position) !important;
   background-size: cover !important;
   background-repeat: no-repeat !important;
   background-attachment: fixed !important;
-  font-family: var(--forge-sans) !important;
 }
 
 :root.forge-ink-mountain body::after {
@@ -76,59 +71,53 @@
   inset: 0;
   pointer-events: none;
   background:
-    repeating-linear-gradient(104deg, rgba(75, 55, 31, .024) 0 1px, transparent 1px 5px),
-    radial-gradient(circle at 50% 38%, transparent 42%, rgba(104, 73, 39, .09) 100%);
-  mix-blend-mode: multiply;
-  opacity: .62;
+    repeating-linear-gradient(103deg, rgba(230, 218, 190, .012) 0 1px, transparent 1px 6px),
+    radial-gradient(circle at 52% 38%, transparent 42%, rgba(12, 13, 11, .24) 100%);
+  mix-blend-mode: soft-light;
+  opacity: .34;
 }
 
 :root.forge-ink-mountain[data-forge-surface="landing"] body {
   background-image:
-    linear-gradient(90deg, rgba(250, 244, 227, .94) 0%, rgba(250, 244, 227, .62) 32%, rgba(250, 244, 227, .08) 69%, rgba(250, 244, 227, .18) 100%),
+    linear-gradient(90deg, rgba(22, 23, 20, .6) 0%, rgba(22, 23, 20, .3) 30%, rgba(22, 23, 20, .025) 68%, rgba(22, 23, 20, .18) 100%),
     linear-gradient(var(--forge-landing-wash), var(--forge-landing-wash)),
     var(--forge-bg) !important;
   background-position: center, center, var(--forge-landing-position) !important;
 }
 
+/* The chrome is an ink veil, not a framed card system. */
 :root.forge-ink-mountain .forge-topbar {
   background:
-    linear-gradient(90deg, var(--forge-lacquer) 0 72px, var(--forge-gold) 72px 180px, transparent 180px) bottom / 100% 2px no-repeat,
-    linear-gradient(90deg, rgba(139, 62, 47, .1), transparent 7%, transparent 86%, rgba(185, 120, 45, .12)),
-    repeating-linear-gradient(112deg, rgba(93, 65, 34, .018) 0 1px, transparent 1px 5px),
-    linear-gradient(90deg, rgba(255, 251, 240, .99), rgba(242, 226, 196, .98) 72%, rgba(255, 251, 240, .99)) !important;
-  border-color: var(--forge-line) !important;
-  color: var(--forge-ink) !important;
-  box-shadow:
-    inset 0 -1px var(--forge-gold),
-    0 7px 24px rgba(91, 58, 25, .08) !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar,
-:root.forge-ink-mountain .forge-right-panel {
-  background:
-    radial-gradient(circle at 0 0, rgba(185, 120, 45, .13), transparent 19%),
-    repeating-linear-gradient(116deg, transparent 0 11px, rgba(95, 66, 34, .025) 11px 12px),
-    linear-gradient(180deg, rgba(251, 246, 232, .99), rgba(236, 221, 190, .985)) !important;
-  border-color: var(--forge-line) !important;
-  color: var(--forge-ink) !important;
+    linear-gradient(90deg, transparent 0 3%, rgba(166, 139, 88, .42) 15%, rgba(166, 139, 88, .1) 54%, transparent 88%) bottom / 100% 1px no-repeat,
+    linear-gradient(90deg, rgba(27, 28, 24, .99), rgba(31, 32, 27, .97)) !important;
+  border-color: transparent !important;
+  color: var(--forge-ink-soft) !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar {
-  box-shadow:
-    inset -1px 0 var(--forge-gold),
-    inset -4px 0 rgba(139, 62, 47, .12),
-    12px 0 30px rgba(91, 58, 25, .08) !important;
+  background:
+    radial-gradient(ellipse at 18% 9%, rgba(166, 139, 88, .08), transparent 30%),
+    linear-gradient(90deg, rgba(24, 25, 21, .995) 0%, rgba(29, 30, 25, .97) 82%, rgba(29, 30, 25, .76) 94%, rgba(29, 30, 25, .2) 100%) !important;
+  border-color: transparent !important;
+  color: var(--forge-ink) !important;
+  box-shadow: inset -1px 0 rgba(166, 139, 88, .15) !important;
 }
 
 :root.forge-ink-mountain .forge-right-panel {
-  box-shadow: inset 1px 0 var(--forge-gold), inset 4px 0 rgba(98, 127, 105, .11) !important;
+  background:
+    radial-gradient(ellipse at 82% 10%, rgba(127, 53, 46, .07), transparent 31%),
+    linear-gradient(270deg, rgba(24, 25, 21, .995) 0%, rgba(29, 30, 25, .97) 82%, rgba(29, 30, 25, .76) 94%, rgba(29, 30, 25, .2) 100%) !important;
+  border-color: transparent !important;
+  color: var(--forge-ink) !important;
+  box-shadow: inset 1px 0 rgba(166, 139, 88, .15) !important;
 }
 
 :root.forge-ink-mountain .forge-workspace {
   isolation: isolate;
   background-color: transparent !important;
   background-image:
-    radial-gradient(circle at 70% 82%, rgba(185, 79, 54, .09), transparent 24%),
+    radial-gradient(circle at 73% 87%, rgba(127, 53, 46, .1), transparent 27%),
     linear-gradient(var(--forge-task-wash), var(--forge-task-wash)),
     var(--forge-bg) !important;
   background-position: center, center, var(--forge-position) !important;
@@ -139,7 +128,7 @@
 
 :root.forge-ink-mountain[data-forge-surface="landing"] .forge-workspace {
   background-image:
-    linear-gradient(90deg, rgba(250, 244, 227, .93) 0%, rgba(250, 244, 227, .55) 34%, rgba(250, 244, 227, .06) 70%, rgba(250, 244, 227, .13) 100%),
+    linear-gradient(90deg, rgba(22, 23, 20, .58) 0%, rgba(22, 23, 20, .28) 30%, rgba(22, 23, 20, .02) 68%, rgba(22, 23, 20, .16) 100%),
     linear-gradient(var(--forge-landing-wash), var(--forge-landing-wash)),
     var(--forge-bg) !important;
   background-position: center, center, var(--forge-landing-position) !important;
@@ -153,284 +142,291 @@
 }
 
 :root.forge-ink-mountain .forge-taskbar {
-  border-color: rgba(185, 120, 45, .3) !important;
+  border-color: transparent !important;
   background:
-    linear-gradient(90deg, var(--forge-lacquer) 0 56px, var(--forge-gold) 56px 148px, transparent 148px) bottom / 100% 2px no-repeat,
-    linear-gradient(90deg, rgba(255, 251, 239, .94), rgba(238, 219, 183, .86)) !important;
+    linear-gradient(90deg, rgba(166, 139, 88, .55), rgba(166, 139, 88, .08) 28%, transparent 62%) bottom / 100% 1px no-repeat,
+    linear-gradient(90deg, rgba(25, 26, 22, .9), rgba(25, 26, 22, .68) 72%, rgba(25, 26, 22, .3)) !important;
   color: var(--forge-ink-soft) !important;
-  box-shadow: inset 0 -1px rgba(185, 120, 45, .18), 0 8px 18px rgba(91, 58, 25, .06) !important;
-  font-family: var(--forge-serif) !important;
+  box-shadow: none !important;
 }
 
+/* Landing signature: the original title sits over a Six Roots radial seal. */
 :root.forge-ink-mountain .forge-landing-hero {
+  position: relative !important;
   color: var(--forge-ink) !important;
-  text-shadow: 0 1px rgba(255, 252, 242, .95), 0 8px 28px rgba(70, 45, 24, .2);
+  text-shadow: 0 2px 18px rgba(8, 9, 7, .82);
 }
 
 :root.forge-ink-mountain .forge-landing-title {
-  color: color-mix(in srgb, var(--forge-lacquer) 78%, var(--forge-ink)) !important;
-  font-family: var(--forge-serif) !important;
-  font-weight: 700 !important;
-  letter-spacing: .09em !important;
-  text-decoration: underline;
-  text-decoration-color: rgba(185, 120, 45, .48);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 12px;
+  position: relative !important;
+  z-index: 1;
+  color: #e0d5bc !important;
+  text-shadow: 0 2px 16px rgba(7, 8, 6, .88);
+}
+
+:root.forge-ink-mountain .forge-landing-title::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: 208px;
+  height: 208px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 0 38%, rgba(166, 139, 88, .36) 38.4% 39%, transparent 39.5% 48%, rgba(127, 53, 46, .28) 48.4% 49%, transparent 49.5%),
+    repeating-conic-gradient(from -2deg, transparent 0 13deg, rgba(166, 139, 88, .24) 13.4deg 14deg, transparent 14.4deg 30deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 34%, #000 35% 55%, transparent 56%);
+  mask: radial-gradient(circle, transparent 0 34%, #000 35% 55%, transparent 56%);
+  transform: translate(-50%, -50%) rotate(-6deg);
+  opacity: .9;
+  pointer-events: none;
+}
+
+:root.forge-ink-mountain .forge-landing-title::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: calc(50% + 40px);
+  left: 50%;
+  width: 290px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(214, 207, 189, .2) 20%, rgba(166, 139, 88, .66) 50%, rgba(214, 207, 189, .2) 80%, transparent);
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 :root.forge-ink-mountain .forge-landing-hero :is(small, p) {
-  color: var(--forge-ink-soft) !important;
+  color: #b3aa96 !important;
 }
 
 :root.forge-ink-mountain .forge-landing-hero small {
-  color: var(--forge-lacquer) !important;
+  color: #b99a62 !important;
 }
 
+/* Navigation behaves like the game's borderless result/menu list. */
 :root.forge-ink-mountain .forge-sidebar-action,
 :root.forge-ink-mountain .forge-button,
 :root.forge-ink-mountain .forge-composer-button {
-  border-color: transparent !important;
   color: var(--forge-ink-soft) !important;
-  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease !important;
+  transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, opacity 150ms ease !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-action {
   position: relative !important;
-  overflow: hidden !important;
-  border: 0 !important;
-  border-bottom: 1px solid rgba(185, 120, 45, .16) !important;
+  border-color: transparent !important;
   border-radius: 0 !important;
-  background:
-    radial-gradient(ellipse at 8% 50%, rgba(98, 127, 105, .13), transparent 34%),
-    linear-gradient(96deg, rgba(255, 252, 242, .72), rgba(235, 220, 188, .24) 66%, transparent) !important;
-  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
-  box-shadow: inset 2px 0 rgba(98, 127, 105, .26) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  clip-path: none !important;
 }
 
-:root.forge-ink-mountain .forge-sidebar-action::before {
+:root.forge-ink-mountain .forge-sidebar-action > :first-child {
+  border-radius: 50% !important;
+  background: radial-gradient(circle, rgba(166, 139, 88, .16) 0 24%, transparent 27%) !important;
+  box-shadow: inset 0 0 0 1px rgba(166, 139, 88, .38) !important;
+  color: #c8b787 !important;
+  text-align: center !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-action::after {
   content: "";
   position: absolute;
-  top: calc(50% - 3px);
-  bottom: auto;
-  left: 0;
-  width: 6px;
-  height: 6px;
+  right: 9px;
+  bottom: 1px;
+  left: 31px;
+  height: 1px;
   pointer-events: none;
-  background: var(--forge-jade);
-  box-shadow: 0 0 0 1px rgba(255, 250, 234, .74), 0 0 0 2px rgba(98, 127, 105, .22);
-  transform: translateX(-3px) rotate(45deg);
-  opacity: .78;
+  background: linear-gradient(90deg, rgba(214, 207, 189, .13), rgba(166, 139, 88, .22), transparent);
+  opacity: .62;
 }
 
 :root.forge-ink-mountain .forge-sidebar-action:hover,
 :root.forge-ink-mountain .forge-button:hover,
 :root.forge-ink-mountain .forge-composer-button:hover {
-  border-color: rgba(185, 120, 45, .42) !important;
-  background:
-    radial-gradient(ellipse at 8% 50%, rgba(139, 62, 47, .17), transparent 34%),
-    linear-gradient(96deg, rgba(250, 218, 160, .52), rgba(255, 249, 232, .72) 72%, transparent) !important;
-  color: var(--forge-lacquer) !important;
+  border-color: transparent !important;
+  background: radial-gradient(ellipse at 16% 50%, rgba(166, 139, 88, .14), rgba(214, 207, 189, .045) 34%, transparent 76%) !important;
+  color: #ddd3bb !important;
 }
 
 :root.forge-ink-mountain .forge-new-task {
-  border: 1px solid rgba(139, 62, 47, .46) !important;
-  border-radius: 1px !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
   background:
-    linear-gradient(90deg, var(--forge-lacquer) 0 5px, var(--forge-gold-light) 5px 8px, transparent 8px),
-    radial-gradient(circle at 88% 50%, rgba(139, 62, 47, .14), transparent 26%),
-    linear-gradient(102deg, rgba(255, 238, 198, .98), rgba(255, 249, 230, .96) 58%, rgba(215, 227, 207, .7)) !important;
-  color: color-mix(in srgb, var(--forge-lacquer) 82%, var(--forge-ink)) !important;
-  box-shadow:
-    inset 0 2px rgba(220, 173, 97, .7),
-    inset 0 -2px rgba(139, 62, 47, .18),
-    0 8px 20px rgba(91, 58, 25, .1) !important;
-  clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
-  font-family: var(--forge-serif) !important;
-  font-weight: 700 !important;
-  letter-spacing: .05em !important;
+    radial-gradient(ellipse at 13% 50%, rgba(127, 53, 46, .27), transparent 31%),
+    linear-gradient(90deg, rgba(166, 139, 88, .12), rgba(214, 207, 189, .035) 55%, transparent) !important;
+  box-shadow: inset 2px 0 var(--forge-lacquer), inset 3px 0 rgba(166, 139, 88, .65), inset 0 -1px rgba(166, 139, 88, .2) !important;
+  clip-path: none !important;
+  color: #dfd3ba !important;
 }
 
-:root.forge-ink-mountain .forge-new-task::before {
-  top: calc(50% - 4px);
-  width: 8px;
-  height: 8px;
-  background: var(--forge-lacquer);
-  box-shadow: 0 0 0 2px rgba(255, 239, 203, .8), 0 0 0 3px var(--forge-gold);
-  opacity: 1;
+:root.forge-ink-mountain .forge-new-task > :first-child {
+  background: radial-gradient(circle, rgba(127, 53, 46, .82) 0 23%, transparent 26%) !important;
+  box-shadow: inset 0 0 0 1px rgba(209, 189, 142, .7), inset 0 0 0 4px rgba(27, 28, 24, .76) !important;
 }
 
 :root.forge-ink-mountain .forge-project-active {
-  background:
-    radial-gradient(ellipse at 12% 50%, rgba(139, 62, 47, .2), transparent 42%),
-    linear-gradient(96deg, rgba(220, 173, 97, .5), rgba(214, 229, 211, .72) 64%, transparent 94%) !important;
-  color: var(--forge-lacquer) !important;
-  box-shadow: inset 4px 0 var(--forge-lacquer), inset 0 -1px rgba(185, 120, 45, .54) !important;
-  font-family: var(--forge-serif) !important;
-  font-weight: 700 !important;
+  position: relative !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  background: linear-gradient(90deg, rgba(214, 207, 189, .1), rgba(166, 139, 88, .07) 58%, transparent 94%) !important;
+  color: #e0d7c4 !important;
+  box-shadow: inset 0 -1px rgba(166, 139, 88, .5) !important;
+}
+
+:root.forge-ink-mountain .forge-project-active::before {
+  content: "";
+  position: absolute;
+  top: calc(50% - 2px);
+  left: 11px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--forge-gold-light);
+  box-shadow: 6px 0 var(--forge-gold), 3px -5px rgba(214, 207, 189, .76), 3px 5px rgba(127, 53, 46, .86), 9px -5px rgba(166, 139, 88, .64), 9px 5px rgba(166, 139, 88, .64);
+  opacity: .88;
+  pointer-events: none;
 }
 
 :root.forge-ink-mountain .forge-sidebar :is(h1, h2, h3, p) {
-  color: color-mix(in srgb, var(--forge-lacquer) 72%, var(--forge-ink-soft)) !important;
-  font-family: var(--forge-serif) !important;
-  letter-spacing: .12em !important;
+  color: #858277 !important;
 }
 
+/* Composer: a floating ink altar with a single staff line, never resized. */
 :root.forge-ink-mountain .forge-composer {
-  overflow: visible !important;
-  border: 1px solid rgba(139, 62, 47, .52) !important;
-  border-radius: 0 !important;
+  border-color: transparent !important;
+  border-radius: 18px 8px !important;
   background:
-    linear-gradient(90deg, transparent 0 10%, var(--forge-gold) 10% 72%, var(--forge-lacquer) 72% 90%, transparent 90%) top / 100% 2px no-repeat,
-    linear-gradient(270deg, transparent 0 10%, var(--forge-gold) 10% 72%, var(--forge-lacquer) 72% 90%, transparent 90%) bottom / 100% 2px no-repeat,
-    linear-gradient(90deg, var(--forge-lacquer) 0 4px, var(--forge-gold-light) 4px 8px, transparent 8px calc(100% - 8px), var(--forge-gold-light) calc(100% - 8px) calc(100% - 4px), var(--forge-lacquer) calc(100% - 4px)),
-    radial-gradient(circle at 86% 8%, rgba(220, 173, 97, .22), transparent 34%),
-    repeating-linear-gradient(108deg, rgba(92, 66, 38, .022) 0 1px, transparent 1px 5px),
-    linear-gradient(180deg, rgba(255, 252, 240, .985), rgba(239, 220, 181, .97)) !important;
+    linear-gradient(90deg, transparent, rgba(166, 139, 88, .42) 18%, rgba(127, 53, 46, .62) 72%, transparent) top / calc(100% - 52px) 1px no-repeat,
+    radial-gradient(ellipse at 0 0, rgba(166, 139, 88, .13), transparent 28%),
+    radial-gradient(ellipse at 100% 100%, rgba(127, 53, 46, .16), transparent 27%),
+    linear-gradient(180deg, rgba(24, 25, 21, .96), rgba(35, 35, 29, .97)) !important;
   box-shadow:
-    0 20px 48px rgba(93, 60, 27, .2),
-    inset 0 0 0 4px rgba(255, 249, 231, .7),
-    inset 11px 0 rgba(139, 62, 47, .08),
-    inset -11px 0 rgba(185, 120, 45, .08) !important;
-  clip-path: polygon(12px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 18px 100%, 0 calc(100% - 18px), 0 8px);
-  filter: drop-shadow(0 11px 18px rgba(93, 60, 27, .12));
+    0 18px 46px rgba(5, 6, 5, .34),
+    inset 0 -1px rgba(166, 139, 88, .44),
+    inset 0 1px rgba(214, 207, 189, .07) !important;
+  clip-path: none !important;
 }
 
 :root.forge-ink-mountain .forge-composer:focus-within {
-  border-color: var(--forge-lacquer) !important;
+  border-color: transparent !important;
   box-shadow:
-    0 0 0 3px rgba(185, 120, 45, .2),
-    0 22px 52px rgba(93, 60, 27, .22),
-    inset 0 0 0 4px rgba(255, 249, 231, .74),
-    inset 11px 0 rgba(139, 62, 47, .12),
-    inset -11px 0 rgba(185, 120, 45, .12) !important;
+    0 0 0 1px rgba(166, 139, 88, .22),
+    0 18px 46px rgba(5, 6, 5, .38),
+    inset 0 -1px rgba(209, 189, 142, .62),
+    inset 0 1px rgba(214, 207, 189, .1) !important;
 }
 
 :root.forge-ink-mountain .forge-input {
   background: transparent !important;
   color: var(--forge-ink) !important;
-  caret-color: var(--forge-lacquer) !important;
-  font-family: var(--forge-serif) !important;
-  letter-spacing: .025em !important;
+  caret-color: var(--forge-gold-light) !important;
 }
 
 :root.forge-ink-mountain .forge-input::placeholder {
-  color: color-mix(in srgb, var(--forge-mist) 72%, transparent) !important;
+  color: #7f7e74 !important;
 }
 
 :root.forge-ink-mountain .forge-composer-button {
-  border: 1px solid rgba(139, 62, 47, .28) !important;
+  border-color: transparent !important;
   border-radius: 0 !important;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(255, 251, 238, .94) 0 52%, transparent 53%),
-    linear-gradient(145deg, rgba(220, 173, 97, .5), rgba(98, 127, 105, .28)) !important;
-  clip-path: polygon(25% 0, 75% 0, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0 75%, 0 25%);
-  color: var(--forge-lacquer) !important;
-  font-family: var(--forge-serif) !important;
+  background: linear-gradient(145deg, rgba(214, 207, 189, .14), rgba(89, 107, 97, .08)) !important;
+  clip-path: polygon(50% 0, 91% 21%, 100% 69%, 72% 100%, 23% 91%, 0 49%, 18% 12%);
+  color: #c7bea9 !important;
+  box-shadow: inset 0 0 0 1px rgba(166, 139, 88, .16) !important;
 }
 
 :root.forge-ink-mountain .forge-composer button[type="submit"],
 :root.forge-ink-mountain .forge-composer-button[aria-label*="Send"],
 :root.forge-ink-mountain .forge-composer-button[aria-label*="发送"] {
-  border: 2px solid var(--forge-gold-light) !important;
+  border-color: transparent !important;
   border-radius: 50% !important;
   background:
-    radial-gradient(circle at 38% 30%, #c86e55 0 9%, transparent 10%),
-    linear-gradient(145deg, #a74d3a, #7f3529) !important;
-  color: #fff5dc !important;
-  clip-path: none;
-  box-shadow:
-    0 0 0 1px var(--forge-lacquer),
-    0 7px 16px rgba(111, 65, 23, .24),
-    inset 0 1px rgba(255, 255, 255, .32) !important;
+    radial-gradient(circle, #b27c3f 0 14%, #7e3b2f 16% 42%, #24251f 44% 61%, #a68b58 63% 67%, #292a23 69%) !important;
+  color: #eee2ca !important;
+  clip-path: none !important;
+  box-shadow: 0 0 16px rgba(178, 124, 63, .2), inset 0 0 0 1px rgba(209, 189, 142, .48) !important;
 }
 
-:root.forge-ink-mountain .forge-turn {
-  border: 1px solid rgba(98, 127, 105, .24) !important;
-  border-inline-start: 4px double var(--forge-gold) !important;
-  border-radius: 1px !important;
-  background:
-    linear-gradient(90deg, rgba(139, 62, 47, .07), transparent 12%),
-    repeating-linear-gradient(108deg, rgba(92, 66, 38, .018) 0 1px, transparent 1px 5px),
-    linear-gradient(100deg, rgba(255, 251, 239, .9), rgba(239, 224, 195, .72)) !important;
-  box-shadow: inset 0 0 0 3px rgba(255, 250, 236, .48), 0 10px 28px rgba(91, 58, 25, .09) !important;
-  clip-path: polygon(8px 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%, 0 8px);
+/* Authored content remains untouched. Assistant prose is always frameless. */
+:root.forge-ink-mountain .forge-turn,
+:root.forge-ink-mountain .forge-assistant-message {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  clip-path: none !important;
+  filter: none !important;
 }
 
 :root.forge-ink-mountain .forge-user-message {
-  border: 1px solid rgba(139, 62, 47, .38) !important;
-  border-radius: 1px !important;
+  border-color: transparent !important;
+  border-radius: 18px 6px 18px 18px !important;
   background:
-    linear-gradient(90deg, var(--forge-lacquer) 0 4px, var(--forge-gold-light) 4px 7px, transparent 7px),
-    linear-gradient(120deg, rgba(255, 226, 174, .96), rgba(243, 237, 210, .93)) !important;
-  color: var(--forge-ink) !important;
-  box-shadow: inset -3px 0 rgba(139, 62, 47, .22), 0 10px 26px rgba(91, 58, 25, .11) !important;
-  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 8px);
-  font-family: var(--forge-serif) !important;
-}
-
-:root.forge-ink-mountain .forge-assistant-message {
-  border-inline-start: 3px double var(--forge-jade) !important;
-  background:
-    linear-gradient(90deg, rgba(98, 127, 105, .18), rgba(255, 250, 236, .58) 42%, transparent) !important;
+    radial-gradient(ellipse at 100% 12%, rgba(127, 53, 46, .24), transparent 33%),
+    radial-gradient(ellipse at 18% 52%, rgba(166, 139, 88, .11), transparent 48%),
+    rgba(29, 30, 25, .9) !important;
+  color: #ddd5c3 !important;
+  box-shadow: inset -2px 0 rgba(127, 53, 46, .64), inset 0 -1px rgba(166, 139, 88, .24), 0 8px 24px rgba(4, 5, 4, .2) !important;
+  clip-path: none !important;
 }
 
 :root.forge-ink-mountain .forge-code-block {
-  border: 1px solid rgba(92, 76, 56, .3) !important;
-  border-inline-start: 3px solid rgba(185, 120, 45, .82) !important;
-  border-radius: 1px !important;
+  border-color: transparent !important;
+  border-radius: 2px !important;
   background:
-    linear-gradient(135deg, rgba(45, 42, 36, .98), rgba(58, 52, 43, .97)) !important;
-  color: #f3ead7 !important;
-  box-shadow: 0 14px 32px rgba(72, 50, 28, .16), inset 0 1px rgba(255, 255, 255, .05) !important;
+    linear-gradient(90deg, rgba(166, 139, 88, .72), rgba(166, 139, 88, .08) 3px, transparent 3px),
+    rgba(13, 14, 12, .88) !important;
+  color: #d4cebc !important;
+  box-shadow: inset 0 1px rgba(214, 207, 189, .05), inset 0 -1px rgba(166, 139, 88, .16) !important;
   font-family: var(--forge-mono) !important;
-  clip-path: polygon(7px 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%, 0 7px);
+  clip-path: none !important;
 }
 
-:root.forge-ink-mountain .forge-right-card,
-:root.forge-ink-mountain .forge-dialog,
-:root.forge-ink-mountain .forge-menu {
-  border: 1px solid rgba(139, 62, 47, .36) !important;
-  border-radius: 1px !important;
+/* Environment/menu surfaces use a fading information veil instead of a box. */
+:root.forge-ink-mountain .forge-right-card {
+  border-color: transparent !important;
+  border-radius: 0 !important;
   background:
-    linear-gradient(90deg, var(--forge-lacquer) 0 3px, var(--forge-gold) 3px 6px, transparent 6px calc(100% - 6px), var(--forge-gold) calc(100% - 6px) calc(100% - 3px), var(--forge-lacquer) calc(100% - 3px)),
-    linear-gradient(180deg, var(--forge-gold) 0 2px, transparent 2px calc(100% - 2px), var(--forge-jade) calc(100% - 2px)),
-    repeating-linear-gradient(108deg, rgba(92, 66, 38, .022) 0 1px, transparent 1px 5px),
-    linear-gradient(155deg, rgba(255, 251, 239, .98), rgba(232, 218, 188, .97)) !important;
+    radial-gradient(ellipse at 86% 8%, rgba(166, 139, 88, .09), transparent 30%),
+    linear-gradient(180deg, rgba(29, 30, 25, .94), rgba(23, 24, 21, .86)) !important;
   color: var(--forge-ink) !important;
-  box-shadow:
-    0 18px 42px rgba(88, 57, 26, .15),
-    inset 0 0 0 4px rgba(255, 248, 230, .64),
-    inset 0 1px rgba(255, 255, 255, .82) !important;
-  clip-path: polygon(10px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 10px);
+  box-shadow: inset 2px 0 rgba(127, 53, 46, .56), inset 3px 0 rgba(166, 139, 88, .42), inset 0 -1px rgba(166, 139, 88, .22) !important;
+  clip-path: none !important;
 }
 
 :root.forge-ink-mountain .forge-right-card :is(h1, h2, h3, h4) {
-  color: var(--forge-lacquer) !important;
-  font-family: var(--forge-serif) !important;
-  letter-spacing: .08em !important;
+  color: #c4ac7b !important;
+}
+
+:root.forge-ink-mountain .forge-dialog,
+:root.forge-ink-mountain .forge-menu {
+  border-color: rgba(166, 139, 88, .22) !important;
+  background:
+    radial-gradient(ellipse at 12% 8%, rgba(166, 139, 88, .1), transparent 34%),
+    rgba(28, 29, 24, .98) !important;
+  color: var(--forge-ink) !important;
+  box-shadow: 0 20px 54px rgba(4, 5, 4, .42), inset 0 1px rgba(214, 207, 189, .06) !important;
 }
 
 :root.forge-ink-mountain .forge-menu [role^="menuitem"]:hover {
-  background:
-    linear-gradient(90deg, rgba(139, 62, 47, .12), rgba(239, 202, 139, .48), rgba(196, 215, 194, .38)) !important;
+  background: linear-gradient(90deg, rgba(166, 139, 88, .14), rgba(127, 53, 46, .08), transparent) !important;
 }
 
 :root.forge-ink-mountain .forge-button:focus-visible,
 :root.forge-ink-mountain .forge-sidebar-action:focus-visible,
 :root.forge-ink-mountain .forge-composer-button:focus-visible {
-  outline: 2px solid var(--forge-lacquer) !important;
+  outline: 2px solid var(--forge-gold-light) !important;
   outline-offset: 2px !important;
 }
 
-:root.forge-ink-mountain *::-webkit-scrollbar { width: 9px; height: 9px; }
-:root.forge-ink-mountain *::-webkit-scrollbar-track { background: rgba(233, 218, 187, .72); }
+:root.forge-ink-mountain *::-webkit-scrollbar-track { background: rgba(22, 23, 20, .68); }
 :root.forge-ink-mountain *::-webkit-scrollbar-thumb {
-  border: 3px solid rgba(243, 233, 211, .94);
+  border: 3px solid rgba(31, 32, 27, .9);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--forge-jade) 62%, var(--forge-paper-solid));
+  background: color-mix(in srgb, var(--forge-jade) 68%, var(--forge-panel-soft));
 }
 :root.forge-ink-mountain *::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--forge-gold) 64%, var(--forge-paper-solid));
+  background: color-mix(in srgb, var(--forge-gold) 62%, var(--forge-panel-soft));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -449,5 +445,7 @@
   :root.forge-ink-mountain .forge-workspace {
     background-image: none !important;
   }
-  :root.forge-ink-mountain body::after { display: none !important; }
+  :root.forge-ink-mountain body::after,
+  :root.forge-ink-mountain .forge-landing-title::before,
+  :root.forge-ink-mountain .forge-landing-title::after { display: none !important; }
 }

@@ -25,11 +25,11 @@ export const runtimeFixtureHtml = String.raw`
     .landing-native h1 { margin: 12px 0 8px; font-size: 31px; font-weight: 600; }
     .landing-native p { color: #aaa; }
     [data-thread-find-target="conversation"] { width: min(760px, calc(100% - 76px)); margin: 62px auto 150px; }
-    [data-virtualized-turn-content] { margin-bottom: 19px; padding: 15px 18px; border: 1px solid #333; border-radius: 13px; background: #262626; }
+    [data-virtualized-turn-content] { margin-bottom: 19px; }
     [data-user-message-bubble] { margin-left: auto; width: fit-content; max-width: 72%; padding: 10px 13px; border-radius: 15px; background: #2d2d2d; }
-    [data-local-conversation-final-assistant] { padding: 12px 16px; }
+    [data-local-conversation-final-assistant] { padding: 12px 0; }
     pre { margin: 10px 0 2px; padding: 12px; border: 1px solid #383838; border-radius: 7px; background: #171717; }
-    form { position: absolute; right: 34px; bottom: 20px; left: 34px; min-height: 96px; padding: 11px 13px 8px; border: 1px solid #414141; border-radius: 17px; background: #2c2c2c; box-shadow: 0 12px 34px rgba(0,0,0,.24); }
+    form { position: absolute; bottom: 20px; left: 50%; width: min(736px, calc(100% - 68px)); min-height: 96px; padding: 11px 13px 8px; border: 1px solid #414141; border-radius: 17px; background: #2c2c2c; box-shadow: 0 12px 34px rgba(0,0,0,.24); transform: translateX(-50%); }
     textarea { width: 100%; height: 48px; resize: none; border: 0; outline: 0; background: transparent; }
     [role="toolbar"] { display: flex; align-items: center; gap: 8px; }
     [role="toolbar"] button { min-width: 28px; min-height: 28px; border-radius: 7px; }
@@ -55,7 +55,7 @@ export const runtimeFixtureHtml = String.raw`
       <p class="section">项目</p>
       <div role="tree" aria-label="项目">
         <div role="treeitem">▱　wukong-codex-forge</div>
-        <div role="treeitem" aria-selected="true">重设计黑神话悟空主题</div>
+        <div role="treeitem" aria-selected="true" data-native-slot="project-active">重设计黑神话悟空主题</div>
         <div role="treeitem">▱　reproduction-temple-run</div>
         <div role="treeitem">接管 Temple 总控并归档修复</div>
         <div role="treeitem">▱　reproduction-tetris</div>
@@ -63,7 +63,7 @@ export const runtimeFixtureHtml = String.raw`
       </div>
     </nav>
     <main role="main" data-native-slot="workspace" data-vscode-context='{"chatgpt.supportsNewChatMenu": true}'>
-      <div class="task-top"><span>▱　重设计黑神话悟空主题　···</span><div class="actions"><button>打开位置⌄</button><button>☷</button></div></div>
+      <div class="task-top" data-native-slot="taskbar"><span>▱　重设计黑神话悟空主题　···</span><div class="actions"><button>打开位置⌄</button><button>☷</button></div></div>
       <section class="landing-native">
         <small>新建任务</small>
         <h1>今天想处理什么？</h1>
@@ -75,7 +75,7 @@ export const runtimeFixtureHtml = String.raw`
       </form>
     </main>
     <aside role="complementary" aria-label="环境信息" data-native-slot="right-panel">
-      <div class="env-card"><h2>环境信息　＋</h2><div class="env-row"><span>▣　变更</span><span class="muted">+0 -0</span></div><div class="env-row"><span>▱　本地</span><span>⌄</span></div><div class="env-row"><span>⌘　main</span><span>⌄</span></div><div class="env-row"><span>◉　比较分支</span><span>↗</span></div></div>
+      <div class="env-card" data-native-slot="right-card"><h2>环境信息　＋</h2><div class="env-row"><span>▣　变更</span><span class="muted">+0 -0</span></div><div class="env-row"><span>▱　本地</span><span>⌄</span></div><div class="env-row"><span>⌘　main</span><span>⌄</span></div><div class="env-row"><span>◉　比较分支</span><span>↗</span></div></div>
     </aside>
   </div>
 `;
@@ -93,11 +93,38 @@ export const enterThreadState = page => page.evaluate(() => {
   conversation.setAttribute('data-thread-find-target', 'conversation');
   conversation.innerHTML = `
     <div data-virtualized-turn-content>
-      <div data-local-conversation-user-anchor><div data-user-message-bubble>不要只换颜色，要替换背景、侧栏按钮和输入框样式。</div></div>
+      <div data-local-conversation-user-anchor><div data-user-message-bubble>请检查当前实现。</div></div>
     </div>
     <div data-virtualized-turn-content data-local-conversation-final-assistant="true">
-      <p>已切换为日照宣纸运行时样式，并保持原生三栏结构。</p>
+      <p>我会保留原始内容和布局，只进行必要的样式处理。</p>
       <pre><code>surface: thread\nlayout: native\nstyle: wukong</code></pre>
     </div>`;
   document.querySelector('main').insertBefore(conversation, document.querySelector('form'));
+  const readRect = selector => {
+    const rect = document.querySelector(selector).getBoundingClientRect();
+    return [rect.x, rect.y, rect.width, rect.height];
+  };
+  return {
+    text: conversation.innerText,
+    geometry: {
+      userBubble: readRect('[data-user-message-bubble]'),
+      assistantAnswer: readRect('[data-local-conversation-final-assistant]'),
+      codeBlock: readRect('pre')
+    }
+  };
 });
+
+export const conversationText = page => page.evaluate(() =>
+  document.querySelector('[data-thread-find-target="conversation"]')?.innerText || ''
+);
+
+export const conversationGeometry = page => page.evaluate(() => Object.fromEntries(
+  [
+    ['userBubble', '[data-user-message-bubble]'],
+    ['assistantAnswer', '[data-local-conversation-final-assistant]'],
+    ['codeBlock', 'pre']
+  ].map(([key, selector]) => {
+    const rect = document.querySelector(selector).getBoundingClientRect();
+    return [key, [rect.x, rect.y, rect.width, rect.height]];
+  })
+));
