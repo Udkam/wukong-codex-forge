@@ -1,9 +1,32 @@
 {
-  "schemaVersion": 1,
-  "id": "ink-mountain-forge",
-  "name": "墨山·悟行",
-  "palette": { "ink": "#101412", "stone": "#1c2420", "jade": "#8aa88d", "gold": "#c19a55", "ash": "#d8ddd2" },
-  "background": { "mode": "gallery", "source": "playstation-official", "asset": null, "position": "right center", "dim": 0.76, "taskIntensity": 0.18 },
-  "accessibility": { "preset": "workbench", "reducedMotion": false },
-  "companion": { "enabled": true, "side": "right", "size": 92, "motion": "quiet" }
+  "schemaVersion": 2,
+  "id": "great-sage-scroll",
+  "name": "大圣归来 · 残卷入梦",
+  "palette": {
+    "ink": "#090b0a",
+    "lacquer": "#211713",
+    "jade": "#748b78",
+    "gold": "#d2a45d",
+    "paper": "#e8dec9"
+  },
+  "background": {
+    "mode": "local",
+    "source": "great-sage-return.jpg",
+    "asset": "assets/great-sage-return.jpg",
+    "position": "right center",
+    "landingPosition": "right center",
+    "dim": 0.72,
+    "taskIntensity": 0.13,
+    "landingIntensity": 0.72
+  },
+  "accessibility": {
+    "preset": "workbench",
+    "reducedMotion": false
+  },
+  "companion": {
+    "enabled": true,
+    "side": "right",
+    "size": 96,
+    "motion": "quiet"
+  }
 }

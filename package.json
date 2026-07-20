@@ -1,6 +1,6 @@
 {
   "name": "wukong-codex-forge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,9 @@
     "validate": "node runtime/forge-runtime.mjs --validate themes/ink-mountain.json && node runtime/forge-runtime.mjs --validate themes/active.json",
     "check": "npm run validate && npm test",
     "test:e2e": "node tests/run-studio-e2e.mjs",
+    "test:theme": "node --test tests/theme.test.mjs",
+    "test:runtime-states": "node --test tests/injection-fixture.test.mjs tests/runtime-background-visual.test.mjs",
+    "test:lifecycle": "node --test tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs",
     "test:runtime-visual": "node --test tests/runtime-background-visual.test.mjs",
     "test:managed-import": "node tests/managed-import.integration.mjs"
   },

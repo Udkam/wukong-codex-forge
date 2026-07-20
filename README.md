@@ -1,65 +1,118 @@
 # Wukong Codex Forge
 
-Windows ChatGPT/Codex 桌面端的本地主题工作台。它采用墨色山海、低饱和玉色与克制金色，提供“启行 / 新建任务”主命令样式、主题配置导入链路和可选的小行者伴随者。
+Windows ChatGPT/Codex 桌面端的本地主题工作台。本轮主题“大圣归来 · 残卷入梦”把新建对话设计成高显影的启程封面，把进行中的对话切换为低显影工作态，并提供可即时关闭的小行者、侧栏/控件样式和随 ChatGPT 启停的受管 watcher。
 
 ![Theme Studio browser evidence](docs/screenshots/theme-studio.png)
 
-![Runtime background browser fixture](docs/screenshots/runtime-background-fixture.png)
+![Runtime state fixture](docs/screenshots/runtime-background-fixture.png)
 
-## 已验证能力
+## 核心能力
 
-- Theme Studio 维护有效主题对象：名称、完整调色板、背景模式/来源/焦点/暗化/任务页强度、无障碍和伴随者字段都会保存到浏览器本地存储，并能导出为可直接通过 validateTheme 的 JSON。
-- 导入 JSON 会重新验证完整 schema。导入本地 PNG/JPEG/WebP 会实时应用到预览；本地二进制不会写入 GitHub，导出的 JSON 仅保存其文件名，需在运行时导入步骤再次指定图片。
-- 官方来源画廊提供 Game Science、Steam、PlayStation、Xbox 四张可选择卡片、版权提示与直达链接；它们不是图片下载或再分发功能。
-- 高可读性预设去除任务页背景、强制高暗化并启用 reduced-motion；reduced-motion 也会停止小行者的轻量待机动画。
-- 在通常的工作台预设中，受管本地背景以 `body` 的双层背景绘制在信息表面之下，因此不会拦截指针事件或被负层级遮住；暗化和任务页强度会生成实际的背景遮罩。高可读性或纯色模式会明确输出 `--forge-bg:none`。
-- 小行者是本项目的原创生成资产，可关闭、左右放置和调大小。它是 pointer-events none 的静态状态标识，不要求或拦截悬停、点击、输入。
-- 运行时对受管标记的主工作区、项目树活动项、消息正文、代码块、输入容器、工具栏、右侧面板、菜单、dialog 和滚动条应用主题；恢复会删除样式、伴随者和全部受管标记。
+- 新建对话和对话进行中使用两套明确视觉层级；运行时按消息语义自动切换 `landing / thread`。
+- 默认背景是用户提供的 `大圣归来.jpg`。同一张 78 KB 图片通过两组遮罩复用，不加载视频、WebGL 或远程字体。
+- “悟”开关即时切换主题与原生外观；关闭时不改变 Codex 的布局、事件和输入路径。
+- 新建按钮、侧栏活动项、消息、代码块、输入区、工具栏、菜单、弹窗与滚动条使用受管 `forge-*` 标记。
+- 小行者可关闭、左右停驻和调尺寸，始终 `pointer-events:none`，并响应 reduced motion。
+- MutationObserver 处理 Codex 路由和动态渲染；120 ms 合并刷新，不监听 class 变化。
+- 完整 restore 删除 style、observer、主题节点、标记、状态与本地偏好。
 
-## 配置管线
+## 安全边界
 
-Theme Studio → 有效 theme.json → scripts/theme.ps1 受控导入 → themes/active.json + 受管背景副本 → injector → CSS variables
+本项目不修改 WindowsApps、`app.asar`、Codex 配置、Wallpaper Engine 或全局系统设置。运行时只接受 `127.0.0.1` CDP，并验证监听进程位于注册的 `OpenAI.Codex` 包内。
 
-注入时读取 themes/active.json，将受管本地背景编码为数据 URL，并生成实际的 --forge-bg、--forge-position、--forge-backdrop-dim、--forge-art-intensity、伴随者尺寸和动效变量。没有导入本地图片时，画廊仍保存来源选择，但不会请求或下载第三方图片。
+CDP 仍允许同一 Windows 用户下的本地进程检查开启调试的应用。只在你信任的本机账户中使用受管启动器。
 
-## Studio
+## Theme Studio
 
-Run npm install, then npm run studio; open http://127.0.0.1:5173/studio/ .
+```powershell
+npm install
+npm run studio
+```
 
-## 安装、导入、应用、恢复
+打开 [http://127.0.0.1:5173/studio/](http://127.0.0.1:5173/studio/)。
 
-关闭 Codex 后运行 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1。
+Studio 可以：
 
-从 Studio 导出 JSON 后，把配置和可合法使用的本地背景导入唯一受控目录。以下路径已从 E:\Proj 作为相对参数实跑：
+- 切换新建对话/对话态和主题/原生模拟态；
+- 调整双状态背景焦点、显影、暗化与小行者；
+- 导入本地 PNG/JPEG/WebP（最大 16 MB）；
+- 导入/导出经 schema v2 校验的主题 JSON；
+- 切换完全移除背景的高可读性预设。
 
-Set-Location E:\Proj
+## 安装与随启随停
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\WukongCodexForge\app\scripts\theme.ps1" -Import .\wukong-codex-forge\themes\active.json -Image .\wukong-codex-forge\assets\little-wayfarer.png
+先关闭所有 ChatGPT 进程，再在项目根目录执行：
 
-theme.ps1 在切换到受管 app 目录之前会将 Import 和 Image 解析为绝对路径；因此上述相对路径不会被后续 cwd 改变。
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -CreateShortcut
+```
 
-自行以仅回环 CDP 启动官方 Codex，再应用主题：
+开始菜单会出现“ChatGPT - 大圣主题”。以后从该入口启动：
 
+1. `launch.ps1` 启动官方 `ChatGPT.exe`，只绑定本机回环 CDP。
+2. `watch.mjs` 等待 renderer 就绪并应用主题。
+3. 页面重载或新 renderer 出现时自动补注入。
+4. ChatGPT 退出、CDP 连失三次后 watcher 自动退出。
+
+这是实现“随 ChatGPT 启动而启动，关闭而关闭”的安全方式。普通 ChatGPT 快捷方式没有 CDP 参数，无法在不修改官方包的前提下注入主题。
+
+也可手动附加到已经以回环 CDP 启动的 ChatGPT：
+
+```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\WukongCodexForge\app\scripts\start.ps1" -Port 9222
+```
 
-运行时仅接受 127.0.0.1 监听器，并检查监听 PID 的可执行路径属于当前注册的 OpenAI.Codex 包。它不会修改 WindowsApps、app.asar、Codex 配置、Wallpaper Engine 或全局系统设置。
+## 导入另一个本地主题
 
-CDP 仍允许同一 Windows 用户下的本地进程检查开启调试的应用；不用时执行 restore.ps1 -Port 9222。卸载只会删除精确的 LOCALAPPDATA\WukongCodexForge 管理目录，并在删除前验证路径与状态标记；传入任何其他 -Destination 会拒绝。
+```powershell
+Set-Location E:\Proj
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\WukongCodexForge\app\scripts\theme.ps1" -Import .\wukong-codex-forge\themes\active.json -Image "E:\GameRecord\Black Myth Wukong\图片\大圣归来.jpg"
+```
 
-## 验证
+`theme.ps1` 在切换工作目录前解析绝对路径，只写入受管 `LOCALAPPDATA\WukongCodexForge\app`。
 
-npm run check 运行 schema、JSON round-trip、调色板变量、受管图片到注入变量、mock Codex DOM 注入/恢复、注入选择器范围、卸载路径拒绝和浏览器像素级背景/恢复测试。后者把强红/金的抽象 SVG 注入 1600×900 fixture，确认工作区像素实际保留图片色，并确认恢复后该颜色消失。
+## 恢复与卸载
 
-也可单独运行 npm run test:runtime-visual 复跑该像素回归并生成 `docs/screenshots/runtime-background-fixture.png`。
+只恢复当前 renderer：
 
-运行 npm run test:managed-import 会从项目父目录以相对 Import 与 Image 参数调用受管 theme.ps1，验证 themes/active.json 和受管背景副本后再卸载清理。
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\WukongCodexForge\app\scripts\restore.ps1" -Port 9222
+```
 
-运行 npm run test:e2e 会自己创建严格绑定 127.0.0.1:5192 的 Vite 服务并执行 Studio 浏览器验收。它覆盖画廊选择、本地背景/焦点/暗化/任务强度、reduced-motion、伴随者静态可达性、有效 JSON 导出与截图。
+卸载受管副本和受管开始菜单入口：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\restore.ps1 -Uninstall
+```
+
+卸载前会验证目标恰好是 `LOCALAPPDATA\WukongCodexForge`、不是 reparse point、state marker 匹配且快捷方式路径精确一致。任一条件不满足都会拒绝删除。
+
+## 针对性验证
+
+```powershell
+npm run validate
+npm run test:theme
+npm run test:runtime-states
+npm run test:lifecycle
+npm run test:e2e
+```
+
+- `test:theme`：schema v2、双状态变量、本地素材和高可读性。
+- `test:runtime-states`：landing/thread 自动识别、主题开关、DOM 动态重标记和完整 restore。
+- `test:lifecycle`：回环限制、启动器/watcher/快捷方式/卸载的静态契约。
+- `test:e2e`：Studio 双状态、开关、本地导入、导出、无障碍和截图。
+
+## 文档
+
+- [需求与验收](docs/REQUIREMENTS.md)
+- [设计与实现](docs/DESIGN.md)
+- [分工与交付边界](docs/WORKBREAKDOWN.md)
+- [素材来源与发布边界](docs/ASSET_SOURCES.md)
+
+过程工作日志保存在本地 `docs/logs/CHANGELOG.md`，按仓库约定不提交。
 
 ## 当前限制
 
-Codex 桌面端 DOM 会随版本改变。本仓库只对明确标记的语义节点施加样式：精确匹配“新建任务”或 “New task”、header、nav、role=tree、main article、pre code、textarea/contenteditable 容器、role=toolbar、role=complementary、role=menu 和 role=dialog；不使用无约束的全局 button 或类名子串选择器。mock DOM fixture 已验证这些节点的标记和完整恢复，但当前没有针对每个生产 Codex 版本进行真实运行中注入的视觉认证；若找不到节点，运行时保持功能优先。
+Codex 桌面端 DOM 会随版本变化。fixture 可以证明主题契约和恢复边界，但真实生产 Codex 的最终视觉认证必须从受管主题入口重新启动应用后执行。找不到某个语义节点时运行时会跳过该节点，优先保证原生功能。
 
-## 素材与许可证
-
-[docs/ASSET_SOURCES.md](docs/ASSET_SOURCES.md) 记录来源与版权边界。仓库未包含任何未经许可的《黑神话：悟空》截图或官方图片二进制。代码以 [MIT](LICENSE) 发布；游戏名称、截图和官方艺术作品属于其权利人。
+代码以 [MIT](LICENSE) 发布；游戏名称、截图与官方艺术作品的权利属于其各自权利人。

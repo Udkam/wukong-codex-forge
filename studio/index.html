@@ -1,25 +1,171 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Wukong Codex Forge · Theme Studio</title><link rel="stylesheet" href="./style.css"></head>
-<body><main class="studio"><aside class="controls">
-<p class="eyebrow">WUKONG CODEX FORGE · LOCAL THEME STUDIO</p><h1>墨山·悟行</h1><p class="quiet">画廊只提供官方来源和导入说明；真正的背景由你选择的本地文件驱动。</p>
-<label>主题名称<input id="themeName" maxlength="80"></label>
-<label>背景模式<select id="backgroundMode"><option value="gallery">官方来源画廊</option><option value="local">导入本地图片</option><option value="solid">纯墨高可读性</option></select></label>
-<label id="localFileLabel">导入本地背景<input id="localFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
-<label>焦点位置<select id="position"><option value="right center">右侧·云海</option><option value="center center">中部·对峙</option><option value="left center">左侧·岩壁</option></select></label>
-<label>暗化 <output id="dimOut"></output><input id="dim" type="range" min="45" max="94"></label>
-<label>任务页显示强度 <output id="artOut"></output><input id="art" type="range" min="0" max="42"></label>
-<fieldset><legend>无障碍与伴随者</legend><label class="switch">Reduced motion<input id="reducedMotion" type="checkbox"><span></span></label><label class="switch">启用小行者<input id="companion" type="checkbox"><span></span></label><label>侧边<select id="side"><option value="right">右侧</option><option value="left">左侧</option></select></label><label>尺寸 <output id="sizeOut"></output><input id="size" type="range" min="60" max="140"></label><label class="switch">静止动效<input id="still" type="checkbox"><span></span></label></fieldset>
-<button id="preset">切换高可读性预设</button><div class="button-pair"><button id="export" class="outline">导出有效 theme.json</button><label class="outline import-label">导入 theme.json<input id="themeImport" type="file" accept="application/json"></label></div><p id="status" class="fine" aria-live="polite"></p>
-</aside><section class="preview" id="preview">
-<header class="top"><span class="mark">悟</span><strong>Codex</strong><div class="crumb">E:Proj / wukong-codex-forge</div><button aria-label="通知">◌</button><button aria-label="菜单">···</button></header>
-<div class="shell"><aside class="sidebar"><button class="new-task" id="newTask"><b>启</b><span>新建任务</span><kbd>Ctrl N</kbd></button><p class="section">置顶</p><div class="row active">◈ &nbsp;墨山主题验收</div><p class="section">项目</p><div class="row">⌁ &nbsp;wukong-codex-forge</div><div class="tree">└─ studio<br>└─ runtime<br>└─ docs</div><p class="section">已安装</p><div class="row">◇ &nbsp;Frontend Design</div><p class="section">插件</p><div class="row dim">◇ &nbsp;本地运行时</div></aside>
-<section class="chat"><div class="route"><span>任务 / 墨山主题验收</span><button>共享</button></div><article class="message user"><div class="avatar">你</div><p>验证“新建任务”及主题工作流的可读性。</p></article><article class="message"><div class="avatar ape">悟</div><div><p>主题变量来自当前有效配置；金色只标记行动，玉色用于状态与焦点。</p><pre><code>npm run check — VALID: 墨山·悟行</code></pre><div class="chips"><button>读取文件</button><button>运行验证</button></div></div></article><div class="composer"><textarea aria-label="输入消息" placeholder="交代下一段行程…"></textarea><div><button>＋</button><button>工具</button><button class="send">发送 ↗</button></div></div></section>
-<aside class="inspector"><div class="inspector-head">检查器 <button>×</button></div><div class="panel"><small>主题状态</small><strong id="previewPreset">工作台预设</strong><span id="previewBackground">官方来源 · 导入后应用</span></div><div class="panel"><small>运行时配置</small><span>themes/active.json</span><span>127.0.0.1 CDP only</span></div></aside></div>
-<section class="gallery" aria-label="官方素材来源画廊"><div><p class="eyebrow">OFFICIAL SOURCE GALLERY</p><h2>择景，不分发</h2><p>卡片仅保存来源和版权说明。选择后请自行下载，再以本地图片导入。</p></div><div class="gallery-grid">
-<article class="gallery-card" data-source="gamescience-official"><span class="scene scene-stone"></span><h3>岩壁·对峙</h3><p>Game Science 官方站</p><button type="button">选择此来源</button><a href="https://www.heishenhua.com/" target="_blank" rel="noreferrer">打开来源 ↗</a></article>
-<article class="gallery-card" data-source="steam-official"><span class="scene scene-ash"></span><h3>余烬·行旅</h3><p>Steam 官方商店页</p><button type="button">选择此来源</button><a href="https://store.steampowered.com/app/2358720/Black_Myth_Wukong/" target="_blank" rel="noreferrer">打开来源 ↗</a></article>
-<article class="gallery-card" data-source="playstation-official"><span class="scene scene-water"></span><h3>水面·寺影</h3><p>PlayStation 官方页</p><button type="button">选择此来源</button><a href="https://www.playstation.com/en-us/games/black-myth-wukong/" target="_blank" rel="noreferrer">打开来源 ↗</a></article>
-<article class="gallery-card" data-source="xbox-official"><span class="scene scene-cloud"></span><h3>云海·金箍</h3><p>Xbox 官方页</p><button type="button">选择此来源</button><a href="https://www.xbox.com/en-us/games/store/black-myth-wukong/9p51d1h0t7cw" target="_blank" rel="noreferrer">打开来源 ↗</a></article>
-</div></section>
-<div class="menu"><b>主题菜单</b><span>切换高可读性</span><span>导入本地背景</span><span>恢复原生外观</span></div><div class="wayfarer" id="wayfarer" aria-hidden="true"><img src="../assets/little-wayfarer.png" alt=""><em>静候下一段行程</em></div>
-</section></main><script type="module" src="./studio.js"></script></body></html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Wukong Codex Forge · 残卷入梦</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <a class="skip-link" href="#preview">跳到主题预览</a>
+  <main class="studio">
+    <aside class="controls" aria-label="主题控制台">
+      <header class="brand">
+        <span class="brand-seal" aria-hidden="true">悟</span>
+        <div>
+          <p class="eyebrow">WUKONG × CODEX / LOCAL FORGE</p>
+          <h1>残卷入梦</h1>
+        </div>
+      </header>
+      <p class="lede">不是贴一张壁纸，而是把“启程、行路、归卷”做成一套可关闭的 Codex 工作界面。</p>
+
+      <div class="master-control">
+        <div>
+          <span>主题主开关</span>
+          <small>关闭后展示原生模拟态</small>
+        </div>
+        <label class="switch" aria-label="切换主题预览">
+          <input id="themeEnabled" type="checkbox" checked>
+          <span></span>
+        </label>
+      </div>
+
+      <section class="control-section" aria-labelledby="scene-title">
+        <div class="section-heading"><span>壹</span><h2 id="scene-title">界面状态</h2></div>
+        <div class="segmented" role="group" aria-label="预览界面状态">
+          <button id="showLanding" type="button" aria-pressed="true">新建对话</button>
+          <button id="showThread" type="button" aria-pressed="false">对话进行中</button>
+        </div>
+      </section>
+
+      <section class="control-section" aria-labelledby="art-title">
+        <div class="section-heading"><span>贰</span><h2 id="art-title">主视觉</h2></div>
+        <label>主题名称<input id="themeName" maxlength="80"></label>
+        <label>背景模式
+          <select id="backgroundMode">
+            <option value="local">本地受管素材</option>
+            <option value="gallery">官方来源指引</option>
+            <option value="solid">纯墨高可读性</option>
+          </select>
+        </label>
+        <label id="localFileLabel" class="file-drop">替换本地背景
+          <input id="localFile" type="file" accept="image/png,image/jpeg,image/webp">
+          <span>PNG / JPEG / WebP · 最大 16 MB</span>
+        </label>
+        <label>新建页焦点
+          <select id="landingPosition">
+            <option value="right center">右侧 · 大圣剪影</option>
+            <option value="center center">中部 · 对峙中心</option>
+            <option value="left center">左侧 · 前景残影</option>
+          </select>
+        </label>
+        <label>对话页焦点
+          <select id="position">
+            <option value="right center">右侧 · 余烬</option>
+            <option value="center center">中部 · 暗场</option>
+            <option value="left center">左侧 · 山影</option>
+          </select>
+        </label>
+        <label>整体暗化 <output id="dimOut"></output><input id="dim" type="range" min="45" max="94"></label>
+        <label>新建页显影 <output id="landingArtOut"></output><input id="landingArt" type="range" min="0" max="100"></label>
+        <label>对话页显影 <output id="artOut"></output><input id="art" type="range" min="0" max="42"></label>
+      </section>
+
+      <section class="control-section" aria-labelledby="companion-title">
+        <div class="section-heading"><span>叁</span><h2 id="companion-title">小行者</h2></div>
+        <div class="switch-row"><span>启用伴随者</span><label class="switch"><input id="companion" type="checkbox"><span></span></label></div>
+        <div class="switch-row"><span>减少动效</span><label class="switch"><input id="reducedMotion" type="checkbox"><span></span></label></div>
+        <label>停驻侧
+          <select id="side"><option value="right">右侧</option><option value="left">左侧</option></select>
+        </label>
+        <label>尺寸 <output id="sizeOut"></output><input id="size" type="range" min="60" max="140"></label>
+        <label class="visually-hidden">伴随者动效<input id="still" type="checkbox"></label>
+      </section>
+
+      <button id="preset" class="preset" type="button">切换高可读性预设</button>
+      <div class="button-pair">
+        <button id="export" class="outline" type="button">导出 theme.json</button>
+        <label class="outline import-label">导入 theme.json<input id="themeImport" type="file" accept="application/json"></label>
+      </div>
+      <p id="status" class="status" aria-live="polite">默认载入你提供的《大圣归来》截图。</p>
+    </aside>
+
+    <section class="stage" id="preview" data-surface="landing" aria-label="Codex 主题预览">
+      <header class="appbar">
+        <div class="window-mark"><span>悟</span><b>Codex</b></div>
+        <div class="breadcrumb"><i></i><span>E:\Proj\wukong-codex-forge</span></div>
+        <div class="app-actions"><button aria-label="搜索">⌕</button><button aria-label="更多">•••</button></div>
+      </header>
+
+      <div class="app-shell">
+        <nav class="sidebar" aria-label="Codex 导航">
+          <button class="new-chat"><span class="seal">启</span><b>新建对话</b><kbd>Ctrl N</kbd></button>
+          <p class="nav-label">置顶</p>
+          <button class="nav-row active"><span>◆</span><b>残卷入梦 · 主题验收</b></button>
+          <p class="nav-label">项目</p>
+          <button class="nav-row"><span>⌁</span><b>wukong-codex-forge</b></button>
+          <div class="tree"><span>studio</span><span>runtime</span><span>docs</span></div>
+          <p class="nav-label">功能</p>
+          <button class="nav-row"><span>◇</span><b>代码</b></button>
+          <button class="nav-row"><span>◇</span><b>自动化</b></button>
+          <button class="nav-row"><span>◇</span><b>技能</b></button>
+          <div class="sidebar-foot"><span class="mini-seal">悟</span><div><b>本地受管主题</b><small>Loopback only</small></div></div>
+        </nav>
+
+        <section class="workspace">
+          <div class="scene landing-scene" aria-label="新建对话主题态">
+            <div class="vertical-title" aria-hidden="true"><span>齐天</span><span>入梦</span></div>
+            <div class="hero-copy">
+              <p class="chapter">卷一 · 启程</p>
+              <h2>心有所向<br><em>万行自明</em></h2>
+              <p>把一个想法交给 Codex，让它穿过山雾、代码与测试，抵达可验证的结果。</p>
+            </div>
+            <div class="starter-grid" aria-label="示例任务">
+              <button><small>检视</small><span>审一遍当前项目</span><i>壹</i></button>
+              <button><small>锻造</small><span>实现下一项功能</span><i>贰</i></button>
+              <button><small>问路</small><span>梳理复杂技术方案</span><i>叁</i></button>
+            </div>
+            <div class="composer landing-composer">
+              <textarea aria-label="新建对话输入框" placeholder="此去欲往何方？"></textarea>
+              <div class="composer-tools"><button aria-label="添加附件">＋</button><button>工具</button><span></span><button class="send" aria-label="发送">↑</button></div>
+            </div>
+          </div>
+
+          <div class="scene thread-scene" aria-label="对话进行中主题态">
+            <div class="thread-head"><div><p>任务 / 主题深度设计</p><h2>残卷入梦 · 实现与验收</h2></div><span>对话态 · 低显影</span></div>
+            <div class="conversation">
+              <article class="message user-message"><div class="avatar">你</div><p>让新建对话有独立封面，进入任务后背景更克制，同时保持原生交互。</p></article>
+              <article class="message assistant-message"><div class="avatar ape">悟</div><div><p>已把同一张图拆成两个视觉状态：启程时突出剪影与夕照，行路后只保留余烬和轮廓。</p><pre><code>surface: landing → thread
+runtime: scoped marks + clean restore</code></pre><div class="chips"><button>读取文件</button><button>针对性测试</button><button>提交并推送</button></div></div></article>
+              <article class="message note-message"><span></span><p>主题关闭后，所有受管表面回到 Codex 原生外观；仅保留可再次开启的“悟”控制点。</p></article>
+            </div>
+            <div class="composer thread-composer">
+              <textarea aria-label="对话输入框" placeholder="交代下一段行程…"></textarea>
+              <div class="composer-tools"><button aria-label="添加附件">＋</button><button>工具</button><span></span><button class="send" aria-label="发送">↑</button></div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="inspector" aria-label="主题状态">
+          <div class="inspector-title"><span>主题状态</span><button aria-label="关闭检查器">×</button></div>
+          <div class="state-orbit"><i></i><b id="previewPreset">工作台预设</b><small id="previewBackground">本地图片 · 已受管</small></div>
+          <dl><div><dt>主色</dt><dd><i class="swatch gold"></i>烬金</dd></div><div><dt>状态</dt><dd><i class="swatch jade"></i>黛玉</dd></div><div><dt>表面</dt><dd id="surfaceLabel">新建对话</dd></div></dl>
+          <div class="runtime-card"><span>RUNTIME</span><b>随 ChatGPT 启停</b><small>127.0.0.1 · managed watcher</small></div>
+        </aside>
+      </div>
+
+      <button id="runtimeToggle" class="runtime-toggle" type="button" aria-pressed="true" title="切换主题与原生外观"><span>悟</span><b>主题</b></button>
+      <div class="wayfarer" id="wayfarer" aria-hidden="true"><img src="../assets/little-wayfarer.png" alt=""><em>候你启程</em></div>
+    </section>
+
+    <section class="source-rail" aria-label="素材决策">
+      <div><p class="eyebrow">ART DIRECTION / 01</p><h2>一图，两境</h2></div>
+      <article class="source-card chosen"><span class="thumb user-art"></span><div><small>当前采用</small><b>大圣归来 · 用户截图</b><p>剪影明确、暖金聚焦、仅 78 KB；作为默认资产性价比最高。</p></div></article>
+      <article class="source-card"><span class="thumb official-art"></span><div><small>来源指引</small><b>Game Science / Steam</b><p>只保留官方链接，不自动下载或二次分发。</p></div></article>
+      <div class="source-links"><a href="https://www.heishenhua.com/" target="_blank" rel="noreferrer">Game Science ↗</a><a href="https://store.steampowered.com/app/2358720/Black_Myth_Wukong/" target="_blank" rel="noreferrer">Steam ↗</a></div>
+    </section>
+  </main>
+  <script type="module" src="./studio.js"></script>
+</body>
+</html>

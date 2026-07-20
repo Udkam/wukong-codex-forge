@@ -1,8 +1,106 @@
-import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {DEFAULT_THEME,makeTheme,validateTheme,cssFor} from '../shared/theme-model.mjs';import {payloadFromThemeFile} from '../runtime/forge-runtime.mjs';import {makeApplyExpression} from '../runtime/injection-plan.mjs';
-test('default theme is schema-valid',()=>assert.equal(validateTheme(DEFAULT_THEME).id,'ink-mountain-forge'));
-test('theme JSON round-trips through validation',()=>{const exported=JSON.parse(JSON.stringify(makeTheme({name:'本地验收主题',background:{mode:'local',source:'mist.png',asset:null,position:'left center',dim:.62,taskIntensity:.31},accessibility:{preset:'high-read',reducedMotion:true}})));assert.deepEqual(validateTheme(exported),exported)});
-test('CSS variables carry palette, background, focus, dim and intensity',()=>{const css=cssFor(makeTheme({palette:{ink:'#112233',stone:'#223344',jade:'#334455',gold:'#445566',ash:'#ddeeff'},background:{mode:'local',source:'mist.png',asset:null,position:'left center',dim:.62,taskIntensity:.31}}),'data:image/png;base64,AA==');assert.match(css,/--forge-ink:#112233/);assert.match(css,/--forge-gold:#445566/);assert.match(css,/--forge-bg:url\("data:image\/png/);assert.match(css,/--forge-position:left center/);assert.match(css,/--forge-backdrop-dim:0.62/);assert.match(css,/--forge-art-intensity:0.31/)});
-test('solid and high-read themes suppress the runtime background',()=>{const themed=makeTheme({background:{mode:'local',source:'mist.png',asset:null,position:'center center',dim:.45,taskIntensity:1},accessibility:{preset:'high-read',reducedMotion:true}});assert.match(cssFor(themed,'data:image/png;base64,AA=='),/--forge-bg:none/);assert.match(cssFor(makeTheme({background:{mode:'solid',source:'none',asset:null,position:'center center',dim:.45,taskIntensity:1}}),'data:image/png;base64,AA=='),/--forge-bg:none/)});
-test('managed local asset becomes real injected data URL',()=>{const root=fs.mkdtempSync(path.join(os.tmpdir(),'forge-theme-'));fs.mkdirSync(path.join(root,'assets'));fs.writeFileSync(path.join(root,'assets','mist.png'),Buffer.from([137,80,78,71]));const theme=makeTheme({background:{mode:'local',source:'mist.png',asset:'assets/mist.png',position:'center center',dim:.5,taskIntensity:.2}});fs.writeFileSync(path.join(root,'theme.json'),JSON.stringify(theme));const payload=payloadFromThemeFile(path.join(root,'theme.json'));assert.match(payload.assetUrl,/^data:image\/png;base64,/);assert.match(payload.variables,/--forge-bg:url/);fs.rmSync(root,{recursive:true,force:true})});
-test('runtime accepts UTF-8 BOM theme input',()=>{const root=fs.mkdtempSync(path.join(os.tmpdir(),'forge-bom-')),file=path.join(root,'theme.json');fs.writeFileSync(file,'\uFEFF'+JSON.stringify(DEFAULT_THEME),'utf8');assert.equal(payloadFromThemeFile(file).theme.name,'墨山·悟行');fs.rmSync(root,{recursive:true,force:true})});
-test('injection plan includes variables and only forge-scoped styling hooks',()=>{const expression=makeApplyExpression({styleSheet:'.forge-new-task{}',variables:'--forge-bg:url("x")',companion:{enabled:false}});assert.match(expression,/--forge-bg:url/);assert.doesNotMatch(expression,/\[class\*=/);assert.match(expression,/forge-new-task/)});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { DEFAULT_THEME, makeTheme, validateTheme, cssFor } from '../shared/theme-model.mjs';
+import { payloadFromThemeFile } from '../runtime/forge-runtime.mjs';
+import { makeApplyExpression } from '../runtime/injection-plan.mjs';
+
+test('default schema v2 theme is valid and uses the bundled user image', () => {
+  assert.equal(validateTheme(DEFAULT_THEME).schemaVersion, 2);
+  assert.equal(DEFAULT_THEME.id, 'great-sage-scroll');
+  assert.equal(DEFAULT_THEME.background.asset, 'assets/great-sage-return.jpg');
+  assert.ok(DEFAULT_THEME.background.landingIntensity > DEFAULT_THEME.background.taskIntensity);
+});
+
+test('theme JSON round-trips with independent landing and thread settings', () => {
+  const exported = JSON.parse(JSON.stringify(makeTheme({
+    name: '本地验收主题',
+    background: {
+      mode: 'local',
+      source: 'mist.png',
+      asset: null,
+      position: 'left center',
+      landingPosition: 'right center',
+      dim: .62,
+      taskIntensity: .18,
+      landingIntensity: .76
+    },
+    accessibility: { preset: 'workbench', reducedMotion: true }
+  })));
+  assert.deepEqual(validateTheme(exported), exported);
+});
+
+test('CSS variables carry the complete dual-state visual contract', () => {
+  const css = cssFor(makeTheme({
+    palette: {
+      ink: '#112233',
+      lacquer: '#221b18',
+      jade: '#334455',
+      gold: '#cc9955',
+      paper: '#ddeeff'
+    },
+    background: {
+      mode: 'local',
+      source: 'mist.png',
+      asset: null,
+      position: 'left center',
+      landingPosition: 'right center',
+      dim: .62,
+      taskIntensity: .18,
+      landingIntensity: .76
+    }
+  }), 'data:image/png;base64,AA==');
+  assert.match(css, /--forge-ink:#112233/);
+  assert.match(css, /--forge-lacquer:#221b18/);
+  assert.match(css, /--forge-gold:#cc9955/);
+  assert.match(css, /--forge-bg:url\("data:image\/png/);
+  assert.match(css, /--forge-position:left center/);
+  assert.match(css, /--forge-landing-position:right center/);
+  assert.match(css, /--forge-task-wash:rgba/);
+  assert.match(css, /--forge-landing-wash:rgba/);
+  assert.match(css, /--forge-landing-intensity:0.76/);
+});
+
+test('solid and high-read themes suppress the runtime image', () => {
+  const highRead = makeTheme({
+    background: { mode: 'local' },
+    accessibility: { preset: 'high-read', reducedMotion: true }
+  });
+  assert.match(cssFor(highRead, 'data:image/png;base64,AA=='), /--forge-bg:none/);
+  assert.match(
+    cssFor(makeTheme({ background: { mode: 'solid' } }), 'data:image/png;base64,AA=='),
+    /--forge-bg:none/
+  );
+});
+
+test('bundled managed asset becomes a real injected data URL', () => {
+  const payload = payloadFromThemeFile('themes/active.json');
+  assert.match(payload.assetUrl, /^data:image\/jpeg;base64,/);
+  assert.match(payload.variables, /--forge-bg:url/);
+  assert.equal(payload.theme.background.source, 'great-sage-return.jpg');
+});
+
+test('runtime accepts UTF-8 BOM schema v2 input', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'forge-bom-'));
+  const file = path.join(root, 'theme.json');
+  fs.writeFileSync(file, '\uFEFF' + JSON.stringify({ ...DEFAULT_THEME, background: {
+    ...DEFAULT_THEME.background,
+    asset: null
+  } }), 'utf8');
+  assert.equal(payloadFromThemeFile(file).theme.name, '大圣归来 · 残卷入梦');
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('injection expression is Forge-scoped and includes state and toggle logic', () => {
+  const expression = makeApplyExpression({
+    styleSheet: '.forge-new-task{}',
+    variables: '--forge-bg:url("x")',
+    companion: { enabled: false }
+  });
+  assert.match(expression, /--forge-bg:url/);
+  assert.match(expression, /forge-theme-toggle/);
+  assert.match(expression, /forgeSurface/);
+  assert.doesNotMatch(expression, /\[class\*=/);
+});

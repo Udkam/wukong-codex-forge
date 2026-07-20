@@ -1,7 +1,40 @@
-import fs from 'node:fs';import http from 'node:http';import process from 'node:process';import {WebSocket} from 'ws';import {payloadFromThemeFile} from './forge-runtime.mjs';import {makeApplyExpression,RESTORE_EXPRESSION} from './injection-plan.mjs';
-const [,,mode,portRaw,providedTheme]=process.argv,port=Number(portRaw),themePath=providedTheme||'themes/active.json';if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Port must be 1024..65535');
-const request=p=>new Promise((resolve,reject)=>{const r=http.get({host:'127.0.0.1',port,path:p,timeout:2500},x=>{let d='';x.on('data',c=>d+=c);x.on('end',()=>resolve(JSON.parse(d)))});r.on('error',reject);r.on('timeout',()=>r.destroy(Error('CDP timeout')))});
-const version=await request('/json/version');if(!/^ws:\/\/127\.0\.0\.1(?::\d+)?\//.test(version.webSocketDebuggerUrl||''))throw Error('Refusing non-loopback CDP endpoint');
-if(mode==='--verify'){console.log(JSON.stringify({ok:true,address:'127.0.0.1',browserId:version.id||null}));process.exit(0)}if(!['--apply','--restore'].includes(mode))throw Error('Use --verify|--apply|--restore <port> [theme.json]');
-const expression=mode==='--restore'?RESTORE_EXPRESSION:(()=>{const payload=payloadFromThemeFile(themePath),styleSheet=fs.readFileSync(new URL('./forge-theme.css',import.meta.url),'utf8'),companion=payload.theme.companion.enabled?{...payload.theme.companion,image:'data:image/png;base64,'+fs.readFileSync(new URL('../assets/little-wayfarer.png',import.meta.url)).toString('base64')}:null;return makeApplyExpression({styleSheet,variables:payload.variables,companion})})();
-for(const t of (await request('/json/list')).filter(t=>t.type==='page'&&(/^(app:|http:\/\/localhost)/.test(t.url))))await new Promise((resolve,reject)=>{const ws=new WebSocket(t.webSocketDebuggerUrl);ws.on('open',()=>ws.send(JSON.stringify({id:1,method:'Runtime.evaluate',params:{expression}})));ws.on('message',()=>{ws.close();resolve()});ws.on('error',reject)});console.log(mode+' complete on loopback CDP using '+themePath);
+import fs from 'node:fs';
+import process from 'node:process';
+import { payloadFromThemeFile } from './forge-runtime.mjs';
+import { getBrowserVersion, getTargets, evaluateTarget, isCodexTarget } from './cdp-client.mjs';
+import { makeApplyExpression, RESTORE_EXPRESSION } from './injection-plan.mjs';
+
+const [,, mode, portRaw, providedTheme] = process.argv;
+const port = Number(portRaw);
+const themePath = providedTheme || 'themes/active.json';
+if (!Number.isInteger(port) || port < 1024 || port > 65535) throw Error('Port must be 1024..65535');
+
+const version = await getBrowserVersion(port);
+if (mode === '--verify') {
+  console.log(JSON.stringify({ ok: true, address: '127.0.0.1', browserId: version.id || null }));
+  process.exit(0);
+}
+if (!['--apply', '--restore'].includes(mode)) {
+  throw Error('Use --verify|--apply|--restore <port> [theme.json]');
+}
+
+const makeExpression = () => {
+  if (mode === '--restore') return RESTORE_EXPRESSION;
+  const payload = payloadFromThemeFile(themePath);
+  const styleSheet = fs.readFileSync(new URL('./forge-theme.css', import.meta.url), 'utf8');
+  const companion = payload.theme.companion.enabled
+    ? {
+        ...payload.theme.companion,
+        image: 'data:image/png;base64,' + fs.readFileSync(
+          new URL('../assets/little-wayfarer.png', import.meta.url)
+        ).toString('base64')
+      }
+    : null;
+  return makeApplyExpression({ styleSheet, variables: payload.variables, companion });
+};
+
+const expression = makeExpression();
+const targets = (await getTargets(port)).filter(isCodexTarget);
+if (!targets.length) throw Error('No Codex renderer target was found');
+await Promise.all(targets.map(target => evaluateTarget(target, expression)));
+console.log(`${mode} complete on ${targets.length} loopback CDP target(s) using ${themePath}`);

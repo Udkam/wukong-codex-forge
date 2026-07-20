@@ -1,14 +1,200 @@
-import {DEFAULT_THEME,makeTheme,validateTheme} from '../shared/theme-model.mjs';
-const $=id=>document.getElementById(id),storage='wukong-codex-forge.theme.v1',clone=value=>JSON.parse(JSON.stringify(value));let localImage='',theme=loadTheme();
-function loadTheme(){try{return makeTheme(JSON.parse(localStorage.getItem(storage)))}catch{return clone(DEFAULT_THEME)}}
-function save(){localStorage.setItem(storage,JSON.stringify(theme))}
-function status(message){$('status').textContent=message}
-function render(){validateTheme(theme);$('themeName').value=theme.name;$('backgroundMode').value=theme.background.mode;$('position').value=theme.background.position;$('dim').value=Math.round(theme.background.dim*100);$('art').value=Math.round(theme.background.taskIntensity*100);$('dimOut').value=Math.round(theme.background.dim*100)+'%';$('artOut').value=Math.round(theme.background.taskIntensity*100)+'%';$('reducedMotion').checked=theme.accessibility.reducedMotion;$('companion').checked=theme.companion.enabled;$('side').value=theme.companion.side;$('size').value=theme.companion.size;$('sizeOut').value=theme.companion.size+'px';$('still').checked=theme.companion.motion==='still';$('localFileLabel').hidden=theme.background.mode!=='local';const preview=$('preview');preview.style.setProperty('--studio-dim',theme.background.dim);preview.style.setProperty('--studio-intensity',theme.background.taskIntensity);preview.style.setProperty('--studio-position',theme.background.position);preview.classList.toggle('high-read',theme.accessibility.preset==='high-read');preview.classList.toggle('reduced-motion',theme.accessibility.reducedMotion);const image=theme.background.mode==='local'&&localImage?'url("'+localImage.replaceAll('"','%22')+'")':'none';preview.style.setProperty('--studio-image',image);$('previewPreset').textContent=theme.accessibility.preset==='high-read'?'高可读性预设':'工作台预设';$('previewBackground').textContent=theme.background.mode==='local'&&localImage?'本地图片 · 已应用':theme.background.mode==='gallery'?'官方来源 · 需下载后导入':'纯墨 · 无背景';const wayfarer=$('wayfarer');wayfarer.hidden=!theme.companion.enabled;wayfarer.dataset.side=theme.companion.side;wayfarer.dataset.motion=theme.accessibility.reducedMotion||theme.companion.motion==='still'?'still':'quiet';wayfarer.style.setProperty('--companion-size',theme.companion.size+'px');document.querySelectorAll('.gallery-card').forEach(card=>card.classList.toggle('selected',card.dataset.source===theme.background.source));save()}
-function update(mutator){mutator(theme);theme=makeTheme(theme);render()}
-for(const [id,mutator] of [['themeName',v=>theme.name=v],['backgroundMode',v=>theme.background.mode=v],['position',v=>theme.background.position=v],['dim',v=>theme.background.dim=Number(v)/100],['art',v=>theme.background.taskIntensity=Number(v)/100],['reducedMotion',v=>theme.accessibility.reducedMotion=v],['companion',v=>theme.companion.enabled=v],['side',v=>theme.companion.side=v],['size',v=>theme.companion.size=Number(v)],['still',v=>theme.companion.motion=v?'still':'quiet']])$(id).addEventListener('input',e=>update(()=>mutator(e.target.type==='checkbox'?e.target.checked:e.target.value)));
-$('localFile').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;if(file.size>16*1024*1024){status('图片超过 16 MB，未导入。');return}const reader=new FileReader;reader.onload=()=>{localImage=reader.result;update(()=>{theme.background.mode='local';theme.background.source=file.name;theme.background.asset=null});status('本地背景仅保存在当前 Studio 会话；导出后请用 theme.ps1 -Image 导入运行时。')};reader.readAsDataURL(file)});
-$('themeImport').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader;reader.onload=()=>{try{theme=makeTheme(JSON.parse(reader.result));localImage='';render();status('有效主题已导入。若它引用本地背景，请重新选择图片。')}catch(error){status('拒绝主题：'+error.message)}};reader.readAsText(file,'utf-8')});
-document.querySelectorAll('.gallery-card button').forEach(button=>button.addEventListener('click',()=>{const card=button.closest('.gallery-card');update(()=>{theme.background.mode='gallery';theme.background.source=card.dataset.source;theme.background.asset=null});status('已选择官方来源；请打开来源页下载并用本地导入应用图片。')}));
-$('preset').addEventListener('click',()=>update(()=>{theme.accessibility.preset=theme.accessibility.preset==='high-read'?'workbench':'high-read';if(theme.accessibility.preset==='high-read'){theme.background.mode='solid';theme.background.asset=null;theme.background.taskIntensity=0;theme.background.dim=.94;theme.accessibility.reducedMotion=true}}));
-$('export').addEventListener('click',()=>{const output=makeTheme(theme),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(output,null,2)],{type:'application/json'}));a.download='wukong-forge-theme.json';a.click();URL.revokeObjectURL(a.href);status('已导出可由运行时直接校验的主题配置。')});
+import { DEFAULT_THEME, makeTheme, validateTheme } from '../shared/theme-model.mjs';
+
+const $ = id => document.getElementById(id);
+const storage = 'wukong-codex-forge.theme.v2';
+const bundledArt = '../themes/assets/great-sage-return.jpg';
+const clone = value => JSON.parse(JSON.stringify(value));
+
+let theme = loadTheme();
+let localImage = theme.background.source === DEFAULT_THEME.background.source ? bundledArt : '';
+let surface = 'landing';
+let themeEnabled = true;
+let workbenchBackground = clone(theme.background);
+
+function loadTheme() {
+  try {
+    return makeTheme(JSON.parse(localStorage.getItem(storage)));
+  } catch {
+    return clone(DEFAULT_THEME);
+  }
+}
+
+function save() {
+  localStorage.setItem(storage, JSON.stringify(theme));
+}
+
+function status(message) {
+  $('status').textContent = message;
+}
+
+function setSurface(next) {
+  surface = next;
+  $('preview').dataset.surface = next;
+  $('showLanding').setAttribute('aria-pressed', String(next === 'landing'));
+  $('showThread').setAttribute('aria-pressed', String(next === 'thread'));
+  $('surfaceLabel').textContent = next === 'landing' ? '新建对话' : '对话进行中';
+  $('wayfarer').querySelector('em').textContent = next === 'landing' ? '候你启程' : '静候下一段行程';
+}
+
+function setThemeEnabled(enabled) {
+  themeEnabled = enabled;
+  $('themeEnabled').checked = enabled;
+  $('runtimeToggle').setAttribute('aria-pressed', String(enabled));
+  $('runtimeToggle').querySelector('b').textContent = enabled ? '主题' : '原生';
+  $('runtimeToggle').title = enabled ? '关闭主题，查看原生外观' : '开启悟空主题';
+  $('preview').classList.toggle('native-preview', !enabled);
+}
+
+function render() {
+  validateTheme(theme);
+  $('themeName').value = theme.name;
+  $('backgroundMode').value = theme.background.mode;
+  $('position').value = theme.background.position;
+  $('landingPosition').value = theme.background.landingPosition;
+  $('dim').value = Math.round(theme.background.dim * 100);
+  $('art').value = Math.round(theme.background.taskIntensity * 100);
+  $('landingArt').value = Math.round(theme.background.landingIntensity * 100);
+  $('dimOut').value = Math.round(theme.background.dim * 100) + '%';
+  $('artOut').value = Math.round(theme.background.taskIntensity * 100) + '%';
+  $('landingArtOut').value = Math.round(theme.background.landingIntensity * 100) + '%';
+  $('reducedMotion').checked = theme.accessibility.reducedMotion;
+  $('companion').checked = theme.companion.enabled;
+  $('side').value = theme.companion.side;
+  $('size').value = theme.companion.size;
+  $('sizeOut').value = theme.companion.size + 'px';
+  $('still').checked = theme.companion.motion === 'still';
+  $('localFileLabel').hidden = theme.background.mode !== 'local';
+
+  const preview = $('preview');
+  preview.style.setProperty('--studio-dim', theme.background.dim);
+  preview.style.setProperty('--studio-intensity', theme.background.taskIntensity);
+  preview.style.setProperty('--studio-landing-intensity', theme.background.landingIntensity);
+  preview.style.setProperty('--studio-position', theme.background.position);
+  preview.style.setProperty('--studio-landing-position', theme.background.landingPosition);
+  preview.classList.toggle('high-read', theme.accessibility.preset === 'high-read');
+  preview.classList.toggle('reduced-motion', theme.accessibility.reducedMotion);
+  const image = theme.background.mode === 'local' && localImage
+    ? 'url("' + localImage.replaceAll('"', '%22') + '")'
+    : 'none';
+  preview.style.setProperty('--studio-image', image);
+
+  $('previewPreset').textContent = theme.accessibility.preset === 'high-read'
+    ? '高可读性预设'
+    : '工作台预设';
+  $('previewBackground').textContent = theme.background.mode === 'local' && localImage
+    ? '本地图片 · 已受管'
+    : theme.background.mode === 'gallery'
+      ? '官方来源 · 等待导入'
+      : '纯墨 · 无背景';
+
+  const wayfarer = $('wayfarer');
+  wayfarer.hidden = !theme.companion.enabled;
+  wayfarer.dataset.side = theme.companion.side;
+  wayfarer.dataset.motion = theme.accessibility.reducedMotion || theme.companion.motion === 'still'
+    ? 'still'
+    : 'quiet';
+  wayfarer.style.setProperty('--companion-size', theme.companion.size + 'px');
+  save();
+}
+
+function update(mutator) {
+  mutator(theme);
+  theme = makeTheme(theme);
+  render();
+}
+
+const inputBindings = [
+  ['themeName', value => { theme.name = value; }],
+  ['backgroundMode', value => { theme.background.mode = value; }],
+  ['position', value => { theme.background.position = value; }],
+  ['landingPosition', value => { theme.background.landingPosition = value; }],
+  ['dim', value => { theme.background.dim = Number(value) / 100; }],
+  ['art', value => { theme.background.taskIntensity = Number(value) / 100; }],
+  ['landingArt', value => { theme.background.landingIntensity = Number(value) / 100; }],
+  ['reducedMotion', value => { theme.accessibility.reducedMotion = value; }],
+  ['companion', value => { theme.companion.enabled = value; }],
+  ['side', value => { theme.companion.side = value; }],
+  ['size', value => { theme.companion.size = Number(value); }],
+  ['still', value => { theme.companion.motion = value ? 'still' : 'quiet'; }]
+];
+
+for (const [id, mutator] of inputBindings) {
+  $(id).addEventListener('input', event => update(() => {
+    const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    mutator(value);
+  }));
+}
+
+$('showLanding').addEventListener('click', () => setSurface('landing'));
+$('showThread').addEventListener('click', () => setSurface('thread'));
+$('themeEnabled').addEventListener('input', event => setThemeEnabled(event.target.checked));
+$('runtimeToggle').addEventListener('click', () => setThemeEnabled(!themeEnabled));
+
+$('localFile').addEventListener('change', event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 16 * 1024 * 1024) {
+    status('图片超过 16 MB，未导入。');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    localImage = reader.result;
+    update(() => {
+      theme.background.mode = 'local';
+      theme.background.source = file.name;
+      theme.background.asset = null;
+    });
+    status('已用于当前预览；导出后请用 theme.ps1 -Image 导入受管运行时。');
+  };
+  reader.readAsDataURL(file);
+});
+
+$('themeImport').addEventListener('change', event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      theme = makeTheme(JSON.parse(reader.result));
+      localImage = theme.background.source === DEFAULT_THEME.background.source ? bundledArt : '';
+      workbenchBackground = clone(theme.background);
+      render();
+      status(localImage ? '有效主题与内置素材已导入。' : '有效主题已导入；本地背景需重新选择。');
+    } catch (error) {
+      status('拒绝主题：' + error.message);
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+});
+
+$('preset').addEventListener('click', () => update(() => {
+  if (theme.accessibility.preset === 'high-read') {
+    theme.accessibility.preset = 'workbench';
+    theme.background = clone(workbenchBackground);
+    theme.accessibility.reducedMotion = false;
+  } else {
+    workbenchBackground = clone(theme.background);
+    theme.accessibility.preset = 'high-read';
+    theme.background.mode = 'solid';
+    theme.background.asset = null;
+    theme.background.taskIntensity = 0;
+    theme.background.landingIntensity = 0;
+    theme.background.dim = 0.94;
+    theme.accessibility.reducedMotion = true;
+  }
+}));
+
+$('export').addEventListener('click', () => {
+  const output = makeTheme(theme);
+  const anchor = document.createElement('a');
+  anchor.href = URL.createObjectURL(new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' }));
+  anchor.download = 'wukong-forge-theme.json';
+  anchor.click();
+  URL.revokeObjectURL(anchor.href);
+  status('已导出 schema v2 主题配置。');
+});
+
+setSurface(surface);
+setThemeEnabled(themeEnabled);
 render();
