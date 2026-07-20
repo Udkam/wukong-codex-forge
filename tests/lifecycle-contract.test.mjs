@@ -25,7 +25,7 @@ test('PowerShell lifecycle scripts parse and keep destructive scope managed', ()
   const launch = read('scripts/launch.ps1');
   const restore = read('scripts/restore.ps1');
   assert.match(install, /\[switch\]\$CreateShortcut/);
-  assert.match(install, /ChatGPT - 大圣主题\.lnk/);
+  assert.match(install, /ChatGPT - Wukong Theme\.lnk/);
   assert.match(launch, /--remote-debugging-address=127\.0\.0\.1/);
   assert.match(launch, /runtime\/watch\.mjs/);
   assert.match(launch, /Get-AppxPackage -Name 'OpenAI\.Codex'/);

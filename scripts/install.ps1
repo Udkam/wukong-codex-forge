@@ -37,7 +37,7 @@ Copy-Item -LiteralPath $wsSource -Destination (Join-Path $managedModules 'ws') -
 $shortcutPath = $null
 if ($CreateShortcut) {
     $startMenu = [Environment]::GetFolderPath('Programs')
-    $shortcutPath = Join-Path $startMenu 'ChatGPT - 大圣主题.lnk'
+    $shortcutPath = Join-Path $startMenu 'ChatGPT - Wukong Theme.lnk'
     $powerShell = (Get-Command powershell.exe -ErrorAction Stop).Source
     $launchScript = Join-Path $target 'app\scripts\launch.ps1'
     $shell = New-Object -ComObject WScript.Shell

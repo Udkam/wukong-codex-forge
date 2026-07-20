@@ -49,7 +49,7 @@ if (
 
 if ($state.shortcutPath) {
     $expectedShortcut = [IO.Path]::GetFullPath(
-        (Join-Path ([Environment]::GetFolderPath('Programs')) 'ChatGPT - 大圣主题.lnk')
+        (Join-Path ([Environment]::GetFolderPath('Programs')) 'ChatGPT - Wukong Theme.lnk')
     )
     $recordedShortcut = [IO.Path]::GetFullPath([string]$state.shortcutPath)
     if (-not [string]::Equals($recordedShortcut, $expectedShortcut, [StringComparison]::OrdinalIgnoreCase)) {

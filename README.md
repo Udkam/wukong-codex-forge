@@ -47,7 +47,7 @@ Studio 可以：
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -CreateShortcut
 ```
 
-开始菜单会出现“ChatGPT - 大圣主题”。以后从该入口启动：
+开始菜单会出现“ChatGPT - Wukong Theme”（大圣主题）。以后从该入口启动：
 
 1. `launch.ps1` 启动官方 `ChatGPT.exe`，只绑定本机回环 CDP。
 2. `watch.mjs` 等待 renderer 就绪并应用主题。
