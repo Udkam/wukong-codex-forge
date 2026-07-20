@@ -35,6 +35,7 @@ test('Wukong style visibly replaces background, navigation and composer without 
     bodyBackground: getComputedStyle(document.body).backgroundImage,
     workspaceBackground: getComputedStyle(document.querySelector('.forge-workspace')).backgroundImage,
     composerRadius: getComputedStyle(document.querySelector('.forge-composer')).borderRadius,
+    composerClip: getComputedStyle(document.querySelector('.forge-composer')).clipPath,
     composerBackground: getComputedStyle(document.querySelector('.forge-composer')).backgroundImage,
     newTaskShadow: getComputedStyle(document.querySelector('.forge-new-task')).boxShadow,
     sidebarClip: getComputedStyle(document.querySelector('.forge-sidebar-action')).clipPath
@@ -43,7 +44,8 @@ test('Wukong style visibly replaces background, navigation and composer without 
   assert.match(landingStyles.bodyBackground, /data:image\/jpeg/);
   assert.match(landingStyles.workspaceBackground, /data:image\/jpeg/);
   assert.notEqual(landingStyles.composerBackground, 'none');
-  assert.match(landingStyles.composerRadius, /3px 18px/);
+  assert.equal(landingStyles.composerRadius, '0px');
+  assert.match(landingStyles.composerClip, /polygon/);
   assert.notEqual(landingStyles.newTaskShadow, 'none');
   assert.notEqual(landingStyles.sidebarClip, 'none');
   assert.deepEqual(await geometry(page), nativeGeometry);
