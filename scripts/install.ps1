@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$Destination = (Join-Path $env:LOCALAPPDATA 'WukongCodexForge'),
-    [switch]$CreateShortcut
+    [switch]$NoShortcut
 )
 
 $ErrorActionPreference = 'Stop'
@@ -35,7 +35,7 @@ New-Item -ItemType Directory -Force -Path $managedModules | Out-Null
 Copy-Item -LiteralPath $wsSource -Destination (Join-Path $managedModules 'ws') -Recurse -Force
 
 $shortcutPath = $null
-if ($CreateShortcut) {
+if (-not $NoShortcut) {
     $startMenu = [Environment]::GetFolderPath('Programs')
     $shortcutPath = Join-Path $startMenu 'ChatGPT - Wukong Theme.lnk'
     $powerShell = (Get-Command powershell.exe -ErrorAction Stop).Source

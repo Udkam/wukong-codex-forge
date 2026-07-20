@@ -24,8 +24,13 @@ test('PowerShell lifecycle scripts parse and keep destructive scope managed', ()
   const install = read('scripts/install.ps1');
   const launch = read('scripts/launch.ps1');
   const restore = read('scripts/restore.ps1');
-  assert.match(install, /\[switch\]\$CreateShortcut/);
+  const installEntry = read('install-theme.cmd');
+  const removeEntry = read('remove-theme.cmd');
+  assert.match(install, /\[switch\]\$NoShortcut/);
+  assert.match(install, /if \(-not \$NoShortcut\)/);
   assert.match(install, /ChatGPT - Wukong Theme\.lnk/);
+  assert.match(installEntry, /scripts\\install\.ps1/);
+  assert.match(removeEntry, /scripts\\restore\.ps1" -Uninstall/);
   assert.match(launch, /--remote-debugging-address=127\.0\.0\.1/);
   assert.match(launch, /runtime\/watch\.mjs/);
   assert.match(launch, /Get-AppxPackage -Name 'OpenAI\.Codex'/);

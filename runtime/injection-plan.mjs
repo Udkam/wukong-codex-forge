@@ -17,23 +17,13 @@ export const MARK_CLASSES = [
   'forge-input'
 ];
 
-const ENABLED_KEY = 'wukong-codex-forge.enabled.v2';
 const RUNTIME_KEY = '__wukongCodexForgeRuntimeV2';
 
 function applyRuntime(payload) {
   const root = document.documentElement;
   const markClasses = payload.markClasses;
-  const enabledKey = payload.enabledKey;
   const runtimeKey = payload.runtimeKey;
   const textForNewTask = new Set(['新建任务', '新聊天', '新建对话', 'New task', 'New chat']);
-  const readPreference = () => {
-    try { return localStorage.getItem(enabledKey); }
-    catch { return null; }
-  };
-  const writePreference = enabled => {
-    try { localStorage.setItem(enabledKey, enabled ? '1' : '0'); }
-    catch {}
-  };
 
   const previous = window[runtimeKey];
   previous?.observer?.disconnect();
@@ -76,32 +66,6 @@ function applyRuntime(payload) {
     return element;
   };
 
-  const landingMark = getOrCreate('forge-landing-mark', () => {
-    const element = document.createElement('section');
-    element.setAttribute('aria-hidden', 'true');
-    const kicker = document.createElement('span');
-    kicker.textContent = '齐天 · 入梦';
-    const title = document.createElement('b');
-    title.append('心有所向', document.createElement('br'), '万行自明');
-    const note = document.createElement('i');
-    note.textContent = 'WUKONG × CODEX';
-    element.append(kicker, title, note);
-    return element;
-  });
-
-  const toggle = getOrCreate('forge-theme-toggle', () => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.setAttribute('aria-label', '切换悟空主题与 Codex 原生主题');
-    const dot = document.createElement('span');
-    dot.className = 'forge-toggle-dot';
-    dot.textContent = '悟';
-    const label = document.createElement('span');
-    label.className = 'forge-toggle-label';
-    button.append(dot, label);
-    return button;
-  });
-
   let companion = document.querySelector('.forge-wayfarer[data-forge-owned="1"]');
   if (!payload.companion?.enabled) {
     companion?.remove();
@@ -112,8 +76,7 @@ function applyRuntime(payload) {
       element.setAttribute('aria-hidden', 'true');
       const image = document.createElement('img');
       image.alt = '';
-      const status = document.createElement('span');
-      element.append(image, status);
+      element.append(image);
       return element;
     });
     companion.dataset.side = payload.companion.side;
@@ -122,20 +85,7 @@ function applyRuntime(payload) {
     companion.querySelector('img').src = payload.companion.image;
   }
 
-  const updateToggle = enabled => {
-    root.classList.toggle('forge-ink-mountain', enabled);
-    toggle.setAttribute('aria-pressed', String(enabled));
-    toggle.title = enabled ? '关闭主题，恢复 Codex 原生外观' : '开启悟空主题';
-    toggle.querySelector('.forge-toggle-label').textContent = enabled ? '主题' : '原生';
-  };
-
-  const setEnabled = enabled => {
-    writePreference(enabled);
-    updateToggle(enabled);
-  };
-
-  toggle.onclick = () => setEnabled(!root.classList.contains('forge-ink-mountain'));
-  updateToggle(readPreference() !== '0');
+  root.classList.add('forge-ink-mountain');
 
   const refresh = () => {
     clearMarks();
@@ -158,7 +108,6 @@ function applyRuntime(payload) {
     mark(composer, 'forge-composer-anchor');
 
     document.querySelectorAll('button').forEach(button => {
-      if (button === toggle) return;
       mark(button, 'forge-button');
       const text = button.textContent.trim();
       if (!text || text.length <= 2) mark(button, 'forge-icon-button');
@@ -170,14 +119,12 @@ function applyRuntime(payload) {
     ).length;
     const surface = messageCount > 0 ? 'thread' : 'landing';
     root.dataset.forgeSurface = surface;
-    landingMark.dataset.surface = surface;
     if (companion) {
       companion.dataset.surface = surface;
-      companion.querySelector('span').textContent = surface === 'landing' ? '候你启程' : '静候下一段行程';
     }
   };
 
-  const state = { observer: null, timer: 0, refresh, setEnabled };
+  const state = { observer: null, timer: 0, refresh };
   const scheduleRefresh = () => {
     if (state.timer) return;
     state.timer = window.setTimeout(() => {
@@ -198,7 +145,6 @@ export function makeApplyExpression({ styleSheet, variables, companion }) {
     variables,
     companion,
     markClasses: MARK_CLASSES,
-    enabledKey: ENABLED_KEY,
     runtimeKey: RUNTIME_KEY
   });
   return `(${applyRuntime.toString()})(${payload})`;
@@ -217,5 +163,4 @@ export const RESTORE_EXPRESSION = `(() => {
   });
   document.documentElement.classList.remove('forge-ink-mountain');
   delete document.documentElement.dataset.forgeSurface;
-  try { localStorage.removeItem('${ENABLED_KEY}'); } catch {}
 })()`;

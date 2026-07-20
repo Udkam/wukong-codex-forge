@@ -93,14 +93,14 @@ test('runtime accepts UTF-8 BOM schema v2 input', () => {
   fs.rmSync(root, { recursive: true, force: true });
 });
 
-test('injection expression is Forge-scoped and includes state and toggle logic', () => {
+test('injection expression is Forge-scoped, state-aware, and contains no in-app controls', () => {
   const expression = makeApplyExpression({
     styleSheet: '.forge-new-task{}',
     variables: '--forge-bg:url("x")',
     companion: { enabled: false }
   });
   assert.match(expression, /--forge-bg:url/);
-  assert.match(expression, /forge-theme-toggle/);
   assert.match(expression, /forgeSurface/);
+  assert.doesNotMatch(expression, /forge-theme-toggle|forge-landing-mark|localStorage/);
   assert.doesNotMatch(expression, /\[class\*=/);
 });

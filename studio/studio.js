@@ -8,7 +8,6 @@ const clone = value => JSON.parse(JSON.stringify(value));
 let theme = loadTheme();
 let localImage = theme.background.source === DEFAULT_THEME.background.source ? bundledArt : '';
 let surface = 'landing';
-let themeEnabled = true;
 let workbenchBackground = clone(theme.background);
 
 function loadTheme() {
@@ -33,16 +32,6 @@ function setSurface(next) {
   $('showLanding').setAttribute('aria-pressed', String(next === 'landing'));
   $('showThread').setAttribute('aria-pressed', String(next === 'thread'));
   $('surfaceLabel').textContent = next === 'landing' ? '新建对话' : '对话进行中';
-  $('wayfarer').querySelector('em').textContent = next === 'landing' ? '候你启程' : '静候下一段行程';
-}
-
-function setThemeEnabled(enabled) {
-  themeEnabled = enabled;
-  $('themeEnabled').checked = enabled;
-  $('runtimeToggle').setAttribute('aria-pressed', String(enabled));
-  $('runtimeToggle').querySelector('b').textContent = enabled ? '主题' : '原生';
-  $('runtimeToggle').title = enabled ? '关闭主题，查看原生外观' : '开启悟空主题';
-  $('preview').classList.toggle('native-preview', !enabled);
 }
 
 function render() {
@@ -127,8 +116,6 @@ for (const [id, mutator] of inputBindings) {
 
 $('showLanding').addEventListener('click', () => setSurface('landing'));
 $('showThread').addEventListener('click', () => setSurface('thread'));
-$('themeEnabled').addEventListener('input', event => setThemeEnabled(event.target.checked));
-$('runtimeToggle').addEventListener('click', () => setThemeEnabled(!themeEnabled));
 
 $('localFile').addEventListener('change', event => {
   const file = event.target.files[0];
@@ -196,5 +183,4 @@ $('export').addEventListener('click', () => {
 });
 
 setSurface(surface);
-setThemeEnabled(themeEnabled);
 render();

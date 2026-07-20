@@ -18,7 +18,7 @@ const run = (file, args, cwd = root) => {
 
 if (fs.existsSync(managed)) throw Error('Refusing integration test: managed runtime already exists.');
 try {
-  run(path.join(root, 'scripts', 'install.ps1'), []);
+  run(path.join(root, 'scripts', 'install.ps1'), ['-NoShortcut']);
   for (const omitted of ['.git', 'docs', 'studio', 'tests']) {
     assert.equal(fs.existsSync(path.join(managed, 'app', omitted)), false, 'development-only path was copied: ' + omitted);
   }

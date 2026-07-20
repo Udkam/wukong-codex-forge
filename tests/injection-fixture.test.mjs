@@ -5,7 +5,7 @@ import { chromium } from '@playwright/test';
 import { makeTheme, cssFor } from '../shared/theme-model.mjs';
 import { makeApplyExpression, RESTORE_EXPRESSION } from '../runtime/injection-plan.mjs';
 
-test('runtime detects surfaces, re-marks dynamic DOM, toggles native mode, and restores cleanly', async t => {
+test('runtime preserves the native shell, detects surfaces, re-marks dynamic DOM, and restores cleanly', async t => {
   const browser = await chromium.launch({ headless: true });
   t.after(() => browser.close());
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -37,11 +37,13 @@ test('runtime detects surfaces, re-marks dynamic DOM, toggles native mode, and r
   await page.evaluate(expression);
 
   assert.equal(await page.locator('html').getAttribute('data-forge-surface'), 'landing');
-  assert.equal(await page.locator('.forge-landing-mark').count(), 1);
-  assert.equal(await page.locator('.forge-theme-toggle').getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('html').evaluate(element => element.classList.contains('forge-ink-mountain')), true);
+  assert.equal(await page.locator('.forge-landing-mark, .forge-theme-toggle').count(), 0);
   assert.equal(await page.locator('.forge-new-task').count(), 1);
   assert.equal(await page.locator('.forge-composer-anchor').count(), 1);
-  assert.equal(await page.locator('.forge-wayfarer span').textContent(), '候你启程');
+  assert.equal(await page.locator('[data-forge-owned]').count(), 2);
+  assert.equal(await page.locator('.forge-wayfarer').evaluate(element => getComputedStyle(element).pointerEvents), 'none');
+  assert.equal(await page.locator('.forge-wayfarer').locator('span').count(), 0);
 
   await page.evaluate(() => {
     const article = document.createElement('article');
@@ -52,7 +54,7 @@ test('runtime detects surfaces, re-marks dynamic DOM, toggles native mode, and r
   assert.equal(await page.locator('html').getAttribute('data-forge-surface'), 'thread');
   assert.equal(await page.locator('article.forge-message').count(), 1);
   assert.equal(await page.locator('pre.forge-code-block').count(), 1);
-  assert.equal(await page.locator('.forge-wayfarer span').textContent(), '静候下一段行程');
+  assert.equal(await page.locator('.forge-wayfarer').getAttribute('data-surface'), 'thread');
 
   await page.evaluate(() => {
     const button = document.createElement('button');
@@ -62,25 +64,13 @@ test('runtime detects surfaces, re-marks dynamic DOM, toggles native mode, and r
   await page.waitForTimeout(220);
   assert.equal(await page.getByText('Dynamic action').evaluate(element => element.classList.contains('forge-button')), true);
 
-  await page.locator('.forge-theme-toggle').click();
-  assert.equal(await page.locator('html').evaluate(element => element.classList.contains('forge-ink-mountain')), false);
-  assert.equal(await page.locator('.forge-theme-toggle').getAttribute('aria-pressed'), 'false');
-  assert.equal(await page.locator('.forge-wayfarer').evaluate(element => getComputedStyle(element).display), 'none');
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundImage), 'none');
-
-  await page.locator('.forge-theme-toggle').click();
-  assert.equal(await page.locator('html').evaluate(element => element.classList.contains('forge-ink-mountain')), true);
-
   await page.evaluate(RESTORE_EXPRESSION);
   await page.waitForTimeout(180);
   assert.equal(await page.locator('[data-forge-mark]').count(), 0);
   assert.equal(await page.locator('[data-forge-owned]').count(), 0);
   assert.equal(await page.locator('#wukong-forge-style').count(), 0);
   assert.equal(await page.locator('html').getAttribute('data-forge-surface'), null);
-  assert.equal(await page.evaluate(() => {
-    try { return localStorage.getItem('wukong-codex-forge.enabled.v2'); }
-    catch { return null; }
-  }), null);
+  assert.equal(await page.locator('html').evaluate(element => element.classList.contains('forge-ink-mountain')), false);
 
   await page.evaluate(() => {
     const button = document.createElement('button');

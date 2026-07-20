@@ -1,51 +1,13 @@
-.forge-theme-toggle {
-  position: fixed;
-  z-index: 2147483600;
-  left: 12px;
-  bottom: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 72px;
-  min-height: 34px;
-  padding: 4px 10px 4px 5px;
-  border: 1px solid rgba(128, 128, 128, .42);
-  border-radius: 999px;
-  background: rgba(24, 24, 24, .92);
-  color: #e5e5e5;
-  box-shadow: 0 5px 18px rgba(0, 0, 0, .28);
-  font: 600 11px/1 system-ui, sans-serif;
-  letter-spacing: .04em;
-  cursor: pointer;
-}
-
-.forge-theme-toggle:focus-visible {
-  outline: 2px solid #8da592;
-  outline-offset: 2px;
-}
-
-.forge-toggle-dot {
-  display: grid;
-  width: 24px;
-  height: 24px;
-  place-items: center;
-  border-radius: 50%;
-  background: #353535;
-  color: #d7d7d7;
-  font: 700 13px/1 "Noto Serif SC", "Songti SC", serif;
-}
-
-.forge-landing-mark,
 .forge-wayfarer {
   display: none;
 }
 
 :root.forge-ink-mountain {
   color-scheme: dark;
-  --forge-line: color-mix(in srgb, var(--forge-gold) 25%, transparent);
-  --forge-hairline: color-mix(in srgb, var(--forge-jade) 18%, transparent);
+  --forge-line: color-mix(in srgb, var(--forge-gold) 24%, transparent);
+  --forge-hairline: color-mix(in srgb, var(--forge-jade) 19%, transparent);
   --forge-surface: color-mix(in srgb, var(--forge-ink) 91%, transparent);
-  --forge-raised: color-mix(in srgb, var(--forge-lacquer) 82%, var(--forge-ink));
+  --forge-raised: color-mix(in srgb, var(--forge-lacquer) 80%, var(--forge-ink));
 }
 
 :root.forge-ink-mountain body {
@@ -63,7 +25,7 @@
 
 :root.forge-ink-mountain[data-forge-surface="landing"] body {
   background-image:
-    linear-gradient(90deg, rgba(9, 11, 10, .92) 0%, rgba(9, 11, 10, .48) 40%, transparent 68%),
+    linear-gradient(90deg, rgba(9, 11, 10, .93) 0%, rgba(9, 11, 10, .56) 38%, transparent 69%),
     linear-gradient(var(--forge-landing-wash), var(--forge-landing-wash)),
     var(--forge-bg) !important;
   background-position: center, center, var(--forge-landing-position) !important;
@@ -71,9 +33,9 @@
 
 :root.forge-ink-mountain .forge-topbar {
   background: linear-gradient(90deg, rgba(9, 11, 10, .98), rgba(33, 23, 19, .94)) !important;
-  border-block-end: 1px solid var(--forge-line) !important;
+  border-color: var(--forge-line) !important;
   color: var(--forge-paper) !important;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, .52) !important;
+  box-shadow: inset 0 -1px var(--forge-line) !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar,
@@ -86,65 +48,42 @@
 }
 
 :root.forge-ink-mountain .forge-sidebar {
-  box-shadow: 8px 0 28px rgba(0, 0, 0, .18) !important;
+  box-shadow: inset -1px 0 var(--forge-hairline), 8px 0 28px rgba(0, 0, 0, .18) !important;
+}
+
+:root.forge-ink-mountain .forge-right-panel {
+  box-shadow: inset 1px 0 var(--forge-hairline) !important;
 }
 
 :root.forge-ink-mountain .forge-workspace {
-  background: rgba(9, 11, 10, .38) !important;
+  background: rgba(9, 11, 10, .43) !important;
   color: var(--forge-paper) !important;
 }
 
 :root.forge-ink-mountain[data-forge-surface="landing"] .forge-workspace {
-  background: linear-gradient(180deg, rgba(9, 11, 10, .08), rgba(9, 11, 10, .42)) !important;
+  background: linear-gradient(180deg, rgba(9, 11, 10, .10), rgba(9, 11, 10, .44)) !important;
 }
 
 :root.forge-ink-mountain .forge-project-tree {
-  border-inline-end: 1px solid var(--forge-line) !important;
+  box-shadow: inset -1px 0 var(--forge-line) !important;
 }
 
 :root.forge-ink-mountain .forge-project-active {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--forge-jade) 23%, transparent), transparent) !important;
-  border-inline-start: 2px solid var(--forge-jade) !important;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--forge-jade) 24%, transparent), transparent) !important;
   color: var(--forge-paper) !important;
+  box-shadow: inset 2px 0 color-mix(in srgb, var(--forge-jade) 74%, transparent) !important;
 }
 
 :root.forge-ink-mountain .forge-new-task {
-  position: relative !important;
-  min-height: 40px !important;
-  padding: 0 14px 0 45px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 9px !important;
-  overflow: hidden !important;
-  background: linear-gradient(102deg, rgba(210, 164, 93, .24), rgba(33, 23, 19, .88) 58%) !important;
-  border: 1px solid color-mix(in srgb, var(--forge-gold) 62%, transparent) !important;
-  border-radius: 3px 10px 3px 3px !important;
-  color: color-mix(in srgb, var(--forge-gold) 62%, var(--forge-paper)) !important;
-  font-weight: 700 !important;
-  letter-spacing: .02em !important;
-}
-
-:root.forge-ink-mountain .forge-new-task::before {
-  content: "启";
-  position: absolute;
-  inset: 0 auto 0 0;
-  display: grid;
-  width: 34px;
-  place-items: center;
-  background: rgba(9, 11, 10, .52);
-  border-inline-end: 1px solid var(--forge-line);
-  color: var(--forge-jade);
-  font: 700 17px/1 "Noto Serif SC", "Songti SC", serif;
+  background-color: color-mix(in srgb, var(--forge-gold) 16%, var(--forge-lacquer)) !important;
+  border-color: color-mix(in srgb, var(--forge-gold) 48%, transparent) !important;
+  color: color-mix(in srgb, var(--forge-gold) 58%, var(--forge-paper)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--forge-gold) 18%, transparent) !important;
 }
 
 :root.forge-ink-mountain .forge-new-task:hover {
-  background: linear-gradient(102deg, rgba(210, 164, 93, .34), rgba(33, 23, 19, .94) 58%) !important;
+  background-color: color-mix(in srgb, var(--forge-gold) 24%, var(--forge-lacquer)) !important;
   border-color: var(--forge-gold) !important;
-  transform: translateY(-1px);
-}
-
-:root.forge-ink-mountain .forge-new-task:active {
-  transform: translateY(1px);
 }
 
 :root.forge-ink-mountain .forge-button {
@@ -159,39 +98,32 @@
 
 :root.forge-ink-mountain .forge-button:focus-visible,
 :root.forge-ink-mountain .forge-new-task:focus-visible {
-  outline: 2px solid var(--forge-jade) !important;
-  outline-offset: 2px !important;
-}
-
-:root.forge-ink-mountain .forge-icon-button {
-  border-radius: 50% !important;
+  outline-color: var(--forge-jade) !important;
 }
 
 :root.forge-ink-mountain .forge-message {
   background: linear-gradient(90deg, rgba(19, 22, 19, .76), rgba(13, 15, 13, .52)) !important;
-  border: 1px solid var(--forge-hairline) !important;
-  border-inline-start: 2px solid color-mix(in srgb, var(--forge-jade) 42%, transparent) !important;
+  border-color: var(--forge-hairline) !important;
   color: var(--forge-paper) !important;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, .12) !important;
+  box-shadow: inset 2px 0 color-mix(in srgb, var(--forge-jade) 36%, transparent), 0 14px 36px rgba(0, 0, 0, .12) !important;
 }
 
 :root.forge-ink-mountain .forge-code-block {
   background: rgba(6, 8, 7, .94) !important;
-  border: 1px solid color-mix(in srgb, var(--forge-jade) 28%, transparent) !important;
-  border-inline-start: 3px solid color-mix(in srgb, var(--forge-gold) 64%, transparent) !important;
+  border-color: color-mix(in srgb, var(--forge-jade) 28%, transparent) !important;
   color: var(--forge-paper) !important;
+  box-shadow: inset 3px 0 color-mix(in srgb, var(--forge-gold) 64%, transparent) !important;
 }
 
 :root.forge-ink-mountain .forge-composer-anchor {
   background: linear-gradient(180deg, rgba(18, 20, 17, .96), rgba(10, 12, 10, .98)) !important;
-  border: 1px solid color-mix(in srgb, var(--forge-gold) 38%, transparent) !important;
-  border-radius: 14px 14px 5px 5px !important;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, .3), inset 0 1px rgba(255, 255, 255, .025) !important;
+  border-color: color-mix(in srgb, var(--forge-gold) 38%, transparent) !important;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, .30), inset 0 1px rgba(255, 255, 255, .025) !important;
 }
 
 :root.forge-ink-mountain .forge-composer-anchor:focus-within {
   border-color: var(--forge-gold) !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--forge-jade) 24%, transparent), 0 18px 45px rgba(0, 0, 0, .3) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--forge-jade) 24%, transparent), 0 18px 45px rgba(0, 0, 0, .30) !important;
 }
 
 :root.forge-ink-mountain .forge-input {
@@ -204,61 +136,11 @@
 }
 
 :root.forge-ink-mountain .forge-tool-rail {
-  border-block-start: 1px solid var(--forge-line) !important;
+  border-color: var(--forge-line) !important;
 }
 
 :root.forge-ink-mountain .forge-menu [role^="menuitem"]:hover {
   background: color-mix(in srgb, var(--forge-jade) 18%, transparent) !important;
-}
-
-:root.forge-ink-mountain .forge-landing-mark {
-  position: fixed;
-  z-index: 8;
-  top: clamp(84px, 15vh, 164px);
-  right: clamp(22px, 4.5vw, 78px);
-  display: grid;
-  width: 168px;
-  padding: 19px 18px 17px;
-  pointer-events: none;
-  border: 1px solid color-mix(in srgb, var(--forge-gold) 38%, transparent);
-  border-block-start: 3px solid var(--forge-gold);
-  background: linear-gradient(145deg, rgba(9, 11, 10, .78), rgba(33, 23, 19, .42));
-  color: var(--forge-paper);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, .2);
-}
-
-:root.forge-ink-mountain .forge-landing-mark::after {
-  content: "";
-  position: absolute;
-  right: -1px;
-  bottom: -14px;
-  width: 42px;
-  height: 14px;
-  border-inline-end: 1px solid var(--forge-line);
-  border-block-end: 1px solid var(--forge-line);
-}
-
-:root.forge-ink-mountain .forge-landing-mark span {
-  color: var(--forge-gold);
-  font: 700 10px/1.2 ui-monospace, monospace;
-  letter-spacing: .28em;
-}
-
-:root.forge-ink-mountain .forge-landing-mark b {
-  margin: 12px 0 16px;
-  font: 700 22px/1.55 "Noto Serif SC", "Songti SC", serif;
-  letter-spacing: .08em;
-}
-
-:root.forge-ink-mountain .forge-landing-mark i {
-  color: color-mix(in srgb, var(--forge-jade) 78%, var(--forge-paper));
-  font: 600 9px/1 ui-monospace, monospace;
-  font-style: normal;
-  letter-spacing: .2em;
-}
-
-:root.forge-ink-mountain[data-forge-surface="thread"] .forge-landing-mark {
-  display: none;
 }
 
 :root.forge-ink-mountain .forge-wayfarer {
@@ -266,10 +148,8 @@
   z-index: 20;
   right: 18px;
   bottom: 76px;
-  display: grid;
+  display: block;
   width: var(--forge-companion-size, 96px);
-  justify-items: center;
-  gap: 0;
   pointer-events: none;
   filter: drop-shadow(0 12px 13px rgba(0, 0, 0, .48));
   animation: forge-idle var(--forge-motion) ease-in-out infinite;
@@ -277,9 +157,10 @@
 
 :root.forge-ink-mountain .forge-wayfarer::after {
   content: "";
+  display: block;
   width: 74%;
   height: 7px;
-  margin-top: -4px;
+  margin: -4px auto 0;
   border-radius: 50%;
   background: rgba(0, 0, 0, .45);
   filter: blur(3px);
@@ -294,17 +175,6 @@
   display: block;
   width: 100%;
   height: auto;
-}
-
-:root.forge-ink-mountain .forge-wayfarer span {
-  margin-top: -2px;
-  padding: 4px 7px;
-  border: 1px solid var(--forge-line);
-  border-radius: 2px;
-  background: rgba(9, 11, 10, .94);
-  color: var(--forge-paper);
-  font: 10px/1.2 system-ui, sans-serif;
-  white-space: nowrap;
 }
 
 :root.forge-ink-mountain .forge-workspace::-webkit-scrollbar,
@@ -326,38 +196,13 @@
 }
 
 @media (max-width: 900px) {
-  :root.forge-ink-mountain .forge-landing-mark {
-    right: 18px;
-    width: 138px;
-    opacity: .82;
-  }
-
   :root.forge-ink-mountain .forge-wayfarer {
     --forge-companion-size: 76px !important;
-  }
-}
-
-@media (max-width: 640px) {
-  :root.forge-ink-mountain .forge-landing-mark {
-    display: none;
-  }
-
-  .forge-toggle-label {
-    display: none;
-  }
-
-  .forge-theme-toggle {
-    min-width: 34px;
-    padding: 4px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root.forge-ink-mountain .forge-wayfarer {
     animation: none !important;
-  }
-
-  :root.forge-ink-mountain .forge-new-task {
-    transition: none !important;
   }
 }

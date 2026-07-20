@@ -8,9 +8,8 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <a class="skip-link" href="#preview">跳到主题预览</a>
   <main class="studio">
-    <aside class="controls" aria-label="主题控制台">
+    <aside class="controls" aria-label="主题控制台" hidden>
       <header class="brand">
         <span class="brand-seal" aria-hidden="true">悟</span>
         <div>
@@ -18,18 +17,7 @@
           <h1>残卷入梦</h1>
         </div>
       </header>
-      <p class="lede">不是贴一张壁纸，而是把“启程、行路、归卷”做成一套可关闭的 Codex 工作界面。</p>
-
-      <div class="master-control">
-        <div>
-          <span>主题主开关</span>
-          <small>关闭后展示原生模拟态</small>
-        </div>
-        <label class="switch" aria-label="切换主题预览">
-          <input id="themeEnabled" type="checkbox" checked>
-          <span></span>
-        </label>
-      </div>
+      <p class="lede">这里只编辑主题参数；实际运行时保留 Codex 原生页面结构，不创建控制栏、底栏或主题按钮。</p>
 
       <section class="control-section" aria-labelledby="scene-title">
         <div class="section-heading"><span>壹</span><h2 id="scene-title">界面状态</h2></div>
@@ -138,7 +126,7 @@
               <article class="message user-message"><div class="avatar">你</div><p>让新建对话有独立封面，进入任务后背景更克制，同时保持原生交互。</p></article>
               <article class="message assistant-message"><div class="avatar ape">悟</div><div><p>已把同一张图拆成两个视觉状态：启程时突出剪影与夕照，行路后只保留余烬和轮廓。</p><pre><code>surface: landing → thread
 runtime: scoped marks + clean restore</code></pre><div class="chips"><button>读取文件</button><button>针对性测试</button><button>提交并推送</button></div></div></article>
-              <article class="message note-message"><span></span><p>主题关闭后，所有受管表面回到 Codex 原生外观；仅保留可再次开启的“悟”控制点。</p></article>
+              <article class="message note-message"><span></span><p>安装即启用主题；卸载后删除全部受管样式与节点，Codex 完整回到原生外观。</p></article>
             </div>
             <div class="composer thread-composer">
               <textarea aria-label="对话输入框" placeholder="交代下一段行程…"></textarea>
@@ -155,15 +143,7 @@ runtime: scoped marks + clean restore</code></pre><div class="chips"><button>读
         </aside>
       </div>
 
-      <button id="runtimeToggle" class="runtime-toggle" type="button" aria-pressed="true" title="切换主题与原生外观"><span>悟</span><b>主题</b></button>
-      <div class="wayfarer" id="wayfarer" aria-hidden="true"><img src="../assets/little-wayfarer.png" alt=""><em>候你启程</em></div>
-    </section>
-
-    <section class="source-rail" aria-label="素材决策">
-      <div><p class="eyebrow">ART DIRECTION / 01</p><h2>一图，两境</h2></div>
-      <article class="source-card chosen"><span class="thumb user-art"></span><div><small>当前采用</small><b>大圣归来 · 用户截图</b><p>剪影明确、暖金聚焦、仅 78 KB；作为默认资产性价比最高。</p></div></article>
-      <article class="source-card"><span class="thumb official-art"></span><div><small>来源指引</small><b>Game Science / Steam</b><p>只保留官方链接，不自动下载或二次分发。</p></div></article>
-      <div class="source-links"><a href="https://www.heishenhua.com/" target="_blank" rel="noreferrer">Game Science ↗</a><a href="https://store.steampowered.com/app/2358720/Black_Myth_Wukong/" target="_blank" rel="noreferrer">Steam ↗</a></div>
+      <div class="wayfarer" id="wayfarer" aria-hidden="true"><img src="../assets/little-wayfarer.png" alt=""></div>
     </section>
   </main>
   <script type="module" src="./studio.js"></script>
