@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "wukong-great-sage",
+  "name": "大圣归来 · 玄金",
+  "description": "A native Codex chrome theme using the supported desktop appearance settings.",
+  "previewAsset": "assets/great-sage-return.jpg",
+  "settings": [
+    { "section": "desktop", "key": "appearanceTheme", "value": "dark" },
+    { "section": "desktop", "key": "appearanceDarkCodeThemeId", "value": "vesper" },
+    { "section": "desktop.appearanceDarkChromeTheme", "key": "accent", "value": "#d6a85f" },
+    { "section": "desktop.appearanceDarkChromeTheme", "key": "contrast", "value": 74 },
+    { "section": "desktop.appearanceDarkChromeTheme", "key": "ink", "value": "#f2e4c8" },
+    { "section": "desktop.appearanceDarkChromeTheme", "key": "opaqueWindows", "value": true },
+    { "section": "desktop.appearanceDarkChromeTheme", "key": "surface", "value": "#0d100e" },
+    { "section": "desktop.appearanceDarkChromeTheme.fonts", "key": "code", "value": "\"JetBrains Mono\"" },
+    { "section": "desktop.appearanceDarkChromeTheme.fonts", "key": "ui", "value": "\"Microsoft YaHei UI\"" },
+    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "diffAdded", "value": "#86a96d" },
+    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "diffRemoved", "value": "#c86a5a" },
+    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "skill", "value": "#d6a85f" }
+  ],
+  "unsupportedByNativeLoader": ["backgroundImage", "companion", "customCss"]
+}

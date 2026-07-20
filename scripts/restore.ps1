@@ -1,64 +1,37 @@
 [CmdletBinding()]
 param(
-    [ValidateRange(1024, 65535)][int]$Port,
     [switch]$Uninstall,
-    [string]$Destination = (Join-Path $env:LOCALAPPDATA 'WukongCodexForge')
+    [string]$Destination = (Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge')
 )
 
 $ErrorActionPreference = 'Stop'
-$controlled = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'WukongCodexForge'))
+$controlled = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge'))
 $target = [IO.Path]::GetFullPath($Destination)
 if (-not [string]::Equals($target, $controlled, [StringComparison]::OrdinalIgnoreCase)) {
-    throw 'Refusing uninstall: Destination is outside the explicitly controlled WukongCodexForge directory.'
-}
-
-$app = Join-Path $target 'app'
-if ($Port -and (Test-Path -LiteralPath (Join-Path $app 'runtime\injector.mjs'))) {
-    Push-Location $app
-    try { node runtime/injector.mjs --restore $Port }
-    finally { Pop-Location }
-}
-if (-not $Uninstall) {
-    Write-Host 'Restore attempted. Close/reopen ChatGPT if a renderer retains cached styles.'
-    return
+    throw 'Refusing uninstall: Destination is outside the managed CODEX_HOME Wukong theme directory.'
 }
 if (-not (Test-Path -LiteralPath $target)) {
-    Write-Host 'No managed runtime exists.'
+    Write-Host 'No native Wukong theme is installed.'
     return
 }
 
 $targetItem = Get-Item -LiteralPath $target -Force
 if ($targetItem.Attributes -band [IO.FileAttributes]::ReparsePoint) {
-    throw 'Refusing uninstall: the controlled path is a reparse point.'
+    throw 'Refusing uninstall: the managed theme path is a reparse point.'
 }
 $statePath = Join-Path $target 'state.json'
-if (-not (Test-Path -LiteralPath $statePath)) {
-    throw 'Refusing uninstall: missing managed state marker.'
-}
-$state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
-if (
-    $state.managedBy -ne 'WukongCodexForge' -or
-    -not [string]::Equals(
-        [IO.Path]::GetFullPath($state.destination),
-        $controlled,
-        [StringComparison]::OrdinalIgnoreCase
-    )
-) {
-    throw 'Refusing uninstall: state marker does not match the controlled runtime.'
+$enginePath = Join-Path $target 'native-theme.mjs'
+if (-not (Test-Path -LiteralPath $statePath) -or -not (Test-Path -LiteralPath $enginePath)) {
+    throw 'Refusing uninstall: managed native theme files are incomplete.'
 }
 
-if ($state.shortcutPath) {
-    $expectedShortcut = [IO.Path]::GetFullPath(
-        (Join-Path ([Environment]::GetFolderPath('Programs')) 'ChatGPT - Wukong Theme.lnk')
-    )
-    $recordedShortcut = [IO.Path]::GetFullPath([string]$state.shortcutPath)
-    if (-not [string]::Equals($recordedShortcut, $expectedShortcut, [StringComparison]::OrdinalIgnoreCase)) {
-        throw 'Refusing uninstall: managed shortcut path does not match the expected Start Menu target.'
-    }
-    if (Test-Path -LiteralPath $recordedShortcut) {
-        Remove-Item -LiteralPath $recordedShortcut -Force
-    }
-}
+$configPath = Join-Path $env:USERPROFILE '.codex\config.toml'
+& node $enginePath restore --config $configPath --destination $target
+if ($LASTEXITCODE -ne 0) { throw 'Native Codex theme restore failed.' }
 
-Remove-Item -LiteralPath $target -Recurse -Force
-Write-Host 'Managed Wukong Codex Forge files and launcher removed. ChatGPT itself was never modified.'
+if ($Uninstall) {
+    Remove-Item -LiteralPath $target -Recurse -Force
+    Write-Host 'Removed the native Wukong theme and restored its prior Codex appearance values.'
+} else {
+    Write-Host 'Restored the prior Codex appearance values; the installed theme files remain.'
+}
