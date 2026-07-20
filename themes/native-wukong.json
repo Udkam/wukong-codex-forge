@@ -1,22 +1,22 @@
 {
   "schemaVersion": 1,
   "id": "wukong-great-sage",
-  "name": "大圣归来 · 六根墨幕",
-  "description": "A restrained ink-veil, bone, old-gold and cinnabar baseline for the managed Wukong style layer.",
+  "name": "大圣归来 · 玄锋双境",
+  "description": "A balanced iron, Yaksha lacquer, cyan-staff jade and Jingu gold baseline for the managed Wukong battle-and-scenery style layer.",
   "previewAsset": "assets/great-sage-return.jpg",
   "settings": [
     { "section": "desktop", "key": "appearanceTheme", "value": "dark" },
     { "section": "desktop", "key": "appearanceDarkCodeThemeId", "value": "vesper" },
-    { "section": "desktop.appearanceDarkChromeTheme", "key": "accent", "value": "#a68b58" },
+    { "section": "desktop.appearanceDarkChromeTheme", "key": "accent", "value": "#bd914d" },
     { "section": "desktop.appearanceDarkChromeTheme", "key": "contrast", "value": 60 },
-    { "section": "desktop.appearanceDarkChromeTheme", "key": "ink", "value": "#d6cfbd" },
+    { "section": "desktop.appearanceDarkChromeTheme", "key": "ink", "value": "#e2ddd3" },
     { "section": "desktop.appearanceDarkChromeTheme", "key": "opaqueWindows", "value": true },
-    { "section": "desktop.appearanceDarkChromeTheme", "key": "surface", "value": "#24251f" },
+    { "section": "desktop.appearanceDarkChromeTheme", "key": "surface", "value": "#1c1f1e" },
     { "section": "desktop.appearanceDarkChromeTheme.fonts", "key": "code", "value": "\"JetBrains Mono\"" },
     { "section": "desktop.appearanceDarkChromeTheme.fonts", "key": "ui", "value": "\"Microsoft YaHei UI\"" },
-    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "diffAdded", "value": "#667a6d" },
-    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "diffRemoved", "value": "#93483a" },
-    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "skill", "value": "#a68b58" }
+    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "diffAdded", "value": "#69777b" },
+    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "diffRemoved", "value": "#9d3029" },
+    { "section": "desktop.appearanceDarkChromeTheme.semanticColors", "key": "skill", "value": "#bd914d" }
   ],
   "unsupportedByNativeLoader": ["backgroundImage", "companion", "customCss"]
 }

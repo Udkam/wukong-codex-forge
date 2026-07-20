@@ -6,26 +6,21 @@ param(
 $ErrorActionPreference = 'Stop'
 $managedTheme = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge'))
 $managedRoot = [IO.Path]::GetFullPath((Join-Path $managedTheme 'app'))
+$managedReleases = [IO.Path]::GetFullPath((Join-Path $managedTheme 'releases'))
 $rootPath = [IO.Path]::GetFullPath($Root)
-if (-not [string]::Equals($rootPath, $managedRoot, [StringComparison]::OrdinalIgnoreCase)) {
-    throw 'Launcher only runs from the managed Wukong Codex Forge app directory.'
+$isLegacyRoot = [string]::Equals($rootPath, $managedRoot, [StringComparison]::OrdinalIgnoreCase)
+$releasePrefix = $managedReleases.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+$isReleaseRoot = $rootPath.StartsWith($releasePrefix, [StringComparison]::OrdinalIgnoreCase) -and (Split-Path $rootPath -Leaf) -eq 'app'
+if (-not $isLegacyRoot -and -not $isReleaseRoot) {
+    throw 'Launcher only runs from a managed Wukong Codex Forge app or release directory.'
+}
+if ($isReleaseRoot -and -not (Test-Path -LiteralPath (Join-Path (Split-Path $rootPath -Parent) 'release.json'))) {
+    throw 'Managed release marker is missing.'
 }
 foreach ($required in @('runtime\watch.mjs', 'runtime\injector.mjs', 'themes\active.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $rootPath $required))) {
         throw "Managed runtime file is missing: $required"
     }
-}
-if (Get-Process -Name ChatGPT -ErrorAction SilentlyContinue) {
-    throw 'Codex is already running. Close it before using the Wukong theme launcher.'
-}
-
-$statePath = Join-Path $managedTheme 'state.json'
-$state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($state.managedBy -ne 'WukongCodexForgeNativeTheme' -or $state.runtime.managedBy -ne 'WukongCodexForgeRuntime') {
-    throw 'Managed theme state marker is invalid.'
-}
-if (-not [string]::Equals([IO.Path]::GetFullPath([string]$state.destination), $managedTheme, [StringComparison]::OrdinalIgnoreCase)) {
-    throw 'Managed theme state destination is invalid.'
 }
 
 $package = Get-AppxPackage -Name 'OpenAI.Codex' | Select-Object -First 1
@@ -36,21 +31,33 @@ $node = (Get-Command node -ErrorAction Stop).Source
 
 $profilePath = Join-Path $managedTheme 'profile'
 $activePortPath = Join-Path $profilePath 'DevToolsActivePort'
-$disableRequest = Join-Path $managedTheme 'disable.request'
 New-Item -ItemType Directory -Force -Path $profilePath | Out-Null
-if (Test-Path -LiteralPath $activePortPath) { Remove-Item -LiteralPath $activePortPath -Force }
-if (Test-Path -LiteralPath $disableRequest) { Remove-Item -LiteralPath $disableRequest -Force }
+$managedProcesses = @(Get-CimInstance Win32_Process -Filter "Name='ChatGPT.exe'" -ErrorAction SilentlyContinue | Where-Object {
+    $_.CommandLine -and $_.CommandLine.IndexOf($profilePath, [StringComparison]::OrdinalIgnoreCase) -ge 0
+})
+if ($managedProcesses.Count -gt 0) { throw 'A managed Wukong Codex instance is already running.' }
 
-function Set-ManagedRuntimeState([string]$value, [Nullable[int]]$port) {
-    $current = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($current.managedBy -ne 'WukongCodexForgeNativeTheme' -or $current.runtime.managedBy -ne 'WukongCodexForgeRuntime') { return }
-    $current.runtime.state = $value
-    $current.runtime.lastLaunchAt = (Get-Date).ToString('o')
-    $current.runtime.port = $port
-    [IO.File]::WriteAllText($statePath, ($current | ConvertTo-Json -Depth 12), [Text.UTF8Encoding]::new($false))
+$sessionId = [Guid]::NewGuid().ToString('N')
+$requestDirectory = Join-Path $managedTheme 'requests'
+$disableRequest = Join-Path $requestDirectory ("disable-$sessionId.request")
+$eventPath = Join-Path $managedTheme 'runtime-events.jsonl'
+New-Item -ItemType Directory -Force -Path $requestDirectory | Out-Null
+
+function Write-RuntimeEvent([string]$value, [Nullable[int]]$port) {
+    $event = [ordered]@{
+        at = (Get-Date).ToString('o')
+        session = $sessionId
+        state = $value
+        port = $port
+        appPath = $rootPath
+        profilePath = $profilePath
+        disableRequest = $disableRequest
+    } | ConvertTo-Json -Compress
+    [IO.File]::AppendAllText($eventPath, $event + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 }
 
-Set-ManagedRuntimeState 'starting' $null
+$launchStartedAt = [DateTime]::UtcNow
+Write-RuntimeEvent 'starting' $null
 $previousUserDataPath = $env:CODEX_ELECTRON_USER_DATA_PATH
 try {
     $env:CODEX_ELECTRON_USER_DATA_PATH = $profilePath
@@ -61,12 +68,14 @@ try {
     ) -PassThru
 }
 finally {
-    if ($null -eq $previousUserDataPath) { Remove-Item Env:CODEX_ELECTRON_USER_DATA_PATH -ErrorAction SilentlyContinue }
+    if ($null -eq $previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', $null, 'Process') }
     else { $env:CODEX_ELECTRON_USER_DATA_PATH = $previousUserDataPath }
 }
 
 $deadline = [DateTime]::UtcNow.AddSeconds(45)
-while (-not (Test-Path -LiteralPath $activePortPath)) {
+while ($true) {
+    $portReady = (Test-Path -LiteralPath $activePortPath) -and ((Get-Item -LiteralPath $activePortPath).LastWriteTimeUtc -ge $launchStartedAt.AddSeconds(-1))
+    if ($portReady) { break }
     if ($codexProcess.HasExited) { throw 'Codex exited before its local theme channel became ready.' }
     if ([DateTime]::UtcNow -ge $deadline) { throw 'Timed out waiting for the local Codex theme channel.' }
     Start-Sleep -Milliseconds 250
@@ -81,19 +90,19 @@ Push-Location $rootPath
 try {
     & $node runtime/injector.mjs --verify $port
     if ($LASTEXITCODE -ne 0) { throw 'Codex loopback theme channel verification failed.' }
-    Set-ManagedRuntimeState 'watching' $port
+    Write-RuntimeEvent 'watching' $port
     & $node runtime/watch.mjs $port themes/active.json $disableRequest
     if ($LASTEXITCODE -ne 0) { throw "Theme watcher exited with code $LASTEXITCODE." }
 }
 finally {
     if (Test-Path -LiteralPath $disableRequest) {
-        Set-ManagedRuntimeState 'disabled' $null
+        Write-RuntimeEvent 'disabled' $null
     } else {
         if (-not $codexProcess.HasExited) {
             try { & $node runtime/injector.mjs --restore $port | Out-Null }
             catch { }
         }
-        Set-ManagedRuntimeState 'not-running' $null
+        Write-RuntimeEvent 'not-running' $null
     }
     Pop-Location
 }

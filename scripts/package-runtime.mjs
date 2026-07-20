@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const requiredDirectories = ['runtime', 'shared', 'themes'];
 const requiredFiles = ['package.json', 'LICENSE'];
+const runtimeScripts = ['launch.ps1', 'disable.ps1'];
 
 const inside = (parent, child) => {
   const relative = path.relative(parent, child);
@@ -25,7 +26,7 @@ export function packageRuntime({ source, destination }) {
     const item = path.join(sourceRoot, directory);
     if (!fs.statSync(item).isDirectory()) throw new Error(`Required runtime directory is missing: ${directory}`);
   }
-  for (const file of [...requiredFiles, 'scripts/launch.ps1']) {
+  for (const file of [...requiredFiles, ...runtimeScripts.map(script => `scripts/${script}`)]) {
     const item = path.join(sourceRoot, file);
     if (!fs.statSync(item).isFile()) throw new Error(`Required runtime file is missing: ${file}`);
   }
@@ -40,7 +41,9 @@ export function packageRuntime({ source, destination }) {
     fs.copyFileSync(path.join(sourceRoot, file), path.join(target, file));
   }
   fs.mkdirSync(path.join(target, 'scripts'), { recursive: true });
-  fs.copyFileSync(path.join(sourceRoot, 'scripts', 'launch.ps1'), path.join(target, 'scripts', 'launch.ps1'));
+  for (const script of runtimeScripts) {
+    fs.copyFileSync(path.join(sourceRoot, 'scripts', script), path.join(target, 'scripts', script));
+  }
   fs.mkdirSync(path.join(target, 'node_modules'), { recursive: true });
   fs.cpSync(wsSource, path.join(target, 'node_modules', 'ws'), { recursive: true });
   return target;

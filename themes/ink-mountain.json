@@ -1,23 +1,41 @@
 {
   "schemaVersion": 2,
   "id": "great-sage-scroll",
-  "name": "大圣归来 · 六根墨幕",
+  "name": "大圣归来 · 玄锋双境",
   "palette": {
-    "ink": "#d6cfbd",
-    "lacquer": "#7f352e",
-    "jade": "#596b61",
-    "gold": "#a68b58",
-    "paper": "#20221e"
+    "ink": "#e2ddd3",
+    "lacquer": "#9d3029",
+    "jade": "#69777b",
+    "gold": "#bd914d",
+    "paper": "#181a19"
   },
   "background": {
-    "mode": "local",
-    "source": "great-sage-return.jpg",
+    "mode": "gallery",
+    "source": "managed-cinematic-gallery",
     "asset": "assets/great-sage-return.jpg",
     "position": "right center",
     "landingPosition": "right center",
-    "dim": 0.34,
-    "taskIntensity": 0.55,
-    "landingIntensity": 0.7
+    "dim": 0.3,
+    "taskIntensity": 0.7,
+    "landingIntensity": 0.84,
+    "primarySceneCount": 3,
+    "gallery": [
+      { "id": "erlang-ink-duel", "asset": "assets/erlang-ink-duel.jpg", "position": "center center", "mode": "battle-primary" },
+      { "id": "great-sage", "asset": "assets/great-sage-return.jpg", "position": "right center", "mode": "battle-primary" },
+      { "id": "great-sage-staff", "asset": "assets/great-sage-staff.jpg", "position": "center center", "mode": "battle-primary" },
+      { "id": "yaksha-king-rift", "asset": "assets/yaksha-king-rift.jpg", "position": "center center", "mode": "battle-secondary" },
+      { "id": "storm-bearer", "asset": "assets/storm-bearer.jpg", "position": "center center", "mode": "battle-secondary" },
+      { "id": "shadow-confrontation", "asset": "assets/shadow-confrontation.jpg", "position": "center center", "mode": "battle-secondary" },
+      { "id": "ridge-gate", "asset": "assets/ridge-gate.jpg", "position": "center center", "mode": "scenery" },
+      { "id": "forest-shrine", "asset": "assets/forest-shrine.jpg", "position": "center center", "mode": "scenery" },
+      { "id": "mountain-path", "asset": "assets/mountain-path.jpg", "position": "center center", "mode": "scenery" },
+      { "id": "stone-buddhas", "asset": "assets/stone-buddhas.jpg", "position": "center center", "mode": "scenery" },
+      { "id": "sunset-ravine", "asset": "assets/sunset-ravine.jpg", "position": "center center", "mode": "scenery" }
+    ]
+  },
+  "motifs": {
+    "yakshaSet": "motifs/yaksha-set.png",
+    "fangedCyanStaff": "motifs/fanged-cyan-staff.png"
   },
   "accessibility": {
     "preset": "workbench",

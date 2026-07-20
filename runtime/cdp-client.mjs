@@ -32,6 +32,7 @@ export const getTargets = port => requestJson(port, '/json/list');
 
 export const isCodexTarget = target => target?.type === 'page' && (
   /^app:\/\/codex\//.test(target.url || '') ||
+  (target.title === 'Codex' && /^app:\/\/-\/index\.html(?:[?#]|$)/.test(target.url || '')) ||
   /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\//.test(target.url || '')
 );
 

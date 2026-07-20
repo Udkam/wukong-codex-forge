@@ -13,7 +13,7 @@ const expression = makeApplyExpression({
   styleSheet: fs.readFileSync(new URL('./forge-theme.css', import.meta.url), 'utf8'),
   variables: payloadFromThemeFile(themePath).variables
 });
-const probe = 'Boolean(document.getElementById("wukong-forge-style") && window.__wukongCodexForgeRuntimeV4)';
+const probe = 'Boolean(document.getElementById("wukong-forge-style") && window.__wukongCodexForgeRuntimeV5)';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let stopping = false;
 let connected = false;

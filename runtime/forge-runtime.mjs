@@ -7,6 +7,8 @@ export { DEFAULT_THEME, cssFor, makeTheme, validateTheme } from '../shared/theme
 
 export const MAX_THEME_BYTES = 256 * 1024;
 export const MAX_ART_BYTES = 16 * 1024 * 1024;
+export const MAX_GALLERY_BYTES = 24 * 1024 * 1024;
+export const MAX_MOTIF_BYTES = 4 * 1024 * 1024;
 
 export function readThemeFile(themePath) {
   const raw = fs.readFileSync(themePath, 'utf8');
@@ -14,10 +16,9 @@ export function readThemeFile(themePath) {
   return validateTheme(JSON.parse(raw.replace(/^\uFEFF/, '')));
 }
 
-export function resolveThemeAsset(themePath, theme) {
-  if (!theme.background.asset) return '';
+const assetDataUrl = (themePath, relativeAsset) => {
   const root = path.resolve(path.dirname(themePath));
-  const asset = path.resolve(root, theme.background.asset);
+  const asset = path.resolve(root, relativeAsset);
   const relative = path.relative(root, asset);
   if (relative.startsWith('..') || path.isAbsolute(relative)) throw Error('Theme asset escapes its managed directory');
   const stat = fs.statSync(asset);
@@ -26,16 +27,59 @@ export function resolveThemeAsset(themePath, theme) {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
-    '.webp': 'image/webp'
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml'
   }[path.extname(asset).toLowerCase()];
   if (!mime) throw Error('Unsupported theme asset');
-  return `data:${mime};base64,${fs.readFileSync(asset).toString('base64')}`;
+  return {
+    bytes: stat.size,
+    url: `data:${mime};base64,${fs.readFileSync(asset).toString('base64')}`
+  };
+};
+
+export function resolveThemeAssets(themePath, theme) {
+  if (theme.background.mode === 'solid') return [];
+  const requested = theme.background.gallery?.length
+    ? theme.background.gallery
+    : theme.background.asset
+      ? [{ id: 'primary', asset: theme.background.asset, position: theme.background.position }]
+      : [];
+  let totalBytes = 0;
+  const cache = new Map();
+  const assets = requested.map(entry => {
+    let encoded = cache.get(entry.asset);
+    if (!encoded) {
+      encoded = assetDataUrl(themePath, entry.asset);
+      cache.set(entry.asset, encoded);
+      totalBytes += encoded.bytes;
+      if (totalBytes > MAX_GALLERY_BYTES) throw Error('Theme gallery exceeds size limit');
+    }
+    return { id: entry.id, url: encoded.url, position: entry.position, mode: entry.mode };
+  });
+  return assets;
+}
+
+export function resolveThemeAsset(themePath, theme) {
+  return resolveThemeAssets(themePath, theme)[0]?.url || '';
+}
+
+export function resolveThemeMotifs(themePath, theme) {
+  if (!theme.motifs) return {};
+  let totalBytes = 0;
+  return Object.fromEntries(Object.entries(theme.motifs).map(([key, relativeAsset]) => {
+    const encoded = assetDataUrl(themePath, relativeAsset);
+    totalBytes += encoded.bytes;
+    if (totalBytes > MAX_MOTIF_BYTES) throw Error('Theme motifs exceed size limit');
+    return [key, encoded.url];
+  }));
 }
 
 export function payloadFromThemeFile(themePath) {
   const theme = readThemeFile(themePath);
-  const assetUrl = resolveThemeAsset(themePath, theme);
-  return { theme, assetUrl, variables: cssFor(theme, assetUrl) };
+  const assets = resolveThemeAssets(themePath, theme);
+  const motifs = resolveThemeMotifs(themePath, theme);
+  const assetUrl = assets[0]?.url || '';
+  return { theme, assetUrl, assets, motifs, variables: cssFor(theme, assets, motifs) };
 }
 
 if (process.argv[2] === '--validate') {

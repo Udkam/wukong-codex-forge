@@ -1,74 +1,78 @@
 # Wukong Codex Forge
 
-“大圣归来 · 六根墨幕”是 Windows Codex 桌面端的《黑神话：悟空》样式层。它保留 Codex 原生顶部栏、侧栏、工作区、输入区和环境栏，不增加主题按钮、侧栏或底栏；在原生 DOM 上替换背景、按钮、输入框、用户气泡、代码块、菜单和环境信息样式。
+“大圣归来 · 玄锋双境”是 Windows Codex 桌面端的《黑神话：悟空》样式层。它保留 Codex 原生顶部栏、侧栏、工作区、输入区和环境信息栏，不增加主题按钮、侧栏、底栏或宠物；只替换现有 DOM 的背景、轮廓与材质。用户提示词和回答不改写，助手回答保持无框，所有原生槽位尺寸不变。
 
-当前视觉从用户本地战绩页截图提炼“六根盘、无框墨幕、细线层级、六点印记”语言：`大圣归来.jpg` 保持为主背景；新对话标题叠放射六根盘；侧栏取消卡片框，仅保留圆形图标、墨迹选中和六点印记；输入框成为单线棍势的悬浮墨台。所有原生槽位尺寸保持不变，用户文字不改写，助手回答保持无框。
+## 玄锋双境
+
+- **新建任务页＝战斗境**：首幕是用户指定的水墨杨戬对决图；大圣归来和金箍棒同属主组，夜叉王、雷法与蓝色对峙只低频出现。
+- **进入对话＝风景境**：根据任务路径和标题稳定选择岭谷、林寺、山径、佛窟或晚霞，同一任务不随时间跳图。
+- **装备采用小面积实物嵌件**：侧栏与环境信息窗口裁取厌火套装的长角/鬼面/甲片；输入框只嵌入短截兽棍·神锋与金箍棒实景，不贴整个人物或拉伸武器。
+- **原生形状优先**：275 px 侧栏、46 px 任务栏、768/736 px 内容与输入器、300 px 浮动环境卡及原生圆角均不变；只换背景、透明度、边线和材质。
 
 ## 安装与使用
 
 下载并解压后双击 [install-theme.cmd](install-theme.cmd)，或执行：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-preserving.ps1
 ```
 
 安装器会：
 
-1. 把最小运行包安装到 `%USERPROFILE%\.codex\themes\wukong-codex-forge`。
-2. 写入中明度烟墨原生外观基线，并按键记录安装前值。
-3. 创建开始菜单入口 `Codex - Wukong Theme`。
+1. 把最小运行包写入 `%USERPROFILE%\.codex\themes\wukong-codex-forge\releases\<版本-时间>`。
+2. 保留旧 app、旧 state、旧素材和历史配置副本；若检测到早期颜色主题，只在完整备份后按键恢复用户原值。
+3. 创建版本化开始菜单入口 `Codex - Wukong Theme 0.7.0`，不会覆盖旧入口。
 
-若 Codex 已打开，安装器不会强关或修改当前进程。准备审计时，正常关闭当前 Codex，再从 `Codex - Wukong Theme` 启动；主题 watcher 与该次 Codex 同启同停。普通 Codex 入口仍保持官方行为。
+安装完成后，从版本化入口启动即使用主题，watcher 与这次 Codex 同启同停。普通 Codex 可以保持打开；主题入口使用独立受管 profile，不强关现有窗口，也不修改 `ChatGPT.exe`、WindowsApps、`app.asar`、签名文件或官方快捷方式。已经运行且没有调试端口的普通 Codex 窗口无法通过“只复制文件”即时换肤。
 
-该启动方式是当前 Chromium 安全策略下实现自定义背景与 CSS 的稳定边界：默认 profile 会忽略外部远程调试参数，受管启动器因此使用主题目录内的隔离 web profile 和随机回环端口。它不修改 `ChatGPT.exe`、WindowsApps、`app.asar` 或签名文件。
-
-## 删除与恢复
+## 停用与保留
 
 双击 [remove-theme.cmd](remove-theme.cmd)，或执行：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\restore.ps1 -Uninstall
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\disable.ps1
 ```
 
-卸载器先移除打开窗口中的样式并按键恢复原生配置，再删除快捷方式和受管目录。若受管 Codex 窗口仍占用 profile，样式会先恢复原生，卸载器会要求关闭该窗口后再运行一次，以避免强杀进程或损坏 profile。
+停用脚本向当前受管 watcher 请求恢复原生样式，但不删除任何文件；再次从普通 Codex 入口打开就是原生界面。0.7.0 不向官方程序或 Codex 原生主题配置写入持续样式，因此用户自行移除整个受管主题目录后也不会残留背景或组件 CSS。本轮按最高约束保留所有旧版本、历史 state、素材、测试证据和研究副本。
 
-不要直接删除 `state.json`：它保存精确恢复安装前外观所需的键级记录。用户在安装后再次修改过的受管键会被保留，不会被旧值覆盖。
+## 成本与稳定性
 
-## 视觉与运行边界
-
-- 页面布局和事件由 Codex 提供；样式层不创建 body 子节点。
-- 运行时只在 `head` 添加一个受管 `<style>`，并为现有元素添加可清理标记类。
-- landing/thread 状态由当前 Codex 数据属性与路由判定，110 ms 合并刷新。
-- 背景图本地内嵌，无主题网络请求；素材大小约 78 KB。
-- watcher 每 1.7 秒进行一次廉价存活/样式探测，Codex 关闭后自动退出。
-- 小悟空宠物本版暂缓，因为用户当前优先要求原生页面无额外节点。
+- 11 张压缩 JPEG 和 2 张透明 PNG 共 4,693,008 bytes（约 4.48 MiB）；启动后无素材网络请求。
+- 无视频解码、定时轮播、持续截图或布局轮询。
+- 页面内只有一个 `head` 样式节点和一个 110 ms 合并的 `MutationObserver`；watcher 每 1.7 秒做一次廉价存活探测。
+- 页面内停用只撤销受管 style 和 `forge-*` 标记；磁盘文件与历史版本全部保留。
 
 ## 针对性验证
 
 ```powershell
-npm install
-npm run validate
 npm run test:theme
-npm run test:lifecycle
 npm run test:managed-package
 npm run test:runtime-states
 ```
 
-这些测试分别覆盖原生基线升级/恢复、Windows 生命周期与路径边界、最小包独立导入、landing/thread 动态样式、中明度范围、无新增 UI、输入框与消息几何不变、对话文字零改写、助手回答无框和清理恢复。
+当前证据分两类：
 
-当前两张自动实渲染证据：
+- 生产 DOM 形态 fixture：验证双境切换、原生几何不变、回答无框、文字零改写、装备素材实际载入与完全清理。
+- 本机生产窗口：只有从受管入口启动、并同时记录注入状态与端口的截图才算真实 Codex 证据。
 
-- [新对话样式](docs/screenshots/runtime-style-landing.png)
-- [对话中样式](docs/screenshots/runtime-style-thread.png)
+自动实渲染截图：
 
-它们是生产 DOM 形态 fixture 的浏览器渲染，不冒充当前真实 Codex 窗口截图；真实窗口验收须在受管入口启动后完成。
+- [原生 UI 基线](docs/screenshots/native-ui-baseline.png)
+- [战斗境·杨戬首幕](docs/screenshots/runtime-style-battle-erlang.png)
+- [战斗境·大圣归来](docs/screenshots/runtime-style-battle-great-sage.png)
+- [战斗境·夜叉王](docs/screenshots/runtime-style-battle-yaksha.png)
+- [战斗境·金箍棒](docs/screenshots/runtime-style-battle-jingu.png)
+- [风景境·对话中](docs/screenshots/runtime-style-thread.png)
+- [金箍棒与兽棍·神锋输入框近景](docs/screenshots/runtime-style-composer.png)
+- [厌火套装环境信息近景](docs/screenshots/runtime-style-environment.png)
 
 ## 文档
 
 - [需求与验收](docs/REQUIREMENTS.md)
 - [设计与实现](docs/DESIGN.md)
-- [分工与交付边界](docs/WORKBREAKDOWN.md)
+- [多对话分工与交付边界](docs/WORKBREAKDOWN.md)
 - [运行时调查](docs/RUNTIME_FINDINGS.md)
+- [Codex 26.715.2305.0 原生 UI 基线](docs/UI_BASELINE.md)
 - [素材来源与发布边界](docs/ASSET_SOURCES.md)
 
-过程日志位于本地 `docs/logs/CHANGELOG.md`，按仓库约定不提交。代码以 [MIT](LICENSE) 发布；游戏名称、截图与官方艺术作品的权利属于其各自权利人。
+过程日志位于本地 `docs/logs/CHANGELOG.md`，按仓库约定不提交。代码以 [MIT](LICENSE) 发布；游戏名称、截图、装备参考与官方艺术作品的权利属于其各自权利人。

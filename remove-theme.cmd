@@ -1,3 +1,3 @@
 @echo off
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\restore.ps1" -Uninstall
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\disable.ps1"
 if errorlevel 1 pause

@@ -46,7 +46,7 @@ test('install and uninstall round-trip only managed native appearance values', (
   ].join('\r\n');
   const applied = applyNativeTheme(original, definition.settings);
   assert.match(applied.text, /appearanceTheme = "dark"/);
-  assert.match(applied.text, /accent = "#a68b58"/);
+  assert.match(applied.text, /accent = "#bd914d"/);
   assert.match(applied.text, /ui = "\\"Microsoft YaHei UI\\""/);
   assert.match(applied.text, /\[features\]\r\nmemories = true/);
 
@@ -58,7 +58,7 @@ test('install and uninstall round-trip only managed native appearance values', (
 test('uninstall preserves a managed value changed by the user after install', () => {
   const original = '[desktop]\nappearanceTheme = "system"\n';
   const applied = applyNativeTheme(original, definition.settings);
-  const userChanged = applied.text.replace('accent = "#a68b58"', 'accent = "#ff00aa"');
+  const userChanged = applied.text.replace('accent = "#bd914d"', 'accent = "#ff00aa"');
   const restored = restoreNativeTheme(userChanged, applied.state);
   assert.match(restored.text, /accent = "#ff00aa"/);
   assert.ok(restored.warnings.some(warning => warning.includes('appearanceDarkChromeTheme.accent')));
@@ -84,7 +84,7 @@ test('upgrade replaces an older managed theme while preserving the pre-theme bas
   const upgraded = upgradeNativeTheme(oldApplied.text, oldApplied.state, definition.settings);
   assert.deepEqual(upgraded.warnings, []);
   assert.match(upgraded.text, /appearanceTheme = "dark"/);
-  assert.match(upgraded.text, /accent = "#a68b58"/);
+  assert.match(upgraded.text, /accent = "#bd914d"/);
   const restored = restoreNativeTheme(upgraded.text, upgraded.state);
   assert.deepEqual(restored.warnings, []);
   assert.equal(restored.text, original);

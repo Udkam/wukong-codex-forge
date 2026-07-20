@@ -22,7 +22,7 @@ export const MARK_CLASSES = [
   'forge-button'
 ];
 
-const RUNTIME_KEY = '__wukongCodexForgeRuntimeV4';
+const RUNTIME_KEY = '__wukongCodexForgeRuntimeV5';
 
 function applyRuntime(payload) {
   const root = document.documentElement;
@@ -88,44 +88,86 @@ function applyRuntime(payload) {
     }
     return null;
   };
-  const composerAncestor = editor => {
-    const direct = editor.closest('[data-thread-find-composer="true"], form');
-    if (direct && visible(direct)) return direct;
-    let element = editor;
-    let match = null;
-    while (element && element !== document.body) {
+  const composerSurface = editor => {
+    const fitsComposer = element => {
+      if (!visible(element)) return false;
       const rect = element.getBoundingClientRect();
-      if (
+      return (
         rect.width >= Math.min(360, innerWidth * .48) &&
-        rect.width <= innerWidth * .88 &&
+        rect.width <= Math.min(960, innerWidth * .9) &&
         rect.height >= 58 &&
         rect.height <= 240 &&
         rect.bottom >= innerHeight * .68
-      ) match = element;
-      if (rect.height > 260) break;
-      element = element.parentElement;
-    }
-    return match || editor.parentElement;
+      );
+    };
+    const exact = editor.closest('.composer-surface-chrome');
+    if (exact && fitsComposer(exact)) return exact;
+    const attributed = editor.closest('[data-codex-composer]');
+    if (attributed && fitsComposer(attributed)) return attributed;
+    return [...document.querySelectorAll('[data-thread-find-composer="true"] .composer-surface-chrome')]
+      .filter(fitsComposer)
+      .sort((left, right) => right.getBoundingClientRect().bottom - left.getBoundingClientRect().bottom)[0] || null;
   };
   const textOf = element => (element?.textContent || '').replace(/\s+/g, ' ').trim();
+  const stableHash = value => {
+    let hash = 2166136261;
+    for (let index = 0; index < value.length; index += 1) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  };
   const newTaskLabels = [
     '新建任务', '新聊天', '新建对话', '新任务',
     'New task', 'New chat', 'Start a new chat'
   ];
+  let battleCycle = 0;
 
   const refresh = () => {
     clearMarks();
 
-    const threadEvidence = document.querySelector([
+    const previousSurface = root.dataset.forgeSurface || null;
+    const threadEvidence = [...document.querySelectorAll([
       '[data-thread-find-target="conversation"]',
       '[data-virtualized-turn-content]',
       '[data-content-search-turn-key]',
       '[data-local-conversation-final-assistant]',
-      '[data-message-author-role]'
-    ].join(','));
-    const threadRoute = /^\/(?:local|remote|thread|c)\//i.test(location.pathname);
-    const surface = threadEvidence || threadRoute ? 'thread' : 'landing';
+      '[data-message-author-role]',
+      '[data-testid*="conversation" i]',
+      '[data-testid*="assistant" i]',
+      '[class*="conversation-turn" i]'
+    ].join(','))].find(visible);
+    const surfaceRoot = document.querySelector('[role="main"], main');
+    const landingTitle = [...(surfaceRoot || document).querySelectorAll('h1, h2')].some(element => (
+      /今天想处理什么|准备好就开始|从哪里开始|what(?:'s| is) on your mind|ready when you are|where should we begin|what (?:do you want|would you like) to (?:work on|do)|how can i help|新建任务/i.test(textOf(element))
+    ));
+    const landingMain = [...document.querySelectorAll('[data-vscode-context*="supportsNewChatMenu"] [role="main"]')].some(visible);
+    const localComposer = [...document.querySelectorAll('[data-thread-find-composer="true"]')].some(visible);
+    const surface = threadEvidence || (localComposer && !landingTitle && !landingMain) ? 'thread' : 'landing';
     root.dataset.forgeSurface = surface;
+    const mode = surface === 'landing' ? 'battle' : 'scenery';
+    root.dataset.forgeMode = mode;
+    const rootStyle = getComputedStyle(root);
+    const sceneCount = Math.max(1, Number.parseInt(rootStyle.getPropertyValue('--forge-scene-count'), 10) || 1);
+    const sceneList = name => rootStyle.getPropertyValue(name)
+      .trim()
+      .split(/\s+/)
+      .map(value => Number.parseInt(value, 10))
+      .filter(value => Number.isInteger(value) && value >= 0 && value < sceneCount);
+    const sceneryScenes = sceneList('--forge-scenery-scenes');
+    const primaryBattleScenes = sceneList('--forge-battle-primary-scenes');
+    const secondaryBattleScenes = sceneList('--forge-battle-secondary-scenes');
+    let scene = 0;
+    if (mode === 'battle') {
+      if (previousSurface === 'thread') battleCycle += 1;
+      const useSecondary = secondaryBattleScenes.length > 0 && battleCycle % 4 === 3;
+      const choices = useSecondary ? secondaryBattleScenes : primaryBattleScenes;
+      if (choices.length) scene = choices[battleCycle % choices.length];
+    } else if (sceneryScenes.length) {
+      const key = `${location.pathname}|${document.title || 'codex'}`;
+      scene = sceneryScenes[stableHash(`${key}|scenery`) % sceneryScenes.length];
+    }
+    root.dataset.forgeScene = String(scene);
 
     let topbar = document.querySelector('body > header, #root > header, header');
     if (!topbar || topbar.getBoundingClientRect().top > 90) {
@@ -135,7 +177,7 @@ function applyRuntime(payload) {
     }
     mark(topbar, 'forge-topbar');
 
-    let sidebar = document.querySelector('[data-testid="app-shell-floating-left-panel"], nav[aria-label], aside[aria-label*="chat" i]');
+    let sidebar = document.querySelector('aside.app-shell-left-panel, aside[data-testid="app-shell-floating-left-panel"], [data-testid="app-shell-floating-left-panel"], nav[aria-label], aside[aria-label*="chat" i]');
     if (!sidebar || !visible(sidebar)) sidebar = panelAt(14, innerHeight * .52, 'left');
     mark(sidebar, 'forge-sidebar');
     if (sidebar) {
@@ -196,7 +238,7 @@ function applyRuntime(payload) {
       '[contenteditable="true"]'
     ].join(','))].filter(visible);
     const editor = editors.sort((left, right) => right.getBoundingClientRect().bottom - left.getBoundingClientRect().bottom)[0];
-    const composer = editor ? composerAncestor(editor) : null;
+    const composer = editor ? composerSurface(editor) : null;
     mark(editor, 'forge-input');
     mark(composer, 'forge-composer');
     composer?.querySelectorAll('button, [role="button"]').forEach(button => mark(button, 'forge-composer-button'));
@@ -206,21 +248,36 @@ function applyRuntime(payload) {
     document.querySelectorAll('[data-message-author-role="user"]').forEach(turn => {
       mark(turn.querySelector('[data-user-message-bubble]') || turn, 'forge-user-message');
     });
-    markAll('[data-local-conversation-final-assistant], [data-message-author-role="assistant"]', 'forge-assistant-message');
+    document.querySelectorAll([
+      '[data-local-conversation-final-assistant]',
+      '[data-message-author-role="assistant"]',
+      '[data-testid*="assistant" i]',
+      '[aria-label*="assistant" i]',
+      '[aria-label*="回答"]',
+      '[class*="assistant-message" i]'
+    ].join(',')).forEach(element => {
+      mark(element, 'forge-assistant-message');
+    });
     markAll('pre, pre:has(code)', 'forge-code-block');
 
-    let rightPanel = document.querySelector('[role="complementary"], aside[aria-label*="environment" i], aside[aria-label*="环境"]');
+    let rightPanel = document.querySelector('[data-pip-obstacle="thread-summary-panel"], aside[data-app-shell-focus-area="right-panel"], [role="complementary"], aside[aria-label*="environment" i], aside[aria-label*="环境"]');
     if (!rightPanel || rightPanel === sidebar || !visible(rightPanel)) rightPanel = panelAt(innerWidth - 14, innerHeight * .52, 'right');
     mark(rightPanel, 'forge-right-panel');
     if (rightPanel) {
-      [...rightPanel.querySelectorAll('div, section')].forEach(element => {
+      const rightCards = [...rightPanel.querySelectorAll('div, section')].filter(element => {
         const rect = element.getBoundingClientRect();
         const panelRect = rightPanel.getBoundingClientRect();
         if (rect.width >= panelRect.width * .72 && rect.height >= 48 && rect.height <= innerHeight * .72) {
           const computed = getComputedStyle(element);
-          if (parseFloat(computed.borderRadius) >= 6 || computed.borderTopWidth !== '0px') mark(element, 'forge-right-card');
+          return parseFloat(computed.borderRadius) >= 6 || computed.borderTopWidth !== '0px';
         }
+        return false;
+      }).sort((left, right) => {
+        const leftRect = left.getBoundingClientRect();
+        const rightRect = right.getBoundingClientRect();
+        return rightRect.width * rightRect.height - leftRect.width * leftRect.height;
       });
+      mark(rightCards[0], 'forge-right-card');
     }
 
     markAll('[role="menu"]', 'forge-menu');
@@ -273,4 +330,6 @@ export const RESTORE_EXPRESSION = `(() => {
   });
   document.documentElement.classList.remove('forge-ink-mountain');
   delete document.documentElement.dataset.forgeSurface;
+  delete document.documentElement.dataset.forgeScene;
+  delete document.documentElement.dataset.forgeMode;
 })()`;

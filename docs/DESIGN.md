@@ -1,76 +1,71 @@
-# 大圣归来 · 六根墨幕 — 设计与实现
+# 大圣归来 · 玄锋双境 — 设计与实现
 
-## 设计来源
+## 设计结论
 
-背景继续使用用户指定的 `大圣归来.jpg`。组件语言不再来自通用“古风卡片”，而是从用户本地 `11891心猿.jpg` 战绩页提炼：大面积无框墨幕、放射圆盘、六点印记、细水平线和少量暖金。`金箍.jpg` 提供熔金棍势与暗绿黑环境的明暗关系，`封面.png` 提供黑底金绘与朱砂小印的比例。三张参考图只用于观察，不进入运行包。
+本轮不再做“深色界面加金边”，也不用古风卡片、书法标签、emoji 或装饰按钮制造主题感。视觉核心改为“真实画面 + 高保真兵甲实物”：杨戬、大圣、夜叉王和黑神话风景承担画面张力，厌火套装、兽棍·神锋和金箍棒承担组件辨识度。
 
-## 三个母题
+页面仍然是 Codex：定位、尺寸、文案、图标、事件和三栏结构均不改。主题仅在现有节点上增加 class / dataset，使用背景层和空内容伪元素替换表面。
 
-| 母题 | 应用位置 | 设计特征 |
+## 双境状态
+
+| Codex 页面 | 主题状态 | 用途 |
 | --- | --- | --- |
-| 六根盘 | 新对话标题、项目选中 | 标题背后由 radial/conic gradient 组成放射盘；选中项目用六个微点形成印记 |
-| 无框墨幕 | 侧栏、右栏、用户气泡、菜单 | 黑绿墨色由实到虚，不使用逐项卡片边框；层级由细线、明度和局部朱砂表达 |
-| 单线棍势 | 输入框、任务栏、代码 | 一条旧金到朱砂的水平亮线贯穿墨台；工具按钮是石符轮廓，发送键是熔金圆印 |
+| 新建任务 / landing | **战斗境** `data-forge-mode="battle"` | 任务开始前给出最强张力和角色识别 |
+| 已进入对话 / thread | **风景境** `data-forge-mode="scenery"` | 长时间阅读时降低角色冲突，保留世界感 |
 
-配色为暖骨白 `#d6cfbd`、墨绿黑 `#20221e`、旧金 `#a68b58`、朱砂 `#7f352e`、灰青 `#596b61`。亮色只用于文字、放射线、六点印和交互焦点；背景画面保留中等亮度，不铺白纸，也不退回近黑纯色。
+这一映射不提供开关按钮，由运行时根据可见页面语义自动判断。对话 data 属性、virtualized turn、assistant 包装和新建页原生标题是依据；`supportsNewChatMenu` 与 pathname 都不能单独判断页面状态。
 
-## 双页面状态
+## 场景系统
 
-- `landing`：`大圣归来.jpg` 高显影；原生标题文字不改，背后叠放射六根盘；原生输入框在原位置呈悬浮墨台。
-- `thread`：背景增加墨色 wash；用户气泡只有墨迹材质和右侧朱砂影，助手回答背景/边框/阴影全部为 none；代码仍使用独立墨面以维持可读性。
+| 索引 | 文件 | 分组 | 视觉主体 |
+| --- | --- | --- | --- |
+| 0 | `erlang-ink-duel.jpg` | battle-primary | 水墨杨戬与大圣对决，战斗境首幕 |
+| 1 | `great-sage-return.jpg` | battle-primary | 大圣归来剪影与残阳 |
+| 2 | `great-sage-staff.jpg` | battle-primary | 金箍棒与大圣甲胄特写 |
+| 3 | `yaksha-king-rift.jpg` | battle-secondary | 夜叉王红色裂焰 |
+| 4 | `storm-bearer.jpg` | battle-secondary | 雷法、棍势与青蓝强光 |
+| 5 | `shadow-confrontation.jpg` | battle-secondary | 蓝色光柱下的巨影对峙 |
+| 6 | `ridge-gate.jpg` | scenery | 日色岭谷与山门 |
+| 7 | `forest-shrine.jpg` | scenery | 雾林寺院 |
+| 8 | `mountain-path.jpg` | scenery | 山道、石灯与天光 |
+| 9 | `stone-buddhas.jpg` | scenery | 佛窟、造像与暗部烛火 |
+| 10 | `sunset-ravine.jpg` | scenery | 晚霞山峡 |
 
-状态由 Codex 当前数据属性、路由和消息证据判定；MutationObserver 以 110 ms 合并刷新。没有额外主题开关、侧栏、底栏或状态卡。
+战斗境第一次进入固定为索引 0；从 thread 返回 landing 后依次使用三张主场景，每第四次使用一张次场景。风景境使用 `location.pathname + document.title` 的 FNV-1a 稳定哈希，同一任务刷新后仍保持同图。两种状态都不使用计时轮播、视频解码或运行时网络请求。
 
-## 几何与内容契约
+## 装备与组件映射
 
-运行时优先使用当前 Codex 的稳定属性：
+| 元素 | 真实特征 | 落点 |
+| --- | --- | --- |
+| 厌火套装 | 暗红长角、鬼面、灰蓝绣衫、玫红骨肉纹与前臂骨刺 | 新建任务按钮、当前项目、环境信息外卡 |
+| 兽棍·神锋 | 旧金兽首、青绿结晶核、象牙骨刺、灰白波纹棍身与暗红短穗 | 输入框底部右侧 112 × 24 px 短截武器头 |
+| 金箍棒 | 暗褐红棍芯、分段旧金箍环和燃金棍势 | 输入框底部 168–224 × 20 px 实景嵌件 |
 
-- `data-thread-find-target="conversation"`
-- `data-thread-find-composer="true"`
-- `data-virtualized-turn-content`
-- `data-content-search-turn-key`
-- `data-user-message-bubble`
-- `data-local-conversation-final-assistant`
-- `data-vscode-context*="supportsNewChatMenu"`
+厌火套装与兽棍·神锋均使用透明 PNG，不再用通用 SVG 盾牌、直线或随机切角替代实际装备。原图、编辑方式和权利边界记录在 `ASSET_SOURCES.md`。
 
-标记器只给现有节点增加 `forge-*` class 和 `data-forge-mark`。用户样式只落到真正的 `data-user-message-bubble`，不标记外层 anchor；唯一新增元素是 `head` 内的一个受管 `<style>`。运行时不写入任何提示词或回答节点。
+## 配色与明度
 
-CSS 不设置输入框或消息的 `width`、`height`、`padding`、`margin`、定位或 transform。棍线是 composer 的 background layer，不再为装饰覆盖宿主 `position`。定向测试在注入前后逐项比较 composer、用户气泡、助手回答和代码块 DOMRect，fixture 的原生 composer 基线为 736 px，并比较整段 `innerText`。
+| 角色 | 色值 | 用法 |
+| --- | --- | --- |
+| 骨白 | `#e5dfd4` | 正文和关键标题 |
+| 夜叉漆红 | `#8f2f3e` / `#b94655` | 厌火内甲、尾脊与小面积强调 |
+| 神锋青钢 | `#527a75` / `#a8b5b3` | focus、接缝和次级信息 |
+| 金箍旧金 | `#b79455` / `#d0b172` | 金环、链接和小面积热点 |
+| 石青黑铁 | `#202420` / `#292e2b` | 基层、侧栏和稳定阅读表面 |
 
-恢复表达式断开 observer、移除 listener/style/class/data 标记，并清空 landing/thread 状态。测试断言 body 子节点数不增加、清理后受管标记为零。
+配色是画面的承托，不是主题本身。战斗境主体区遮罩较薄，确保杨戬、夜叉王和金箍棒可识别；风景境只在文字左右增加方向性 veil，不把图压成近黑。
 
-## 生命周期
+## 原生几何和内容契约
 
-```mermaid
-flowchart LR
-  A["install-theme.cmd"] --> B["安装六根墨幕原生基线"]
-  B --> C["打包最小 runtime"]
-  C --> D["创建 Codex - Wukong Theme"]
-  D --> E["启动官方 ChatGPT.exe + 随机回环端口"]
-  E --> F["watcher 注入/维持样式"]
-  F --> G["Codex 关闭后 watcher 退出"]
-  H["remove-theme.cmd"] --> I["实时清理样式 + 恢复 TOML 键"]
-  I --> J["删除快捷方式、profile 与受管目录"]
-```
+- 不对顶部栏、侧栏、项目树、环境行、消息和输入槽位设置 `width`、`height`、`margin`、`padding`、`gap`、定位或 `transform`。
+- composer 只在实际组合框宽 360–960 px、高 58–240 px 且位于页面底部时标记；外层过宽 `form` 不再降级命中，修复“输入框被拉长”的生产 DOM 风险。
+- 环境栏只标记面积最大的一个候选容器，防止多层嵌套同时变成卡片。
+- 只对实际 `[data-local-conversation-final-assistant]` 助手包装去除背景、边框、阴影、outline 和 filter；不再污染 turn 祖先链。代码块可保留独立黑铁表面。
+- 用户气泡只更换不占布局的材质与轮廓。注入前后对话 `innerText` 必须逐字一致。
+- 唯一新增节点是 `head` 内的受管 `<style>`；body 内不新增任何 UI。
 
-默认 Chromium profile 会忽略远程调试参数，因此受管入口使用主题目录内的隔离 web profile。官方 Store 包路径在每次启动时通过 `Get-AppxPackage OpenAI.Codex` 解析，更新后无需写死版本路径。
+## 恢复与兼容
 
-## 配置恢复
+恢复表达式会断开 observer，移除 listener、style、class、`data-forge-mark`、`data-forge-surface`、`data-forge-mode` 与 `data-forge-scene`。强制高对比模式下禁用所有图片伪元素，优先保证系统可访问性。
 
-原生基线用于启动前和非注入表面：`appearanceTheme=dark`，`appearanceDarkChromeTheme` 使用墨绿黑、暖骨白与旧金。已有安装可原位升级：引擎先按旧 state 精确还原安装前基线，再应用新定义并生成新 state；卸载仍能回到主题安装前的用户值。
-
-恢复只操作主题持有的 TOML section/key。若用户安装后改过某键，恢复保留用户值并输出警告，不回滚整份配置。
-
-## 性能与兼容
-
-| 项目 | 设计值 |
-| --- | --- |
-| 背景网络请求 | 0，本地 JPEG 以内嵌 data URL 使用 |
-| 新增 body 节点 | 0 |
-| 样式节点 | 1，位于 head |
-| observer | 1，110 ms 合并 |
-| watcher | 1 个 Node 进程，1.7 s 存活探测 |
-| 调试端口 | 随机、仅 `127.0.0.1` |
-| 官方文件写入 | 0 |
-
-选择器以稳定属性和角色为主，哈希 class 变化时由几何 fallback 承接；Codex 大版本更新后仍必须执行真实 DOM 截图审计。
+受管启动器使用主题目录内的隔离 web profile 和随机回环端口，不写官方程序文件。0.7.0 采用 append-only release：新包写入新目录，旧 app/state/素材与配置快照保留；停用只请求 renderer 恢复，不删除磁盘文件。已经运行且没有 CDP 端口的普通 Codex 无法从外部热注入；这是 Chromium 运行边界，不得在交付说明中写成“复制即对当前窗口生效”。
