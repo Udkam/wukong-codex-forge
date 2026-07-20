@@ -16,7 +16,23 @@ if (Test-Path -LiteralPath $target) {
 
 $source = Split-Path $PSScriptRoot -Parent
 New-Item -ItemType Directory -Force -Path $target | Out-Null
-Copy-Item -LiteralPath $source -Destination (Join-Path $target 'app') -Recurse -Force
+$appTarget = Join-Path $target 'app'
+New-Item -ItemType Directory -Force -Path $appTarget | Out-Null
+foreach ($directory in @('runtime', 'shared', 'scripts', 'themes', 'assets')) {
+    $sourceDirectory = Join-Path $source $directory
+    if (-not (Test-Path -LiteralPath $sourceDirectory)) { throw "Required runtime directory is missing: $directory" }
+    Copy-Item -LiteralPath $sourceDirectory -Destination (Join-Path $appTarget $directory) -Recurse -Force
+}
+foreach ($file in @('package.json', 'LICENSE')) {
+    Copy-Item -LiteralPath (Join-Path $source $file) -Destination (Join-Path $appTarget $file) -Force
+}
+$wsSource = Join-Path $source 'node_modules\ws'
+if (-not (Test-Path -LiteralPath $wsSource)) {
+    throw 'Runtime dependency node_modules\ws is missing. Run npm install before install.ps1.'
+}
+$managedModules = Join-Path $appTarget 'node_modules'
+New-Item -ItemType Directory -Force -Path $managedModules | Out-Null
+Copy-Item -LiteralPath $wsSource -Destination (Join-Path $managedModules 'ws') -Recurse -Force
 
 $shortcutPath = $null
 if ($CreateShortcut) {
@@ -48,5 +64,5 @@ $stateJson = $state | ConvertTo-Json
     [Text.UTF8Encoding]::new($false)
 )
 
-Write-Host "Installed managed copy at $target. WindowsApps, app.asar, and Codex config were not modified."
+Write-Host "Installed minimal managed runtime at $target. Studio, tests, Git data, WindowsApps, app.asar, and Codex config were not copied or modified."
 if ($shortcutPath) { Write-Host "Created managed launcher: $shortcutPath" }

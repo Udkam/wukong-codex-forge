@@ -56,6 +56,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Creat
 
 这是实现“随 ChatGPT 启动而启动，关闭而关闭”的安全方式。普通 ChatGPT 快捷方式没有 CDP 参数，无法在不修改官方包的前提下注入主题。
 
+安装器只复制运行时、主题、脚本、素材和 `ws`；不会把 `.git`、Studio、测试、截图、Playwright 或 Vite 放进常驻目录。
+
 也可手动附加到已经以回环 CDP 启动的 ChatGPT：
 
 ```powershell

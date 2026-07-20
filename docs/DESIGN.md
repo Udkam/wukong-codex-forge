@@ -82,6 +82,8 @@ flowchart LR
 
 `watch.mjs` 在启动阶段最多等待约 15 秒。连接后每 1.4 秒用一个布尔表达式探测运行时是否仍存在；只有新 renderer 或页面重载后才重新发送完整主题。CDP 连失三次视为 ChatGPT 退出，watcher 自行结束。
 
+安装器只复制 `runtime/shared/scripts/themes/assets`、许可/包清单与 `node_modules/ws`。Studio、测试、截图、Git 数据和 Playwright/Vite 开发依赖不会进入常驻运行目录。
+
 安全恢复分两层：
 
 - 主题开关：去掉根主题类，保留“悟”控制点。

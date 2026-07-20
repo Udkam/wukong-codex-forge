@@ -19,6 +19,10 @@ const run = (file, args, cwd = root) => {
 if (fs.existsSync(managed)) throw Error('Refusing integration test: managed runtime already exists.');
 try {
   run(path.join(root, 'scripts', 'install.ps1'), []);
+  for (const omitted of ['.git', 'docs', 'studio', 'tests']) {
+    assert.equal(fs.existsSync(path.join(managed, 'app', omitted)), false, 'development-only path was copied: ' + omitted);
+  }
+  assert.ok(fs.existsSync(path.join(managed, 'app', 'node_modules', 'ws')), 'minimal ws runtime is missing');
   const relativeImport = '.\\' + project + '\\themes\\active.json';
   const relativeImage = '.\\' + project + '\\themes\\assets\\great-sage-return.jpg';
   run(
