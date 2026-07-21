@@ -1,21 +1,22 @@
 export const PALETTE_KEYS = ['ink', 'lacquer', 'jade', 'gold', 'paper'];
-export const MOTIF_KEYS = ['yakshaSet', 'fangedCyanStaff'];
+export const MOTIF_KEYS = ['xiangfeiGourd', 'littleWukong', 'littleBajie'];
 
 const MOTIF_CSS_NAMES = {
-  yakshaSet: 'yaksha-set',
-  fangedCyanStaff: 'fanged-cyan-staff'
+  xiangfeiGourd: 'xiangfei-gourd',
+  littleWukong: 'little-wukong',
+  littleBajie: 'little-bajie'
 };
 
 export const DEFAULT_THEME = {
   schemaVersion: 2,
   id: 'great-sage-scroll',
-  name: '大圣归来 · 玄锋双境',
+  name: '大圣归来 · 潇湘双境',
   palette: {
-    ink: '#e2ddd3',
-    lacquer: '#9d3029',
-    jade: '#69777b',
-    gold: '#bd914d',
-    paper: '#181a19'
+    ink: '#e3ded4',
+    lacquer: '#7c4438',
+    jade: '#4f7f7c',
+    gold: '#a88755',
+    paper: '#171917'
   },
   background: {
     mode: 'gallery',
@@ -42,8 +43,9 @@ export const DEFAULT_THEME = {
     ]
   },
   motifs: {
-    yakshaSet: 'motifs/yaksha-set.png',
-    fangedCyanStaff: 'motifs/fanged-cyan-staff.png'
+    xiangfeiGourd: 'motifs/xiangfei-gourd-icon.webp',
+    littleWukong: 'motifs/little-wukong-gameplay-v6.webp',
+    littleBajie: 'motifs/little-bajie-gameplay-v6.webp'
   },
   accessibility: {
     preset: 'workbench',
@@ -52,7 +54,7 @@ export const DEFAULT_THEME = {
   companion: {
     enabled: false,
     side: 'right',
-    size: 96,
+    size: 72,
     motion: 'quiet'
   }
 };
@@ -172,7 +174,7 @@ export function cssFor(theme, assetInput = '', motifInput = {}) {
     : 0;
   const assetVariables = assets.map((entry, index) => (
     `--forge-bg-${index}:${entry.url ? cssEscapeUrl(entry.url) : 'none'};` +
-    `--forge-art-${entry.id}:${entry.url ? cssEscapeUrl(entry.url) : 'none'};` +
+    `--forge-art-${entry.id}:var(--forge-bg-${index});` +
     `--forge-position-${index}:${POSITIONS.includes(entry.position) ? entry.position : b.position};`
   )).join('');
   const motifVariables = MOTIF_KEYS.map(key => (

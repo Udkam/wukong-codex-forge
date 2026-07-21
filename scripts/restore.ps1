@@ -1,10 +1,17 @@
 [CmdletBinding()]
 param(
     [switch]$Uninstall,
-    [string]$Destination = (Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge')
+    [string]$Destination = (Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge'),
+    [switch]$AllowLegacyMutation
 )
 
 $ErrorActionPreference = 'Stop'
+if ($Uninstall -or $AllowLegacyMutation) { Write-Warning 'Deletion is not performed. Theme files and archived state are retained.' }
+& (Join-Path $PSScriptRoot 'disable.ps1') -Root (Split-Path $PSScriptRoot -Parent)
+return
+
+<# Archived legacy implementation retained below as non-executable history.
+
 $controlled = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge'))
 $target = [IO.Path]::GetFullPath($Destination)
 if (-not [string]::Equals($target, $controlled, [StringComparison]::OrdinalIgnoreCase)) {
@@ -100,3 +107,4 @@ $normalCodexStillRunning = @(Get-Process -Name ChatGPT -ErrorAction SilentlyCont
 if ($normalCodexStillRunning) {
     Write-Warning 'A non-managed Codex window is still open and may retain cached native colors until its next launch.'
 }
+#>

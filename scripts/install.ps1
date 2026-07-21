@@ -1,10 +1,17 @@
 [CmdletBinding()]
 param(
     [string]$Destination = (Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge'),
-    [switch]$NoShortcut
+    [switch]$NoShortcut,
+    [switch]$AllowLegacyMutation
 )
 
 $ErrorActionPreference = 'Stop'
+if ($AllowLegacyMutation) { Write-Warning 'Legacy mutation was requested, but destructive legacy behavior remains archived and cannot run.' }
+& (Join-Path $PSScriptRoot 'install-preserving.ps1') -Destination $Destination -NoShortcut:$NoShortcut
+return
+
+<# Archived legacy implementation retained below as non-executable history.
+
 $controlled = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge'))
 $target = [IO.Path]::GetFullPath($Destination)
 if (-not [string]::Equals($target, $controlled, [StringComparison]::OrdinalIgnoreCase)) {
@@ -125,3 +132,4 @@ if ($codexWasRunning) {
 } else {
     Write-Host 'Launch Codex - Wukong Theme from the Start menu to use the managed style.'
 }
+#>

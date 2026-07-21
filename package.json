@@ -1,6 +1,6 @@
 {
   "name": "wukong-codex-forge",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,9 +17,7 @@
     "test:managed-package": "node --test tests/managed-package.test.mjs",
     "test:preserve": "node --test tests/preserving-install-contract.test.mjs"
   },
-  "dependencies": {
-    "ws": "^8.18.3"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@playwright/test": "^1.55.0",
     "pngjs": "^7.0.0",

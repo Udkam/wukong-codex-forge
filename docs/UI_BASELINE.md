@@ -3,7 +3,7 @@
 ## 审计方式
 
 - 2026-07-21 只读检查本机 Microsoft Store 包：`C:\Program Files\WindowsApps\OpenAI.Codex_26.715.2305.0_x64__2p2nqsd0c76g0`。
-- UI 来源是 `app\resources\app.asar` 内的 `webview/index.html` 与打包 CSS/JS；只把检查副本展开到系统临时目录，没有修改 `WindowsApps`、`app.asar`、`ChatGPT.exe` 或签名文件。
+- UI 来源是 `app\resources\app.asar` 内的 `webview/index.html` 与打包 CSS/JS；只把检查副本展开到项目的只读临时工作目录，没有修改 `WindowsApps`、`app.asar`、`ChatGPT.exe` 或签名文件。
 - 本轮没有使用 computer use，也没有用视觉点击推测 DOM。仓库保留的只读摘录位于 `docs/logs/asar-inspect/`。
 
 ## 原生结构合同
@@ -24,11 +24,11 @@
 
 ## 状态识别
 
-- 新建任务页：可见原生首页标题与首页 `[role="main"]`，没有可见 conversation turn。
+- 新建任务页：可见原生首页标题；当前 26.715.2305.0 使用 `[data-feature="game-source"]` 与 `.heading-xl`，没有可见 conversation turn。
 - 已进入对话：存在可见 conversation/virtualized turn/assistant 节点。
 - `data-vscode-context*="supportsNewChatMenu"` 两种页面都可能出现，不能单独作为状态依据。
 - 路由 pathname 不是稳定合同，本实现不依赖它判断战斗境或风景境。
 
 ## 视觉差分原则
 
-原生基线截图是 `docs/screenshots/native-ui-baseline.png`。主题截图必须与它保持同一槽位坐标、尺寸、圆角和文字；允许变化的只有全窗背景、表面透明度、边框/阴影颜色与小面积装备纹理。fixture 证明 DOM/CSS 合同，不冒充真实生产 renderer 截图。
+原生基线截图是 `docs/screenshots/native-ui-baseline.png`。主题截图必须与它保持同一槽位坐标、尺寸、圆角和文字；允许变化的只有全窗背景、表面透明度、边框/阴影颜色，以及输入器两侧空白沟槽中的无交互同行者/葫芦。fixture 证明 DOM/CSS 合同，不冒充真实生产 renderer 截图。

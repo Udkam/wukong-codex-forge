@@ -33,15 +33,17 @@ test('Wukong style visibly replaces background, navigation and composer without 
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 });
   await page.setContent(runtimeFixtureHtml);
   const nativeGeometry = await geometry(page);
+  const nativeBodyChildren = await page.locator('body > *').count();
+  const nativeBodyText = await page.locator('body').innerText();
   const nativeShapes = await page.evaluate(() => ({
     composerRadius: getComputedStyle(document.querySelector('.composer-native')).borderRadius,
     sidebarRadius: getComputedStyle(document.querySelector('.sidebar-row')).borderRadius,
     rightCardRadius: getComputedStyle(document.querySelector('.summary-panel-card')).borderRadius,
     sendRadius: getComputedStyle(document.querySelector('.send')).borderRadius
   }));
-  await page.screenshot({ path: 'docs/screenshots/native-ui-baseline.png' });
   const payload = payloadFromThemeFile(fileURLToPath(new URL('../themes/active.json', import.meta.url)));
   const styleSheet = fs.readFileSync(new URL('../runtime/forge-theme.css', import.meta.url), 'utf8');
+  assert.doesNotMatch(styleSheet, /forge-motif-(?:yaksha|fanged-cyan)/);
   await page.evaluate(makeApplyExpression({ styleSheet, variables: payload.variables }));
 
   const landingStyles = await page.evaluate(() => ({
@@ -57,9 +59,17 @@ test('Wukong style visibly replaces background, navigation and composer without 
     composerRadius: getComputedStyle(document.querySelector('.forge-composer')).borderRadius,
     composerClip: getComputedStyle(document.querySelector('.forge-composer')).clipPath,
     composerBackground: getComputedStyle(document.querySelector('.forge-composer')).backgroundImage,
-    jinguMaterial: getComputedStyle(document.querySelector('.forge-composer'), '::before').backgroundImage,
-    shenfengMaterial: getComputedStyle(document.querySelector('.forge-composer'), '::after').backgroundImage,
-    yakshaMaterial: getComputedStyle(document.querySelector('.forge-new-task'), '::after').backgroundImage,
+    xiangfeiMaterial: getComputedStyle(document.querySelector('.forge-workspace'), '::after').backgroundImage,
+    xiangfeiPointerEvents: getComputedStyle(document.querySelector('.forge-workspace'), '::after').pointerEvents,
+    littleWukongMaterial: getComputedStyle(document.querySelector('.forge-composer'), '::before').backgroundImage,
+    littleWukongPointerEvents: getComputedStyle(document.querySelector('.forge-composer'), '::before').pointerEvents,
+    littleBajieMaterial: getComputedStyle(document.querySelector('.forge-composer'), '::after').backgroundImage,
+    littleBajiePointerEvents: getComputedStyle(document.querySelector('.forge-composer'), '::after').pointerEvents,
+    sidebarDecoration: getComputedStyle(document.querySelector('.forge-new-task'), '::after').content,
+    environmentDecoration: getComputedStyle(document.querySelector('.forge-right-card'), '::after').content,
+    wukongSafe: document.documentElement.dataset.forgeWukongSafe,
+    bajieSafe: document.documentElement.dataset.forgeBajieSafe,
+    gourdSafe: document.documentElement.dataset.forgeGourdSafe,
     newTaskShadow: getComputedStyle(document.querySelector('.forge-new-task')).boxShadow,
     sidebarClip: getComputedStyle(document.querySelector('.forge-sidebar-action')).clipPath,
     landingSeal: getComputedStyle(document.querySelector('.forge-landing-title'), '::before').backgroundImage,
@@ -79,9 +89,17 @@ test('Wukong style visibly replaces background, navigation and composer without 
   assert.notEqual(landingStyles.fullScreenVeil, 'none');
   assert.equal(landingStyles.workspaceBackground, 'none');
   assert.equal(landingStyles.composerBackground, 'none');
-  assert.match(landingStyles.jinguMaterial, /data:image\/jpeg/);
-  assert.match(landingStyles.shenfengMaterial, /data:image\/png/);
-  assert.match(landingStyles.yakshaMaterial, /data:image\/png/);
+  assert.match(landingStyles.xiangfeiMaterial, /data:image\/webp/);
+  assert.match(landingStyles.littleWukongMaterial, /data:image\/webp/);
+  assert.match(landingStyles.littleBajieMaterial, /data:image\/webp/);
+  assert.equal(landingStyles.xiangfeiPointerEvents, 'none');
+  assert.equal(landingStyles.littleWukongPointerEvents, 'none');
+  assert.equal(landingStyles.littleBajiePointerEvents, 'none');
+  assert.equal(landingStyles.sidebarDecoration, 'none');
+  assert.equal(landingStyles.environmentDecoration, 'none');
+  assert.equal(landingStyles.wukongSafe, 'true');
+  assert.equal(landingStyles.bajieSafe, 'true');
+  assert.equal(landingStyles.gourdSafe, 'true');
   assert.equal(landingStyles.composerRadius, nativeShapes.composerRadius);
   assert.equal(landingStyles.composerClip, 'none');
   assert.notEqual(landingStyles.newTaskShadow, 'none');
@@ -93,18 +111,13 @@ test('Wukong style visibly replaces background, navigation and composer without 
   assert.equal(landingStyles.sendRadius, nativeShapes.sendRadius);
   assert.equal(landingStyles.composerWidth, 736);
   assert.deepEqual(await geometry(page), nativeGeometry);
+  assert.equal(await page.locator('body > *').count(), nativeBodyChildren);
+  assert.equal(await page.locator('body').innerText(), nativeBodyText);
+  assert.equal(await page.locator('body [data-forge-owned]').count(), 0);
+  assert.equal(await page.locator('.summary-panel-card.forge-right-card').count(), 1);
 
-  const landingBuffer = await page.screenshot({ path: 'docs/screenshots/runtime-style-landing.png' });
+  const landingBuffer = await page.screenshot();
   const landing = PNG.sync.read(landingBuffer);
-  await page.locator('.forge-composer').screenshot({ path: 'docs/screenshots/runtime-style-composer.png' });
-  await page.evaluate(() => { document.documentElement.dataset.forgeScene = '0'; });
-  await page.screenshot({ path: 'docs/screenshots/runtime-style-battle-erlang.png' });
-  await page.evaluate(() => { document.documentElement.dataset.forgeScene = '1'; });
-  await page.screenshot({ path: 'docs/screenshots/runtime-style-battle-great-sage.png' });
-  await page.evaluate(() => { document.documentElement.dataset.forgeScene = '3'; });
-  await page.screenshot({ path: 'docs/screenshots/runtime-style-battle-yaksha.png' });
-  await page.evaluate(() => { document.documentElement.dataset.forgeScene = '2'; });
-  await page.screenshot({ path: 'docs/screenshots/runtime-style-battle-jingu.png' });
   const authored = await enterThreadState(page);
   await page.waitForTimeout(180);
   const threadStyles = await page.evaluate(() => ({
@@ -117,9 +130,8 @@ test('Wukong style visibly replaces background, navigation and composer without 
   assert.ok(['6', '7', '8', '9', '10'].includes(threadStyles.scene));
   assert.notEqual(threadStyles.fullScreenBackground, landingStyles.fullScreenBackground);
   assert.equal(threadStyles.workspaceBackground, 'none');
-  const threadBuffer = await page.screenshot({ path: 'docs/screenshots/runtime-style-thread.png' });
+  const threadBuffer = await page.screenshot();
   const thread = PNG.sync.read(threadBuffer);
-  await page.locator('.forge-right-card').screenshot({ path: 'docs/screenshots/runtime-style-environment.png' });
   assert.deepEqual(await geometry(page), nativeGeometry);
   assert.deepEqual(await conversationGeometry(page), authored.geometry);
   assert.equal(await conversationText(page), authored.text);

@@ -216,7 +216,8 @@ export const runtimeFixtureHtml = String.raw`
     }
     .landing-hero { width: min(100%, var(--thread-content-max-width)); min-width: 0; padding-inline: 20px; }
     .landing-hero small { color: #94958f; letter-spacing: .08em; }
-    .landing-hero h1 { margin: 13px 0 8px; color: #e2e2df; font-size: 30px; line-height: 1.25; font-weight: 420; }
+    .landing-hero h1,
+    .landing-hero .heading-xl { margin: 13px 0 8px; color: #e2e2df; font-size: 30px; line-height: 1.25; font-weight: 420; }
     .landing-hero p { margin: 0; color: #9c9e9a; }
 
     [data-thread-find-target="conversation"] {
@@ -408,7 +409,7 @@ export const runtimeFixtureHtml = String.raw`
                   <section class="landing-native">
                     <div class="landing-hero">
                       <small>新建任务</small>
-                      <h1>今天想处理什么？</h1>
+                      <div class="heading-xl" data-feature="game-source"><span>我们该构建什么？</span></div>
                       <p>描述目标，Codex 会在当前项目中开始工作。</p>
                     </div>
                   </section>

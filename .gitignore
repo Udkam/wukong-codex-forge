@@ -1,4 +1,7 @@
 node_modules/
 dist/
 .wukong-forge/
+.wukong-runtime/
+tmp/
+release/
 assets/little-wayfarer-source.png

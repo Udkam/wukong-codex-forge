@@ -3,9 +3,27 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-const requiredDirectories = ['runtime', 'shared', 'themes'];
-const requiredFiles = ['package.json', 'LICENSE'];
-const runtimeScripts = ['launch.ps1', 'disable.ps1'];
+const runtimeFiles = [
+  'runtime/cdp-client.mjs',
+  'runtime/forge-runtime.mjs',
+  'runtime/forge-theme.css',
+  'runtime/injection-plan.mjs',
+  'runtime/injector.mjs',
+  'runtime/watch.mjs',
+  'shared/theme-model.mjs',
+  'scripts/launch.ps1',
+  'scripts/disable.ps1',
+  'themes/active.json',
+  'themes/ink-mountain.json',
+  'themes/native-wukong.json',
+  'package.json',
+  'LICENSE',
+  'README.md',
+  'PORTABLE-README.txt',
+  'start-theme.cmd',
+  'stop-theme.cmd',
+  'remove-theme.cmd'
+];
 
 const inside = (parent, child) => {
   const relative = path.relative(parent, child);
@@ -22,30 +40,27 @@ export function packageRuntime({ source, destination }) {
     throw new Error('Runtime package destination must be empty.');
   }
 
-  for (const directory of requiredDirectories) {
-    const item = path.join(sourceRoot, directory);
-    if (!fs.statSync(item).isDirectory()) throw new Error(`Required runtime directory is missing: ${directory}`);
-  }
-  for (const file of [...requiredFiles, ...runtimeScripts.map(script => `scripts/${script}`)]) {
-    const item = path.join(sourceRoot, file);
-    if (!fs.statSync(item).isFile()) throw new Error(`Required runtime file is missing: ${file}`);
-  }
-  const wsSource = path.join(sourceRoot, 'node_modules', 'ws');
-  if (!fs.statSync(wsSource).isDirectory()) throw new Error('Runtime dependency node_modules/ws is missing. Run npm install first.');
-
+  const activePath = path.join(sourceRoot, 'themes', 'active.json');
+  if (!fs.statSync(activePath).isFile()) throw new Error('Required active theme definition is missing.');
+  const active = JSON.parse(fs.readFileSync(activePath, 'utf8'));
+  const themeReferences = [
+    active.background?.asset,
+    ...(active.background?.gallery || []).map(item => item.asset),
+    ...Object.values(active.motifs || {})
+  ].filter(Boolean).map(file => `themes/${file}`);
+  const packageFiles = [...new Set([...runtimeFiles, ...themeReferences])];
+  const copyRelativeFile = relativeFile => {
+    const normalized = path.normalize(relativeFile);
+    const sourceFile = path.resolve(sourceRoot, normalized);
+    if (!inside(sourceRoot, sourceFile)) throw new Error(`Theme file escapes the source root: ${relativeFile}`);
+    if (!fs.statSync(sourceFile).isFile()) throw new Error(`Required runtime file is missing: ${relativeFile}`);
+    const targetFile = path.resolve(target, normalized);
+    if (!inside(target, targetFile)) throw new Error(`Theme file escapes the package root: ${relativeFile}`);
+    fs.mkdirSync(path.dirname(targetFile), { recursive: true });
+    fs.copyFileSync(sourceFile, targetFile);
+  };
   fs.mkdirSync(target, { recursive: true });
-  for (const directory of requiredDirectories) {
-    fs.cpSync(path.join(sourceRoot, directory), path.join(target, directory), { recursive: true });
-  }
-  for (const file of requiredFiles) {
-    fs.copyFileSync(path.join(sourceRoot, file), path.join(target, file));
-  }
-  fs.mkdirSync(path.join(target, 'scripts'), { recursive: true });
-  for (const script of runtimeScripts) {
-    fs.copyFileSync(path.join(sourceRoot, 'scripts', script), path.join(target, 'scripts', script));
-  }
-  fs.mkdirSync(path.join(target, 'node_modules'), { recursive: true });
-  fs.cpSync(wsSource, path.join(target, 'node_modules', 'ws'), { recursive: true });
+  packageFiles.forEach(copyRelativeFile);
   return target;
 }
 

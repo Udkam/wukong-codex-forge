@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { MAX_MOTIF_BYTES, payloadFromThemeFile } from '../runtime/forge-runtime.mjs';
 import {
   applyNativeTheme,
   loadThemeDefinition,
@@ -9,6 +10,36 @@ import {
 } from '../scripts/native-theme.mjs';
 
 const definition = loadThemeDefinition('themes/native-wukong.json');
+const activeThemePath = 'themes/active.json';
+const activeTheme = JSON.parse(fs.readFileSync(activeThemePath, 'utf8').replace(/^\uFEFF/, ''));
+
+test('V9 theme packages only the Xiangfei gourd and selected little companions', () => {
+  const expectedMotifs = ['littleBajie', 'littleWukong', 'xiangfeiGourd'];
+  assert.deepEqual(Object.keys(activeTheme.motifs).sort(), expectedMotifs);
+
+  const motifFiles = Object.values(activeTheme.motifs);
+  assert.ok(motifFiles.every(asset => asset.endsWith('.webp')), 'V9 motifs must use compact alpha WebP assets');
+  assert.equal(activeTheme.motifs.xiangfeiGourd, 'motifs/xiangfei-gourd-icon.webp');
+  assert.equal(activeTheme.motifs.littleWukong, 'motifs/little-wukong-gameplay-v6.webp');
+  assert.equal(activeTheme.motifs.littleBajie, 'motifs/little-bajie-gameplay-v6.webp');
+  assert.equal(activeTheme.companion.enabled, false, 'companions must remain CSS-only and must not create Studio companion DOM');
+  assert.ok(motifFiles.every(asset => fs.statSync(`themes/${asset}`).isFile()));
+  const motifBytes = motifFiles.reduce((total, asset) => total + fs.statSync(`themes/${asset}`).size, 0);
+  assert.ok(motifBytes <= MAX_MOTIF_BYTES, `V9 motif payload exceeds ${MAX_MOTIF_BYTES} bytes`);
+
+  const payload = payloadFromThemeFile(activeThemePath);
+  assert.deepEqual(Object.keys(payload.motifs).sort(), expectedMotifs);
+  for (const motif of Object.values(payload.motifs)) assert.match(motif, /^data:image\/webp;base64,/);
+  assert.match(payload.variables, /--forge-motif-xiangfei-gourd:url\(/);
+  assert.match(payload.variables, /--forge-motif-little-wukong:url\(/);
+  assert.match(payload.variables, /--forge-motif-little-bajie:url\(/);
+  assert.doesNotMatch(payload.variables, /forge-motif-(?:yaksha|fanged-cyan)/);
+
+  const modes = activeTheme.background.gallery.map(scene => scene.mode);
+  assert.ok(modes.includes('battle-primary'));
+  assert.ok(modes.includes('battle-secondary'));
+  assert.ok(modes.includes('scenery'));
+});
 
 test('native definition stays within the current Codex chrome theme schema', () => {
   const identities = definition.settings.map(setting => `${setting.section}.${setting.key}`);
@@ -46,7 +77,7 @@ test('install and uninstall round-trip only managed native appearance values', (
   ].join('\r\n');
   const applied = applyNativeTheme(original, definition.settings);
   assert.match(applied.text, /appearanceTheme = "dark"/);
-  assert.match(applied.text, /accent = "#bd914d"/);
+  assert.match(applied.text, /accent = "#a88755"/);
   assert.match(applied.text, /ui = "\\"Microsoft YaHei UI\\""/);
   assert.match(applied.text, /\[features\]\r\nmemories = true/);
 
@@ -58,7 +89,7 @@ test('install and uninstall round-trip only managed native appearance values', (
 test('uninstall preserves a managed value changed by the user after install', () => {
   const original = '[desktop]\nappearanceTheme = "system"\n';
   const applied = applyNativeTheme(original, definition.settings);
-  const userChanged = applied.text.replace('accent = "#bd914d"', 'accent = "#ff00aa"');
+  const userChanged = applied.text.replace('accent = "#a88755"', 'accent = "#ff00aa"');
   const restored = restoreNativeTheme(userChanged, applied.state);
   assert.match(restored.text, /accent = "#ff00aa"/);
   assert.ok(restored.warnings.some(warning => warning.includes('appearanceDarkChromeTheme.accent')));
@@ -84,7 +115,7 @@ test('upgrade replaces an older managed theme while preserving the pre-theme bas
   const upgraded = upgradeNativeTheme(oldApplied.text, oldApplied.state, definition.settings);
   assert.deepEqual(upgraded.warnings, []);
   assert.match(upgraded.text, /appearanceTheme = "dark"/);
-  assert.match(upgraded.text, /accent = "#bd914d"/);
+  assert.match(upgraded.text, /accent = "#a88755"/);
   const restored = restoreNativeTheme(upgraded.text, upgraded.state);
   assert.deepEqual(restored.warnings, []);
   assert.equal(restored.text, original);

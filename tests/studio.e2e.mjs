@@ -70,11 +70,11 @@ assert(variables.landingIntensity === '0.83', 'Landing intensity did not update'
 const downloadPromise = page.waitForEvent('download');
 await page.evaluate(() => document.getElementById('export').click());
 const download = await downloadPromise;
-const temp = path.join(os.tmpdir(), 'wukong-forge-export-v2.json');
-await download.saveAs(temp);
-const exported = JSON.parse(fs.readFileSync(temp, 'utf8'));
+const retainedExportDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'wukong-forge-export-'));
+const retainedExportPath = path.join(retainedExportDirectory, 'theme.json');
+await download.saveAs(retainedExportPath);
+const exported = JSON.parse(fs.readFileSync(retainedExportPath, 'utf8'));
 validateTheme(exported);
-fs.rmSync(temp, { force: true });
 
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });

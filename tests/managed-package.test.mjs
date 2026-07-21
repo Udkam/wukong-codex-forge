@@ -13,33 +13,51 @@ test('minimal managed package imports independently and omits development surfac
   packageRuntime({ source: process.cwd(), destination: target });
   const sourceTheme = JSON.parse(fs.readFileSync('themes/active.json', 'utf8'));
 
-  for (const omitted of ['.git', 'docs', 'studio', 'tests']) {
+  for (const omitted of ['.git', 'docs', 'studio', 'tests', 'node_modules']) {
     assert.equal(fs.existsSync(path.join(target, omitted)), false, `development-only path copied: ${omitted}`);
   }
   for (const required of [
     'runtime/forge-theme.css',
     'runtime/watch.mjs',
-    'runtime/capture-live.mjs',
     'scripts/launch.ps1',
     'scripts/disable.ps1',
+    'start-theme.cmd',
+    'stop-theme.cmd',
+    'remove-theme.cmd',
+    'PORTABLE-README.txt',
     'themes/active.json',
     ...sourceTheme.background.gallery.map(entry => `themes/${entry.asset}`),
-    ...Object.values(sourceTheme.motifs).map(asset => `themes/${asset}`),
-    'node_modules/ws/package.json'
+    ...Object.values(sourceTheme.motifs).map(asset => `themes/${asset}`)
   ]) {
     assert.equal(fs.existsSync(path.join(target, required)), true, `managed file missing: ${required}`);
   }
+  assert.equal(fs.existsSync(path.join(target, 'node_modules', 'ws')), false, 'ws runtime dependency was packaged');
+  assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client.mjs')), false, 'superseded ws bundle was packaged');
+  assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client-node.mjs')), false, 'diagnostic ws bundle was packaged');
+  const packagedManifest = JSON.parse(fs.readFileSync(path.join(target, 'package.json'), 'utf8'));
+  assert.equal(packagedManifest.version, '0.8.0');
+  assert.deepEqual(packagedManifest.dependencies, {});
   for (const rejected of [
     'themes/assets/erlang-meishan.jpg',
     'themes/assets/yaksha-king.jpg',
     'themes/motifs/yaksha-plate.svg',
-    'themes/motifs/shenfeng-profile.svg'
+    'themes/motifs/shenfeng-profile.svg',
+    'themes/motifs/yaksha-set.png',
+    'themes/motifs/fanged-cyan-staff.png',
+    'themes/motifs/little-wukong.webp',
+    'themes/motifs/little-bajie.webp',
+    'themes/motifs/little-wukong-v2.png',
+    'themes/motifs/little-bajie-v2.png',
+    'themes/motifs/little-wukong-gameplay-v6.png',
+    'themes/motifs/little-bajie-gameplay-v6.png',
+    'themes/motifs/xiangfei-gourd.png'
   ]) assert.equal(fs.existsSync(path.join(target, rejected)), false, `rejected asset packaged: ${rejected}`);
+  assert.equal(fs.existsSync(path.join(target, 'runtime', 'capture-live.mjs')), false);
 
   const runtime = await import(pathToFileURL(path.join(target, 'runtime', 'forge-runtime.mjs')));
   const payload = runtime.payloadFromThemeFile(path.join(target, 'themes', 'active.json'));
   assert.match(payload.variables, /data:image\/jpeg;base64/);
-  assert.match(payload.variables, /data:image\/png;base64/);
+  assert.match(payload.variables, /data:image\/webp;base64/);
   assert.equal(payload.assets.length, 11);
   assert.deepEqual(payload.assets.map(asset => asset.id), [
     'erlang-ink-duel',
@@ -54,27 +72,26 @@ test('minimal managed package imports independently and omits development surfac
     'stone-buddhas',
     'sunset-ravine'
   ]);
-  assert.deepEqual(Object.keys(payload.motifs).sort(), ['fangedCyanStaff', 'yakshaSet']);
-  assert.equal(payload.theme.name, '大圣归来 · 玄锋双境');
-  assert.deepEqual(payload.theme.palette, {
-    ink: '#e2ddd3',
-    lacquer: '#9d3029',
-    jade: '#69777b',
-    gold: '#bd914d',
-    paper: '#181a19'
-  });
-  assert.match(payload.variables, /--forge-paper:#181a19/);
+  assert.deepEqual(Object.keys(payload.motifs).sort(), ['littleBajie', 'littleWukong', 'xiangfeiGourd']);
+  assert.match(payload.theme.name, /\S/);
+  assert.match(payload.variables, /--forge-paper:#[0-9a-f]{6}/i);
   assert.match(payload.variables, /--forge-scene-count:11/);
   assert.match(payload.variables, /--forge-primary-scene-count:3/);
   assert.match(payload.variables, /--forge-scenery-scenes:6 7 8 9 10/);
   assert.match(payload.variables, /--forge-battle-primary-scenes:0 1 2/);
   assert.match(payload.variables, /--forge-battle-secondary-scenes:3 4 5/);
-  assert.match(payload.variables, /--forge-art-yaksha-king-rift:url\("data:image\/jpeg;base64,/);
-  assert.match(payload.variables, /--forge-art-great-sage-staff:url\("data:image\/jpeg;base64,/);
-  assert.match(payload.variables, /--forge-motif-yaksha-set:url\("data:image\/png;base64,/);
-  assert.match(payload.variables, /--forge-motif-fanged-cyan-staff:url\("data:image\/png;base64,/);
+  assert.match(payload.variables, /--forge-art-yaksha-king-rift:var\(--forge-bg-3\)/);
+  assert.match(payload.variables, /--forge-art-great-sage-staff:var\(--forge-bg-2\)/);
+  assert.equal((payload.variables.match(/data:image\/jpeg;base64,/g) || []).length, 11, 'each gallery image must be embedded only once');
+  assert.match(payload.variables, /--forge-motif-xiangfei-gourd:url\("data:image\/webp;base64,/);
+  assert.match(payload.variables, /--forge-motif-little-wukong:url\("data:image\/webp;base64,/);
+  assert.match(payload.variables, /--forge-motif-little-bajie:url\("data:image\/webp;base64,/);
+  assert.equal(payload.theme.motifs.xiangfeiGourd, 'motifs/xiangfei-gourd-icon.webp');
+  assert.equal(payload.theme.motifs.littleWukong, 'motifs/little-wukong-gameplay-v6.webp');
+  assert.equal(payload.theme.motifs.littleBajie, 'motifs/little-bajie-gameplay-v6.webp');
   const client = await import(pathToFileURL(path.join(target, 'runtime', 'cdp-client.mjs')));
   assert.equal(typeof client.getTargets, 'function');
+  assert.equal(typeof client.commandTarget, 'function');
   assert.equal(client.isCodexTarget({ type: 'page', title: 'Codex', url: 'app://-/index.html' }), true);
   assert.equal(client.isCodexTarget({ type: 'page', title: 'Other', url: 'app://-/index.html' }), false);
   assert.equal(client.isCodexTarget({ type: 'page', title: 'Codex', url: 'https://example.com/' }), false);

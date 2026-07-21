@@ -1,12 +1,12 @@
 # 素材来源与发布边界
 
-## 0.7.0 运行时画廊
+## 0.8.0 运行时画廊
 
 | 文件 | 像素 / 字节 | 来源与用途 |
 | --- | --- | --- |
 | `themes/assets/great-sage-return.jpg` | 1256 × 707 / 78,423 | 用户本地 `E:\\GameRecord\\Black Myth Wukong\\图片\\大圣归来.jpg`；战斗境主场景之一。 |
 | `themes/assets/erlang-ink-duel.jpg` | 2560 × 1043 / 309,953 | 用户提供的白场水墨杨戬对决图 `codex-clipboard-62ae5e68-bad0-4a3c-aa72-97d2d4d87aa2.png`；替换被否决的旧杨戬背景。 |
-| `themes/assets/great-sage-staff.jpg` | 1920 × 1080 / 341,165 | 用户本地 `E:\\GameRecord\\Black Myth Wukong\\图片\\金箍.jpg`；战斗境与输入器金箍棒嵌件。 |
+| `themes/assets/great-sage-staff.jpg` | 1920 × 1080 / 341,165 | 用户本地 `E:\\GameRecord\\Black Myth Wukong\\图片\\金箍.jpg`；战斗境主场景之一。 |
 | `themes/assets/yaksha-king-rift.jpg` | 1920 × 1080 / 267,415 | 用户提供 `codex-clipboard-92ab9198-6da0-49fc-9afe-590acee89f9c.jpg`；夜叉王次级战斗场景。 |
 | `themes/assets/storm-bearer.jpg` | 1920 × 1080 / 293,694 | 用户提供 `codex-clipboard-f90c91b3-0b8a-40a6-a288-578fcf8fac7e.jpg`；低频次级战斗场景。 |
 | `themes/assets/shadow-confrontation.jpg` | 1920 × 1080 / 98,466 | 用户提供 `codex-clipboard-b49f0747-316a-461e-8ae9-0e838dd764b5.jpg`；低频次级战斗场景。 |
@@ -18,14 +18,29 @@
 
 新建任务页只从三张主战斗图（大圣、杨戬、金箍棒）选择；夜叉王与另外两张高张力画面为低频战斗补充。已进入对话只从五张纯风景图稳定选择。所有背景使用一个 fixed `cover` 平面，不并排、不留黑边、不重复叠图。
 
-## 0.7.0 装备嵌件
+## 0.8.0 伴随元素
 
-| 文件 | 像素 / 字节 | 设计边界 |
+| 文件 | 像素 / 字节 | 来源、处理与边界 |
 | --- | --- | --- |
-| `themes/motifs/yaksha-set.png` | 852 × 1343 / 1,541,837 | 参考 [Yaksha Armor Set](https://blackmythwukong.fandom.com/wiki/Yaksha_Armor_Set) 的实机造型做透明化编辑；只裁取长角、鬼面与甲片纹理，不在 UI 中展示整个人物。 |
-| `themes/motifs/fanged-cyan-staff.png` | 1500 × 403 / 578,241 | 参考 [兽棍·神锋装备画面](https://www.9game.cn/news/10695528.html) 做透明化造型嵌件；只在输入器底部显示短截武器头，不拉伸为整条装饰。 |
+| `themes/motifs/little-wukong-gameplay-v6.webp` | 508 × 768 / 76,266 | 以用户本地实机画面 `E:\\GameRecord\\Black Myth Wukong\\TipsImg\\Img_LoadTips_200003_B.png` 作为造型参考，通过图像生成得到绿幕角色中间件 `tmp/imagegen/little-wukong-gameplay-chroma.png`，再经本地色键透明化、边缘清理、紧裁和 WebP 压缩，保留青色鳞甲、猴脸、尾巴和棍势。不是 Game Science 模型导出或官方立绘；相关角色与游戏美术权利仍归原权利人。 |
+| `themes/motifs/little-bajie-gameplay-v6.webp` | 509 × 768 / 78,038 | 以 [BWIKI 八戒实机截图](https://patchwiki.biligame.com/images/wukong/8/81/a5y269r2m0nhml7ll69afir51cj6hki.jpg) 为造型参考，并用 [八戒影神图](https://patchwiki.biligame.com/images/wukong/6/60/9yji4hm85t19qn4wea97geaadc99a9r.png) 核对旧青袍、念珠和九齿钉耙；通过图像生成得到绿幕角色中间件 `tmp/imagegen/little-bajie-gameplay-chroma.png`，再经本地色键透明化、边缘清理、紧裁和 WebP 压缩。不是 Game Science 模型导出或官方立绘；相关角色与游戏美术权利仍归原权利人。 |
+| `themes/motifs/xiangfei-gourd-icon.webp` | 140 × 175 / 10,650 | 从 [BWIKI 湘妃葫芦游戏图标](https://patchwiki.biligame.com/images/wukong/c/c9/chawfoslfshdt8kci9q85zpfrid064e.png) 紧裁并透明化，保留青绿双节、银白泪痕、蓝绳和流苏；相关图像权利仍归原权利人。 |
 
-两张透明嵌件不是 Game Science 官方模型导出，不应作为装备设定图再次分发或宣称官方素材。用户提供与本地原始文件均未被移动或删除。0.7.0 运行包共 11 张 JPEG 与 2 张 PNG，合计 4,693,008 bytes；无运行时网络请求、视频、HUD 战绩页或普通战斗录屏。`tmp/research/` 保留联网核对副本，不进入正式运行包。
+三张透明伴随元素均不是 Game Science 官方模型导出，不应作为角色/装备设定图再次分发或宣称官方素材。用户提供、本地原始文件、首轮/V2/V3/V4/V5 候选和 PNG 编辑源均未被移动或删除。0.8.0 最小运行包只复制 11 张 JPEG 与上述 3 张 WebP，合计 2,737,884 bytes；无运行时网络请求、视频或 HUD 战绩页。`tmp/` 保留生成与研究副本，不进入正式运行包。
+
+## 已停用但保留的 0.7.0 素材
+
+| 文件 | 状态 |
+| --- | --- |
+| `themes/motifs/yaksha-set.png` | 用户否决；0.8.0 主题定义和最小包均不引用，文件保留作历史证据。 |
+| `themes/motifs/fanged-cyan-staff.png` | 用户否决；0.8.0 主题定义和最小包均不引用，文件保留作历史证据。 |
+| `themes/motifs/little-wukong.png/.webp` | 首轮候选成年感过重；不进入运行包，保留不删除。 |
+| `themes/motifs/little-bajie.png/.webp` | 首轮候选武器与“小八戒”要求不符；不进入运行包，保留不删除。 |
+| `themes/motifs/little-wukong-v2.png/.webp` | 第二轮仍呈泛化金甲贴纸感；不进入运行包，保留不删除。 |
+| `themes/motifs/little-bajie-v2.png/.webp` | 第二轮仍缺少实机材质可信度；不进入运行包，保留不删除。 |
+| `themes/motifs/little-wukong-gameplay.png/.webp`、`gameplay-clean`、`gameplay-v3`、`gameplay-v4`、`gameplay-v5` | 绿幕、边缘清理和透明阈值迭代；均不被主题定义引用，保留为过程证据。 |
+| `themes/motifs/little-bajie-gameplay.png/.webp`、`gameplay-clean`、`gameplay-v3`、`gameplay-v4`、`gameplay-v5` | 绿幕、边缘清理和透明阈值迭代；均不被主题定义引用，保留为过程证据。 |
+| `themes/motifs/xiangfei-gourd.png/.webp` | 早期大图候选；正式运行包只使用 `xiangfei-gourd-icon.webp`，旧文件保留。 |
 
 ## 历史素材记录（0.2.0）
 

@@ -1,2 +1,12 @@
-import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {spawnSync} from 'node:child_process';
-test('restore refuses an arbitrary uninstall destination',()=>{const target=fs.mkdtempSync(path.join(os.tmpdir(),'forge-restore-'));const result=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/restore.ps1','-Uninstall','-Destination',target],{encoding:'utf8'});assert.notEqual(result.status,0);assert.match(result.stderr+result.stdout,/Refusing uninstall/);assert.ok(fs.existsSync(target));fs.rmSync(target,{recursive:true,force:true})});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+test('retained restore entry delegates to verified disable and cannot execute archived deletion', () => {
+  const script = fs.readFileSync('scripts/restore.ps1', 'utf8');
+  const livePrefix = script.slice(0, script.indexOf('<# Archived legacy implementation'));
+  assert.match(livePrefix, /disable\.ps1/);
+  assert.match(livePrefix, /Deletion is not performed/);
+  assert.match(livePrefix, /\breturn\b/);
+  assert.doesNotMatch(livePrefix, /\bRemove-Item\b|\bMove-Item\b|Stop-Process|taskkill/i);
+});

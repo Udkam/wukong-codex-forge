@@ -14,6 +14,7 @@ export const MARK_CLASSES = [
   'forge-turn',
   'forge-user-message',
   'forge-assistant-message',
+  'forge-assistant-turn',
   'forge-code-block',
   'forge-right-panel',
   'forge-right-card',
@@ -22,12 +23,19 @@ export const MARK_CLASSES = [
   'forge-button'
 ];
 
-const RUNTIME_KEY = '__wukongCodexForgeRuntimeV5';
+const RUNTIME_KEY = '__wukongCodexForgeRuntimeV9';
 
 function applyRuntime(payload) {
   const root = document.documentElement;
   const runtimeKey = payload.runtimeKey;
   const markClasses = payload.markClasses;
+  for (const retiredKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8']) {
+    const retired = window[retiredKey];
+    retired?.observer?.disconnect();
+    retired?.dispose?.();
+    if (retired?.timer) clearTimeout(retired.timer);
+    delete window[retiredKey];
+  }
   const previous = window[runtimeKey];
   previous?.observer?.disconnect();
   previous?.dispose?.();
@@ -64,6 +72,12 @@ function applyRuntime(payload) {
     const style = getComputedStyle(element);
     return rect.width > 1 && rect.height > 1 && style.display !== 'none' && style.visibility !== 'hidden';
   };
+  const intersects = (left, right, padding = 0) => !(
+    left.right + padding <= right.left ||
+    left.left - padding >= right.right ||
+    left.bottom + padding <= right.top ||
+    left.top - padding >= right.bottom
+  );
   const largeAncestor = (start, predicate) => {
     let element = start;
     let match = null;
@@ -94,9 +108,9 @@ function applyRuntime(payload) {
       const rect = element.getBoundingClientRect();
       return (
         rect.width >= Math.min(360, innerWidth * .48) &&
-        rect.width <= Math.min(960, innerWidth * .9) &&
+        rect.width <= innerWidth * .94 &&
         rect.height >= 58 &&
-        rect.height <= 240 &&
+        rect.height <= Math.min(480, innerHeight * .48) &&
         rect.bottom >= innerHeight * .68
       );
     };
@@ -121,10 +135,19 @@ function applyRuntime(payload) {
     '新建任务', '新聊天', '新建对话', '新任务',
     'New task', 'New chat', 'Start a new chat'
   ];
+  const landingTitlePattern = /我们该构建什么|今天想处理什么|准备好就开始|从哪里开始|what should we build|what(?:'s| is) on your mind|ready when you are|where should we begin|what (?:do you want|would you like) to (?:work on|do)|how can i help|新建任务/i;
   let battleCycle = 0;
 
   const refresh = () => {
+    state.lastRefreshAt = performance.now();
     clearMarks();
+    delete root.dataset.forgeWukongSafe;
+    delete root.dataset.forgeBajieSafe;
+    delete root.dataset.forgeGourdSafe;
+    root.style.removeProperty('--forge-gourd-left');
+    root.style.removeProperty('--forge-gourd-top');
+    root.style.removeProperty('--forge-gourd-width');
+    root.style.removeProperty('--forge-gourd-height');
 
     const previousSurface = root.dataset.forgeSurface || null;
     const threadEvidence = [...document.querySelectorAll([
@@ -138,9 +161,8 @@ function applyRuntime(payload) {
       '[class*="conversation-turn" i]'
     ].join(','))].find(visible);
     const surfaceRoot = document.querySelector('[role="main"], main');
-    const landingTitle = [...(surfaceRoot || document).querySelectorAll('h1, h2')].some(element => (
-      /今天想处理什么|准备好就开始|从哪里开始|what(?:'s| is) on your mind|ready when you are|where should we begin|what (?:do you want|would you like) to (?:work on|do)|how can i help|新建任务/i.test(textOf(element))
-    ));
+    const landingTitle = [...(surfaceRoot || document).querySelectorAll('h1, h2, [data-feature="game-source"], .heading-xl')]
+      .find(element => visible(element) && landingTitlePattern.test(textOf(element)));
     const landingMain = [...document.querySelectorAll('[data-vscode-context*="supportsNewChatMenu"] [role="main"]')].some(visible);
     const localComposer = [...document.querySelectorAll('[data-thread-find-composer="true"]')].some(visible);
     const surface = threadEvidence || (localComposer && !landingTitle && !landingMain) ? 'thread' : 'landing';
@@ -223,7 +245,7 @@ function applyRuntime(payload) {
     }
 
     if (surface === 'landing') {
-      const title = workspace?.querySelector('h1, h2') || document.querySelector('h1, h2');
+      const title = landingTitle || workspace?.querySelector('h1, h2') || document.querySelector('h1, h2');
       mark(title, 'forge-landing-title');
       if (title) {
         const hero = largeAncestor(title, rect => rect.width >= 260 && rect.width <= 960 && rect.height >= 44 && rect.height <= 320);
@@ -256,7 +278,20 @@ function applyRuntime(payload) {
       '[aria-label*="回答"]',
       '[class*="assistant-message" i]'
     ].join(',')).forEach(element => {
-      mark(element, 'forge-assistant-message');
+      if (workspace && !workspace.contains(element)) return;
+      const turn = element.closest([
+        '[data-virtualized-turn-content]',
+        '[data-content-search-turn-key]',
+        'article'
+      ].join(',')) || element.closest('[data-message-author-role="assistant"]');
+      if (!turn) return;
+      mark(turn, 'forge-assistant-turn');
+      let node = element;
+      while (node && node !== document.body && workspace?.contains(node)) {
+        mark(node, 'forge-assistant-message');
+        if (node === turn) break;
+        node = node.parentElement;
+      }
     });
     markAll('pre, pre:has(code)', 'forge-code-block');
 
@@ -277,7 +312,91 @@ function applyRuntime(payload) {
         const rightRect = right.getBoundingClientRect();
         return rightRect.width * rightRect.height - leftRect.width * leftRect.height;
       });
-      mark(rightCards[0], 'forge-right-card');
+      mark(rightCards[0] || rightPanel, 'forge-right-card');
+    }
+
+    const blockers = [...new Set([
+      ...document.querySelectorAll('.forge-user-message, .forge-code-block, .forge-landing-hero, .forge-assistant-turn, [data-local-conversation-final-assistant], [role="dialog"], [role="menu"], [role="tooltip"], [data-radix-popper-content-wrapper]')
+    ])].filter(element => visible(element) && !composer?.contains(element));
+    const decorationSafe = candidate => {
+      if (!candidate) return false;
+      if (candidate.left < 8 || candidate.top < 8 || candidate.right > innerWidth - 8 || candidate.bottom > innerHeight - 8) return false;
+      return blockers.every(element => !intersects(candidate, element.getBoundingClientRect(), 8));
+    };
+    if (composer && visible(composer)) {
+      const composerRect = composer.getBoundingClientRect();
+      const workspaceRect = workspace?.getBoundingClientRect();
+      const rightLimit = Math.min(workspaceRect?.right ?? innerWidth, innerWidth - 8);
+      const compact = mode === 'scenery';
+      const wukong = compact
+        ? { width: 62, height: 70, gap: 52 }
+        : { width: innerWidth < 1100 ? 70 : 88, height: innerWidth < 1100 ? 78 : 98, gap: innerWidth < 1100 ? 58 : 64 };
+      const bajie = compact
+        ? { width: 68, height: 74, gap: 12 }
+        : { width: innerWidth < 1100 ? 74 : 92, height: innerWidth < 1100 ? 82 : 100, gap: 12 };
+      const wukongCandidate = {
+        left: composerRect.left - wukong.gap - wukong.width,
+        right: composerRect.left - wukong.gap,
+        top: composerRect.bottom - wukong.height,
+        bottom: composerRect.bottom
+      };
+      const bajieCandidate = {
+        left: composerRect.right + bajie.gap,
+        right: composerRect.right + bajie.gap + bajie.width,
+        top: composerRect.bottom - bajie.height,
+        bottom: composerRect.bottom
+      };
+      const wukongSafe = (
+        innerWidth >= 780 &&
+        wukongCandidate.left >= (workspaceRect?.left ?? 0) + 8 &&
+        decorationSafe(wukongCandidate)
+      );
+      const bajieSafe = (
+        innerWidth >= 780 &&
+        bajieCandidate.right <= rightLimit &&
+        (!rightPanel || !visible(rightPanel) || !intersects(bajieCandidate, rightPanel.getBoundingClientRect(), 8)) &&
+        decorationSafe(bajieCandidate)
+      );
+      root.dataset.forgeWukongSafe = String(wukongSafe);
+      root.dataset.forgeBajieSafe = String(bajieSafe);
+
+      const gourd = compact ? { width: 34, height: 52 } : { width: 42, height: 64 };
+      const rightGourd = {
+        left: composerRect.right + 12,
+        right: composerRect.right + 12 + gourd.width,
+        top: composerRect.bottom - gourd.height - 5,
+        bottom: composerRect.bottom - 5
+      };
+      const leftGourd = {
+        left: composerRect.left - gourd.width - 12,
+        right: composerRect.left - 12,
+        top: composerRect.bottom - gourd.height - 5,
+        bottom: composerRect.bottom - 5
+      };
+      const fitsWorkspace = candidate => (
+        candidate.left >= (workspaceRect?.left ?? 0) + 8 &&
+        candidate.right <= rightLimit
+      );
+      const occupiedDecorations = [
+        wukongSafe ? wukongCandidate : null,
+        bajieSafe ? bajieCandidate : null
+      ].filter(Boolean);
+      const gourdCandidate = [leftGourd, rightGourd].find(candidate => (
+        fitsWorkspace(candidate) &&
+        decorationSafe(candidate) &&
+        occupiedDecorations.every(occupied => !intersects(candidate, occupied, 6))
+      ));
+      root.dataset.forgeGourdSafe = String(innerWidth >= 900 && Boolean(gourdCandidate));
+      if (gourdCandidate) {
+        root.style.setProperty('--forge-gourd-left', `${gourdCandidate.left}px`);
+        root.style.setProperty('--forge-gourd-top', `${gourdCandidate.top}px`);
+        root.style.setProperty('--forge-gourd-width', `${gourd.width}px`);
+        root.style.setProperty('--forge-gourd-height', `${gourd.height}px`);
+      }
+    } else {
+      root.dataset.forgeWukongSafe = 'false';
+      root.dataset.forgeBajieSafe = 'false';
+      root.dataset.forgeGourdSafe = 'false';
     }
 
     markAll('[role="menu"]', 'forge-menu');
@@ -285,24 +404,97 @@ function applyRuntime(payload) {
     document.querySelectorAll('button').forEach(button => mark(button, 'forge-button'));
   };
 
-  const state = { observer: null, timer: 0, refresh, dispose: null };
+  const state = {
+    observer: null,
+    lastRefreshAt: 0,
+    timer: 0,
+    routeTimers: new Set(),
+    refresh,
+    dispose: null
+  };
   const scheduleRefresh = () => {
     if (state.timer) return;
+    const elapsed = performance.now() - state.lastRefreshAt;
+    const delay = Math.max(160, 650 - elapsed);
     state.timer = window.setTimeout(() => {
       state.timer = 0;
       refresh();
-    }, 110);
+    }, delay);
   };
-  const observer = new MutationObserver(scheduleRefresh);
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['aria-selected', 'aria-current', 'data-state']
+  const queueRefreshes = delays => {
+    scheduleRefresh();
+    for (const delay of delays) {
+      const timer = window.setTimeout(() => {
+        state.routeTimers.delete(timer);
+        scheduleRefresh();
+      }, delay);
+      state.routeTimers.add(timer);
+    }
+  };
+  const scheduleNavigationRefresh = event => {
+    const target = event.target instanceof Element
+      ? event.target.closest('button, a, [role="button"], [role="treeitem"]')
+      : null;
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    const label = textOf(target);
+    const mayNavigate = rect.left < Math.min(540, innerWidth * .34) || newTaskLabels.some(item => label === item || label.includes(item));
+    const composerSubmit = Boolean(target.closest('.forge-composer, [data-thread-find-composer="true"]'));
+    if (!mayNavigate && !composerSubmit) return;
+    queueRefreshes(composerSubmit ? [300, 1000, 2500] : [450, 1400]);
+  };
+  const scheduleComposerKeyboardSubmit = event => {
+    if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target?.closest('.forge-composer, [data-thread-find-composer="true"]')) return;
+    queueRefreshes([300, 1000, 2500]);
+  };
+  // Observe element additions/removals only. Attribute, text, scroll and layout
+  // notifications are intentionally excluded because Codex updates them at a
+  // high frequency while a task streams. The scheduler coalesces each burst.
+  const refreshStructureSelector = [
+    '[data-virtualized-turn-content]',
+    '[data-content-search-turn-key]',
+    '[data-local-conversation-final-assistant]',
+    '[data-message-author-role]',
+    '[data-user-message-bubble]',
+    '[data-thread-find-composer]',
+    '.composer-surface-chrome',
+    'textarea',
+    '[contenteditable="true"]',
+    '[data-pip-obstacle="thread-summary-panel"]',
+    '[data-app-shell-focus-area="right-panel"]',
+    'pre',
+    '[role="dialog"]',
+    '[role="menu"]'
+  ].join(',');
+  const nodeTouchesThemeStructure = node => (
+    node.nodeType === Node.ELEMENT_NODE &&
+    (node.matches(refreshStructureSelector) || Boolean(node.querySelector(refreshStructureSelector)))
+  );
+  const observer = new MutationObserver(records => {
+    const structuralChange = records.some(record => (
+      [...record.addedNodes, ...record.removedNodes].some(nodeTouchesThemeStructure)
+    ));
+    if (structuralChange) scheduleRefresh();
   });
+  observer.observe(document.body, { childList: true, subtree: true });
   window.addEventListener('popstate', scheduleRefresh);
+  window.addEventListener('hashchange', scheduleRefresh);
+  window.addEventListener('resize', scheduleRefresh);
+  document.addEventListener('click', scheduleNavigationRefresh, true);
+  document.addEventListener('keydown', scheduleComposerKeyboardSubmit, true);
   state.observer = observer;
-  state.dispose = () => window.removeEventListener('popstate', scheduleRefresh);
+  state.dispose = () => {
+    window.removeEventListener('popstate', scheduleRefresh);
+    window.removeEventListener('hashchange', scheduleRefresh);
+    window.removeEventListener('resize', scheduleRefresh);
+    document.removeEventListener('click', scheduleNavigationRefresh, true);
+    document.removeEventListener('keydown', scheduleComposerKeyboardSubmit, true);
+    observer.disconnect();
+    state.routeTimers.forEach(timer => clearTimeout(timer));
+    state.routeTimers.clear();
+  };
   window[runtimeKey] = state;
   refresh();
 }
@@ -317,12 +509,55 @@ export function makeApplyExpression({ styleSheet, variables }) {
   return `(${applyRuntime.toString()})(${payload})`;
 }
 
+export const THEME_STATE_EXPRESSION = `(() => ({
+  stylePresent: Boolean(document.getElementById('wukong-forge-style')),
+  rootClass: document.documentElement.classList.contains('forge-ink-mountain'),
+  markedElements: document.querySelectorAll('[data-forge-mark]').length,
+  surface: document.documentElement.dataset.forgeSurface || null,
+  mode: document.documentElement.dataset.forgeMode || null,
+  scene: document.documentElement.dataset.forgeScene || null,
+  wukongSafe: document.documentElement.dataset.forgeWukongSafe || null,
+  bajieSafe: document.documentElement.dataset.forgeBajieSafe || null,
+  gourdSafe: document.documentElement.dataset.forgeGourdSafe || null,
+  runtimeV4: Boolean(window.__wukongCodexForgeRuntimeV4),
+  runtimeV5: Boolean(window.__wukongCodexForgeRuntimeV5),
+  runtimeV6: Boolean(window.__wukongCodexForgeRuntimeV6),
+  runtimeV7: Boolean(window.__wukongCodexForgeRuntimeV7),
+  runtimeV8: Boolean(window.__wukongCodexForgeRuntimeV8),
+  runtimeV9: Boolean(window.__wukongCodexForgeRuntimeV9)
+}))()`;
+
+export const isNativeThemeState = state => Boolean(state) &&
+  state.stylePresent === false &&
+  state.rootClass === false &&
+  state.markedElements === 0 &&
+  state.surface === null &&
+  state.mode === null &&
+  state.scene === null &&
+  state.wukongSafe === null &&
+  state.bajieSafe === null &&
+  state.gourdSafe === null &&
+  state.runtimeV4 === false &&
+  state.runtimeV5 === false &&
+  state.runtimeV6 === false &&
+  state.runtimeV7 === false &&
+  state.runtimeV8 === false &&
+  state.runtimeV9 === false;
+
+export const isActiveThemeState = state => Boolean(state) &&
+  state.stylePresent === true &&
+  state.rootClass === true &&
+  state.runtimeV8 === false &&
+  state.runtimeV9 === true;
+
 export const RESTORE_EXPRESSION = `(() => {
-  const runtime = window.${RUNTIME_KEY};
-  runtime?.observer?.disconnect();
-  runtime?.dispose?.();
-  if (runtime?.timer) clearTimeout(runtime.timer);
-  delete window.${RUNTIME_KEY};
+  for (const runtimeKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8', '${RUNTIME_KEY}']) {
+    const runtime = window[runtimeKey];
+    runtime?.observer?.disconnect();
+    runtime?.dispose?.();
+    if (runtime?.timer) clearTimeout(runtime.timer);
+    delete window[runtimeKey];
+  }
   document.getElementById('wukong-forge-style')?.remove();
   document.querySelectorAll('[data-forge-mark]').forEach(element => {
     element.classList.remove(${MARK_CLASSES.map(name => `'${name}'`).join(',')});
@@ -332,4 +567,12 @@ export const RESTORE_EXPRESSION = `(() => {
   delete document.documentElement.dataset.forgeSurface;
   delete document.documentElement.dataset.forgeScene;
   delete document.documentElement.dataset.forgeMode;
+  delete document.documentElement.dataset.forgeWukongSafe;
+  delete document.documentElement.dataset.forgeBajieSafe;
+  delete document.documentElement.dataset.forgeGourdSafe;
+  document.documentElement.style.removeProperty('--forge-gourd-left');
+  document.documentElement.style.removeProperty('--forge-gourd-top');
+  document.documentElement.style.removeProperty('--forge-gourd-width');
+  document.documentElement.style.removeProperty('--forge-gourd-height');
+  return true;
 })()`;
