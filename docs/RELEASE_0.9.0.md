@@ -1,6 +1,18 @@
 # Wukong Codex Forge 0.9.0 发布记录
 
-## 便携包
+## 最终推荐便携包
+
+- 文件：`E:\Proj\wukong-codex-forge\release\wukong-codex-forge-0.9.0-portable-20260721-185413-8390691.zip`
+- 大小：2,932,159 bytes
+- SHA-256：`BCF9F9E7C7F9B8C7490ED3ECFFF576966A76AE5FC46BC7A8C8AF6F53A07FC697`
+- 条目：35
+- 保留的打包/运行目录：`C:\Users\Alex Chen\AppData\Local\Temp\wukong-codex-forge-0.9.0-portable-20260721-185413-8390691`
+
+这是唯一通过隐藏 Windows PowerShell 5.1、全新目录、全新 `.wukong-runtime\profile` 真启动的推荐包：`ChatGPT.exe` PID 45072、随机端口 34661、watcher PID 46940，事件 `starting → watching`。启动 stderr 为 0 bytes；renderer 为 V10 battle / scene 0、128 个受管标记，三项安全位均为 true。真实图为 `docs/screenshots/live-codex-v10-release-fresh-profile-landing.png/.json`。
+
+包检查：禁用项 0、缺失活动文件 0；包含 11 张 JPEG、三张活动 WebP、短入口、V10 runtime、启动/停用脚本和文档。没有 `node_modules`、docs、tests、tmp、Git、源 PNG、chroma、旧宠物、夜叉套或神锋 UI 素材。
+
+## 首个静态包（历史，已弃用）
 
 - 文件：`E:\Proj\wukong-codex-forge\release\wukong-codex-forge-0.9.0-portable-20260721-183530-7655056.zip`
 - 大小：2,931,727 bytes
@@ -33,6 +45,13 @@
 - 原生主题定义：valid。
 - 打包目录四个 PowerShell 入口：AST 解析 0 错误。
 - 打包目录独立导入：主题载荷成功，包含 V10 companion payload。
+- 最终包 fresh-profile：真实 `starting → watching`，隐藏启动 stderr 0 bytes。
+
+### fresh-profile 发布后补充验证
+
+首个 0.9.0 ZIP 的静态内容正确，但从全新 profile 启动时发现 Windows PowerShell 5.1 会把 renderer 未就绪时的 native stderr 提升为终止错误，提前跳过 20 秒 apply retry。该 ZIP 与其 stage 均保留作失败证据，不再作为最终推荐包；后续唯一命名的更正版将记录在本文件追加段和工作日志中。
+
+第二个唯一包修复了 retry，但隐藏 PowerShell 5.1 子进程没有自动加载 `Get-FileHash` 模块，入口在写哈希审计事件时失败。该包、stage、profile 和 stdout/stderr 同样保留且不再推荐。入口现使用只依赖核心 .NET 的只读 SHA-256 函数。
 
 ## 安全与回退
 

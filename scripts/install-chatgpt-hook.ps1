@@ -6,6 +6,19 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+function Get-PortableSha256([string]$Path) {
+    $stream = [IO.File]::OpenRead($Path)
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    try {
+        return ([BitConverter]::ToString($algorithm.ComputeHash($stream))).Replace('-', '')
+    }
+    finally {
+        $algorithm.Dispose()
+        $stream.Dispose()
+    }
+}
+
 $rootPath = [IO.Path]::GetFullPath($Root)
 $packageDefinition = Join-Path $rootPath 'package.json'
 $launcherPath = Join-Path $rootPath 'scripts\launch.ps1'
@@ -53,11 +66,15 @@ $bridgeScript = @"
     `$_.CommandLine -and `$_.CommandLine.IndexOf(`$themeRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and `$_.CommandLine -match 'runtime[\\/]watch\.mjs'
 })
 if (`$managed.Count -eq 1 -and `$watching.Count -ge 1 -and `$official -and (Test-Path -LiteralPath `$official)) {
-    Start-Process -FilePath `$official -ArgumentList @(
-        '--remote-debugging-address=127.0.0.1',
-        '--remote-debugging-port=0',
-        "--user-data-dir=`"`$profile`""
-    ) | Out-Null
+    `$previousUserDataPath = `$env:CODEX_ELECTRON_USER_DATA_PATH
+    try {
+        `$env:CODEX_ELECTRON_USER_DATA_PATH = `$profile
+        Start-Process -FilePath `$official | Out-Null
+    }
+    finally {
+        if (`$null -eq `$previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', `$null, 'Process') }
+        else { `$env:CODEX_ELECTRON_USER_DATA_PATH = `$previousUserDataPath }
+    }
     exit 0
 }
 if ((Test-Path -LiteralPath `$launcher) -and (Test-Path -LiteralPath `$marker)) {
@@ -76,6 +93,12 @@ if (-not `$package) { exit 2 }
 if (-not (Test-Path -LiteralPath `$official)) { exit 3 }
 Start-Process -FilePath `$official | Out-Null
 "@
+$bridgeTokens = $null
+$bridgeErrors = $null
+[Management.Automation.Language.Parser]::ParseInput($bridgeScript, [ref]$bridgeTokens, [ref]$bridgeErrors) | Out-Null
+if ($bridgeErrors.Count -gt 0) {
+    throw "Generated ChatGPT launch bridge is invalid: $($bridgeErrors[0].Message)"
+}
 $bridgeBytes = [Text.Encoding]::UTF8.GetBytes($bridgeScript)
 $sha256 = [Security.Cryptography.SHA256]::Create()
 try {
@@ -138,11 +161,11 @@ $event = [ordered]@{
     themeRoot = $rootPath
     portable = [bool]$Portable
     bridgePath = $bridgePath
-    bridgeHash = (Get-FileHash -LiteralPath $bridgePath -Algorithm SHA256).Hash
+    bridgeHash = Get-PortableSha256 $bridgePath
     shortcutArgumentsLength = $expectedArguments.Length
     changed = -not $alreadyCurrent
     preservedBackup = $backupPath
-    shortcutHash = (Get-FileHash -LiteralPath $shortcutPath -Algorithm SHA256).Hash
+    shortcutHash = Get-PortableSha256 $shortcutPath
 } | ConvertTo-Json -Compress
 [IO.File]::AppendAllText($eventPath, $event + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 

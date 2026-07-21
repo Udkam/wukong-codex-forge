@@ -129,3 +129,7 @@
 - 生产证据新增 `docs/screenshots/live-codex-v10-autostart-landing.*` 与 `live-codex-v10-autostart-thread.*`。运行时、视觉、场景色板、生命周期、保留合同和最小包定向回归 24/24 通过。
 - 推送前完整验证通过：原生定义 valid、全部测试 25/25；打包目录的四个 PowerShell 入口 AST 解析 0 错误，独立 V10 载荷导入成功。
 - 第一次 `Compress-Archive -LiteralPath <stage>\*` 因参数语义失败，没有生成 ZIP；stage 保留。最终 0.9.0 包为 `release\wukong-codex-forge-0.9.0-portable-20260721-183530-7655056.zip`，35 项、2,931,727 bytes、SHA-256 `E0A1F1E25184CC50DCC1003B4D3D3C022154DADE128738DF612594F0BD8274D3`；禁用项与缺失项均为 0。
+- 发布后 fresh-profile 实启暴露 PowerShell 5.1 native stderr 终止语义：renderer 未就绪的正常重试错误被 `ErrorActionPreference=Stop` 提前终止。失败 stage、profile、stdout/stderr 和首个 ZIP 全部保留；launch 的 verify/apply loop 改为单次 native 调用期间临时 `Continue`、捕获 exit code 后恢复 `Stop`，等待与超时边界不变。
+- 第二个唯一包的隐藏 PowerShell 5.1 子进程未自动加载 `Get-FileHash` 模块，入口在写快捷方式事件时终止；该包、stage、profile 和日志全部保留。hook 改为 `[IO.File]::OpenRead` + `.NET SHA256` 的自包含只读哈希函数，移除模块自动加载依赖。
+- 第三个唯一包 `release\wukong-codex-forge-0.9.0-portable-20260721-185413-8390691.zip` 完成 fresh-profile 真启动：35 项、2,932,159 bytes、SHA-256 `BCF9F9E7C7F9B8C7490ED3ECFFF576966A76AE5FC46BC7A8C8AF6F53A07FC697`；根 PID 45072、端口 34661、watcher PID 46940，事件 `starting → watching`，隐藏启动 stderr 0 bytes。
+- 最终包生产 renderer 为 V10 battle/scene 0、128 个受管标记、三项安全位 true；2050 × 1106、sidebar 275 px、composer 736 × 98、背景 cover。证据为 `docs/screenshots/live-codex-v10-release-fresh-profile-landing.*`，窗口保留供用户审计。

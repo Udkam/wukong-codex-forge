@@ -104,6 +104,15 @@ $launchStartedAt = [DateTime]::UtcNow
 if ($reuseManagedProcess) {
     Write-RuntimeEvent 'reattaching' $null
     $codexProcess = Get-Process -Id $managedProcesses[0].ProcessId -ErrorAction Stop
+    $previousUserDataPath = $env:CODEX_ELECTRON_USER_DATA_PATH
+    try {
+        $env:CODEX_ELECTRON_USER_DATA_PATH = $profilePath
+        Start-Process -FilePath $chatGpt | Out-Null
+    }
+    finally {
+        if ($null -eq $previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', $null, 'Process') }
+        else { $env:CODEX_ELECTRON_USER_DATA_PATH = $previousUserDataPath }
+    }
 }
 else {
     Write-RuntimeEvent 'starting' $null
@@ -147,8 +156,19 @@ try {
     $verifyDeadline = [DateTime]::UtcNow.AddSeconds(20)
     $lastVerifyOutput = @()
     while ($true) {
-        $lastVerifyOutput = @(& $node runtime/injector.mjs --verify $port 2>&1)
-        if ($LASTEXITCODE -eq 0) { break }
+        $priorErrorActionPreference = $ErrorActionPreference
+        try {
+            # Windows PowerShell 5.1 wraps native stderr as ErrorRecord objects.
+            # During the expected readiness window, capture those records and
+            # decide from the native exit code instead of terminating the script.
+            $ErrorActionPreference = 'Continue'
+            $lastVerifyOutput = @(& $node runtime/injector.mjs --verify $port 2>&1)
+            $verifyExitCode = $LASTEXITCODE
+        }
+        finally {
+            $ErrorActionPreference = $priorErrorActionPreference
+        }
+        if ($verifyExitCode -eq 0) { break }
         if ($codexProcess.HasExited) { throw 'Codex exited before its local theme channel accepted a connection.' }
         if ([DateTime]::UtcNow -ge $verifyDeadline) {
             throw "Timed out verifying the Codex loopback theme channel: $($lastVerifyOutput -join ' ')"
@@ -162,8 +182,16 @@ try {
     $applyDeadline = [DateTime]::UtcNow.AddSeconds(20)
     $lastApplyOutput = @()
     while ($true) {
-        $lastApplyOutput = @(& $node runtime/injector.mjs --apply $port themes/active.json 2>&1)
-        if ($LASTEXITCODE -eq 0) { break }
+        $priorErrorActionPreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            $lastApplyOutput = @(& $node runtime/injector.mjs --apply $port themes/active.json 2>&1)
+            $applyExitCode = $LASTEXITCODE
+        }
+        finally {
+            $ErrorActionPreference = $priorErrorActionPreference
+        }
+        if ($applyExitCode -eq 0) { break }
         if ($codexProcess.HasExited) { throw 'Codex exited before the theme reached a verified renderer state.' }
         if ([DateTime]::UtcNow -ge $applyDeadline) {
             throw "Timed out waiting for a verified Codex theme surface: $($lastApplyOutput -join ' ')"

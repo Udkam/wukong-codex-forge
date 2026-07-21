@@ -36,6 +36,8 @@ test('public install and disable entry points preserve every existing file', () 
   assert.match(hook, /ChatGPT-before-wukong-/);
   assert.match(hook, /Copy-Item -LiteralPath \$shortcutPath -Destination \$backupPath/);
   assert.match(hook, /launcher-bridges/);
+  assert.match(hook, /function Get-PortableSha256/);
+  assert.doesNotMatch(hook, /Get-FileHash/);
   assert.match(hook, /-File `"\$bridgePath`"/);
   assert.match(hook, /\$expectedArguments\.Length -ge 900/);
   assert.doesNotMatch(hook, /EncodedCommand/);
@@ -63,6 +65,7 @@ test('V10 watcher and disable path prove native restoration before reporting suc
   const injector = read('runtime/injector.mjs');
 
   assert.match(watcher, /__wukongCodexForgeRuntimeV10/);
+  assert.match(watcher, /emptyTargetPasses >= 8/);
   assert.match(watcher, /states\.every\(isNativeThemeState\)/);
   assert.match(watcher, /\.confirmed\.json/);
   assert.match(disable, /Managed watcher did not acknowledge the restore request; native state was not claimed/);

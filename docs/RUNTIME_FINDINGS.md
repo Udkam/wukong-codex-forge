@@ -12,6 +12,10 @@ V10 把完整逻辑写入按内容哈希命名的版本化桥接脚本，`.lnk` 
 
 第二个真实问题是 Electron 写出 `DevToolsActivePort` 后，回环 HTTP 端点仍可能短暂拒绝首个连接。原启动器立即 `--verify`，导致健康窗口被记录成 `not-running`。V10 对回环验证增加 20 秒、250 ms 间隔的有界重试；renderer `--apply` 仍保留 20 秒、350 ms 间隔重试。
 
+正式便携包 fresh-profile 验收进一步发现 Windows PowerShell 5.1 会把 native stderr 包装为 `ErrorRecord`；在全局 `ErrorActionPreference=Stop` 下，renderer 尚未出现时 `injector` 的预期 stderr 会提前终止脚本，使上述重试形同虚设。两段 readiness loop 现仅在单次 native 调用期间临时使用 `Continue`，同时捕获 stdout/stderr 和 `$LASTEXITCODE`，调用后立即恢复 `Stop`。失败输出仍进入最终超时信息，非 readiness 阶段的脚本错误仍然 fail-closed。
+
+第二次 fresh-profile 包验证发现隐藏 PowerShell 5.1 子进程未自动加载 `Get-FileHash` 所属模块，快捷方式已保存但写审计事件时终止。V10 入口不再依赖该 cmdlet：`Get-PortableSha256` 以 `[IO.File]::OpenRead` 和 `[Security.Cryptography.SHA256]::Create()` 只读计算哈希，并在 `finally` 释放 stream/algorithm。这样快捷方式安装只依赖 PowerShell 5.1 核心 .NET 类型。
+
 ## V10 普通快捷方式实测
 
 - 快捷方式目标：系统 PowerShell；Arguments 长度 178。
@@ -22,6 +26,10 @@ V10 把完整逻辑写入按内容哈希命名的版本化桥接脚本，`.lnk` 
 - thread：V10 `scenery/scene 8`、同尺寸 composer、环境卡 300 × 473、assistant 透明无框；葫芦从 landing 主视觉左侧改放环境卡脚部。
 
 主题实例继续留在本机供用户审计。直接 WindowsApps 可执行文件、Store AUMID、协议或第三方自建入口仍会绕过适配器；这是稳定性与官方零写入边界，不伪装成“全系统注入”。
+
+## 最终包 fresh-profile 实测
+
+静态打包测试不能替代一个从未出现过 `DevToolsActivePort` 的全新 profile。最终推荐包因此从唯一临时目录启动，取得根 PID 45072、端口 34661 和 watcher PID 46940；事件顺序为 `starting` 后约 3.9 秒进入 `watching`，重试期间 PowerShell stderr 文件保持 0 bytes。生产 renderer 回读 V10 active、128 个受管标记、独立 overlay 存在、三项安全位 true；2050 × 1106 真实截图仍保持 sidebar 275 px、composer 736 × 98、背景 cover 和三件独立伴随元素。该实例与旧诊断实例并存，没有结束任何进程。
 
 ## 结论
 

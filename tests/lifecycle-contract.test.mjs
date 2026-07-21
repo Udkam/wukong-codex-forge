@@ -96,7 +96,12 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.match(publicScripts.launch, /AddSeconds\(20\)/);
   assert.match(publicScripts.launch, /\$verifyDeadline = \[DateTime\]::UtcNow\.AddSeconds\(20\)/);
   assert.match(publicScripts.launch, /Timed out verifying the Codex loopback theme channel/);
+  assert.match(publicScripts.launch, /\$ErrorActionPreference = 'Continue'/);
+  assert.match(publicScripts.launch, /\$verifyExitCode = \$LASTEXITCODE/);
+  assert.match(publicScripts.launch, /\$applyExitCode = \$LASTEXITCODE/);
+  assert.match(publicScripts.launch, /\$ErrorActionPreference = \$priorErrorActionPreference/);
   assert.match(publicScripts.launch, /runtime\/injector\.mjs --apply \$port themes\/active\.json/);
+  assert.match(publicScripts.launch, /if \(\$reuseManagedProcess\)[\s\S]*CODEX_ELECTRON_USER_DATA_PATH = \$profilePath[\s\S]*Start-Process -FilePath \$chatGpt/);
   assert.ok(
     publicScripts.launch.indexOf('runtime/injector.mjs --apply $port themes/active.json') <
       publicScripts.launch.indexOf("Write-RuntimeEvent 'watching'"),
@@ -110,13 +115,19 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.match(publicScripts.hook, /launcher-bridges/);
   assert.match(publicScripts.hook, /chatgpt-entry-\$bridgeId\.ps1/);
   assert.match(publicScripts.hook, /WriteAllText\(\$bridgePath, \$bridgeScript/);
+  assert.match(publicScripts.hook, /function Get-PortableSha256/);
+  assert.match(publicScripts.hook, /\[IO\.File\]::OpenRead\(\$Path\)/);
+  assert.doesNotMatch(publicScripts.hook, /Get-FileHash/);
   assert.match(publicScripts.hook, /-File `"\$bridgePath`"/);
   assert.match(publicScripts.hook, /\$expectedArguments\.Length -ge 900/);
   assert.doesNotMatch(publicScripts.hook, /EncodedCommand/);
   assert.match(publicScripts.hook, /\$watching = @\(Get-CimInstance Win32_Process -Filter "Name='node\.exe'"/);
   assert.match(publicScripts.hook, /runtime\[\\\\\/\]watch\\\.mjs/);
   assert.match(publicScripts.hook, /\$managed\.Count -eq 1 -and `\$watching\.Count -ge 1/);
-  assert.match(publicScripts.hook, /--user-data-dir=`"`\$profile`"/);
+  assert.match(publicScripts.hook, /`\$env:CODEX_ELECTRON_USER_DATA_PATH = `\$profile/);
+  assert.match(publicScripts.hook, /SetEnvironmentVariable\('CODEX_ELECTRON_USER_DATA_PATH', `\$null, 'Process'\)/);
+  assert.match(publicScripts.hook, /Management\.Automation\.Language\.Parser\]::ParseInput\(\$bridgeScript/);
+  assert.match(publicScripts.hook, /Generated ChatGPT launch bridge is invalid/);
   assert.match(publicScripts.hook, /Start-Process -FilePath `\$official/);
   assert.match(publicScripts.start, /install-chatgpt-hook\.ps1/);
   assert.match(publicScripts.start, /launch\.ps1/);
@@ -199,4 +210,9 @@ test('renderer refreshes are structural, throttled, and layout-loop free', () =>
   assert.match(runtime, /visualViewport\?\.addEventListener\('scroll', scheduleRefresh/);
   assert.match(runtime, /addEventListener\('keydown', scheduleComposerKeyboardSubmit/);
   assert.doesNotMatch(runtime, /addEventListener\('input', scheduleRefresh/);
+
+  const watcher = read('runtime/watch.mjs');
+  assert.match(watcher, /let emptyTargetPasses = 0/);
+  assert.match(watcher, /if \(!targets\.length\)[\s\S]*emptyTargetPasses >= 8/);
+  assert.match(watcher, /watcher stopped with the visible Codex lifecycle/);
 });

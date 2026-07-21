@@ -13,10 +13,13 @@
 
 当前本机真实窗口证据：
 
+- [最终便携包 fresh-profile 启动](docs/screenshots/live-codex-v10-release-fresh-profile-landing.png)及其[状态与几何 JSON](docs/screenshots/live-codex-v10-release-fresh-profile-landing.json)
 - [普通快捷方式启动·新任务战斗境](docs/screenshots/live-codex-v10-autostart-landing.png)及其[状态与几何 JSON](docs/screenshots/live-codex-v10-autostart-landing.json)
 - [同一窗口·对话风景境](docs/screenshots/live-codex-v10-autostart-thread.png)及其[状态与几何 JSON](docs/screenshots/live-codex-v10-autostart-thread.json)
 
 本次实测为 PID 26812、随机回环端口 38625、watcher PID 18296；V10 active、背景 `cover`、输入器 736 × 98、环境卡 300 × 473、助手回答透明无框，三件伴随元素均不接收鼠标。定向回归 24/24 通过。
+
+最终推荐 ZIP 另以全新目录和全新 profile 验收：PID 45072、端口 34661、watcher PID 46940；`starting → watching`，受管标记 128、三项安全位 true、启动 stderr 0 bytes。该窗口保留供现场审计。
 
 安全边界：开始菜单快捷方式、安装目录内 `start-theme.cmd` 与由它安装的入口可自动带主题启动。直接运行 WindowsApps 内 `ChatGPT.exe`、Store AUMID、协议或第三方自建入口会绕过适配器；若要无条件拦截这些入口，需要修改官方包、IFEO、注入 DLL 或系统服务，本项目为避免崩溃与破坏签名明确不采用。
 
