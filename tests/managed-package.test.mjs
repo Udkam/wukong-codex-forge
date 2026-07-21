@@ -20,6 +20,8 @@ test('minimal managed package imports independently and omits development surfac
     'runtime/forge-theme.css',
     'runtime/watch.mjs',
     'scripts/launch.ps1',
+    'scripts/start.ps1',
+    'scripts/install-chatgpt-hook.ps1',
     'scripts/disable.ps1',
     'start-theme.cmd',
     'stop-theme.cmd',
@@ -35,7 +37,7 @@ test('minimal managed package imports independently and omits development surfac
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client.mjs')), false, 'superseded ws bundle was packaged');
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client-node.mjs')), false, 'diagnostic ws bundle was packaged');
   const packagedManifest = JSON.parse(fs.readFileSync(path.join(target, 'package.json'), 'utf8'));
-  assert.equal(packagedManifest.version, '0.8.0');
+  assert.equal(packagedManifest.version, '0.9.0');
   assert.deepEqual(packagedManifest.dependencies, {});
   for (const rejected of [
     'themes/assets/erlang-meishan.jpg',
@@ -50,6 +52,10 @@ test('minimal managed package imports independently and omits development surfac
     'themes/motifs/little-bajie-v2.png',
     'themes/motifs/little-wukong-gameplay-v6.png',
     'themes/motifs/little-bajie-gameplay-v6.png',
+    'themes/motifs/pets/little-wukong-pet-v1.png',
+    'themes/motifs/pets/little-bajie-pet-v1.png',
+    'themes/motifs/pets/little-wukong-pet-v1-chroma.png',
+    'themes/motifs/pets/little-bajie-pet-v1-chroma.png',
     'themes/motifs/xiangfei-gourd.png'
   ]) assert.equal(fs.existsSync(path.join(target, rejected)), false, `rejected asset packaged: ${rejected}`);
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'capture-live.mjs')), false);
@@ -87,8 +93,9 @@ test('minimal managed package imports independently and omits development surfac
   assert.match(payload.variables, /--forge-motif-little-wukong:url\("data:image\/webp;base64,/);
   assert.match(payload.variables, /--forge-motif-little-bajie:url\("data:image\/webp;base64,/);
   assert.equal(payload.theme.motifs.xiangfeiGourd, 'motifs/xiangfei-gourd-icon.webp');
-  assert.equal(payload.theme.motifs.littleWukong, 'motifs/little-wukong-gameplay-v6.webp');
-  assert.equal(payload.theme.motifs.littleBajie, 'motifs/little-bajie-gameplay-v6.webp');
+  assert.equal(payload.theme.motifs.littleWukong, 'motifs/pets/little-wukong-pet-v1.webp');
+  assert.equal(payload.theme.motifs.littleBajie, 'motifs/pets/little-bajie-pet-v1.webp');
+  assert.deepEqual(payload.assets.map(asset => asset.tone), payload.theme.background.gallery.map(scene => scene.tone));
   const client = await import(pathToFileURL(path.join(target, 'runtime', 'cdp-client.mjs')));
   assert.equal(typeof client.getTargets, 'function');
   assert.equal(typeof client.commandTarget, 'function');

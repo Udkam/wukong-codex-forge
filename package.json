@@ -1,6 +1,6 @@
 {
   "name": "wukong-codex-forge",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,12 +10,13 @@
     "check": "npm run validate && npm test",
     "test:e2e": "node tests/run-studio-e2e.mjs",
     "test:theme": "node --test tests/native-theme.test.mjs",
-    "test:lifecycle": "node --test tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs",
+    "test:lifecycle": "node --test tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs tests/preserving-install-contract.test.mjs",
     "test:native": "node --test tests/native-theme.test.mjs tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs",
-    "test:runtime-states": "node --test tests/injection-fixture.test.mjs tests/runtime-style-visual.test.mjs",
+    "test:runtime-states": "node --test tests/injection-fixture.test.mjs tests/runtime-style-visual.test.mjs tests/scene-palette.test.mjs",
     "test:runtime-visual": "node --test tests/runtime-style-visual.test.mjs",
     "test:managed-package": "node --test tests/managed-package.test.mjs",
-    "test:preserve": "node --test tests/preserving-install-contract.test.mjs"
+    "test:preserve": "node --test tests/preserving-install-contract.test.mjs",
+    "test:scene-palette": "node --test tests/scene-palette.test.mjs"
   },
   "dependencies": {},
   "devDependencies": {

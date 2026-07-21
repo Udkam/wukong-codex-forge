@@ -76,7 +76,16 @@ try {
     const composer = document.querySelector('.forge-composer, .composer-surface-chrome');
     const assistant = document.querySelector('.forge-assistant-turn, [data-local-conversation-final-assistant]');
     const workspace = document.querySelector('.forge-workspace, main');
-    const rightCard = document.querySelector('.forge-right-card, [data-pip-obstacle="thread-summary-panel"]');
+    const rightCard = document.querySelector('.forge-right-card') || document.querySelector('[data-pip-obstacle="thread-summary-panel"]');
+    const petState = name => {
+      const element = document.querySelector(`[data-forge-pet="${name}"]`);
+      return element ? {
+        hidden: element.hidden,
+        placement: element.dataset.forgePlacement || null,
+        rect: rect(element),
+        pointerEvents: getComputedStyle(element).pointerEvents
+      } : null;
+    };
     const backgroundImage = getComputedStyle(document.body, '::before').backgroundImage;
     return {
       url: location.href,
@@ -85,11 +94,13 @@ try {
       theme: {
         active: document.documentElement.classList.contains('forge-ink-mountain'),
         runtimeV9: Boolean(window.__wukongCodexForgeRuntimeV9),
+        runtimeV10: Boolean(window.__wukongCodexForgeRuntimeV10),
         mode: document.documentElement.dataset.forgeMode || null,
         scene: document.documentElement.dataset.forgeScene || null,
         wukongSafe: document.documentElement.dataset.forgeWukongSafe || null,
         bajieSafe: document.documentElement.dataset.forgeBajieSafe || null,
         gourdSafe: document.documentElement.dataset.forgeGourdSafe || null,
+        gourdPlacement: document.documentElement.dataset.forgeGourdPlacement || null,
         styleLength: document.getElementById('wukong-forge-style')?.textContent?.length || 0
       },
       geometry: {
@@ -98,6 +109,14 @@ try {
         composer: rect(composer),
         rightCard: rect(rightCard)
       },
+      pets: {
+        wukong: petState('little-wukong'),
+        bajie: petState('little-bajie'),
+        xiangfeiGourd: petState('xiangfei-gourd')
+      },
+      sceneTokens: Object.fromEntries([
+        '--forge-ink', '--forge-paper', '--forge-sidebar-bg', '--forge-composer-bg', '--forge-right-card-bg'
+      ].map(name => [name, getComputedStyle(document.documentElement).getPropertyValue(name).trim()])),
       styles: {
         composer: styleState(composer),
         assistant: styleState(assistant),

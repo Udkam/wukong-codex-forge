@@ -12,6 +12,8 @@ const runtimeFiles = [
   'runtime/watch.mjs',
   'shared/theme-model.mjs',
   'scripts/launch.ps1',
+  'scripts/start.ps1',
+  'scripts/install-chatgpt-hook.ps1',
   'scripts/disable.ps1',
   'themes/active.json',
   'themes/ink-mountain.json',

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "great-sage-scroll",
   "name": "大圣归来 · 潇湘双境",
   "palette": {
@@ -20,30 +20,30 @@
     "landingIntensity": 0.84,
     "primarySceneCount": 3,
     "gallery": [
-      { "id": "erlang-ink-duel", "asset": "assets/erlang-ink-duel.jpg", "position": "center center", "mode": "battle-primary" },
-      { "id": "great-sage", "asset": "assets/great-sage-return.jpg", "position": "right center", "mode": "battle-primary" },
-      { "id": "great-sage-staff", "asset": "assets/great-sage-staff.jpg", "position": "center center", "mode": "battle-primary" },
-      { "id": "yaksha-king-rift", "asset": "assets/yaksha-king-rift.jpg", "position": "center center", "mode": "battle-secondary" },
-      { "id": "storm-bearer", "asset": "assets/storm-bearer.jpg", "position": "center center", "mode": "battle-secondary" },
-      { "id": "shadow-confrontation", "asset": "assets/shadow-confrontation.jpg", "position": "center center", "mode": "battle-secondary" },
-      { "id": "ridge-gate", "asset": "assets/ridge-gate.jpg", "position": "center center", "mode": "scenery" },
-      { "id": "forest-shrine", "asset": "assets/forest-shrine.jpg", "position": "center center", "mode": "scenery" },
-      { "id": "mountain-path", "asset": "assets/mountain-path.jpg", "position": "center center", "mode": "scenery" },
-      { "id": "stone-buddhas", "asset": "assets/stone-buddhas.jpg", "position": "center center", "mode": "scenery" },
-      { "id": "sunset-ravine", "asset": "assets/sunset-ravine.jpg", "position": "center center", "mode": "scenery" }
+      { "id": "erlang-ink-duel", "asset": "assets/erlang-ink-duel.jpg", "position": "center center", "mode": "battle-primary", "tone": "celestial-ink" },
+      { "id": "great-sage", "asset": "assets/great-sage-return.jpg", "position": "right center", "mode": "battle-primary", "tone": "sage-sepia" },
+      { "id": "great-sage-staff", "asset": "assets/great-sage-staff.jpg", "position": "center center", "mode": "battle-primary", "tone": "staff-gold" },
+      { "id": "yaksha-king-rift", "asset": "assets/yaksha-king-rift.jpg", "position": "center center", "mode": "battle-secondary", "tone": "yaksha-lacquer" },
+      { "id": "storm-bearer", "asset": "assets/storm-bearer.jpg", "position": "center center", "mode": "battle-secondary", "tone": "storm-cyan" },
+      { "id": "shadow-confrontation", "asset": "assets/shadow-confrontation.jpg", "position": "center center", "mode": "battle-secondary", "tone": "midnight-blue" },
+      { "id": "ridge-gate", "asset": "assets/ridge-gate.jpg", "position": "center center", "mode": "scenery", "tone": "ridge-umber" },
+      { "id": "forest-shrine", "asset": "assets/forest-shrine.jpg", "position": "center center", "mode": "scenery", "tone": "forest-moss" },
+      { "id": "mountain-path", "asset": "assets/mountain-path.jpg", "position": "center center", "mode": "scenery", "tone": "mountain-jade" },
+      { "id": "stone-buddhas", "asset": "assets/stone-buddhas.jpg", "position": "center center", "mode": "scenery", "tone": "stone-ash" },
+      { "id": "sunset-ravine", "asset": "assets/sunset-ravine.jpg", "position": "center center", "mode": "scenery", "tone": "sunset-copper" }
     ]
   },
   "motifs": {
     "xiangfeiGourd": "motifs/xiangfei-gourd-icon.webp",
-    "littleWukong": "motifs/little-wukong-gameplay-v6.webp",
-    "littleBajie": "motifs/little-bajie-gameplay-v6.webp"
+    "littleWukong": "motifs/pets/little-wukong-pet-v1.webp",
+    "littleBajie": "motifs/pets/little-bajie-pet-v1.webp"
   },
   "accessibility": {
     "preset": "workbench",
     "reducedMotion": false
   },
   "companion": {
-    "enabled": false,
+    "enabled": true,
     "side": "right",
     "size": 72,
     "motion": "quiet"

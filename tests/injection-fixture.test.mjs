@@ -12,7 +12,7 @@ import {
   conversationText
 } from './runtime-fixture.mjs';
 
-const V9_MOTIFS = {
+const V10_MOTIFS = {
   xiangfeiGourd: 'data:image/webp;base64,Aw==',
   littleWukong: 'data:image/webp;base64,BA==',
   littleBajie: 'data:image/webp;base64,BQ=='
@@ -31,7 +31,7 @@ const fixtureExpression = styleSheet => makeApplyExpression({
     { id: 'great-sage', url: 'data:image/jpeg;base64,AA==', position: 'right center', mode: 'scenery' },
     { id: 'erlang', url: 'data:image/jpeg;base64,AQ==', position: 'center center', mode: 'battle-primary' },
     { id: 'mountain', url: 'data:image/jpeg;base64,Ag==', position: 'center center', mode: 'scenery' }
-  ], V9_MOTIFS)
+  ], V10_MOTIFS)
 });
 
 test('runtime restyles native surfaces, follows dynamic thread state, and restores cleanly', async t => {
@@ -52,10 +52,11 @@ test('runtime restyles native surfaces, follows dynamic thread state, and restor
   assert.equal(await page.locator('html').getAttribute('data-forge-mode'), 'battle');
   assert.equal(await page.locator('html').getAttribute('data-forge-scene'), '1');
   assert.deepEqual(await geometry(page), nativeGeometry);
-  assert.equal(await page.locator('body > *').count(), nativeBodyChildren);
+  assert.equal(await page.locator('body > *').count(), nativeBodyChildren + 1);
   assert.equal(await page.locator('body').innerText(), nativeBodyText);
   assert.equal(await page.locator('.ProseMirror').getAttribute('data-placeholder'), nativePlaceholder);
-  assert.equal(await page.locator('body [data-forge-owned]').count(), 0);
+  assert.equal(await page.locator('body > #wukong-forge-pet-overlay[data-forge-owned="pet-overlay"]').count(), 1);
+  assert.equal(await page.locator('#wukong-forge-pet-overlay > [data-forge-pet]').count(), 3);
   assert.equal(await page.locator('.forge-workspace').count(), 1);
   assert.equal(await page.locator('.forge-taskbar').count(), 1);
   assert.equal(await page.locator('.forge-sidebar').count(), 1);
@@ -74,11 +75,11 @@ test('runtime restyles native surfaces, follows dynamic thread state, and restor
   assert.equal(await page.locator('html').getAttribute('data-forge-gourd-safe'), 'true');
 
   const motifStyles = await page.evaluate(() => [
-    ['.forge-composer', '::before'],
-    ['.forge-composer', '::after'],
-    ['.forge-workspace', '::after']
-  ].map(([selector, pseudo]) => {
-    const style = getComputedStyle(document.querySelector(selector), pseudo);
+    '[data-forge-pet="little-wukong"]',
+    '[data-forge-pet="little-bajie"]',
+    '[data-forge-pet="xiangfei-gourd"]'
+  ].map(selector => {
+    const style = getComputedStyle(document.querySelector(selector));
     return {
       backgroundImage: style.backgroundImage,
       pointerEvents: style.pointerEvents
@@ -152,6 +153,8 @@ test('runtime restyles native surfaces, follows dynamic thread state, and restor
   assert.equal(await page.locator('html').getAttribute('data-forge-wukong-safe'), null);
   assert.equal(await page.locator('html').getAttribute('data-forge-bajie-safe'), null);
   assert.equal(await page.locator('html').getAttribute('data-forge-gourd-safe'), null);
+  assert.equal(await page.locator('html').getAttribute('data-forge-gourd-placement'), null);
+  assert.equal(await page.locator('#wukong-forge-pet-overlay').count(), 0);
   assert.equal(await page.locator('html').evaluate(element => element.classList.contains('forge-ink-mountain')), false);
 });
 
@@ -195,7 +198,7 @@ test('sidebar navigation refresh catches a text-only route transition', async t 
   assert.equal(await page.locator('html').getAttribute('data-forge-mode'), 'scenery');
 });
 
-test('V9 companion pseudos are noninteractive, collision-safe, and forced-color safe', async t => {
+test('V10 independent pets are noninteractive, collision-safe, and forced-color safe', async t => {
   const browser = await chromium.launch({ headless: true });
   t.after(() => browser.close());
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
@@ -204,41 +207,43 @@ test('V9 companion pseudos are noninteractive, collision-safe, and forced-color 
   await page.evaluate(fixtureExpression(styleSheet));
 
   const targets = [
-    ['.forge-composer', '::before'],
-    ['.forge-composer', '::after'],
-    ['.forge-workspace', '::after']
+    '[data-forge-pet="little-wukong"]',
+    '[data-forge-pet="little-bajie"]',
+    '[data-forge-pet="xiangfei-gourd"]'
   ];
-  const motifStyles = await page.evaluate(targets => targets.map(([selector, pseudo]) => {
-    const style = getComputedStyle(document.querySelector(selector), pseudo);
+  const motifStyles = await page.evaluate(targets => targets.map(selector => {
+    const style = getComputedStyle(document.querySelector(selector));
     return { backgroundImage: style.backgroundImage, pointerEvents: style.pointerEvents };
   }), targets);
   assert.ok(motifStyles.every(style => /data:image\/webp/.test(style.backgroundImage)));
   assert.ok(motifStyles.every(style => style.pointerEvents === 'none'));
+  assert.equal(await page.locator('#wukong-forge-pet-overlay').getAttribute('aria-hidden'), 'true');
+  assert.equal(await page.locator('#wukong-forge-pet-overlay').getAttribute('inert'), '');
+  assert.equal(await page.locator('#wukong-forge-pet-overlay').innerText(), '');
+  assert.equal(await page.locator('#wukong-forge-pet-overlay').evaluate(element => element.closest('.forge-composer') === null), true);
 
   await page.evaluate(() => {
-    const composer = document.querySelector('.forge-composer').getBoundingClientRect();
+    const pet = document.querySelector('[data-forge-pet="little-wukong"]').getBoundingClientRect();
     const blocker = document.createElement('div');
     blocker.setAttribute('data-local-conversation-final-assistant', 'true');
-    blocker.style.cssText = `position:fixed;left:${composer.left - 158}px;top:${composer.bottom - 104}px;width:104px;height:108px;`;
+    blocker.style.cssText = `position:fixed;left:${pet.left}px;top:${pet.top}px;width:${pet.width}px;height:${pet.height}px;`;
     document.body.append(blocker);
-    window.dispatchEvent(new Event('resize'));
   });
   await page.waitForTimeout(760);
   assert.equal(await page.locator('html').getAttribute('data-forge-wukong-safe'), 'false');
-  assert.equal(await page.locator('.forge-composer').evaluate(element => getComputedStyle(element, '::before').content), 'none');
+  assert.equal(await page.locator('[data-forge-pet="little-wukong"]').getAttribute('hidden'), '');
 
   await page.emulateMedia({ forcedColors: 'active' });
-  const forcedColorDisplays = await page.evaluate(targets => targets.map(([selector, pseudo]) => (
-    getComputedStyle(document.querySelector(selector), pseudo).display
-  )), targets);
-  assert.deepEqual(forcedColorDisplays, ['none', 'none', 'none']);
+  assert.equal(await page.locator('#wukong-forge-pet-overlay').evaluate(element => getComputedStyle(element).display), 'none');
   await page.emulateMedia({ forcedColors: 'none' });
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  const reducedMotionAnimations = await page.evaluate(targets => targets.map(([selector, pseudo]) => (
-    getComputedStyle(document.querySelector(selector), pseudo).animationName
-  )), targets);
-  assert.deepEqual(reducedMotionAnimations, ['none', 'none', 'none']);
+  const reducedMotion = await page.locator('[data-forge-pet="little-bajie"]').evaluate(element => ({
+    duration: getComputedStyle(element).animationDuration,
+    iterations: getComputedStyle(element).animationIterationCount
+  }));
+  assert.ok(['0.01ms', '1e-05s'].includes(reducedMotion.duration));
+  assert.equal(reducedMotion.iterations, '1');
 });
 
 test('assistant frame ancestors are cleared without changing authored content or geometry', async t => {
@@ -270,7 +275,7 @@ test('assistant frame ancestors are cleared without changing authored content or
   assert.equal(await page.locator('[data-local-conversation-final-assistant].forge-assistant-message').count(), 1);
   assert.deepEqual(await conversationGeometry(page), authoredGeometry);
   assert.equal(await conversationText(page), authoredText);
-  assert.equal(await page.locator('body > *').count(), nativeBodyChildren);
+  assert.equal(await page.locator('body > *').count(), nativeBodyChildren + 1);
 
   const frames = await page.locator('.forge-assistant-message').evaluateAll(elements => elements.map(element => {
     const style = getComputedStyle(element);

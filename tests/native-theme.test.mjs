@@ -13,19 +13,19 @@ const definition = loadThemeDefinition('themes/native-wukong.json');
 const activeThemePath = 'themes/active.json';
 const activeTheme = JSON.parse(fs.readFileSync(activeThemePath, 'utf8').replace(/^\uFEFF/, ''));
 
-test('V9 theme packages only the Xiangfei gourd and selected little companions', () => {
+test('V10 theme packages Xiangfei gourd and generated independent pets', () => {
   const expectedMotifs = ['littleBajie', 'littleWukong', 'xiangfeiGourd'];
   assert.deepEqual(Object.keys(activeTheme.motifs).sort(), expectedMotifs);
 
   const motifFiles = Object.values(activeTheme.motifs);
-  assert.ok(motifFiles.every(asset => asset.endsWith('.webp')), 'V9 motifs must use compact alpha WebP assets');
+  assert.ok(motifFiles.every(asset => asset.endsWith('.webp')), 'V10 motifs must use compact alpha WebP assets');
   assert.equal(activeTheme.motifs.xiangfeiGourd, 'motifs/xiangfei-gourd-icon.webp');
-  assert.equal(activeTheme.motifs.littleWukong, 'motifs/little-wukong-gameplay-v6.webp');
-  assert.equal(activeTheme.motifs.littleBajie, 'motifs/little-bajie-gameplay-v6.webp');
-  assert.equal(activeTheme.companion.enabled, false, 'companions must remain CSS-only and must not create Studio companion DOM');
+  assert.equal(activeTheme.motifs.littleWukong, 'motifs/pets/little-wukong-pet-v1.webp');
+  assert.equal(activeTheme.motifs.littleBajie, 'motifs/pets/little-bajie-pet-v1.webp');
+  assert.equal(activeTheme.companion.enabled, true, 'independent pet overlay must be enabled');
   assert.ok(motifFiles.every(asset => fs.statSync(`themes/${asset}`).isFile()));
   const motifBytes = motifFiles.reduce((total, asset) => total + fs.statSync(`themes/${asset}`).size, 0);
-  assert.ok(motifBytes <= MAX_MOTIF_BYTES, `V9 motif payload exceeds ${MAX_MOTIF_BYTES} bytes`);
+  assert.ok(motifBytes <= MAX_MOTIF_BYTES, `V10 motif payload exceeds ${MAX_MOTIF_BYTES} bytes`);
 
   const payload = payloadFromThemeFile(activeThemePath);
   assert.deepEqual(Object.keys(payload.motifs).sort(), expectedMotifs);
@@ -39,6 +39,8 @@ test('V9 theme packages only the Xiangfei gourd and selected little companions',
   assert.ok(modes.includes('battle-primary'));
   assert.ok(modes.includes('battle-secondary'));
   assert.ok(modes.includes('scenery'));
+  assert.equal(activeTheme.schemaVersion, 3);
+  assert.equal(new Set(activeTheme.background.gallery.map(scene => scene.tone)).size, 11);
 });
 
 test('native definition stays within the current Codex chrome theme schema', () => {

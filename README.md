@@ -1,5 +1,27 @@
 # Wukong Codex Forge
 
+> 当前交付为 **0.9.0 / V10**。本节覆盖后文仍保留的 0.8.0 / V9 历史说明；旧文字与旧证据没有删除。
+
+## 0.9.0 当前交付
+
+- **普通入口自动生效**：首次双击 `start-theme.cmd` 会把用户开始菜单中的普通 `ChatGPT.lnk` 改为 178 字符的短入口，并立即启动主题窗口。以后从同一个普通 ChatGPT 快捷方式启动即可；主题根目录不存在时，版本化桥接脚本动态定位当前官方 Store 包并按原生方式启动。
+- **关闭同生命周期**：主题 watcher 只跟随使用隔离 profile 启动的 `ChatGPT.exe`，应用退出后 watcher 结束；不会结束或改写用户已经打开的普通 Codex。
+- **原生外形、场景换肤**：仍是 36 px 菜单栏、275 px 侧栏、原生工作区、736 × 98 px 输入器和 300 px 环境卡；没有主题侧栏、底栏、按钮或开关。新任务自动为战斗境，进入对话自动为风景境。
+- **11 组场景自适应矿色**：每张背景同时携带独立的文字、侧栏、顶栏、输入器、用户气泡、代码块、菜单、环境卡与 veil 色板，换图不再只换背景。
+- **独立同行者层**：新绘小悟空、小八戒与湘妃葫芦位于一个 `aria-hidden`、`inert`、`pointer-events:none` 的固定覆盖层；不再依附输入框伪元素。小悟空和小八戒站在工作区底部两侧，葫芦按页面在新任务主视觉、环境卡脚部或工作区上缘之间选择安全位置。
+- **只增不删**：官方 `ChatGPT.exe`、WindowsApps、`app.asar` 与 `config.toml` 零写入；官方快捷方式原件、失败的 1023 字符入口和后续入口版本均保存在 append-only 历史目录。脚本不删除、不移动文件。
+
+当前本机真实窗口证据：
+
+- [普通快捷方式启动·新任务战斗境](docs/screenshots/live-codex-v10-autostart-landing.png)及其[状态与几何 JSON](docs/screenshots/live-codex-v10-autostart-landing.json)
+- [同一窗口·对话风景境](docs/screenshots/live-codex-v10-autostart-thread.png)及其[状态与几何 JSON](docs/screenshots/live-codex-v10-autostart-thread.json)
+
+本次实测为 PID 26812、随机回环端口 38625、watcher PID 18296；V10 active、背景 `cover`、输入器 736 × 98、环境卡 300 × 473、助手回答透明无框，三件伴随元素均不接收鼠标。定向回归 24/24 通过。
+
+安全边界：开始菜单快捷方式、安装目录内 `start-theme.cmd` 与由它安装的入口可自动带主题启动。直接运行 WindowsApps 内 `ChatGPT.exe`、Store AUMID、协议或第三方自建入口会绕过适配器；若要无条件拦截这些入口，需要修改官方包、IFEO、注入 DLL 或系统服务，本项目为避免崩溃与破坏签名明确不采用。
+
+## 0.8.0 / V9 历史记录（保留）
+
 “大圣归来 · 潇湘双境”是 Windows Codex 桌面端的《黑神话：悟空》样式层。它复用真实 Codex DOM，保留顶部栏、275 px 侧栏、工作区、736 × 98 px 输入器与 300 px 环境卡，不增加主题控制栏、侧栏或底栏。用户提示词和回答不改写，助手回答保持无框；小悟空、小八戒与湘妃葫芦只作为无交互伪元素出现，不改变任何原生槽位。
 
 ## 潇湘双境
@@ -90,5 +112,7 @@ npm run test:runtime-states
 - [运行时调查](docs/RUNTIME_FINDINGS.md)
 - [Codex 26.715.2305.0 原生 UI 基线](docs/UI_BASELINE.md)
 - [素材来源与发布边界](docs/ASSET_SOURCES.md)
+- [V10 同行者生成谱系](docs/PET_GENERATION.md)
+- [0.9.0 发布记录](docs/RELEASE_0.9.0.md)
 
 过程日志位于本地 `docs/logs/CHANGELOG.md`，按仓库约定不提交。代码以 [MIT](LICENSE) 发布；游戏名称、截图、装备参考与官方艺术作品的权利属于其各自权利人。

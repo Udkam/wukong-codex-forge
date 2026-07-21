@@ -9,7 +9,9 @@ const read = file => fs.readFileSync(file, 'utf8');
 const publicScripts = {
   install: read('scripts/install-preserving.ps1'),
   launch: read('scripts/launch.ps1'),
-  disable: read('scripts/disable.ps1')
+  disable: read('scripts/disable.ps1'),
+  hook: read('scripts/install-chatgpt-hook.ps1'),
+  start: read('scripts/start.ps1')
 };
 
 const parsePowerShell = file => {
@@ -28,6 +30,8 @@ test('all public and retained legacy lifecycle scripts parse', () => {
   for (const file of [
     'scripts/install-preserving.ps1',
     'scripts/launch.ps1',
+    'scripts/start.ps1',
+    'scripts/install-chatgpt-hook.ps1',
     'scripts/disable.ps1',
     'scripts/install.ps1',
     'scripts/restore.ps1'
@@ -47,12 +51,11 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.doesNotMatch(installEntry, /scripts\\install\.ps1/i);
   assert.match(removeEntry, /scripts\\disable\.ps1/i);
   assert.doesNotMatch(removeEntry, /scripts\\restore\.ps1|-Uninstall/i);
-  assert.match(startEntry, /scripts\\launch\.ps1/i);
-  assert.match(startEntry, /-Portable/i);
+  assert.match(startEntry, /scripts\\start\.ps1/i);
   assert.match(stopEntry, /scripts\\disable\.ps1/i);
   assert.match(stopEntry, /-Portable/i);
 
-  for (const [name, script] of Object.entries(publicScripts)) {
+  for (const [name, script] of Object.entries({ install: publicScripts.install, launch: publicScripts.launch, disable: publicScripts.disable })) {
     assert.match(script, /Get-AppxPackage -Name 'OpenAI\.Codex'/, `${name} does not resolve the official Codex package`);
     assert.match(script, /app\\resources\\cua_node\\bin\\node\.exe/, `${name} does not use Codex's embedded Node runtime`);
     assert.doesNotMatch(script, /Get-Command\s+node(?:\.exe)?\b/i, `${name} depends on an external Node installation`);
@@ -68,6 +71,11 @@ test('public entries route only to the preserving and verified-disable lifecycle
       /(?:-Destination\s+\$configPath|WriteAllText\(\s*\$configPath|AppendAllText\(\s*\$configPath|(?:Set-Content|Add-Content|Out-File)[^\r\n]*\$configPath)/i,
       `${name} writes the official Codex config`
     );
+  }
+
+  for (const [name, script] of Object.entries(publicScripts)) {
+    assert.doesNotMatch(script, /\bRemove-Item\b|\bMove-Item\b|\.Delete\(|rmSync|unlinkSync|rmdirSync/, `${name} contains a destructive file operation`);
+    assert.doesNotMatch(script, /Stop-Process|taskkill/i, `${name} terminates a Codex process`);
   }
 
   assert.doesNotMatch(publicScripts.install, /(?:upgrade|apply|restore)\s+--config|&\s*\$node\s+\$engine/i);
@@ -86,6 +94,8 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.match(publicScripts.launch, /System\.Threading\.Mutex|Threading\.Mutex/);
   assert.match(publicScripts.launch, /WaitOne\(0\)/);
   assert.match(publicScripts.launch, /AddSeconds\(20\)/);
+  assert.match(publicScripts.launch, /\$verifyDeadline = \[DateTime\]::UtcNow\.AddSeconds\(20\)/);
+  assert.match(publicScripts.launch, /Timed out verifying the Codex loopback theme channel/);
   assert.match(publicScripts.launch, /runtime\/injector\.mjs --apply \$port themes\/active\.json/);
   assert.ok(
     publicScripts.launch.indexOf('runtime/injector.mjs --apply $port themes/active.json') <
@@ -93,7 +103,23 @@ test('public entries route only to the preserving and verified-disable lifecycle
     'launch records watching before the first renderer has verified the active theme'
   );
   assert.match(publicScripts.disable, /\.wukong-runtime/);
-  assert.doesNotMatch(publicScripts.install, /CreateShortcut|WScript\.Shell|GetFolderPath\('Programs'\)/i);
+  assert.match(publicScripts.install, /install-chatgpt-hook\.ps1/);
+  assert.match(publicScripts.hook, /ChatGPT-before-wukong-/);
+  assert.match(publicScripts.hook, /Copy-Item -LiteralPath \$shortcutPath -Destination \$backupPath/);
+  assert.match(publicScripts.hook, /CreateShortcut\(\$shortcutPath\)/);
+  assert.match(publicScripts.hook, /launcher-bridges/);
+  assert.match(publicScripts.hook, /chatgpt-entry-\$bridgeId\.ps1/);
+  assert.match(publicScripts.hook, /WriteAllText\(\$bridgePath, \$bridgeScript/);
+  assert.match(publicScripts.hook, /-File `"\$bridgePath`"/);
+  assert.match(publicScripts.hook, /\$expectedArguments\.Length -ge 900/);
+  assert.doesNotMatch(publicScripts.hook, /EncodedCommand/);
+  assert.match(publicScripts.hook, /\$watching = @\(Get-CimInstance Win32_Process -Filter "Name='node\.exe'"/);
+  assert.match(publicScripts.hook, /runtime\[\\\\\/\]watch\\\.mjs/);
+  assert.match(publicScripts.hook, /\$managed\.Count -eq 1 -and `\$watching\.Count -ge 1/);
+  assert.match(publicScripts.hook, /--user-data-dir=`"`\$profile`"/);
+  assert.match(publicScripts.hook, /Start-Process -FilePath `\$official/);
+  assert.match(publicScripts.start, /install-chatgpt-hook\.ps1/);
+  assert.match(publicScripts.start, /launch\.ps1/);
 
   const packager = read('scripts/package-runtime.mjs');
   assert.doesNotMatch(packager, /node_modules/);
@@ -167,9 +193,10 @@ test('renderer refreshes are structural, throttled, and layout-loop free', () =>
   assert.match(runtime, /observer\.observe\(document\.body, \{ childList: true, subtree: true \}\)/);
   assert.match(runtime, /nodeTouchesThemeStructure/);
   assert.match(runtime, /data-local-conversation-final-assistant/);
-  assert.doesNotMatch(runtime, /new ResizeObserver\(/);
+  assert.match(runtime, /new ResizeObserver\(/);
   assert.doesNotMatch(runtime, /attributes:\s*true|characterData:\s*true/);
-  assert.doesNotMatch(runtime, /addEventListener\('scroll', scheduleRefresh/);
+  assert.doesNotMatch(runtime, /window\.addEventListener\('scroll', scheduleRefresh/);
+  assert.match(runtime, /visualViewport\?\.addEventListener\('scroll', scheduleRefresh/);
   assert.match(runtime, /addEventListener\('keydown', scheduleComposerKeyboardSubmit/);
   assert.doesNotMatch(runtime, /addEventListener\('input', scheduleRefresh/);
 });

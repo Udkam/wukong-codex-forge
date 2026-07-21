@@ -1,5 +1,28 @@
 # Codex 样式运行时调查
 
+> **2026-07-21 V10 当前结论。** 下方 V9 调查继续保留为路线证据。
+
+## 普通入口重启失效的根因与修复
+
+重启后的普通 Codex 根进程由 Explorer 直接启动，没有 `--remote-debugging-*`、隔离 profile、主题 watcher、启动项或服务，因此 V9 只存在于此前受管 renderer，重启后不会自动恢复。安全路线不能把 CSS 复制到正在运行且没有调试通道的 renderer；也不能在不修改官方包、IFEO、DLL 或系统服务的前提下拦截所有可能入口。
+
+本轮将用户开始菜单的普通 `ChatGPT.lnk` 作为默认入口。第一次实现把完整 `-EncodedCommand` 写进快捷方式，真实读取发现 WScript 将 Arguments 截断为 **1023** 字符，脚本中断在变量名中间。该失败入口哈希为 `0C9A89D6E19541DDEBFDE2095CE57D4C8A0CC01AC1638A5E878AD3D0534841D5`，已保留在 `history\shortcut-backups`；官方原始快捷方式哈希 `D2E3ACB487C7D1BC03282D4FDBA4A93DB24BA749274307D7D158358B89B60C6C` 也仍保留。
+
+V10 把完整逻辑写入按内容哈希命名的版本化桥接脚本，`.lnk` 只使用 178 字符 `-File` 参数，并在安装时拒绝达到 900 字符的参数。桥接脚本不在下载主题根内：根存在时调用主题启动器，根缺失时动态 `Get-AppxPackage OpenAI.Codex` 并启动官方 `ChatGPT.exe`。已有桥接文件内容不覆盖；哈希冲突时创建带时间戳的新文件。每次改变快捷方式前先复制当前 `.lnk`，没有删除或移动。
+
+第二个真实问题是 Electron 写出 `DevToolsActivePort` 后，回环 HTTP 端点仍可能短暂拒绝首个连接。原启动器立即 `--verify`，导致健康窗口被记录成 `not-running`。V10 对回环验证增加 20 秒、250 ms 间隔的有界重试；renderer `--apply` 仍保留 20 秒、350 ms 间隔重试。
+
+## V10 普通快捷方式实测
+
+- 快捷方式目标：系统 PowerShell；Arguments 长度 178。
+- 受管 `ChatGPT.exe`：PID 26812，命令行包含随机端口与 `E:\Proj\wukong-codex-forge\.wukong-runtime\profile`。
+- CDP：`127.0.0.1:38625`；watcher：PID 18296。
+- 事件：首次暴露启动竞态的 `not-running` 记录原样保留；修复后同一进程安全重连，记录 `reattaching` → `watching`。
+- landing：V10 `battle/scene 0`、sidebar 275 px、composer 736 × 98、背景 cover、三件伴随元素安全。
+- thread：V10 `scenery/scene 8`、同尺寸 composer、环境卡 300 × 473、assistant 透明无框；葫芦从 landing 主视觉左侧改放环境卡脚部。
+
+主题实例继续留在本机供用户审计。直接 WindowsApps 可执行文件、Store AUMID、协议或第三方自建入口仍会绕过适配器；这是稳定性与官方零写入边界，不伪装成“全系统注入”。
+
 ## 结论
 
 Windows Codex 26.715.2305.0 的原生 Chrome Theme 只能表达颜色、字体和语义色，不能表达背景图、组件切角或 landing/thread 状态。外部修改 `config.toml` 也不会让已打开窗口热加载。因此“深度样式替换”需要受控运行时 CSS；只放置原生主题文件只能得到用户已否决的颜色变化。

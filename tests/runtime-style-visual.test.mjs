@@ -59,12 +59,12 @@ test('Wukong style visibly replaces background, navigation and composer without 
     composerRadius: getComputedStyle(document.querySelector('.forge-composer')).borderRadius,
     composerClip: getComputedStyle(document.querySelector('.forge-composer')).clipPath,
     composerBackground: getComputedStyle(document.querySelector('.forge-composer')).backgroundImage,
-    xiangfeiMaterial: getComputedStyle(document.querySelector('.forge-workspace'), '::after').backgroundImage,
-    xiangfeiPointerEvents: getComputedStyle(document.querySelector('.forge-workspace'), '::after').pointerEvents,
-    littleWukongMaterial: getComputedStyle(document.querySelector('.forge-composer'), '::before').backgroundImage,
-    littleWukongPointerEvents: getComputedStyle(document.querySelector('.forge-composer'), '::before').pointerEvents,
-    littleBajieMaterial: getComputedStyle(document.querySelector('.forge-composer'), '::after').backgroundImage,
-    littleBajiePointerEvents: getComputedStyle(document.querySelector('.forge-composer'), '::after').pointerEvents,
+    xiangfeiMaterial: getComputedStyle(document.querySelector('[data-forge-pet="xiangfei-gourd"]')).backgroundImage,
+    xiangfeiPointerEvents: getComputedStyle(document.querySelector('[data-forge-pet="xiangfei-gourd"]')).pointerEvents,
+    littleWukongMaterial: getComputedStyle(document.querySelector('[data-forge-pet="little-wukong"]')).backgroundImage,
+    littleWukongPointerEvents: getComputedStyle(document.querySelector('[data-forge-pet="little-wukong"]')).pointerEvents,
+    littleBajieMaterial: getComputedStyle(document.querySelector('[data-forge-pet="little-bajie"]')).backgroundImage,
+    littleBajiePointerEvents: getComputedStyle(document.querySelector('[data-forge-pet="little-bajie"]')).pointerEvents,
     sidebarDecoration: getComputedStyle(document.querySelector('.forge-new-task'), '::after').content,
     environmentDecoration: getComputedStyle(document.querySelector('.forge-right-card'), '::after').content,
     wukongSafe: document.documentElement.dataset.forgeWukongSafe,
@@ -111,15 +111,15 @@ test('Wukong style visibly replaces background, navigation and composer without 
   assert.equal(landingStyles.sendRadius, nativeShapes.sendRadius);
   assert.equal(landingStyles.composerWidth, 736);
   assert.deepEqual(await geometry(page), nativeGeometry);
-  assert.equal(await page.locator('body > *').count(), nativeBodyChildren);
+  assert.equal(await page.locator('body > *').count(), nativeBodyChildren + 1);
   assert.equal(await page.locator('body').innerText(), nativeBodyText);
-  assert.equal(await page.locator('body [data-forge-owned]').count(), 0);
+  assert.equal(await page.locator('body > #wukong-forge-pet-overlay[data-forge-owned="pet-overlay"]').count(), 1);
   assert.equal(await page.locator('.summary-panel-card.forge-right-card').count(), 1);
 
   const landingBuffer = await page.screenshot();
   const landing = PNG.sync.read(landingBuffer);
   const authored = await enterThreadState(page);
-  await page.waitForTimeout(180);
+  await page.waitForTimeout(760);
   const threadStyles = await page.evaluate(() => ({
     scene: document.documentElement.dataset.forgeScene,
     mode: document.documentElement.dataset.forgeMode,
@@ -156,7 +156,8 @@ test('Wukong style visibly replaces background, navigation and composer without 
     rootClass: document.documentElement.classList.contains('forge-ink-mountain'),
     stylePresent: Boolean(document.getElementById('wukong-forge-style')),
     scene: document.documentElement.dataset.forgeScene || null,
-    mode: document.documentElement.dataset.forgeMode || null
+    mode: document.documentElement.dataset.forgeMode || null,
+    companionLayerPresent: Boolean(document.getElementById('wukong-forge-pet-overlay'))
   }));
   assert.deepEqual(restored, {
     backgroundImage: 'none',
@@ -164,6 +165,7 @@ test('Wukong style visibly replaces background, navigation and composer without 
     rootClass: false,
     stylePresent: false,
     scene: null,
-    mode: null
+    mode: null,
+    companionLayerPresent: false
   });
 });

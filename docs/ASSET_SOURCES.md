@@ -1,5 +1,21 @@
 # 素材来源与发布边界
 
+## 0.9.0 / V10 活动伴随元素
+
+| 文件 | 字节 | 来源、处理与用途 |
+| --- | ---: | --- |
+| `themes/motifs/pets/little-wukong-pet-v1-chroma.png` | 1,829,632 | 本轮图像生成的平面品红色键源；参考旧 V6 悟空与用户本地 `E:\GameRecord\Black Myth Wukong\TipsImg\Img_LoadTips_200003_B.png`。保留作可复现编辑证据，不进入最小包。 |
+| `themes/motifs/pets/little-wukong-pet-v1.png` | 1,201,795 | 通过官方 imagegen skill 的 `remove_chroma_key.py` 自动取边缘键色，soft matte 18/82 与 spill cleanup 得到的透明 PNG；不进入最小包。 |
+| `themes/motifs/pets/little-wukong-pet-v1.webp` | 142,866 | 活动透明宠物；保留猴脸、单根毛发、青玉旧甲、红绳和金棍，工作区左下安全位置。 |
+| `themes/motifs/pets/little-bajie-pet-v1-chroma.png` | 2,150,124 | 本轮图像生成的平面品红色键源；参考旧 V6 八戒，明确要求传统九齿钉耙的九枚独立耙齿。保留，不进入最小包。 |
+| `themes/motifs/pets/little-bajie-pet-v1.png` | 1,728,734 | 同一色键流程得到的透明 PNG；不进入最小包。 |
+| `themes/motifs/pets/little-bajie-pet-v1.webp` | 202,024 | 活动透明宠物；保留野猪面部、鬃毛、旧青袍、念珠与九齿钉耙，工作区右下安全位置。 |
+| `themes/motifs/xiangfei-gourd-icon.webp` | 10,650 | 继续使用游戏图标紧裁透明版；V10 不再只依附 composer，按页面放在新任务主视觉、环境卡脚部或工作区上缘。 |
+
+活动发布包仍只携带 11 张 JPEG 与 3 张透明 WebP，共 **2,928,470 bytes**；chroma 与透明 PNG 作为仓库内 append-only 生成证据保留。完整提示词、参考图和去背参数见 [PET_GENERATION.md](PET_GENERATION.md)。
+
+本轮没有把生成角色宣称为 Game Science 官方模型或设定图；它们是依据用户提供/指定的游戏画面重新生成的主题伴随资产。游戏角色、装备、画面与美术权利属于相应权利人。
+
 ## 0.8.0 运行时画廊
 
 | 文件 | 像素 / 字节 | 来源与用途 |

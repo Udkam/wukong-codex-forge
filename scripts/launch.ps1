@@ -141,8 +141,20 @@ if (-not [int]::TryParse($portLine, [ref]$port) -or $port -lt 1024 -or $port -gt
 
 Push-Location $rootPath
 try {
-    & $node runtime/injector.mjs --verify $port
-    if ($LASTEXITCODE -ne 0) { throw 'Codex loopback theme channel verification failed.' }
+    # Electron can publish DevToolsActivePort a fraction of a second before the
+    # loopback endpoint accepts its first connection. Retry that startup edge
+    # instead of turning a healthy new window into a false not-running result.
+    $verifyDeadline = [DateTime]::UtcNow.AddSeconds(20)
+    $lastVerifyOutput = @()
+    while ($true) {
+        $lastVerifyOutput = @(& $node runtime/injector.mjs --verify $port 2>&1)
+        if ($LASTEXITCODE -eq 0) { break }
+        if ($codexProcess.HasExited) { throw 'Codex exited before its local theme channel accepted a connection.' }
+        if ([DateTime]::UtcNow -ge $verifyDeadline) {
+            throw "Timed out verifying the Codex loopback theme channel: $($lastVerifyOutput -join ' ')"
+        }
+        Start-Sleep -Milliseconds 250
+    }
 
     # The browser port can become reachable before the Codex page target exists.
     # Do not report a watching session until one renderer has accepted and verified

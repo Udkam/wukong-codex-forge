@@ -54,7 +54,7 @@ export function resolveThemeAssets(themePath, theme) {
       totalBytes += encoded.bytes;
       if (totalBytes > MAX_GALLERY_BYTES) throw Error('Theme gallery exceeds size limit');
     }
-    return { id: entry.id, url: encoded.url, position: entry.position, mode: entry.mode };
+    return { id: entry.id, url: encoded.url, position: entry.position, mode: entry.mode, tone: entry.tone };
   });
   return assets;
 }

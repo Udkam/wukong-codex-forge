@@ -1,5 +1,39 @@
 # 大圣归来 · 潇湘双境 — 设计与实现
 
+> **0.9.0 / V10 当前设计。** 后文 V9 伪元素与固定矿色描述保留作历史，不再代表活动实现。
+
+## V10 设计结论
+
+V10 的重点不是给原生界面统一蒙一层深色，而是让每张电影画面决定自身的“界面矿物”。`SCENE_TONES` 为 11 张背景分别定义 ink、paper、topbar、sidebar、composer、environment card、user bubble、code、menu 与 veil；白场杨戬使用冷墨青灰，夜叉王使用漆红与焦铜，山林场景使用松石、苔灰与岩绿。背景切换和 chrome 配色是同一个原子状态，避免“图换了、界面仍是上一张图的颜色”。
+
+组件继续保留 Codex 原生几何与文字：只改已有表面的颜色、边线、阴影与背景透明度，不设宽高、外边距、网格或文案。助手回答祖先链保持透明无框；输入器仍使用官方 25 px 圆角和原始高度，不做武器形输入框、装备贴图或额外工具按钮。
+
+## 独立同行者层
+
+运行时只新增一个 body 直属容器：
+
+```html
+<div id="wukong-forge-pet-overlay" data-forge-owned="pet-overlay" aria-hidden="true" inert>
+  <i data-forge-pet="little-wukong" hidden></i>
+  <i data-forge-pet="little-bajie" hidden></i>
+  <i data-forge-pet="xiangfei-gourd" hidden></i>
+</div>
+```
+
+容器与三个子元素均 `position:fixed`、`pointer-events:none`，不属于 composer、sidebar 或环境卡的布局树。小悟空和小八戒分别以 `workspace-left-floor` 与 `workspace-right-floor` 站在工作区底边；landing 使用约 112 px 档，thread 使用约 92 px 档。湘妃葫芦依次尝试 `landing-hero-left`、`right-card-foot` 与 `workspace-upper-rail`。每次结构变化、视口变化或视觉视口滚动后，用真实 DOMRect 检查标题、正文、代码块、composer 和环境卡碰撞，不安全即隐藏；900 px 以下全部收敛隐藏。恢复时整个受管覆盖层移除。
+
+两位同行者使用本轮重新生成的透明 WebP：小悟空保留可信猴脸、单根毛发、青玉旧甲、红绳与金棍；小八戒保留野猪面部、粗硬鬃毛、旧青袍、念珠与九枚清晰耙齿。它们只做低振幅呼吸/摇摆，`prefers-reduced-motion` 与 forced-colors 下禁用。完整提示词、参考图与编辑链见 [PET_GENERATION.md](PET_GENERATION.md)。
+
+## 普通入口与回退
+
+`start-theme.cmd` 先安装用户级普通 `ChatGPT.lnk` 适配器，再调用原有安全启动器。V10 不再把完整 PowerShell 代码塞进 `.lnk`：Windows 将其截断到 1023 字符。安装器把完整 ASCII-safe 脚本按内容 SHA-256 命名，写入 `%USERPROFILE%\.codex\themes\wukong-codex-forge\history\launcher-bridges`，快捷方式只保留 178 字符 `-File` 参数。桥接脚本存在但主题根缺失时，动态定位当前 Store 包并原生启动。所有旧快捷方式先复制到 `history\shortcut-backups`，不覆盖历史。
+
+主题启动器使用隔离 profile 和随机 loopback 端口；端口文件出现后允许 20 秒有界连接重试，再允许 20 秒 renderer 生效重试。只有 `THEME_STATE` 确认为 V10 active 才进入 watcher。watcher 随受管 `ChatGPT.exe` 退出，不安装服务或开机项。
+
+## V10 真实几何
+
+普通快捷方式启动的 2050 × 1106 生产窗口实测：landing 为 `battle/scene 0`，thread 为 `scenery/scene 8`；侧栏 275 px、composer 736 × 98 / 25 px 圆角，thread 环境卡 300 × 473。背景为单层 embedded JPEG、`background-size:cover`；助手回答 computed style 为透明背景、无阴影、0 px 圆角。覆盖层元素不接收鼠标，三项安全位均为 true。
+
 ## 设计结论
 
 本轮不做“深色界面加金边”，也不用古风卡片、书法标签、emoji 或装饰按钮制造主题感。视觉核心是“真实电影画面 + 潇湘矿色 + 两位同行者”：杨戬、大圣、夜叉王和黑神话风景承担画面张力，湘妃葫芦提供石青识别，小悟空与小八戒提供角色温度。夜叉套、兽棍·神锋和武器条已按用户最终意见停用。

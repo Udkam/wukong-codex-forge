@@ -13,20 +13,28 @@
   --forge-panel: rgba(28, 31, 29, .88);
   --forge-panel-high: rgba(39, 41, 38, .9);
   --forge-hairline: rgba(205, 199, 187, .13);
+  --forge-topbar-bg: rgba(22, 25, 23, .975);
+  --forge-sidebar-bg: rgba(23, 27, 25, .95);
+  --forge-taskbar-bg: rgba(27, 29, 27, .95);
+  --forge-composer-bg: rgba(28, 32, 29, .97);
+  --forge-right-card-bg: rgba(35, 39, 36, .96);
+  --forge-user-bg: rgba(39, 42, 38, .92);
+  --forge-code-bg: rgba(21, 25, 23, .94);
+  --forge-menu-bg: rgba(36, 39, 36, .98);
   --forge-veil:
     linear-gradient(90deg, rgba(11, 13, 12, .72) 0%, rgba(17, 19, 18, .48) 25%, rgba(17, 19, 18, .45) 75%, rgba(11, 13, 12, .68) 100%),
     linear-gradient(180deg, rgba(15, 17, 16, .44), rgba(18, 20, 19, .27) 18%, rgba(18, 20, 19, .3) 82%, rgba(15, 17, 16, .48));
 
-  --color-token-bg-primary: rgba(27, 30, 28, .9);
-  --color-token-bg-secondary: rgba(36, 39, 36, .9);
-  --color-token-bg-tertiary: rgba(43, 46, 42, .91);
+  --color-token-bg-primary: var(--forge-composer-bg);
+  --color-token-bg-secondary: var(--forge-right-card-bg);
+  --color-token-bg-tertiary: var(--forge-menu-bg);
   --color-token-main-surface-primary: transparent;
-  --color-token-side-bar-background: rgba(25, 29, 27, .89);
-  --color-token-input-background: rgba(34, 37, 34, .91);
+  --color-token-side-bar-background: var(--forge-sidebar-bg);
+  --color-token-input-background: var(--forge-composer-bg);
   --color-token-input-border: rgba(205, 199, 187, .16);
-  --color-token-menu-background: rgba(38, 41, 38, .96);
+  --color-token-menu-background: var(--forge-menu-bg);
   --color-token-menu-border: rgba(205, 199, 187, .14);
-  --color-token-dropdown-background: rgba(40, 42, 39, .91);
+  --color-token-dropdown-background: var(--forge-menu-bg);
   --color-token-border: rgba(205, 199, 187, .12);
   --color-token-border-default: rgba(205, 199, 187, .12);
   --color-token-border-light: rgba(205, 199, 187, .08);
@@ -38,7 +46,7 @@
   --color-token-description-foreground: #969a94;
   --color-token-conversation-body: #d9d5cc;
   --color-token-conversation-header: #ece6db;
-  --color-token-text-code-block-background: rgba(22, 25, 23, .92);
+  --color-token-text-code-block-background: var(--forge-code-bg);
   --color-token-text-preformat-background: rgba(189, 145, 77, .09);
   --color-token-list-hover-background: rgba(79, 127, 124, .12);
   --color-token-list-active-selection-background: rgba(124, 68, 56, .28);
@@ -99,11 +107,75 @@
   background-repeat: no-repeat;
 }
 
-:root.forge-ink-mountain body::after { background: var(--forge-veil); }
+:root.forge-ink-mountain body::after {
+  z-index: 1;
+  background: var(--forge-veil);
+}
 
 :root.forge-ink-mountain #root {
   position: relative;
-  z-index: 1;
+  z-index: 3;
+}
+
+/* Runtime-owned decorations are independent from the composer and every native
+   Codex subtree. They live below #root, never receive input, and can disappear
+   without changing a single native box. */
+:root.forge-ink-mountain #wukong-forge-pet-overlay {
+  pointer-events: none !important;
+  user-select: none !important;
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: clip;
+  contain: strict;
+}
+
+:root.forge-ink-mountain #wukong-forge-pet-overlay > [data-forge-pet] {
+  pointer-events: none !important;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--forge-pet-width, 0px);
+  height: var(--forge-pet-height, 0px);
+  transform: translate3d(var(--forge-pet-x, -9999px), var(--forge-pet-y, -9999px), 0);
+  transform-origin: 50% 100%;
+  background-position: center bottom;
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: saturate(.94) contrast(1.035) drop-shadow(0 9px 11px rgba(3, 5, 4, .58));
+  opacity: .96;
+  animation: forge-companion-breathe var(--forge-motion, 5200ms) ease-in-out infinite;
+}
+
+:root.forge-ink-mountain #wukong-forge-pet-overlay > [data-forge-pet][hidden] {
+  display: none !important;
+}
+
+:root.forge-ink-mountain [data-forge-pet="little-wukong"] {
+  background-image: var(--forge-motif-little-wukong);
+}
+
+:root.forge-ink-mountain [data-forge-pet="little-bajie"] {
+  background-image: var(--forge-motif-little-bajie);
+  animation-delay: -1800ms;
+}
+
+:root.forge-ink-mountain [data-forge-pet="xiangfei-gourd"] {
+  background-image: var(--forge-motif-xiangfei-gourd);
+  filter: saturate(.92) contrast(1.05) drop-shadow(0 7px 8px rgba(3, 5, 4, .52));
+  opacity: .9;
+  animation-name: forge-gourd-sway;
+  animation-delay: -900ms;
+}
+
+@keyframes forge-companion-breathe {
+  0%, 100% { translate: 0 0; scale: 1; }
+  50% { translate: 0 -2px; scale: 1.006; }
+}
+
+@keyframes forge-gourd-sway {
+  0%, 100% { rotate: -1deg; translate: 0 0; }
+  50% { rotate: 1.2deg; translate: 0 -2px; }
 }
 
 /* The packaged app mounts an opaque full-window shell directly under #root.
@@ -125,28 +197,14 @@
   background-image: none !important;
 }
 
-/* The Xiangfei gourd lives in the empty composer-side gutter, never inside a panel. */
+/* Retired pseudo decoration carriers stay explicitly empty. */
 :root.forge-ink-mountain .forge-workspace::after {
-  content: none;
-  pointer-events: none;
-  position: fixed;
-  left: var(--forge-gourd-left, -9999px);
-  top: var(--forge-gourd-top, -9999px);
-  z-index: 4;
-  width: var(--forge-gourd-width, 42px);
-  height: var(--forge-gourd-height, 64px);
-  background: var(--forge-motif-xiangfei-gourd) center / contain no-repeat;
-  filter: saturate(.9) contrast(1.04) drop-shadow(0 7px 8px rgba(4, 7, 6, .45));
-  opacity: .86;
-}
-
-:root.forge-ink-mountain[data-forge-gourd-safe="true"] .forge-workspace::after {
-  content: "";
+  content: none !important;
 }
 
 :root.forge-ink-mountain .forge-topbar {
   border-color: transparent !important;
-  background: rgba(22, 25, 23, .965) !important;
+  background: var(--forge-topbar-bg) !important;
   color: #aaa9a4 !important;
   box-shadow: inset 0 -1px rgba(168, 135, 85, .2) !important;
   backdrop-filter: none;
@@ -154,7 +212,7 @@
 
 :root.forge-ink-mountain .forge-sidebar {
   border-color: transparent !important;
-  background: rgba(23, 27, 25, .945) !important;
+  background: var(--forge-sidebar-bg) !important;
   color: var(--forge-ink) !important;
   box-shadow: inset -1px 0 rgba(130, 170, 164, .17), inset 0 1px rgba(198, 173, 125, .08) !important;
   backdrop-filter: none;
@@ -162,7 +220,7 @@
 
 :root.forge-ink-mountain .forge-taskbar {
   border-color: transparent !important;
-  background: rgba(27, 29, 27, .93) !important;
+  background: var(--forge-taskbar-bg) !important;
   color: var(--forge-ink-soft) !important;
   box-shadow: inset 0 -1px rgba(205, 199, 187, .1) !important;
   backdrop-filter: none;
@@ -243,13 +301,10 @@
 
 :root.forge-ink-mountain .forge-sidebar :is(h1, h2, h3, p) { color: #8e928d !important; }
 
-/* Composer: exact native box and radius. Companions stand in its empty side gutters. */
+/* Composer: exact native box, radius, layout and overflow. */
 :root.forge-ink-mountain .forge-composer {
-  position: relative !important;
-  isolation: isolate;
-  overflow: visible !important;
   border-color: rgba(130, 170, 164, .27) !important;
-  background-color: rgba(28, 32, 29, .965) !important;
+  background-color: var(--forge-composer-bg) !important;
   background-image: none !important;
   box-shadow: 0 0 0 .5px rgba(205, 199, 187, .08), inset 2px 0 rgba(79, 127, 124, .28), inset 0 1px rgba(198, 173, 125, .11), 0 12px 27px rgba(5, 7, 6, .28) !important;
   backdrop-filter: none;
@@ -257,46 +312,7 @@
 
 :root.forge-ink-mountain .forge-composer::before,
 :root.forge-ink-mountain .forge-composer::after {
-  content: none;
-  pointer-events: none;
-  position: absolute;
-  bottom: 0;
-  z-index: 3;
-  background-position: center bottom;
-  background-size: contain;
-  background-repeat: no-repeat;
-  filter: saturate(.93) contrast(1.04) drop-shadow(0 9px 10px rgba(3, 5, 4, .55));
-  opacity: .94;
-}
-
-:root.forge-ink-mountain[data-forge-wukong-safe="true"] .forge-composer::before {
-  content: "";
-  left: -152px;
-  width: 88px;
-  height: 98px;
-  background-image: var(--forge-motif-little-wukong);
-}
-
-:root.forge-ink-mountain[data-forge-bajie-safe="true"] .forge-composer::after {
-  content: "";
-  right: -104px;
-  width: 92px;
-  height: 100px;
-  background-image: var(--forge-motif-little-bajie);
-}
-
-:root.forge-ink-mountain[data-forge-mode="scenery"] .forge-composer::before {
-  left: -114px;
-  width: 62px;
-  height: 70px;
-  opacity: .86;
-}
-
-:root.forge-ink-mountain[data-forge-mode="scenery"] .forge-composer::after {
-  right: -80px;
-  width: 68px;
-  height: 74px;
-  opacity: .86;
+  content: none !important;
 }
 
 :root.forge-ink-mountain .forge-composer:focus-within {
@@ -351,7 +367,7 @@
 
 :root.forge-ink-mountain .forge-user-message {
   border-color: rgba(205, 199, 187, .1) !important;
-  background-color: rgba(39, 42, 38, .89) !important;
+  background-color: var(--forge-user-bg) !important;
   background-image: none !important;
   color: #e5e0d6 !important;
   box-shadow: inset -2px 0 rgba(124, 68, 56, .5), inset 0 1px rgba(205, 199, 187, .09) !important;
@@ -359,7 +375,7 @@
 
 :root.forge-ink-mountain .forge-code-block {
   border-color: rgba(145, 161, 164, .14) !important;
-  background-color: rgba(21, 25, 23, .92) !important;
+  background-color: var(--forge-code-bg) !important;
   background-image: linear-gradient(90deg, rgba(79, 127, 124, .58) 0 2px, transparent 2px) !important;
   color: #d8d5ce !important;
   box-shadow: inset 0 1px rgba(205, 199, 187, .05) !important;
@@ -368,7 +384,7 @@
 /* Environment card: original geometry, carved-stone material, no character pasted into it. */
 :root.forge-ink-mountain .forge-right-card {
   border-color: rgba(205, 199, 187, .15) !important;
-  background-color: rgba(35, 39, 36, .955) !important;
+  background-color: var(--forge-right-card-bg) !important;
   background-image: none !important;
   color: var(--forge-ink) !important;
   box-shadow: 0 10px 24px rgba(4, 6, 5, .27), inset 2px 0 rgba(79, 127, 124, .45), inset 0 1px rgba(198, 173, 125, .12) !important;
@@ -385,7 +401,7 @@
 :root.forge-ink-mountain .forge-dialog,
 :root.forge-ink-mountain .forge-menu {
   border-color: rgba(205, 199, 187, .14) !important;
-  background-color: rgba(36, 39, 36, .97) !important;
+  background-color: var(--forge-menu-bg) !important;
   background-image: none !important;
   color: var(--forge-ink) !important;
   box-shadow: 0 18px 42px rgba(4, 6, 5, .36), inset 2px 0 rgba(79, 127, 124, .31) !important;
@@ -417,33 +433,12 @@
   }
 }
 
-@media (max-width: 1099px) {
-  :root.forge-ink-mountain[data-forge-mode="battle"] .forge-composer::before {
-    left: -128px;
-    width: 70px;
-    height: 78px;
-  }
-  :root.forge-ink-mountain[data-forge-mode="battle"] .forge-composer::after {
-    right: -86px;
-    width: 74px;
-    height: 82px;
-  }
-}
-
-@media (max-width: 899px) {
-  :root.forge-ink-mountain .forge-workspace::after { display: none !important; }
-}
-
-@media (max-width: 779px) {
-  :root.forge-ink-mountain .forge-composer::before,
-  :root.forge-ink-mountain .forge-composer::after { display: none !important; }
-}
-
 @media (forced-colors: active) {
   :root.forge-ink-mountain body::before,
   :root.forge-ink-mountain body::after,
   :root.forge-ink-mountain .forge-workspace::after,
   :root.forge-ink-mountain .forge-composer::before,
   :root.forge-ink-mountain .forge-composer::after,
-  :root.forge-ink-mountain .forge-right-card::after { display: none !important; }
+  :root.forge-ink-mountain .forge-right-card::after,
+  :root.forge-ink-mountain #wukong-forge-pet-overlay { display: none !important; }
 }

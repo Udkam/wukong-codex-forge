@@ -23,13 +23,13 @@ export const MARK_CLASSES = [
   'forge-button'
 ];
 
-const RUNTIME_KEY = '__wukongCodexForgeRuntimeV9';
+const RUNTIME_KEY = '__wukongCodexForgeRuntimeV10';
 
 function applyRuntime(payload) {
   const root = document.documentElement;
   const runtimeKey = payload.runtimeKey;
   const markClasses = payload.markClasses;
-  for (const retiredKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8']) {
+  for (const retiredKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8', '__wukongCodexForgeRuntimeV9']) {
     const retired = window[retiredKey];
     retired?.observer?.disconnect();
     retired?.dispose?.();
@@ -40,6 +40,7 @@ function applyRuntime(payload) {
   previous?.observer?.disconnect();
   previous?.dispose?.();
   if (previous?.timer) clearTimeout(previous.timer);
+  document.getElementById('wukong-forge-pet-overlay')?.remove();
 
   let style = document.getElementById('wukong-forge-style');
   if (!style) {
@@ -138,16 +139,57 @@ function applyRuntime(payload) {
   const landingTitlePattern = /我们该构建什么|今天想处理什么|准备好就开始|从哪里开始|what should we build|what(?:'s| is) on your mind|ready when you are|where should we begin|what (?:do you want|would you like) to (?:work on|do)|how can i help|新建任务/i;
   let battleCycle = 0;
 
+  const ensurePetOverlay = () => {
+    let overlay = document.getElementById('wukong-forge-pet-overlay');
+    if (overlay) return overlay;
+    overlay = document.createElement('div');
+    overlay.id = 'wukong-forge-pet-overlay';
+    overlay.dataset.forgeOwned = 'pet-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.setAttribute('inert', '');
+    overlay.inert = true;
+    for (const name of ['little-wukong', 'little-bajie', 'xiangfei-gourd']) {
+      const pet = document.createElement('i');
+      pet.dataset.forgePet = name;
+      pet.setAttribute('aria-hidden', 'true');
+      pet.hidden = true;
+      overlay.append(pet);
+    }
+    document.body.append(overlay);
+    return overlay;
+  };
+  const clearPets = overlay => {
+    overlay?.querySelectorAll('[data-forge-pet]').forEach(pet => {
+      pet.hidden = true;
+      delete pet.dataset.forgePlacement;
+      for (const property of ['--forge-pet-x', '--forge-pet-y', '--forge-pet-width', '--forge-pet-height']) {
+        pet.style.removeProperty(property);
+      }
+    });
+  };
+  const placePet = (overlay, name, candidate, placement) => {
+    const pet = overlay?.querySelector(`[data-forge-pet="${name}"]`);
+    if (!pet || !candidate) return false;
+    pet.style.setProperty('--forge-pet-x', `${Math.round(candidate.left)}px`);
+    pet.style.setProperty('--forge-pet-y', `${Math.round(candidate.top)}px`);
+    pet.style.setProperty('--forge-pet-width', `${Math.round(candidate.right - candidate.left)}px`);
+    pet.style.setProperty('--forge-pet-height', `${Math.round(candidate.bottom - candidate.top)}px`);
+    pet.dataset.forgePlacement = placement;
+    pet.hidden = false;
+    return true;
+  };
+
   const refresh = () => {
     state.lastRefreshAt = performance.now();
     clearMarks();
     delete root.dataset.forgeWukongSafe;
     delete root.dataset.forgeBajieSafe;
     delete root.dataset.forgeGourdSafe;
-    root.style.removeProperty('--forge-gourd-left');
-    root.style.removeProperty('--forge-gourd-top');
-    root.style.removeProperty('--forge-gourd-width');
-    root.style.removeProperty('--forge-gourd-height');
+    delete root.dataset.forgeGourdPlacement;
+    const companionEnabled = getComputedStyle(root).getPropertyValue('--forge-companion-enabled').trim() === '1';
+    const petOverlay = companionEnabled ? ensurePetOverlay() : null;
+    if (!companionEnabled) document.getElementById('wukong-forge-pet-overlay')?.remove();
+    clearPets(petOverlay);
 
     const previousSurface = root.dataset.forgeSurface || null;
     const threadEvidence = [...document.querySelectorAll([
@@ -298,6 +340,7 @@ function applyRuntime(payload) {
     let rightPanel = document.querySelector('[data-pip-obstacle="thread-summary-panel"], aside[data-app-shell-focus-area="right-panel"], [role="complementary"], aside[aria-label*="environment" i], aside[aria-label*="环境"]');
     if (!rightPanel || rightPanel === sidebar || !visible(rightPanel)) rightPanel = panelAt(innerWidth - 14, innerHeight * .52, 'right');
     mark(rightPanel, 'forge-right-panel');
+    let rightCard = null;
     if (rightPanel) {
       const rightCards = [...rightPanel.querySelectorAll('div, section')].filter(element => {
         const rect = element.getBoundingClientRect();
@@ -312,91 +355,100 @@ function applyRuntime(payload) {
         const rightRect = right.getBoundingClientRect();
         return rightRect.width * rightRect.height - leftRect.width * leftRect.height;
       });
-      mark(rightCards[0] || rightPanel, 'forge-right-card');
+      rightCard = rightCards[0] || rightPanel;
+      mark(rightCard, 'forge-right-card');
     }
 
     const blockers = [...new Set([
-      ...document.querySelectorAll('.forge-user-message, .forge-code-block, .forge-landing-hero, .forge-assistant-turn, [data-local-conversation-final-assistant], [role="dialog"], [role="menu"], [role="tooltip"], [data-radix-popper-content-wrapper]')
-    ])].filter(element => visible(element) && !composer?.contains(element));
+      ...document.querySelectorAll('.forge-user-message, .forge-code-block, .forge-landing-hero, .forge-assistant-turn, [data-local-conversation-final-assistant], [role="dialog"], [role="menu"], [role="tooltip"], [data-radix-popper-content-wrapper]'),
+      composer,
+      rightCard
+    ])].filter(element => visible(element) && (element === composer || !composer?.contains(element)));
     const decorationSafe = candidate => {
       if (!candidate) return false;
       if (candidate.left < 8 || candidate.top < 8 || candidate.right > innerWidth - 8 || candidate.bottom > innerHeight - 8) return false;
       return blockers.every(element => !intersects(candidate, element.getBoundingClientRect(), 8));
     };
-    if (composer && visible(composer)) {
-      const composerRect = composer.getBoundingClientRect();
-      const workspaceRect = workspace?.getBoundingClientRect();
-      const rightLimit = Math.min(workspaceRect?.right ?? innerWidth, innerWidth - 8);
-      const compact = mode === 'scenery';
-      const wukong = compact
-        ? { width: 62, height: 70, gap: 52 }
-        : { width: innerWidth < 1100 ? 70 : 88, height: innerWidth < 1100 ? 78 : 98, gap: innerWidth < 1100 ? 58 : 64 };
-      const bajie = compact
-        ? { width: 68, height: 74, gap: 12 }
-        : { width: innerWidth < 1100 ? 74 : 92, height: innerWidth < 1100 ? 82 : 100, gap: 12 };
-      const wukongCandidate = {
-        left: composerRect.left - wukong.gap - wukong.width,
-        right: composerRect.left - wukong.gap,
-        top: composerRect.bottom - wukong.height,
-        bottom: composerRect.bottom
-      };
-      const bajieCandidate = {
-        left: composerRect.right + bajie.gap,
-        right: composerRect.right + bajie.gap + bajie.width,
-        top: composerRect.bottom - bajie.height,
-        bottom: composerRect.bottom
-      };
-      const wukongSafe = (
-        innerWidth >= 780 &&
-        wukongCandidate.left >= (workspaceRect?.left ?? 0) + 8 &&
-        decorationSafe(wukongCandidate)
-      );
-      const bajieSafe = (
-        innerWidth >= 780 &&
-        bajieCandidate.right <= rightLimit &&
-        (!rightPanel || !visible(rightPanel) || !intersects(bajieCandidate, rightPanel.getBoundingClientRect(), 8)) &&
-        decorationSafe(bajieCandidate)
-      );
-      root.dataset.forgeWukongSafe = String(wukongSafe);
-      root.dataset.forgeBajieSafe = String(bajieSafe);
+    const workspaceRect = workspace?.getBoundingClientRect();
+    const compact = mode === 'scenery';
+    const insideWorkspace = candidate => Boolean(workspaceRect) && (
+      candidate.left >= workspaceRect.left + 8 &&
+      candidate.right <= workspaceRect.right - 8 &&
+      candidate.top >= workspaceRect.top + 8 &&
+      candidate.bottom <= workspaceRect.bottom - 8
+    );
+    const floor = (workspaceRect?.bottom ?? innerHeight) - 18;
+    const wukongSize = compact ? { width: 92, height: 92 } : { width: 112, height: 112 };
+    const bajieSize = compact ? { width: 82, height: 92 } : { width: 100, height: 112 };
+    const wukongCandidate = workspaceRect ? {
+      left: workspaceRect.left + 20,
+      right: workspaceRect.left + 20 + wukongSize.width,
+      top: floor - wukongSize.height,
+      bottom: floor
+    } : null;
+    const bajieCandidate = workspaceRect ? {
+      left: workspaceRect.right - 20 - bajieSize.width,
+      right: workspaceRect.right - 20,
+      top: floor - bajieSize.height,
+      bottom: floor
+    } : null;
+    const wukongSafe = companionEnabled && innerWidth >= 900 && insideWorkspace(wukongCandidate) && decorationSafe(wukongCandidate);
+    const bajieSafe = companionEnabled && innerWidth >= 900 && insideWorkspace(bajieCandidate) && decorationSafe(bajieCandidate) && (
+      !wukongSafe || !intersects(bajieCandidate, wukongCandidate, 10)
+    );
+    root.dataset.forgeWukongSafe = String(wukongSafe);
+    root.dataset.forgeBajieSafe = String(bajieSafe);
+    if (wukongSafe) placePet(petOverlay, 'little-wukong', wukongCandidate, 'workspace-left-floor');
+    if (bajieSafe) placePet(petOverlay, 'little-bajie', bajieCandidate, 'workspace-right-floor');
 
-      const gourd = compact ? { width: 34, height: 52 } : { width: 42, height: 64 };
-      const rightGourd = {
-        left: composerRect.right + 12,
-        right: composerRect.right + 12 + gourd.width,
-        top: composerRect.bottom - gourd.height - 5,
-        bottom: composerRect.bottom - 5
-      };
-      const leftGourd = {
-        left: composerRect.left - gourd.width - 12,
-        right: composerRect.left - 12,
-        top: composerRect.bottom - gourd.height - 5,
-        bottom: composerRect.bottom - 5
-      };
-      const fitsWorkspace = candidate => (
-        candidate.left >= (workspaceRect?.left ?? 0) + 8 &&
-        candidate.right <= rightLimit
-      );
-      const occupiedDecorations = [
-        wukongSafe ? wukongCandidate : null,
-        bajieSafe ? bajieCandidate : null
-      ].filter(Boolean);
-      const gourdCandidate = [leftGourd, rightGourd].find(candidate => (
-        fitsWorkspace(candidate) &&
-        decorationSafe(candidate) &&
-        occupiedDecorations.every(occupied => !intersects(candidate, occupied, 6))
-      ));
-      root.dataset.forgeGourdSafe = String(innerWidth >= 900 && Boolean(gourdCandidate));
-      if (gourdCandidate) {
-        root.style.setProperty('--forge-gourd-left', `${gourdCandidate.left}px`);
-        root.style.setProperty('--forge-gourd-top', `${gourdCandidate.top}px`);
-        root.style.setProperty('--forge-gourd-width', `${gourd.width}px`);
-        root.style.setProperty('--forge-gourd-height', `${gourd.height}px`);
-      }
-    } else {
-      root.dataset.forgeWukongSafe = 'false';
-      root.dataset.forgeBajieSafe = 'false';
-      root.dataset.forgeGourdSafe = 'false';
+    const gourdSize = compact ? { width: 34, height: 52 } : { width: 42, height: 64 };
+    const heroRect = document.querySelector('.forge-landing-hero')?.getBoundingClientRect();
+    const rightCardRect = rightCard && visible(rightCard) ? rightCard.getBoundingClientRect() : null;
+    const gourdCandidates = [
+      heroRect ? {
+        placement: 'landing-hero-left',
+        rect: {
+          left: heroRect.left - gourdSize.width - 18,
+          right: heroRect.left - 18,
+          top: heroRect.top + (heroRect.height - gourdSize.height) / 2,
+          bottom: heroRect.top + (heroRect.height + gourdSize.height) / 2
+        }
+      } : null,
+      surface === 'thread' && rightCardRect ? {
+        placement: 'right-card-foot',
+        rect: {
+          left: rightCardRect.left + (rightCardRect.width - gourdSize.width) / 2,
+          right: rightCardRect.left + (rightCardRect.width + gourdSize.width) / 2,
+          top: rightCardRect.bottom + 16,
+          bottom: rightCardRect.bottom + 16 + gourdSize.height
+        }
+      } : null,
+      workspaceRect ? {
+        placement: 'workspace-upper-rail',
+        rect: {
+          left: workspaceRect.left + 24,
+          right: workspaceRect.left + 24 + gourdSize.width,
+          top: workspaceRect.top + 82,
+          bottom: workspaceRect.top + 82 + gourdSize.height
+        }
+      } : null
+    ].filter(Boolean);
+    const occupiedDecorations = [wukongSafe ? wukongCandidate : null, bajieSafe ? bajieCandidate : null].filter(Boolean);
+    const selectedGourd = companionEnabled && innerWidth >= 900
+      ? gourdCandidates.find(candidate => (
+        decorationSafe(candidate.rect) &&
+        occupiedDecorations.every(occupied => !intersects(candidate.rect, occupied, 10))
+      ))
+      : null;
+    root.dataset.forgeGourdSafe = String(Boolean(selectedGourd));
+    if (selectedGourd) {
+      root.dataset.forgeGourdPlacement = selectedGourd.placement;
+      placePet(petOverlay, 'xiangfei-gourd', selectedGourd.rect, selectedGourd.placement);
+    }
+
+    state.resizeObserver?.disconnect();
+    for (const element of [workspace, composer, rightPanel, rightCard].filter(Boolean)) {
+      state.resizeObserver?.observe(element);
     }
 
     markAll('[role="menu"]', 'forge-menu');
@@ -406,6 +458,7 @@ function applyRuntime(payload) {
 
   const state = {
     observer: null,
+    resizeObserver: null,
     lastRefreshAt: 0,
     timer: 0,
     routeTimers: new Set(),
@@ -478,22 +531,30 @@ function applyRuntime(payload) {
     ));
     if (structuralChange) scheduleRefresh();
   });
+  const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(scheduleRefresh) : null;
   observer.observe(document.body, { childList: true, subtree: true });
   window.addEventListener('popstate', scheduleRefresh);
   window.addEventListener('hashchange', scheduleRefresh);
   window.addEventListener('resize', scheduleRefresh);
+  window.visualViewport?.addEventListener('resize', scheduleRefresh);
+  window.visualViewport?.addEventListener('scroll', scheduleRefresh);
   document.addEventListener('click', scheduleNavigationRefresh, true);
   document.addEventListener('keydown', scheduleComposerKeyboardSubmit, true);
   state.observer = observer;
+  state.resizeObserver = resizeObserver;
   state.dispose = () => {
     window.removeEventListener('popstate', scheduleRefresh);
     window.removeEventListener('hashchange', scheduleRefresh);
     window.removeEventListener('resize', scheduleRefresh);
+    window.visualViewport?.removeEventListener('resize', scheduleRefresh);
+    window.visualViewport?.removeEventListener('scroll', scheduleRefresh);
     document.removeEventListener('click', scheduleNavigationRefresh, true);
     document.removeEventListener('keydown', scheduleComposerKeyboardSubmit, true);
     observer.disconnect();
+    resizeObserver?.disconnect();
     state.routeTimers.forEach(timer => clearTimeout(timer));
     state.routeTimers.clear();
+    document.getElementById('wukong-forge-pet-overlay')?.remove();
   };
   window[runtimeKey] = state;
   refresh();
@@ -513,45 +574,54 @@ export const THEME_STATE_EXPRESSION = `(() => ({
   stylePresent: Boolean(document.getElementById('wukong-forge-style')),
   rootClass: document.documentElement.classList.contains('forge-ink-mountain'),
   markedElements: document.querySelectorAll('[data-forge-mark]').length,
+  ownedNodeCount: document.querySelectorAll('[data-forge-owned]').length,
+  companionLayerPresent: Boolean(document.getElementById('wukong-forge-pet-overlay')),
   surface: document.documentElement.dataset.forgeSurface || null,
   mode: document.documentElement.dataset.forgeMode || null,
   scene: document.documentElement.dataset.forgeScene || null,
   wukongSafe: document.documentElement.dataset.forgeWukongSafe || null,
   bajieSafe: document.documentElement.dataset.forgeBajieSafe || null,
   gourdSafe: document.documentElement.dataset.forgeGourdSafe || null,
+  gourdPlacement: document.documentElement.dataset.forgeGourdPlacement || null,
   runtimeV4: Boolean(window.__wukongCodexForgeRuntimeV4),
   runtimeV5: Boolean(window.__wukongCodexForgeRuntimeV5),
   runtimeV6: Boolean(window.__wukongCodexForgeRuntimeV6),
   runtimeV7: Boolean(window.__wukongCodexForgeRuntimeV7),
   runtimeV8: Boolean(window.__wukongCodexForgeRuntimeV8),
-  runtimeV9: Boolean(window.__wukongCodexForgeRuntimeV9)
+  runtimeV9: Boolean(window.__wukongCodexForgeRuntimeV9),
+  runtimeV10: Boolean(window.__wukongCodexForgeRuntimeV10)
 }))()`;
 
 export const isNativeThemeState = state => Boolean(state) &&
   state.stylePresent === false &&
   state.rootClass === false &&
   state.markedElements === 0 &&
+  state.ownedNodeCount === 0 &&
+  state.companionLayerPresent === false &&
   state.surface === null &&
   state.mode === null &&
   state.scene === null &&
   state.wukongSafe === null &&
   state.bajieSafe === null &&
   state.gourdSafe === null &&
+  state.gourdPlacement === null &&
   state.runtimeV4 === false &&
   state.runtimeV5 === false &&
   state.runtimeV6 === false &&
   state.runtimeV7 === false &&
   state.runtimeV8 === false &&
-  state.runtimeV9 === false;
+  state.runtimeV9 === false &&
+  state.runtimeV10 === false;
 
 export const isActiveThemeState = state => Boolean(state) &&
   state.stylePresent === true &&
   state.rootClass === true &&
-  state.runtimeV8 === false &&
-  state.runtimeV9 === true;
+  state.companionLayerPresent === true &&
+  state.runtimeV9 === false &&
+  state.runtimeV10 === true;
 
 export const RESTORE_EXPRESSION = `(() => {
-  for (const runtimeKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8', '${RUNTIME_KEY}']) {
+  for (const runtimeKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8', '__wukongCodexForgeRuntimeV9', '${RUNTIME_KEY}']) {
     const runtime = window[runtimeKey];
     runtime?.observer?.disconnect();
     runtime?.dispose?.();
@@ -559,6 +629,7 @@ export const RESTORE_EXPRESSION = `(() => {
     delete window[runtimeKey];
   }
   document.getElementById('wukong-forge-style')?.remove();
+  document.getElementById('wukong-forge-pet-overlay')?.remove();
   document.querySelectorAll('[data-forge-mark]').forEach(element => {
     element.classList.remove(${MARK_CLASSES.map(name => `'${name}'`).join(',')});
     delete element.dataset.forgeMark;
@@ -570,9 +641,6 @@ export const RESTORE_EXPRESSION = `(() => {
   delete document.documentElement.dataset.forgeWukongSafe;
   delete document.documentElement.dataset.forgeBajieSafe;
   delete document.documentElement.dataset.forgeGourdSafe;
-  document.documentElement.style.removeProperty('--forge-gourd-left');
-  document.documentElement.style.removeProperty('--forge-gourd-top');
-  document.documentElement.style.removeProperty('--forge-gourd-width');
-  document.documentElement.style.removeProperty('--forge-gourd-height');
+  delete document.documentElement.dataset.forgeGourdPlacement;
   return true;
 })()`;
