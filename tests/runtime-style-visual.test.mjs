@@ -57,26 +57,22 @@ test('Wukong style visibly replaces background, navigation and composer without 
     fullScreenVeil: getComputedStyle(document.body, '::after').backgroundImage,
     workspaceBackground: getComputedStyle(document.querySelector('.forge-workspace')).backgroundImage,
     composerRadius: getComputedStyle(document.querySelector('.forge-composer')).borderRadius,
-    composerClip: getComputedStyle(document.querySelector('.forge-composer')).clipPath,
+    composerFrame: getComputedStyle(document.querySelector('.forge-composer'), '::before').content,
     composerBackground: getComputedStyle(document.querySelector('.forge-composer')).backgroundImage,
-    xiangfeiMaterial: getComputedStyle(document.querySelector('[data-forge-pet="xiangfei-gourd"]')).backgroundImage,
-    xiangfeiPointerEvents: getComputedStyle(document.querySelector('[data-forge-pet="xiangfei-gourd"]')).pointerEvents,
-    littleWukongMaterial: getComputedStyle(document.querySelector('[data-forge-pet="little-wukong"]')).backgroundImage,
-    littleWukongPointerEvents: getComputedStyle(document.querySelector('[data-forge-pet="little-wukong"]')).pointerEvents,
-    littleBajieMaterial: getComputedStyle(document.querySelector('[data-forge-pet="little-bajie"]')).backgroundImage,
-    littleBajiePointerEvents: getComputedStyle(document.querySelector('[data-forge-pet="little-bajie"]')).pointerEvents,
+    xiangfeiMaterial: getComputedStyle(document.querySelector('[data-forge-motif="xiangfei-gourd"]')).backgroundImage,
+    xiangfeiPointerEvents: getComputedStyle(document.querySelector('[data-forge-motif="xiangfei-gourd"]')).pointerEvents,
+    xiangfeiPlacement: document.querySelector('[data-forge-motif="xiangfei-gourd"]').dataset.forgePlacement,
     sidebarDecoration: getComputedStyle(document.querySelector('.forge-new-task'), '::after').content,
     environmentDecoration: getComputedStyle(document.querySelector('.forge-right-card'), '::after').content,
-    wukongSafe: document.documentElement.dataset.forgeWukongSafe,
-    bajieSafe: document.documentElement.dataset.forgeBajieSafe,
     gourdSafe: document.documentElement.dataset.forgeGourdSafe,
-    newTaskShadow: getComputedStyle(document.querySelector('.forge-new-task')).boxShadow,
-    sidebarClip: getComputedStyle(document.querySelector('.forge-sidebar-action')).clipPath,
+    newTaskShape: getComputedStyle(document.querySelector('.forge-new-task'), '::before').clipPath,
+    sidebarShape: getComputedStyle(document.querySelector('.forge-sidebar-action'), '::before').clipPath,
     landingSeal: getComputedStyle(document.querySelector('.forge-landing-title'), '::before').backgroundImage,
     sidebarIconRing: getComputedStyle(document.querySelector('.forge-sidebar-action > :first-child')).boxShadow,
     rightCardRadius: getComputedStyle(document.querySelector('.forge-right-card')).borderRadius,
-    rightCardClip: getComputedStyle(document.querySelector('.forge-right-card')).clipPath,
+    rightCardShape: getComputedStyle(document.querySelector('.forge-right-card'), '::before').clipPath,
     sendRadius: getComputedStyle(document.querySelector('.forge-composer button[type="submit"]')).borderRadius,
+    sendShape: getComputedStyle(document.querySelector('.forge-composer button[type="submit"]')).clipPath,
     composerWidth: document.querySelector('.forge-composer').getBoundingClientRect().width
   }));
   assert.equal(landingStyles.scene, '0');
@@ -90,31 +86,30 @@ test('Wukong style visibly replaces background, navigation and composer without 
   assert.equal(landingStyles.workspaceBackground, 'none');
   assert.equal(landingStyles.composerBackground, 'none');
   assert.match(landingStyles.xiangfeiMaterial, /data:image\/webp/);
-  assert.match(landingStyles.littleWukongMaterial, /data:image\/webp/);
-  assert.match(landingStyles.littleBajieMaterial, /data:image\/webp/);
   assert.equal(landingStyles.xiangfeiPointerEvents, 'none');
-  assert.equal(landingStyles.littleWukongPointerEvents, 'none');
-  assert.equal(landingStyles.littleBajiePointerEvents, 'none');
-  assert.equal(landingStyles.sidebarDecoration, 'none');
-  assert.equal(landingStyles.environmentDecoration, 'none');
-  assert.equal(landingStyles.wukongSafe, 'true');
-  assert.equal(landingStyles.bajieSafe, 'true');
+  assert.doesNotMatch(landingStyles.xiangfeiPlacement, /composer/i);
+  assert.notEqual(landingStyles.sidebarDecoration, 'none');
+  assert.notEqual(landingStyles.environmentDecoration, 'none');
   assert.equal(landingStyles.gourdSafe, 'true');
-  assert.equal(landingStyles.composerRadius, nativeShapes.composerRadius);
-  assert.equal(landingStyles.composerClip, 'none');
-  assert.notEqual(landingStyles.newTaskShadow, 'none');
-  assert.equal(landingStyles.sidebarClip, 'none');
+  assert.notEqual(landingStyles.composerRadius, nativeShapes.composerRadius);
+  assert.notEqual(landingStyles.composerFrame, 'none');
+  assert.notEqual(landingStyles.newTaskShape, 'none');
+  assert.notEqual(landingStyles.sidebarShape, 'none');
   assert.equal(landingStyles.landingSeal, 'none');
   assert.equal(landingStyles.sidebarIconRing, 'none');
-  assert.equal(landingStyles.rightCardRadius, nativeShapes.rightCardRadius);
-  assert.equal(landingStyles.rightCardClip, 'none');
-  assert.equal(landingStyles.sendRadius, nativeShapes.sendRadius);
+  assert.notEqual(landingStyles.rightCardRadius, nativeShapes.rightCardRadius);
+  assert.notEqual(landingStyles.rightCardShape, 'none');
+  assert.notEqual(landingStyles.sendRadius, nativeShapes.sendRadius);
+  assert.notEqual(landingStyles.sendShape, 'none');
   assert.equal(landingStyles.composerWidth, 736);
   assert.deepEqual(await geometry(page), nativeGeometry);
   assert.equal(await page.locator('body > *').count(), nativeBodyChildren + 1);
   assert.equal(await page.locator('body').innerText(), nativeBodyText);
-  assert.equal(await page.locator('body > #wukong-forge-pet-overlay[data-forge-owned="pet-overlay"]').count(), 1);
+  assert.equal(await page.locator('body > #wukong-forge-motif-overlay[data-forge-owned="motif-overlay"]').count(), 1);
+  assert.equal(await page.locator('[data-forge-pet]').count(), 0);
   assert.equal(await page.locator('.summary-panel-card.forge-right-card').count(), 1);
+  assert.equal(await page.locator('.summary-heading.forge-right-title').count(), 1);
+  assert.equal(await page.locator('.summary-row.forge-right-row').count(), 4);
 
   const landingBuffer = await page.screenshot();
   const landing = PNG.sync.read(landingBuffer);
@@ -157,7 +152,7 @@ test('Wukong style visibly replaces background, navigation and composer without 
     stylePresent: Boolean(document.getElementById('wukong-forge-style')),
     scene: document.documentElement.dataset.forgeScene || null,
     mode: document.documentElement.dataset.forgeMode || null,
-    companionLayerPresent: Boolean(document.getElementById('wukong-forge-pet-overlay'))
+    motifLayerPresent: Boolean(document.getElementById('wukong-forge-motif-overlay'))
   }));
   assert.deepEqual(restored, {
     backgroundImage: 'none',
@@ -166,6 +161,6 @@ test('Wukong style visibly replaces background, navigation and composer without 
     stylePresent: false,
     scene: null,
     mode: null,
-    companionLayerPresent: false
+    motifLayerPresent: false
   });
 });

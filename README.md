@@ -1,11 +1,35 @@
 # Wukong Codex Forge
 
-> 当前交付为 **0.9.0 / V10**。本节覆盖后文仍保留的 0.8.0 / V9 历史说明；旧文字与旧证据没有删除。
+> 当前开发线为 **0.10.0 / V11**。V10、V9 的文字与证据继续保留为历史；与现行行为冲突时，以本节和 `docs/` 顶部的 V11 合同为准。
 
-## 0.9.0 当前交付
+## V11 当前实现
+
+- **仍是原生 Codex 页面**：顶部栏、侧栏、工作区、输入器、环境信息卡、原有图标、文案和事件全部保留；不增加主题侧栏、底栏、开关、状态卡或 emoji。
+- **替换样式而非只换颜色**：侧栏操作项采用窄边经匣切角与朱砂签，输入器采用同宽同高的短轨经匣轮廓，发送键采用同尺寸八角朱砂印，环境卡采用同尺寸典籍匣角与行分隔。改变的是轮廓、材质和局部构造，不改变原生槽位坐标、宽高、内边距或文字。
+- **背景完全覆盖且逐图适配**：唯一的 `body::before` 固定背景使用 `cover` 覆盖全窗；11 张画面分别定义色板、遮罩与亮度，战斗/风景模式遮罩与场景遮罩独立叠加。白场杨戬、大圣、夜叉王和五张风景图不再被统一压成同一种暗色。
+- **角色改用原生 Hatch Pet**：页面样式层不再绘制静态小悟空或小八戒。小悟空固定为游科官方天命人厌火夜叉套 1/12 造型并持兽棍·神锋；小八戒固定参考 INART 1/12，使用旧青衣、念珠和恰好九齿的钉耙。两者按 Codex v2 8×11 动画图集制作、验证和安装。
+- **页面 motif 只保留湘妃葫芦**：它是无交互、无障碍隐藏的单一装饰，不进入输入器、侧栏或环境卡布局，也不改变任何 DOMRect。
+- **回答继续无框**：助手回答及其祖先链保持透明、无阴影、无圆角；用户提示词、回答和输入提示均不改写。
+
+当前 V11 fixture 证据：
+
+- [新建任务·杨戬战斗境](docs/screenshots/runtime-v11-fixture-v2-landing.png)
+- [进入对话·佛窟风景境](docs/screenshots/runtime-v11-fixture-v2-thread.png)
+- [几何、状态与控制台记录](docs/screenshots/runtime-v11-fixture-v2.json)
+
+fixture 只用于稳定复核 landing/thread 两类 DOM。真实 Codex renderer 已在同一受管实例完成补充审计：
+
+- [真实 V11 新建任务窗口](docs/screenshots/live-codex-v11-native-pets-initial-20260722.png)及其[状态 JSON](docs/screenshots/live-codex-v11-native-pets-initial-20260722.png.json)
+- [官方“宠物”页识别两个自定义包](docs/screenshots/live-codex-v11-native-pets-linked-payload-main-20260722.png)及其[状态 JSON](docs/screenshots/live-codex-v11-native-pets-linked-payload-main-20260722.png.json)
+- [小八戒原生宠物层](docs/screenshots/live-codex-v11-bajie-pet-linked-payload-20260722.png)与[小悟空原生宠物层](docs/screenshots/live-codex-v11-wukong-pet-linked-payload-20260722.png)
+- [小八戒 11 行动作表](docs/pets/little-bajie-v3-inart/contact-sheet.png)、[小悟空 11 行动作表](docs/pets/little-wukong-yaksha-shenfeng/contact-sheet.png)
+
+`start-theme.cmd` 会先运行 `scripts/install-native-pets.ps1`。官方 Codex 只扫描 `Dirent.isDirectory()` 为真的顶层目录，因此安装器建立真实发现目录，并在其内部放置名为 `payload` 的目录 junction；派生 `pet.json` 指向 `payload/spritesheet.webp`。这样不需要管理员或 Developer Mode，不复制多兆字节 atlas，主题源目录不存在后图集自然不可读。若检测到早期直接副本，安装器先把原 manifest 逐字节保存在 `source-pet.json`，旧 atlas 也原位保留，再迁移到 payload 路径；不删除、不移动任何已有文件。安装记录只追加到包内 `.wukong-runtime/native-pet-links.jsonl`，内容冲突时 fail closed。
+
+## 0.9.0 / V10 历史交付（保留）
 
 - **普通入口自动生效**：首次双击 `start-theme.cmd` 会把用户开始菜单中的普通 `ChatGPT.lnk` 改为 178 字符的短入口，并立即启动主题窗口。以后从同一个普通 ChatGPT 快捷方式启动即可；主题根目录不存在时，版本化桥接脚本动态定位当前官方 Store 包并按原生方式启动。
-- **关闭同生命周期**：主题 watcher 只跟随使用隔离 profile 启动的 `ChatGPT.exe`，应用退出后 watcher 结束；不会结束或改写用户已经打开的普通 Codex。
+- **关闭同生命周期**：主题 watcher 只跟随隔离 profile 的 Codex renderer；连续 8 次、约 13.6 秒没有 renderer 即自动结束。Windows 官方主进程可按托盘策略隐藏窗口并保留 renderer，此时 watcher 继续绑定同一实例而不新增副本；再点同一 ChatGPT 快捷方式会以相同 profile 进入官方 `second-instance` / `codex://launch` 通道并复显该窗口。若 renderer 或进程真正退出，watcher 自动结束，下一次启动再创建。不会结束或改写用户已经打开的普通 Codex。
 - **原生外形、场景换肤**：仍是 36 px 菜单栏、275 px 侧栏、原生工作区、736 × 98 px 输入器和 300 px 环境卡；没有主题侧栏、底栏、按钮或开关。新任务自动为战斗境，进入对话自动为风景境。
 - **11 组场景自适应矿色**：每张背景同时携带独立的文字、侧栏、顶栏、输入器、用户气泡、代码块、菜单、环境卡与 veil 色板，换图不再只换背景。
 - **独立同行者层**：新绘小悟空、小八戒与湘妃葫芦位于一个 `aria-hidden`、`inert`、`pointer-events:none` 的固定覆盖层；不再依附输入框伪元素。小悟空和小八戒站在工作区底部两侧，葫芦按页面在新任务主视觉、环境卡脚部或工作区上缘之间选择安全位置。
@@ -22,6 +46,8 @@
 最终推荐 ZIP 另以全新目录和全新 profile 验收：PID 45072、端口 34661、watcher PID 46940；`starting → watching`，受管标记 128、三项安全位 true、启动 stderr 0 bytes。该窗口保留供现场审计。
 
 安全边界：开始菜单快捷方式、安装目录内 `start-theme.cmd` 与由它安装的入口可自动带主题启动。直接运行 WindowsApps 内 `ChatGPT.exe`、Store AUMID、协议或第三方自建入口会绕过适配器；若要无条件拦截这些入口，需要修改官方包、IFEO、注入 DLL 或系统服务，本项目为避免崩溃与破坏签名明确不采用。
+
+只读核对官方 26.715.2305.0 主进程代码后确认：Windows 的 `window-all-closed` 不调用 `app.quit()`，所以“关闭窗口”与“结束 `ChatGPT.exe`”不是同一事件；驻留实例的恢复由官方 `second-instance` 队列、同一 `CODEX_ELECTRON_USER_DATA_PATH`、同一 `--user-data-dir` 和 `codex://launch` 共同完成。Chromium 在原生窗口已隐藏时仍可能报告 DOM `visible`，因此本项目只按受管根 PID 的 `MainWindowHandle` 验收复显，失败即明确返回非零，不伪造可见或退出状态，也不调用 Win32 窗口操控 API。
 
 ## 0.8.0 / V9 历史记录（保留）
 

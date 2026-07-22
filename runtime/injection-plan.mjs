@@ -18,18 +18,20 @@ export const MARK_CLASSES = [
   'forge-code-block',
   'forge-right-panel',
   'forge-right-card',
+  'forge-right-title',
+  'forge-right-row',
   'forge-menu',
   'forge-dialog',
   'forge-button'
 ];
 
-const RUNTIME_KEY = '__wukongCodexForgeRuntimeV10';
+const RUNTIME_KEY = '__wukongCodexForgeRuntimeV11';
 
 function applyRuntime(payload) {
   const root = document.documentElement;
   const runtimeKey = payload.runtimeKey;
   const markClasses = payload.markClasses;
-  for (const retiredKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8', '__wukongCodexForgeRuntimeV9']) {
+  for (const retiredKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8', '__wukongCodexForgeRuntimeV9', '__wukongCodexForgeRuntimeV10']) {
     const retired = window[retiredKey];
     retired?.observer?.disconnect();
     retired?.dispose?.();
@@ -41,6 +43,7 @@ function applyRuntime(payload) {
   previous?.dispose?.();
   if (previous?.timer) clearTimeout(previous.timer);
   document.getElementById('wukong-forge-pet-overlay')?.remove();
+  document.getElementById('wukong-forge-motif-overlay')?.remove();
 
   let style = document.getElementById('wukong-forge-style');
   if (!style) {
@@ -119,7 +122,9 @@ function applyRuntime(payload) {
     if (exact && fitsComposer(exact)) return exact;
     const attributed = editor.closest('[data-codex-composer]');
     if (attributed && fitsComposer(attributed)) return attributed;
-    return [...document.querySelectorAll('[data-thread-find-composer="true"] .composer-surface-chrome')]
+    const semanticShell = editor.closest('[data-thread-find-composer="true"]');
+    if (!semanticShell) return null;
+    return [...semanticShell.querySelectorAll('.composer-surface-chrome')]
       .filter(fitsComposer)
       .sort((left, right) => right.getBoundingClientRect().bottom - left.getBoundingClientRect().bottom)[0] || null;
   };
@@ -139,57 +144,54 @@ function applyRuntime(payload) {
   const landingTitlePattern = /我们该构建什么|今天想处理什么|准备好就开始|从哪里开始|what should we build|what(?:'s| is) on your mind|ready when you are|where should we begin|what (?:do you want|would you like) to (?:work on|do)|how can i help|新建任务/i;
   let battleCycle = 0;
 
-  const ensurePetOverlay = () => {
-    let overlay = document.getElementById('wukong-forge-pet-overlay');
+  const ensureMotifOverlay = () => {
+    let overlay = document.getElementById('wukong-forge-motif-overlay');
     if (overlay) return overlay;
     overlay = document.createElement('div');
-    overlay.id = 'wukong-forge-pet-overlay';
-    overlay.dataset.forgeOwned = 'pet-overlay';
+    overlay.id = 'wukong-forge-motif-overlay';
+    overlay.dataset.forgeOwned = 'motif-overlay';
     overlay.setAttribute('aria-hidden', 'true');
     overlay.setAttribute('inert', '');
     overlay.inert = true;
-    for (const name of ['little-wukong', 'little-bajie', 'xiangfei-gourd']) {
-      const pet = document.createElement('i');
-      pet.dataset.forgePet = name;
-      pet.setAttribute('aria-hidden', 'true');
-      pet.hidden = true;
-      overlay.append(pet);
-    }
+    const motif = document.createElement('i');
+    motif.dataset.forgeMotif = 'xiangfei-gourd';
+    motif.setAttribute('aria-hidden', 'true');
+    motif.hidden = true;
+    overlay.append(motif);
     document.body.append(overlay);
     return overlay;
   };
-  const clearPets = overlay => {
-    overlay?.querySelectorAll('[data-forge-pet]').forEach(pet => {
-      pet.hidden = true;
-      delete pet.dataset.forgePlacement;
-      for (const property of ['--forge-pet-x', '--forge-pet-y', '--forge-pet-width', '--forge-pet-height']) {
-        pet.style.removeProperty(property);
+  const clearMotifs = overlay => {
+    overlay?.querySelectorAll('[data-forge-motif]').forEach(motif => {
+      motif.hidden = true;
+      delete motif.dataset.forgePlacement;
+      for (const property of ['--forge-motif-x', '--forge-motif-y', '--forge-motif-width', '--forge-motif-height']) {
+        motif.style.removeProperty(property);
       }
     });
   };
-  const placePet = (overlay, name, candidate, placement) => {
-    const pet = overlay?.querySelector(`[data-forge-pet="${name}"]`);
-    if (!pet || !candidate) return false;
-    pet.style.setProperty('--forge-pet-x', `${Math.round(candidate.left)}px`);
-    pet.style.setProperty('--forge-pet-y', `${Math.round(candidate.top)}px`);
-    pet.style.setProperty('--forge-pet-width', `${Math.round(candidate.right - candidate.left)}px`);
-    pet.style.setProperty('--forge-pet-height', `${Math.round(candidate.bottom - candidate.top)}px`);
-    pet.dataset.forgePlacement = placement;
-    pet.hidden = false;
+  const placeMotif = (overlay, name, candidate, placement) => {
+    const motif = overlay?.querySelector(`[data-forge-motif="${name}"]`);
+    if (!motif || !candidate) return false;
+    motif.style.setProperty('--forge-motif-x', `${Math.round(candidate.left)}px`);
+    motif.style.setProperty('--forge-motif-y', `${Math.round(candidate.top)}px`);
+    motif.style.setProperty('--forge-motif-width', `${Math.round(candidate.right - candidate.left)}px`);
+    motif.style.setProperty('--forge-motif-height', `${Math.round(candidate.bottom - candidate.top)}px`);
+    motif.dataset.forgePlacement = placement;
+    motif.hidden = false;
     return true;
   };
 
   const refresh = () => {
     state.lastRefreshAt = performance.now();
     clearMarks();
-    delete root.dataset.forgeWukongSafe;
-    delete root.dataset.forgeBajieSafe;
     delete root.dataset.forgeGourdSafe;
     delete root.dataset.forgeGourdPlacement;
-    const companionEnabled = getComputedStyle(root).getPropertyValue('--forge-companion-enabled').trim() === '1';
-    const petOverlay = companionEnabled ? ensurePetOverlay() : null;
-    if (!companionEnabled) document.getElementById('wukong-forge-pet-overlay')?.remove();
-    clearPets(petOverlay);
+    const motifEnabled = getComputedStyle(root).getPropertyValue('--forge-companion-enabled').trim() === '1';
+    const motifOverlay = motifEnabled ? ensureMotifOverlay() : null;
+    document.getElementById('wukong-forge-pet-overlay')?.remove();
+    if (!motifEnabled) document.getElementById('wukong-forge-motif-overlay')?.remove();
+    clearMotifs(motifOverlay);
 
     const previousSurface = root.dataset.forgeSurface || null;
     const threadEvidence = [...document.querySelectorAll([
@@ -228,7 +230,7 @@ function applyRuntime(payload) {
       const choices = useSecondary ? secondaryBattleScenes : primaryBattleScenes;
       if (choices.length) scene = choices[battleCycle % choices.length];
     } else if (sceneryScenes.length) {
-      const key = `${location.pathname}|${document.title || 'codex'}`;
+      const key = `${location.pathname}|${location.hash}`;
       scene = sceneryScenes[stableHash(`${key}|scenery`) % sceneryScenes.length];
     }
     root.dataset.forgeScene = String(scene);
@@ -242,6 +244,14 @@ function applyRuntime(payload) {
     mark(topbar, 'forge-topbar');
 
     let sidebar = document.querySelector('aside.app-shell-left-panel, aside[data-testid="app-shell-floating-left-panel"], [data-testid="app-shell-floating-left-panel"], nav[aria-label], aside[aria-label*="chat" i]');
+    if (sidebar?.matches('nav[aria-label]')) {
+      sidebar = largeAncestor(sidebar, rect => (
+        rect.height >= innerHeight * .62 &&
+        rect.width >= 150 &&
+        rect.width <= Math.min(440, innerWidth * .42) &&
+        rect.left <= 8
+      )) || sidebar;
+    }
     if (!sidebar || !visible(sidebar)) sidebar = panelAt(14, innerHeight * .52, 'left');
     mark(sidebar, 'forge-sidebar');
     if (sidebar) {
@@ -301,8 +311,12 @@ function applyRuntime(payload) {
       '[contenteditable="true"][data-lexical-editor="true"]',
       '[contenteditable="true"]'
     ].join(','))].filter(visible);
-    const editor = editors.sort((left, right) => right.getBoundingClientRect().bottom - left.getBoundingClientRect().bottom)[0];
-    const composer = editor ? composerSurface(editor) : null;
+    const editorCandidates = editors.map(editor => ({ editor, composer: composerSurface(editor) }))
+      .filter(candidate => candidate.composer)
+      .sort((left, right) => right.composer.getBoundingClientRect().bottom - left.composer.getBoundingClientRect().bottom);
+    const editor = editorCandidates[0]?.editor || editors
+      .sort((left, right) => right.getBoundingClientRect().bottom - left.getBoundingClientRect().bottom)[0] || null;
+    const composer = editorCandidates[0]?.composer || null;
     mark(editor, 'forge-input');
     mark(composer, 'forge-composer');
     composer?.querySelectorAll('button, [role="button"]').forEach(button => mark(button, 'forge-composer-button'));
@@ -355,8 +369,27 @@ function applyRuntime(payload) {
         const rightRect = right.getBoundingClientRect();
         return rightRect.width * rightRect.height - leftRect.width * leftRect.height;
       });
-      rightCard = rightCards[0] || rightPanel;
+      const environmentPattern = /环境信息|environment\s*(?:info|information)?/i;
+      const titleCandidates = [...rightPanel.querySelectorAll('h1, h2, h3, h4, h5, [role="heading"], p, span')]
+        .filter(element => visible(element) && environmentPattern.test(textOf(element)));
+      const titledCard = titleCandidates.map(title => {
+        const card = rightCards.filter(candidate => candidate.contains(title)).sort((left, right) => {
+          const leftRect = left.getBoundingClientRect();
+          const rightRect = right.getBoundingClientRect();
+          return leftRect.width * leftRect.height - rightRect.width * rightRect.height;
+        })[0];
+        return card ? { card, title } : null;
+      }).find(Boolean);
+      rightCard = titledCard?.card || rightCards[0] || rightPanel;
       mark(rightCard, 'forge-right-card');
+      const title = titledCard?.title || [...rightCard.querySelectorAll('h1, h2, h3, h4, h5, [role="heading"]')].find(visible);
+      mark(title, 'forge-right-title');
+      rightCard.querySelectorAll('button, [role="button"], [role="treeitem"], li, :scope > div, :scope > section').forEach(element => {
+        const rect = element.getBoundingClientRect();
+        if (visible(element) && element !== title && rect.width >= rightCard.getBoundingClientRect().width * .58 && rect.height >= 24 && rect.height <= 80) {
+          mark(element, 'forge-right-row');
+        }
+      });
     }
 
     const blockers = [...new Set([
@@ -371,36 +404,6 @@ function applyRuntime(payload) {
     };
     const workspaceRect = workspace?.getBoundingClientRect();
     const compact = mode === 'scenery';
-    const insideWorkspace = candidate => Boolean(workspaceRect) && (
-      candidate.left >= workspaceRect.left + 8 &&
-      candidate.right <= workspaceRect.right - 8 &&
-      candidate.top >= workspaceRect.top + 8 &&
-      candidate.bottom <= workspaceRect.bottom - 8
-    );
-    const floor = (workspaceRect?.bottom ?? innerHeight) - 18;
-    const wukongSize = compact ? { width: 92, height: 92 } : { width: 112, height: 112 };
-    const bajieSize = compact ? { width: 82, height: 92 } : { width: 100, height: 112 };
-    const wukongCandidate = workspaceRect ? {
-      left: workspaceRect.left + 20,
-      right: workspaceRect.left + 20 + wukongSize.width,
-      top: floor - wukongSize.height,
-      bottom: floor
-    } : null;
-    const bajieCandidate = workspaceRect ? {
-      left: workspaceRect.right - 20 - bajieSize.width,
-      right: workspaceRect.right - 20,
-      top: floor - bajieSize.height,
-      bottom: floor
-    } : null;
-    const wukongSafe = companionEnabled && innerWidth >= 900 && insideWorkspace(wukongCandidate) && decorationSafe(wukongCandidate);
-    const bajieSafe = companionEnabled && innerWidth >= 900 && insideWorkspace(bajieCandidate) && decorationSafe(bajieCandidate) && (
-      !wukongSafe || !intersects(bajieCandidate, wukongCandidate, 10)
-    );
-    root.dataset.forgeWukongSafe = String(wukongSafe);
-    root.dataset.forgeBajieSafe = String(bajieSafe);
-    if (wukongSafe) placePet(petOverlay, 'little-wukong', wukongCandidate, 'workspace-left-floor');
-    if (bajieSafe) placePet(petOverlay, 'little-bajie', bajieCandidate, 'workspace-right-floor');
-
     const gourdSize = compact ? { width: 34, height: 52 } : { width: 42, height: 64 };
     const heroRect = document.querySelector('.forge-landing-hero')?.getBoundingClientRect();
     const rightCardRect = rightCard && visible(rightCard) ? rightCard.getBoundingClientRect() : null;
@@ -433,17 +436,13 @@ function applyRuntime(payload) {
         }
       } : null
     ].filter(Boolean);
-    const occupiedDecorations = [wukongSafe ? wukongCandidate : null, bajieSafe ? bajieCandidate : null].filter(Boolean);
-    const selectedGourd = companionEnabled && innerWidth >= 900
-      ? gourdCandidates.find(candidate => (
-        decorationSafe(candidate.rect) &&
-        occupiedDecorations.every(occupied => !intersects(candidate.rect, occupied, 10))
-      ))
+    const selectedGourd = motifEnabled && innerWidth >= 900
+      ? gourdCandidates.find(candidate => decorationSafe(candidate.rect))
       : null;
     root.dataset.forgeGourdSafe = String(Boolean(selectedGourd));
     if (selectedGourd) {
       root.dataset.forgeGourdPlacement = selectedGourd.placement;
-      placePet(petOverlay, 'xiangfei-gourd', selectedGourd.rect, selectedGourd.placement);
+      placeMotif(motifOverlay, 'xiangfei-gourd', selectedGourd.rect, selectedGourd.placement);
     }
 
     state.resizeObserver?.disconnect();
@@ -453,7 +452,9 @@ function applyRuntime(payload) {
 
     markAll('[role="menu"]', 'forge-menu');
     markAll('[role="dialog"]', 'forge-dialog');
-    document.querySelectorAll('button').forEach(button => mark(button, 'forge-button'));
+    for (const scope of [topbar, document.querySelector('.forge-taskbar'), rightCard].filter(Boolean)) {
+      scope.querySelectorAll('button, [role="button"]').forEach(button => mark(button, 'forge-button'));
+    }
   };
 
   const state = {
@@ -555,6 +556,7 @@ function applyRuntime(payload) {
     state.routeTimers.forEach(timer => clearTimeout(timer));
     state.routeTimers.clear();
     document.getElementById('wukong-forge-pet-overlay')?.remove();
+    document.getElementById('wukong-forge-motif-overlay')?.remove();
   };
   window[runtimeKey] = state;
   refresh();
@@ -575,12 +577,10 @@ export const THEME_STATE_EXPRESSION = `(() => ({
   rootClass: document.documentElement.classList.contains('forge-ink-mountain'),
   markedElements: document.querySelectorAll('[data-forge-mark]').length,
   ownedNodeCount: document.querySelectorAll('[data-forge-owned]').length,
-  companionLayerPresent: Boolean(document.getElementById('wukong-forge-pet-overlay')),
+  motifLayerPresent: Boolean(document.getElementById('wukong-forge-motif-overlay')),
   surface: document.documentElement.dataset.forgeSurface || null,
   mode: document.documentElement.dataset.forgeMode || null,
   scene: document.documentElement.dataset.forgeScene || null,
-  wukongSafe: document.documentElement.dataset.forgeWukongSafe || null,
-  bajieSafe: document.documentElement.dataset.forgeBajieSafe || null,
   gourdSafe: document.documentElement.dataset.forgeGourdSafe || null,
   gourdPlacement: document.documentElement.dataset.forgeGourdPlacement || null,
   runtimeV4: Boolean(window.__wukongCodexForgeRuntimeV4),
@@ -589,7 +589,8 @@ export const THEME_STATE_EXPRESSION = `(() => ({
   runtimeV7: Boolean(window.__wukongCodexForgeRuntimeV7),
   runtimeV8: Boolean(window.__wukongCodexForgeRuntimeV8),
   runtimeV9: Boolean(window.__wukongCodexForgeRuntimeV9),
-  runtimeV10: Boolean(window.__wukongCodexForgeRuntimeV10)
+  runtimeV10: Boolean(window.__wukongCodexForgeRuntimeV10),
+  runtimeV11: Boolean(window.__wukongCodexForgeRuntimeV11)
 }))()`;
 
 export const isNativeThemeState = state => Boolean(state) &&
@@ -597,12 +598,10 @@ export const isNativeThemeState = state => Boolean(state) &&
   state.rootClass === false &&
   state.markedElements === 0 &&
   state.ownedNodeCount === 0 &&
-  state.companionLayerPresent === false &&
+  state.motifLayerPresent === false &&
   state.surface === null &&
   state.mode === null &&
   state.scene === null &&
-  state.wukongSafe === null &&
-  state.bajieSafe === null &&
   state.gourdSafe === null &&
   state.gourdPlacement === null &&
   state.runtimeV4 === false &&
@@ -611,17 +610,19 @@ export const isNativeThemeState = state => Boolean(state) &&
   state.runtimeV7 === false &&
   state.runtimeV8 === false &&
   state.runtimeV9 === false &&
-  state.runtimeV10 === false;
+  state.runtimeV10 === false &&
+  state.runtimeV11 === false;
 
 export const isActiveThemeState = state => Boolean(state) &&
   state.stylePresent === true &&
   state.rootClass === true &&
-  state.companionLayerPresent === true &&
+  state.motifLayerPresent === true &&
   state.runtimeV9 === false &&
-  state.runtimeV10 === true;
+  state.runtimeV10 === false &&
+  state.runtimeV11 === true;
 
 export const RESTORE_EXPRESSION = `(() => {
-  for (const runtimeKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8', '__wukongCodexForgeRuntimeV9', '${RUNTIME_KEY}']) {
+  for (const runtimeKey of ['__wukongCodexForgeRuntimeV4', '__wukongCodexForgeRuntimeV5', '__wukongCodexForgeRuntimeV6', '__wukongCodexForgeRuntimeV7', '__wukongCodexForgeRuntimeV8', '__wukongCodexForgeRuntimeV9', '__wukongCodexForgeRuntimeV10', '${RUNTIME_KEY}']) {
     const runtime = window[runtimeKey];
     runtime?.observer?.disconnect();
     runtime?.dispose?.();
@@ -630,6 +631,7 @@ export const RESTORE_EXPRESSION = `(() => {
   }
   document.getElementById('wukong-forge-style')?.remove();
   document.getElementById('wukong-forge-pet-overlay')?.remove();
+  document.getElementById('wukong-forge-motif-overlay')?.remove();
   document.querySelectorAll('[data-forge-mark]').forEach(element => {
     element.classList.remove(${MARK_CLASSES.map(name => `'${name}'`).join(',')});
     delete element.dataset.forgeMark;

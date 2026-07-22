@@ -133,3 +133,16 @@
 - 第二个唯一包的隐藏 PowerShell 5.1 子进程未自动加载 `Get-FileHash` 模块，入口在写快捷方式事件时终止；该包、stage、profile 和日志全部保留。hook 改为 `[IO.File]::OpenRead` + `.NET SHA256` 的自包含只读哈希函数，移除模块自动加载依赖。
 - 第三个唯一包 `release\wukong-codex-forge-0.9.0-portable-20260721-185413-8390691.zip` 完成 fresh-profile 真启动：35 项、2,932,159 bytes、SHA-256 `BCF9F9E7C7F9B8C7490ED3ECFFF576966A76AE5FC46BC7A8C8AF6F53A07FC697`；根 PID 45072、端口 34661、watcher PID 46940，事件 `starting → watching`，隐藏启动 stderr 0 bytes。
 - 最终包生产 renderer 为 V10 battle/scene 0、128 个受管标记、三项安全位 true；2050 × 1106、sidebar 275 px、composer 736 × 98、背景 cover。证据为 `docs/screenshots/live-codex-v10-release-fresh-profile-landing.*`，窗口保留供用户审计。
+- 继续只读审计官方 26.715.2305.0 主进程：Windows `window-all-closed` 不退出应用，二次激活通过 `requestSingleInstanceLock` / `second-instance` 和 `CODEX_ELECTRON_USER_DATA_PATH` 路由。V10 watcher 因此改为无 Codex renderer 连续约 13.6 秒后自行停止；隐藏窗口仍保留 renderer 时复用原 watcher，renderer 已消失时才由 launcher 重建，不强制结束进程。
+- 真机正常关窗证明隐藏原生窗口可继续持有 renderer，且 DOM visibility 会误报 visible。启动桥接改为同一 `CODEX_ELECTRON_USER_DATA_PATH` + 同一 `--user-data-dir` + `codex://launch`，并以受管根 PID 的 `MainWindowHandle` 验收；6 秒未复显重试一次，仍失败返回非零。Win32 操控候选未进入正式包，文件按零删除约束保留。
+
+## 2026-07-22 — 0.10.0 V11 原生 Hatch Pet 与组件深度重构
+
+- 按用户最终参考重做两个原生 Codex v2 Hatch Pet：小八戒使用 INART 1/12 的幼态脸、旧青衣、念珠与完整九齿钉耙；小悟空使用游科官方天命人厌火夜叉套 1/12 造型与兽棍·神锋。两者均为 1536 × 2288、8 × 11、RGBA WebP，覆盖 9 个标准动作行和 16 个顺时针方向。
+- 小八戒最终图集 SHA-256 为 `511BC2B8CA7C197407AB8E3BE194AAA5F2036428C05FDCB811400525005C2277`；小悟空最终图集 SHA-256 为 `018C3447368C23F963335710CA09086EFD634B2826B2913A920F3960E3D77D87`。两套图集均通过透明残留、动作、方向盲审和武器结构审计；小八戒全部方向的钉耙均为九齿。
+- 主题进入 V11：移除页面小悟空/小八戒静态 overlay，只保留无交互湘妃葫芦；侧栏按钮、输入器、发送键和环境卡改用经匣、朱砂签、短轨与典籍匣角造型。原生三栏、槽位坐标、736 × 98 px 输入器、文案和助手无框合同不变。
+- 11 张背景继续使用唯一固定 `cover` 层；每张画面独立适配正文、侧栏、顶栏、输入器、用户气泡、代码块、环境卡和遮罩。新建任务为杨戬/大圣优先的战斗境，进入对话为风景境。
+- 只读复核官方宠物 loader 后修正发现链：顶层使用可被 `Dirent.isDirectory()` 识别的真实目录，内部 `payload` junction 指向保留的主题宠物包，派生 manifest 指向 `payload/spritesheet.webp`。首次安装不复制图集、不需要管理员；早期直接副本只迁移活动 manifest，原 manifest 与 atlas 全部原位保留。
+- 真实 Codex “宠物”设置页识别两个自定义包；小八戒与小悟空均在官方 `avatar-overlay` 窗口完成实际加载。主题实机仍为单层全窗背景、275 px 侧栏、736 × 98 px 输入器与无框回答。
+- 最终定向回归 32/32 通过，覆盖宠物包、官方发现链接器、注入、视觉、11 场景色板、生命周期、保留式安装、最小包与原生恢复。
+- 最终便携 ZIP 为 `release\wukong-codex-forge-0.10.0-portable-20260722-123609-0afe4b0.zip`，42 项、6,790,345 bytes、SHA-256 `25196E65C39AC2176AB63FC856C643ACAEF201736157931801FE8BBBAB6F4513`；开发目录、测试、调研件与运行状态均未打包。唯一 stage、所有候选、失败证据、旧版本和已安装旧副本全部保留，未删除或移动文件。

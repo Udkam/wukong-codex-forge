@@ -10,12 +10,14 @@ test('public install and disable entry points preserve every existing file', () 
   const disable = read('scripts/disable.ps1');
   const hook = read('scripts/install-chatgpt-hook.ps1');
   const start = read('scripts/start.ps1');
+  const nativePets = read('scripts/install-native-pets.ps1');
+  const prepareNativePets = read('scripts/prepare-native-pets.mjs');
   const installCmd = read('install-theme.cmd');
   const removeCmd = read('remove-theme.cmd');
   const startCmd = read('start-theme.cmd');
   const stopCmd = read('stop-theme.cmd');
 
-  for (const [name, script] of Object.entries({ install, launch, disable, hook, start })) {
+  for (const [name, script] of Object.entries({ install, launch, disable, hook, start, nativePets })) {
     assert.doesNotMatch(script, /\bRemove-Item\b|\bMove-Item\b|\.Delete\(|rmSync|unlinkSync|rmdirSync/, `${name} contains a destructive file operation`);
   }
   assert.match(install, /releases/);
@@ -30,12 +32,29 @@ test('public install and disable entry points preserve every existing file', () 
   assert.match(removeCmd, /disable\.ps1/);
   assert.doesNotMatch(removeCmd, /restore\.ps1|-Uninstall/);
   assert.match(startCmd, /start\.ps1/);
+  assert.match(start, /install-native-pets\.ps1/);
+  assert.match(nativePets, /New-Item -ItemType Junction/);
+  assert.match(nativePets, /native-pet-links\.jsonl/);
+  assert.doesNotMatch(nativePets, /Remove-Item|Move-Item|Copy-Item[^\r\n]*-Force/);
+  assert.match(nativePets, /payload\/spritesheet\.webp/);
+  assert.match(nativePets, /source-pet\.json/);
+  assert.doesNotMatch(nativePets, /Copy-Item[^\r\n]*spritesheet\.webp/);
+  assert.match(nativePets, /1536x2288/);
+  assert.match(nativePets, /validation\.json/);
+  assert.match(nativePets, /package-proof\.json/);
+  assert.match(nativePets, /transparent_rgb_residue_pixels/);
+  assert.ok(nativePets.indexOf('$plans = @()') < nativePets.indexOf('New-Item -ItemType Junction'), 'native pets are linked before all packages pass preflight');
+  assert.doesNotMatch(prepareNativePets, /rmSync|unlinkSync|rmdirSync|\.rm\(|\.unlink\(/);
+  assert.match(prepareNativePets, /flag: 'wx'/);
   assert.match(stopCmd, /disable\.ps1/);
   assert.match(stopCmd, /-Portable/);
   assert.match(install, /install-chatgpt-hook\.ps1/);
   assert.match(hook, /ChatGPT-before-wukong-/);
   assert.match(hook, /Copy-Item -LiteralPath \$shortcutPath -Destination \$backupPath/);
   assert.match(hook, /launcher-bridges/);
+  assert.match(hook, /LOCALAPPDATA[^\r\n]*WukongCodexForge/);
+  assert.match(launch, /profileMode = 'native-default'/);
+  assert.match(launch, /GetFolderPath\('ApplicationData'\)[\s\S]*Codex\\web\\Codex/);
   assert.match(hook, /function Get-PortableSha256/);
   assert.doesNotMatch(hook, /Get-FileHash/);
   assert.match(hook, /-File `"\$bridgePath`"/);
@@ -59,13 +78,17 @@ test('managed lifecycle uses Codex embedded Node and no WebSocket dependency tre
   assert.doesNotMatch(read('package-lock.json'), /"node_modules\/ws"|"ws"\s*:/);
 });
 
-test('V10 watcher and disable path prove native restoration before reporting success', () => {
+test('V11 watcher and disable path prove native restoration before reporting success', () => {
   const watcher = read('runtime/watch.mjs');
+  const launch = read('scripts/launch.ps1');
   const disable = read('scripts/disable.ps1');
   const injector = read('runtime/injector.mjs');
 
-  assert.match(watcher, /__wukongCodexForgeRuntimeV10/);
-  assert.match(watcher, /emptyTargetPasses >= 8/);
+  assert.match(watcher, /__wukongCodexForgeRuntimeV11/);
+  assert.doesNotMatch(watcher, /emptyTargetPasses/);
+  assert.match(watcher, /rootIsAlive\(rootPid\)/);
+  assert.match(launch, /& \$node \$watcherPath \$port \$themePath \$disableRequest \$codexProcess\.Id/);
+  assert.match(launch, /Wait-ForManagedMainWindow -ManagedProcessId \$codexProcess\.Id/);
   assert.match(watcher, /states\.every\(isNativeThemeState\)/);
   assert.match(watcher, /\.confirmed\.json/);
   assert.match(disable, /Managed watcher did not acknowledge the restore request; native state was not claimed/);

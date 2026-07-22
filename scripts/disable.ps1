@@ -26,7 +26,11 @@ if (-not $package) { throw 'Official OpenAI.Codex Store package was not found.' 
 $node = Join-Path $package.InstallLocation 'app\resources\cua_node\bin\node.exe'
 if (-not (Test-Path -LiteralPath $node)) { throw 'The Node runtime bundled with OpenAI.Codex was not found.' }
 
-$profilePath = Join-Path $stateRoot 'profile'
+$profilePath = if ($Portable) {
+    Join-Path $stateRoot 'profile'
+} else {
+    [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'))
+}
 $activePortPath = Join-Path $profilePath 'DevToolsActivePort'
 $requestDirectory = Join-Path $stateRoot 'requests'
 $eventPath = Join-Path $stateRoot 'runtime-events.jsonl'
@@ -101,8 +105,22 @@ if ((Get-ManagedWatcherProcesses).Count -gt 0) {
     throw 'Managed watcher did not acknowledge the restore request; native state was not claimed.'
 }
 
+$deferredNative = $false
+foreach ($requestPath in $requests) {
+    $confirmationPath = "$requestPath.confirmed.json"
+    if (-not (Test-Path -LiteralPath $confirmationPath)) { continue }
+    try {
+        $confirmationRecord = Get-Content -LiteralPath $confirmationPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ([bool]$confirmationRecord.deferredNative -and [int]$confirmationRecord.targets -eq 0) {
+            $deferredNative = $true
+        }
+    } catch { }
+}
+
 $managedCodex = @(Get-CimInstance Win32_Process -Filter "Name='ChatGPT.exe'" -ErrorAction SilentlyContinue | Where-Object {
-    $_.CommandLine -and $_.CommandLine.IndexOf($profilePath, [StringComparison]::OrdinalIgnoreCase) -ge 0
+    if (-not $_.CommandLine -or $_.CommandLine -match '(?:^|\s)--type=') { return $false }
+    if ($Portable) { return $_.CommandLine.IndexOf($profilePath, [StringComparison]::OrdinalIgnoreCase) -ge 0 }
+    return $_.CommandLine -notmatch '(?:^|\s)--user-data-dir(?:=|\s)'
 })
 $port = $null
 if ($managedCodex.Count -gt 0) {
@@ -115,15 +133,17 @@ if ($managedCodex.Count -gt 0) {
         throw 'Managed Codex returned an invalid loopback theme channel port.'
     }
     $port = $parsedPort
-    Push-Location $appRoot
-    try {
-        & $node runtime/injector.mjs --restore $port
-        if ($LASTEXITCODE -ne 0) { throw 'Live native restoration failed.' }
-        & $node runtime/injector.mjs --assert-native $port
-        if ($LASTEXITCODE -ne 0) { throw 'Live native restoration could not be verified.' }
-    }
-    finally {
-        Pop-Location
+    if (-not $deferredNative) {
+        Push-Location $appRoot
+        try {
+            & $node runtime/injector.mjs --restore $port
+            if ($LASTEXITCODE -ne 0) { throw 'Live native restoration failed.' }
+            & $node runtime/injector.mjs --assert-native $port
+            if ($LASTEXITCODE -ne 0) { throw 'Live native restoration could not be verified.' }
+        }
+        finally {
+            Pop-Location
+        }
     }
 }
 
@@ -141,7 +161,11 @@ $disableEvent = [ordered]@{
 [IO.File]::AppendAllText($eventPath, $disableEvent + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 
 if ($managedCodex.Count -gt 0) {
-    Write-Host 'The managed Codex window was restored to verified native DOM state and left open.'
+    if ($deferredNative) {
+        Write-Host 'No renderer was visible; the watcher was removed, so the next Codex window will open with its native surface.'
+    } else {
+        Write-Host 'The managed Codex window was restored to verified native DOM state and left open.'
+    }
 } else {
     Write-Host 'No managed Codex window is running; future normal Codex launches remain native.'
 }

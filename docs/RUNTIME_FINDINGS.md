@@ -1,5 +1,28 @@
 # Codex 样式运行时调查
 
+> **2026-07-22 V11 当前结论。** 下方 V10、V9 调查作为历史保留。
+
+## V11 DOM 与视觉修正
+
+- 运行时探针统一升级为 V11；watcher 默认探针不再误留 V10，避免已注入页面被当作旧状态反复处理。
+- sidebar 标记提升到完整左侧面板；composer 只从编辑器自身的 `[data-thread-find-composer=true]` 向内选实体，不把旁边的搜索/假编辑器误标为输入器。
+- 环境信息卡优先按“环境信息 / Environment”标题寻找最小包含卡片，再标记真实标题与直接行；不再命中外层右侧宿主。
+- 取消全局 button 扫描，只主题化 topbar、任务栏、侧栏、composer 和环境卡中的已知按钮，避免把正文或插件按钮误染色。
+- 场景稳定键从 `pathname + document.title` 收敛为 `pathname + hash`，流式标题不再触发背景跳变。
+- 运行时页面只保留一个湘妃葫芦 motif；旧静态悟空/八戒层仅在升级/恢复路径中作为历史清理对象。两只角色交由 Codex 原生 Hatch Pet v2 包。
+
+## V11 fixture 证据
+
+`docs/screenshots/runtime-v11-fixture-v2-landing.png` 与 `runtime-v11-fixture-v2-thread.png` 来自同一套生产 DOM 形态 fixture。记录 JSON 表明 sidebar 275 px、composer 736×96、环境卡 300×213.296875、assistant 祖先透明无框、控制台错误为空。背景为单一固定 `cover` 层。
+
+## V11 原生宠物发现与实机证据
+
+- 只读提取的官方 26.715.2305.0 加载器先对 `%CODEX_HOME%\pets` 执行 `readdir(...,{withFileTypes:true})`，再只保留 `Dirent.isDirectory()`。因此整个宠物目录的 junction 虽可读取，仍会被列表过滤。
+- 同一加载器将 `spritesheetPath` 与宠物目录进行 `resolve/relative` 词法范围检查，再读取图集；目录内部的 `payload/spritesheet.webp` 可以通过检查并经 NTFS junction 解析到保留主题包。
+- V11 安装器据此使用顶层真目录、内部 payload junction 与派生 manifest。隔离证明、三次复用、早期直接副本保留式迁移、冲突 fail-closed 均由 `tests/native-pets-contract.test.mjs` 覆盖。
+- 当前调试实例端口 57508 的官方宠物页刷新后同时显示“小八戒”和“小悟空·厌火夜叉”；主窗口证据为 `live-codex-v11-native-pets-linked-payload-main-20260722.png`。两者均能进入官方 avatar overlay；实际 sprite computed style 为 `background-size:800% 1100%`，与 Hatch Pet v2 8×11 图集一致。
+- 真实 V11 主窗口为 2050×1106、sidebar 275 px、style 3,477,222 字符、68 个 landing 受管标记；`live-codex-v11-native-pets-initial-20260722.png.json` 同时证明背景、原生几何与 assistant 无框。宠物页截图有 24 个标记，因为设置页不含 composer 和环境卡。
+
 > **2026-07-21 V10 当前结论。** 下方 V9 调查继续保留为路线证据。
 
 ## 普通入口重启失效的根因与修复
@@ -30,6 +53,12 @@ V10 把完整逻辑写入按内容哈希命名的版本化桥接脚本，`.lnk` 
 ## 最终包 fresh-profile 实测
 
 静态打包测试不能替代一个从未出现过 `DevToolsActivePort` 的全新 profile。最终推荐包因此从唯一临时目录启动，取得根 PID 45072、端口 34661 和 watcher PID 46940；事件顺序为 `starting` 后约 3.9 秒进入 `watching`，重试期间 PowerShell stderr 文件保持 0 bytes。生产 renderer 回读 V10 active、128 个受管标记、独立 overlay 存在、三项安全位 true；2050 × 1106 真实截图仍保持 sidebar 275 px、composer 736 × 98、背景 cover 和三件独立伴随元素。该实例与旧诊断实例并存，没有结束任何进程。
+
+## 官方 Windows 生命周期补充
+
+只读抽取 26.715.2305.0 的 `.vite/build/bootstrap-*`、`main-*` 与 `window-all-closed-*` 后确认：Windows 的 `window-all-closed` handler 不调用 `app.quit()`；所有窗口关闭后主进程和托盘可以继续存在。二次实例由 `requestSingleInstanceLock` / `second-instance` 接收参数，进入 `queueSecondInstanceArgs`，主窗口管理器随后 restore/show/focus。审计副本位于被忽略且保留的 `.wukong-runtime/research/chatgpt-ui-26.715.2305.0-20260721-1841`，官方包零写入。
+
+因此 V10 不把“窗口不可见”伪报为“`ChatGPT.exe` 已退出”。watcher 连续 8 个 1.7 秒周期找不到 Codex renderer 后自行结束并释放启动 mutex；窗口仅被隐藏但 renderer 保留时，原 watcher 继续绑定。再次点击 ChatGPT 时，adapter 设置相同 `CODEX_ELECTRON_USER_DATA_PATH`，同时传相同 `--user-data-dir` 与官方 `codex://launch`，命中正确 profile 的 `second-instance`。实测 DOM visibility 在原生窗口隐藏时仍为 visible，因此成功条件改为受管根 PID 的 `MainWindowHandle`；首次 6 秒未复显会重试一次，仍失败明确返回非零。没有使用 `ShowWindowAsync`、`SetForegroundWindow`、`Stop-Process`、`taskkill`、IFEO、DLL 注入或 WindowsApps 修改。
 
 ## 结论
 

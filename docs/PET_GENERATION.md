@@ -1,5 +1,16 @@
 # V10 同行者生成谱系
 
+> **V11 现行路线。** 本文其余内容记录 V10 静态同行者素材的历史生成链，不代表当前安装包。V11 页面运行时不再加载静态悟空/八戒 WebP；两位角色改用 Hatch Pet v2，现行造型与验收锁定见 [PET_DESIGN.md](PET_DESIGN.md)，运行目录位于 `artifacts/native-pets/little-wukong-v4-yaksha-shenfeng/` 与 `artifacts/native-pets/little-bajie-v3-inart/`。所有被否决的基准和动画行继续保留，但不得进入 `pet.json`。
+
+## V11 最终生成账本
+
+| 宠物 | canonical / final | 发布文件 | 验证结果 |
+| --- | --- | --- | --- |
+| 小悟空·厌火夜叉 | `base-selected-b-transparent.png` → `spritesheet-extended-v7.webp` | `pets/little-wukong-yaksha-shenfeng/` | 1536×2288 RGBA、8×11、9 标准动作、16 方向、透明 RGB residue 0；atlas SHA-256 `018c3447368c23f963335710ca09086efd634b2826b2913a920f3960e3d77d87` |
+| 小八戒 | `base-c-friendly-transparent.png` → `spritesheet-extended-candidate-c-v1.webp` | `pets/little-bajie-v3-inart/` | 1536×2288 RGBA、8×11、9 标准动作、16 方向、16 look 帧恰好九齿、透明 RGB residue 0；atlas SHA-256 `511bc2b8ca7c197407ab8e3be194aaa5f2036428c05fdcb811400525005c2277` |
+
+Hatch Pet 第 7 行 `running` 按现行技能合同表达 active task work / processing / focused effort，而不是强制角色在画面中位移奔跑；最终复核已按该语义重新判定。每个包用 `package-proof.json` 绑定 exact versioned atlas、validation 与 QA run summary，拒绝任何未版本化旧图集。可提交的 canonical、contact sheet、16 向表、盲审合并结果和最终复核位于 `docs/pets/`；完整中间件继续只增不删地保留在 `artifacts/native-pets/`。
+
 本文件记录 0.9.0 活动小悟空与小八戒的生成输入、提示词、中间件和透明化参数。两张角色图是主题专用生成资产，不是 Game Science 模型导出或官方立绘。
 
 ## 小悟空

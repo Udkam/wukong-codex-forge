@@ -1,6 +1,6 @@
-Wukong Codex Forge 0.9.0 - portable use
+Wukong Codex Forge 0.10.0 - portable use
 
-CURRENT V10 INSTRUCTIONS
+CURRENT V11 INSTRUCTIONS
 
 1. Keep this extracted directory intact.
 2. Double-click start-theme.cmd once. It starts a themed Codex window and safely adapts the user's normal Start Menu ChatGPT shortcut.
@@ -8,7 +8,13 @@ CURRENT V10 INSTRUCTIONS
 4. Double-click stop-theme.cmd to restore the open themed renderer to native appearance. No file is deleted.
 5. If this extracted theme directory is absent, the retained short launch bridge dynamically starts the current official Store ChatGPT.exe in native mode.
 
-The adapter preserves every prior shortcut in append-only history before changing it. It does not modify ChatGPT.exe, app.asar, WindowsApps, signatures or Codex config.toml. It does not install a service or startup task, and its watcher exits with the managed ChatGPT.exe.
+V11 keeps the native Codex layout and wording, but replaces the shapes and materials of existing sidebar actions, the composer, the send control and the Environment card. It uses one full-window cover background with per-scene contrast and keeps assistant answers frameless. It adds no theme sidebar, footer, toggle, status panel, label or emoji.
+
+Little Wukong and Little Bajie are Codex v2 Hatch Pet packages, not static page overlays. Wukong uses the Destined One's Yaksha's Outrage Armor and the correct Beast Staff Shenfeng. Bajie follows the official INART 1/12 figure with a friendlier face and a complete nine-toothed rake. The page theme itself retains only the noninteractive Xiangfei gourd motif.
+
+The pet installer creates real discovery folders under the active Codex pets directory and a nested payload junction back into this retained theme package. This matches the official Dirent.isDirectory scanner, does not require Administrator or Developer Mode, and does not copy the animation atlases. If an older copied package is found, its original manifest and atlas are preserved before the manifest is migrated to the payload path. Removing this extracted source makes the payload unreadable on the next pet refresh; no ChatGPT application file is modified.
+
+The adapter preserves every prior shortcut in append-only history before changing it. It does not modify ChatGPT.exe, app.asar, WindowsApps, signatures or Codex config.toml. It does not install a service or startup task. The watcher exits after roughly 13.6 seconds without any Codex renderer. If Windows hides the window but retains its renderer in the tray process, the same watcher remains bound; launching ChatGPT again reopens that exact profile through the official launch route.
 It uses the Node runtime already bundled with the official Microsoft Store Codex package and a dependency-free loopback protocol client; no npm install is required.
 Runtime profile, requests and events stay under .wukong-runtime inside this extracted directory. Versioned shortcut backups and bridge scripts stay under %USERPROFILE%\.codex\themes\wukong-codex-forge\history so that no previous content is overwritten or deleted.
 

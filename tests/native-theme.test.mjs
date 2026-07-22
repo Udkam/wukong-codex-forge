@@ -13,26 +13,23 @@ const definition = loadThemeDefinition('themes/native-wukong.json');
 const activeThemePath = 'themes/active.json';
 const activeTheme = JSON.parse(fs.readFileSync(activeThemePath, 'utf8').replace(/^\uFEFF/, ''));
 
-test('V10 theme packages Xiangfei gourd and generated independent pets', () => {
-  const expectedMotifs = ['littleBajie', 'littleWukong', 'xiangfeiGourd'];
+test('V11 theme packages only the Xiangfei page motif; characters are native pets', () => {
+  const expectedMotifs = ['xiangfeiGourd'];
   assert.deepEqual(Object.keys(activeTheme.motifs).sort(), expectedMotifs);
 
   const motifFiles = Object.values(activeTheme.motifs);
-  assert.ok(motifFiles.every(asset => asset.endsWith('.webp')), 'V10 motifs must use compact alpha WebP assets');
+  assert.ok(motifFiles.every(asset => asset.endsWith('.webp')), 'V11 motifs must use compact alpha WebP assets');
   assert.equal(activeTheme.motifs.xiangfeiGourd, 'motifs/xiangfei-gourd-icon.webp');
-  assert.equal(activeTheme.motifs.littleWukong, 'motifs/pets/little-wukong-pet-v1.webp');
-  assert.equal(activeTheme.motifs.littleBajie, 'motifs/pets/little-bajie-pet-v1.webp');
-  assert.equal(activeTheme.companion.enabled, true, 'independent pet overlay must be enabled');
+  assert.equal(activeTheme.companion.enabled, true, 'Xiangfei page motif must be enabled');
   assert.ok(motifFiles.every(asset => fs.statSync(`themes/${asset}`).isFile()));
   const motifBytes = motifFiles.reduce((total, asset) => total + fs.statSync(`themes/${asset}`).size, 0);
-  assert.ok(motifBytes <= MAX_MOTIF_BYTES, `V10 motif payload exceeds ${MAX_MOTIF_BYTES} bytes`);
+  assert.ok(motifBytes <= MAX_MOTIF_BYTES, `V11 motif payload exceeds ${MAX_MOTIF_BYTES} bytes`);
 
   const payload = payloadFromThemeFile(activeThemePath);
   assert.deepEqual(Object.keys(payload.motifs).sort(), expectedMotifs);
   for (const motif of Object.values(payload.motifs)) assert.match(motif, /^data:image\/webp;base64,/);
   assert.match(payload.variables, /--forge-motif-xiangfei-gourd:url\(/);
-  assert.match(payload.variables, /--forge-motif-little-wukong:url\(/);
-  assert.match(payload.variables, /--forge-motif-little-bajie:url\(/);
+  assert.doesNotMatch(payload.variables, /--forge-motif-little-(?:wukong|bajie):/);
   assert.doesNotMatch(payload.variables, /forge-motif-(?:yaksha|fanged-cyan)/);
 
   const modes = activeTheme.background.gallery.map(scene => scene.mode);

@@ -1,5 +1,18 @@
 # 素材来源与发布边界
 
+## 0.10.0 / V11 原生 Hatch Pet 参考
+
+| 角色 / 装备 | 参考 | 使用边界 |
+| --- | --- | --- |
+| 小八戒 | [INART 官方授权《黑神话：悟空》Bajie 1/12](https://global.inart.studio/ja/products/bajie-twelfth-scale-figure)；只读研究副本位于 `artifacts/native-pets/little-bajie-v3-inart/references/` | 只用于核对灰棕猪脸、旧青衣、念珠、腰封、体态和九齿钉耙结构；官方宣传图不进入便携运行包，不宣称为本项目资产。 |
+| 小悟空 | 用户指定的游科官方天命人夜叉套 1/12 手办宣传图；[黑神话 BLACKMYTH 官方衍生品发布](https://www.weibo.com/7972761955/Q5qbwbjOC)将其列为“天命人·夜叉王厌火套 1/12 收藏手办”；只读研究副本 `artifacts/reference-library/official-yaksha-figure-1-12.jpg` | 只用于核对厌火面、灰袍、妖臂/魔足不对称与旧化材质；宣传图不进入便携运行包。 |
+| 厌火夜叉套 | `artifacts/reference-library/yanhuo-yaksha-set-wiki.png` | 只用于装备结构交叉核对，不直接贴入组件或宠物图集。 |
+| 兽棍·神锋 | `artifacts/reference-library/beast-staff-shenfeng-icon.png` | 只用于核对兽首、獠牙、旧金和青绿氧化端部；最终宠物武器不得退化为金箍棒、枪或普通棍。 |
+
+V11 最终角色图是基于上述视觉锚点生成并经 Hatch Pet 动画化的项目资产，不是 Game Science 或 INART 模型导出。被否决的基准、旧动画、色键中间件、透明帧与 QA 图全部保留在 `artifacts/native-pets/`，但只有通过 v2 验证与盲审的 `pet.json + spritesheet.webp` 才能进入运行包。页面样式层只发布湘妃葫芦 motif，不再打包静态悟空/八戒覆盖图。
+
+最终发布选择为小八戒 candidate C 和小悟空 v7；二者的可提交 visual proof 位于 `docs/pets/`。运行包只携带项目生成的宠物图集、manifest、验证 JSON 与来源哈希证明，不携带 INART/游科宣传参考图。
+
 ## 0.9.0 / V10 活动伴随元素
 
 | 文件 | 字节 | 来源、处理与用途 |

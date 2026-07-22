@@ -18,6 +18,8 @@ if ([string]$themePackage.name -ne 'wukong-codex-forge') {
 $managedTheme = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge'))
 if ($Portable) {
     $stateRoot = Join-Path $rootPath '.wukong-runtime'
+    $profilePath = Join-Path $stateRoot 'profile'
+    $profileMode = 'isolated-portable'
 } else {
     $managedRoot = [IO.Path]::GetFullPath((Join-Path $managedTheme 'app'))
     $managedReleases = [IO.Path]::GetFullPath((Join-Path $managedTheme 'releases'))
@@ -31,6 +33,8 @@ if ($Portable) {
         throw 'Managed release marker is missing.'
     }
     $stateRoot = $managedTheme
+    $profilePath = [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'))
+    $profileMode = 'native-default'
 }
 foreach ($required in @('runtime\watch.mjs', 'runtime\injector.mjs', 'themes\active.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $rootPath $required))) {
@@ -38,7 +42,7 @@ foreach ($required in @('runtime\watch.mjs', 'runtime\injector.mjs', 'themes\act
     }
 }
 
-foreach ($managedPath in @($rootPath, $stateRoot, (Join-Path $stateRoot 'profile'), (Join-Path $stateRoot 'requests'))) {
+foreach ($managedPath in @($rootPath, $stateRoot, $profilePath, (Join-Path $stateRoot 'requests'))) {
     if (Test-Path -LiteralPath $managedPath) {
         $item = Get-Item -LiteralPath $managedPath -Force
         if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
@@ -70,15 +74,26 @@ if (-not (Test-Path -LiteralPath $chatGpt)) { throw 'ChatGPT.exe was not found i
 $node = Join-Path $package.InstallLocation 'app\resources\cua_node\bin\node.exe'
 if (-not (Test-Path -LiteralPath $node)) { throw 'The Node runtime bundled with OpenAI.Codex was not found.' }
 
-$profilePath = Join-Path $stateRoot 'profile'
 $activePortPath = Join-Path $profilePath 'DevToolsActivePort'
-New-Item -ItemType Directory -Force -Path $profilePath | Out-Null
-$managedProcesses = @(Get-CimInstance Win32_Process -Filter "Name='ChatGPT.exe'" -ErrorAction SilentlyContinue | Where-Object {
-    $_.CommandLine -and
-    $_.CommandLine.IndexOf($profilePath, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and
-    $_.CommandLine -notmatch '(?:^|\s)--type='
+$injectorPath = Join-Path $rootPath 'runtime\injector.mjs'
+$watcherPath = Join-Path $rootPath 'runtime\watch.mjs'
+$themePath = Join-Path $rootPath 'themes\active.json'
+if ($Portable) { New-Item -ItemType Directory -Force -Path $profilePath | Out-Null }
+$profileRootProcesses = @(Get-CimInstance Win32_Process -Filter "Name='ChatGPT.exe'" -ErrorAction SilentlyContinue | Where-Object {
+    if (-not $_.CommandLine -or $_.CommandLine -match '(?:^|\s)--type=') { return $false }
+    if ($Portable) {
+        return $_.CommandLine.IndexOf($profilePath, [StringComparison]::OrdinalIgnoreCase) -ge 0
+    }
+    return $_.CommandLine -notmatch '(?:^|\s)--user-data-dir(?:=|\s)'
 })
-if ($managedProcesses.Count -gt 1) { throw 'Multiple managed Wukong Codex root processes were found; refusing an ambiguous attach.' }
+if ($profileRootProcesses.Count -gt 1) { throw 'Multiple ChatGPT root processes own the selected profile; refusing an ambiguous attach.' }
+$managedProcesses = @($profileRootProcesses | Where-Object {
+    $_.CommandLine -match '(?:^|\s)--remote-debugging-address=127\.0\.0\.1(?:\s|$)' -and
+    $_.CommandLine -match '(?:^|\s)--remote-debugging-port=0(?:\s|$)'
+})
+if ($profileRootProcesses.Count -eq 1 -and $managedProcesses.Count -eq 0) {
+    throw 'ChatGPT is already running without the managed loopback theme channel. Leave it open now; after one full app exit, the installed ChatGPT shortcut will start this same native profile with the theme.'
+}
 $reuseManagedProcess = $managedProcesses.Count -eq 1
 
 $sessionId = [Guid]::NewGuid().ToString('N')
@@ -95,39 +110,65 @@ function Write-RuntimeEvent([string]$value, [Nullable[int]]$port) {
         port = $port
         appPath = $rootPath
         profilePath = $profilePath
+        profileMode = $profileMode
+        rootPid = if ($codexProcess) { $codexProcess.Id } else { $null }
         disableRequest = $disableRequest
     } | ConvertTo-Json -Compress
     [IO.File]::AppendAllText($eventPath, $event + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
+}
+
+function Wait-ForManagedMainWindow([int]$ManagedProcessId, [int]$Seconds) {
+    $deadline = [DateTime]::UtcNow.AddSeconds($Seconds)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        $managedProcess = Get-Process -Id $ManagedProcessId -ErrorAction SilentlyContinue
+        if ($managedProcess -and $managedProcess.MainWindowHandle -ne 0) { return $true }
+        Start-Sleep -Milliseconds 250
+    }
+    return $false
 }
 
 $launchStartedAt = [DateTime]::UtcNow
 if ($reuseManagedProcess) {
     Write-RuntimeEvent 'reattaching' $null
     $codexProcess = Get-Process -Id $managedProcesses[0].ProcessId -ErrorAction Stop
-    $previousUserDataPath = $env:CODEX_ELECTRON_USER_DATA_PATH
-    try {
-        $env:CODEX_ELECTRON_USER_DATA_PATH = $profilePath
-        Start-Process -FilePath $chatGpt | Out-Null
-    }
-    finally {
-        if ($null -eq $previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', $null, 'Process') }
-        else { $env:CODEX_ELECTRON_USER_DATA_PATH = $previousUserDataPath }
+    if ($Portable) {
+        $previousUserDataPath = $env:CODEX_ELECTRON_USER_DATA_PATH
+        try {
+            $env:CODEX_ELECTRON_USER_DATA_PATH = $profilePath
+            Start-Process -FilePath $chatGpt -ArgumentList @(
+                "--user-data-dir=`"$profilePath`"",
+                'codex://launch'
+            ) | Out-Null
+        }
+        finally {
+            if ($null -eq $previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', $null, 'Process') }
+            else { $env:CODEX_ELECTRON_USER_DATA_PATH = $previousUserDataPath }
+        }
+    } else {
+        Start-Process -FilePath $chatGpt -ArgumentList 'codex://launch' | Out-Null
     }
 }
 else {
     Write-RuntimeEvent 'starting' $null
-    $previousUserDataPath = $env:CODEX_ELECTRON_USER_DATA_PATH
-    try {
-        $env:CODEX_ELECTRON_USER_DATA_PATH = $profilePath
+    if ($Portable) {
+        $previousUserDataPath = $env:CODEX_ELECTRON_USER_DATA_PATH
+        try {
+            $env:CODEX_ELECTRON_USER_DATA_PATH = $profilePath
+            $codexProcess = Start-Process -FilePath $chatGpt -ArgumentList @(
+                '--remote-debugging-address=127.0.0.1',
+                '--remote-debugging-port=0',
+                "--user-data-dir=`"$profilePath`""
+            ) -PassThru
+        }
+        finally {
+            if ($null -eq $previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', $null, 'Process') }
+            else { $env:CODEX_ELECTRON_USER_DATA_PATH = $previousUserDataPath }
+        }
+    } else {
         $codexProcess = Start-Process -FilePath $chatGpt -ArgumentList @(
             '--remote-debugging-address=127.0.0.1',
-            '--remote-debugging-port=0',
-            "--user-data-dir=`"$profilePath`""
+            '--remote-debugging-port=0'
         ) -PassThru
-    }
-    finally {
-        if ($null -eq $previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', $null, 'Process') }
-        else { $env:CODEX_ELECTRON_USER_DATA_PATH = $previousUserDataPath }
     }
 }
 
@@ -162,7 +203,7 @@ try {
             # During the expected readiness window, capture those records and
             # decide from the native exit code instead of terminating the script.
             $ErrorActionPreference = 'Continue'
-            $lastVerifyOutput = @(& $node runtime/injector.mjs --verify $port 2>&1)
+            $lastVerifyOutput = @(& $node $injectorPath --verify $port 2>&1)
             $verifyExitCode = $LASTEXITCODE
         }
         finally {
@@ -185,7 +226,7 @@ try {
         $priorErrorActionPreference = $ErrorActionPreference
         try {
             $ErrorActionPreference = 'Continue'
-            $lastApplyOutput = @(& $node runtime/injector.mjs --apply $port themes/active.json 2>&1)
+            $lastApplyOutput = @(& $node $injectorPath --apply $port $themePath 2>&1)
             $applyExitCode = $LASTEXITCODE
         }
         finally {
@@ -198,8 +239,17 @@ try {
         }
         Start-Sleep -Milliseconds 350
     }
+
+    # Chromium can report a visible document while the native Electron window
+    # is hidden in the tray. Accept only the main window of this managed root PID.
+    if (-not (Wait-ForManagedMainWindow -ManagedProcessId $codexProcess.Id -Seconds 9)) {
+        throw 'Timed out waiting for the managed Codex window to become visible.'
+    }
     Write-RuntimeEvent 'watching' $port
-    & $node runtime/watch.mjs $port themes/active.json $disableRequest
+    # Absolute runtime paths make the active package identity visible in the
+    # watcher command line, so the retained ChatGPT shortcut can distinguish
+    # this exact session without touching Electron or official package files.
+    & $node $watcherPath $port $themePath $disableRequest $codexProcess.Id
     if ($LASTEXITCODE -ne 0) { throw "Theme watcher exited with code $LASTEXITCODE." }
 }
 finally {
@@ -207,16 +257,26 @@ finally {
         if ($codexProcess.HasExited) {
             Write-RuntimeEvent 'disabled-on-exit' $null
         } else {
-            & $node runtime/injector.mjs --assert-native $port
-            if ($LASTEXITCODE -ne 0) {
-                Write-RuntimeEvent 'disable-failed' $port
-                throw 'Theme watcher stopped after a disable request, but native DOM state was not verified.'
+            $disableConfirmation = "$disableRequest.confirmed.json"
+            $deferredNative = $false
+            if (Test-Path -LiteralPath $disableConfirmation) {
+                try {
+                    $confirmationRecord = Get-Content -LiteralPath $disableConfirmation -Raw -Encoding UTF8 | ConvertFrom-Json
+                    $deferredNative = [bool]$confirmationRecord.deferredNative -and [int]$confirmationRecord.targets -eq 0
+                } catch { }
+            }
+            if (-not $deferredNative) {
+                & $node $injectorPath --assert-native $port
+                if ($LASTEXITCODE -ne 0) {
+                    Write-RuntimeEvent 'disable-failed' $port
+                    throw 'Theme watcher stopped after a disable request, but native DOM state was not verified.'
+                }
             }
             Write-RuntimeEvent 'disabled-confirmed' $port
         }
     } else {
         if (-not $codexProcess.HasExited) {
-            try { & $node runtime/injector.mjs --restore $port | Out-Null }
+            try { & $node $injectorPath --restore $port | Out-Null }
             catch { }
         }
         Write-RuntimeEvent 'not-running' $null

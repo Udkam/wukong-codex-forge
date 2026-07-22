@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const runtimeFiles = [
@@ -13,6 +14,7 @@ const runtimeFiles = [
   'shared/theme-model.mjs',
   'scripts/launch.ps1',
   'scripts/start.ps1',
+  'scripts/install-native-pets.ps1',
   'scripts/install-chatgpt-hook.ps1',
   'scripts/disable.ps1',
   'themes/active.json',
@@ -27,42 +29,99 @@ const runtimeFiles = [
   'remove-theme.cmd'
 ];
 
+const nativePetFiles = [
+  'pets/little-wukong-yaksha-shenfeng/pet.json',
+  'pets/little-wukong-yaksha-shenfeng/spritesheet.webp',
+  'pets/little-wukong-yaksha-shenfeng/validation.json',
+  'pets/little-wukong-yaksha-shenfeng/package-proof.json',
+  'pets/little-bajie-v3-inart/pet.json',
+  'pets/little-bajie-v3-inart/spritesheet.webp',
+  'pets/little-bajie-v3-inart/validation.json',
+  'pets/little-bajie-v3-inart/package-proof.json'
+];
+
 const inside = (parent, child) => {
   const relative = path.relative(parent, child);
   return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 };
 
+const assertNoLinkedExistingSegments = (candidate, label) => {
+  const resolved = path.resolve(candidate);
+  const parsed = path.parse(resolved);
+  let cursor = parsed.root;
+  for (const segment of resolved.slice(parsed.root.length).split(path.sep).filter(Boolean)) {
+    cursor = path.join(cursor, segment);
+    if (!fs.existsSync(cursor)) break;
+    if (fs.lstatSync(cursor).isSymbolicLink()) {
+      throw new Error(`${label} passes through a symbolic link or junction: ${cursor}`);
+    }
+  }
+};
+
 export function packageRuntime({ source, destination }) {
   const sourceRoot = path.resolve(source);
   const target = path.resolve(destination);
+  assertNoLinkedExistingSegments(sourceRoot, 'Runtime package source');
+  assertNoLinkedExistingSegments(target, 'Runtime package destination');
+  const sourceRootItem = fs.lstatSync(sourceRoot);
+  if (!sourceRootItem.isDirectory() || sourceRootItem.isSymbolicLink()) {
+    throw new Error('Runtime package source must be a direct directory.');
+  }
   if (sourceRoot === target || inside(sourceRoot, target) || inside(target, sourceRoot)) {
     throw new Error('Runtime package destination must be separate from the source repository.');
   }
-  if (fs.existsSync(target) && fs.readdirSync(target).length > 0) {
-    throw new Error('Runtime package destination must be empty.');
+  if (fs.existsSync(target)) {
+    throw new Error('Runtime package destination must not already exist.');
   }
 
   const activePath = path.join(sourceRoot, 'themes', 'active.json');
-  if (!fs.statSync(activePath).isFile()) throw new Error('Required active theme definition is missing.');
+  if (!fs.lstatSync(activePath).isFile()) throw new Error('Required active theme definition is missing.');
   const active = JSON.parse(fs.readFileSync(activePath, 'utf8'));
   const themeReferences = [
     active.background?.asset,
     ...(active.background?.gallery || []).map(item => item.asset),
     ...Object.values(active.motifs || {})
   ].filter(Boolean).map(file => `themes/${file}`);
-  const packageFiles = [...new Set([...runtimeFiles, ...themeReferences])];
-  const copyRelativeFile = relativeFile => {
+  const sourceRootReal = fs.realpathSync.native(sourceRoot);
+  const packageFiles = [...new Set([...runtimeFiles, ...nativePetFiles, ...themeReferences])];
+  const sources = packageFiles.map(relativeFile => {
     const normalized = path.normalize(relativeFile);
     const sourceFile = path.resolve(sourceRoot, normalized);
     if (!inside(sourceRoot, sourceFile)) throw new Error(`Theme file escapes the source root: ${relativeFile}`);
-    if (!fs.statSync(sourceFile).isFile()) throw new Error(`Required runtime file is missing: ${relativeFile}`);
-    const targetFile = path.resolve(target, normalized);
-    if (!inside(target, targetFile)) throw new Error(`Theme file escapes the package root: ${relativeFile}`);
+    assertNoLinkedExistingSegments(sourceFile, `Runtime source file ${relativeFile}`);
+    const sourceItem = fs.lstatSync(sourceFile);
+    if (!sourceItem.isFile() || sourceItem.isSymbolicLink()) throw new Error(`Required runtime file is missing or linked: ${relativeFile}`);
+    const sourceFileReal = fs.realpathSync.native(sourceFile);
+    if (!inside(sourceRootReal, sourceFileReal)) throw new Error(`Theme file resolves outside the source root: ${relativeFile}`);
+    return { relativeFile, normalized, sourceFile };
+  });
+
+  const targetParent = path.dirname(target);
+  assertNoLinkedExistingSegments(targetParent, 'Runtime package destination parent');
+  fs.mkdirSync(targetParent, { recursive: true });
+  assertNoLinkedExistingSegments(targetParent, 'Runtime package destination parent');
+  const stage = `${target}.stage-${process.pid}-${randomUUID()}`;
+  assertNoLinkedExistingSegments(stage, 'Runtime package staging destination');
+  fs.mkdirSync(stage, { recursive: false });
+  assertNoLinkedExistingSegments(stage, 'Runtime package staging destination');
+  const targetRootReal = fs.realpathSync.native(stage);
+  const copyRelativeFile = ({ relativeFile, normalized, sourceFile }) => {
+    const targetFile = path.resolve(stage, normalized);
+    if (!inside(stage, targetFile)) throw new Error(`Theme file escapes the package root: ${relativeFile}`);
     fs.mkdirSync(path.dirname(targetFile), { recursive: true });
+    const targetParentReal = fs.realpathSync.native(path.dirname(targetFile));
+    if (targetParentReal !== targetRootReal && !inside(targetRootReal, targetParentReal)) {
+      throw new Error(`Theme destination resolves outside the package root: ${relativeFile}`);
+    }
     fs.copyFileSync(sourceFile, targetFile);
   };
-  fs.mkdirSync(target, { recursive: true });
-  packageFiles.forEach(copyRelativeFile);
+  try {
+    sources.forEach(copyRelativeFile);
+    fs.renameSync(stage, target);
+  } catch (error) {
+    error.message = `${error.message} Incomplete append-only package state was retained at ${stage}.`;
+    throw error;
+  }
   return target;
 }
 

@@ -21,6 +21,7 @@ test('minimal managed package imports independently and omits development surfac
     'runtime/watch.mjs',
     'scripts/launch.ps1',
     'scripts/start.ps1',
+    'scripts/install-native-pets.ps1',
     'scripts/install-chatgpt-hook.ps1',
     'scripts/disable.ps1',
     'start-theme.cmd',
@@ -28,6 +29,14 @@ test('minimal managed package imports independently and omits development surfac
     'remove-theme.cmd',
     'PORTABLE-README.txt',
     'themes/active.json',
+    'pets/little-wukong-yaksha-shenfeng/pet.json',
+    'pets/little-wukong-yaksha-shenfeng/spritesheet.webp',
+    'pets/little-wukong-yaksha-shenfeng/validation.json',
+    'pets/little-wukong-yaksha-shenfeng/package-proof.json',
+    'pets/little-bajie-v3-inart/pet.json',
+    'pets/little-bajie-v3-inart/spritesheet.webp',
+    'pets/little-bajie-v3-inart/validation.json',
+    'pets/little-bajie-v3-inart/package-proof.json',
     ...sourceTheme.background.gallery.map(entry => `themes/${entry.asset}`),
     ...Object.values(sourceTheme.motifs).map(asset => `themes/${asset}`)
   ]) {
@@ -37,7 +46,7 @@ test('minimal managed package imports independently and omits development surfac
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client.mjs')), false, 'superseded ws bundle was packaged');
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client-node.mjs')), false, 'diagnostic ws bundle was packaged');
   const packagedManifest = JSON.parse(fs.readFileSync(path.join(target, 'package.json'), 'utf8'));
-  assert.equal(packagedManifest.version, '0.9.0');
+  assert.equal(packagedManifest.version, '0.10.0');
   assert.deepEqual(packagedManifest.dependencies, {});
   for (const rejected of [
     'themes/assets/erlang-meishan.jpg',
@@ -78,7 +87,7 @@ test('minimal managed package imports independently and omits development surfac
     'stone-buddhas',
     'sunset-ravine'
   ]);
-  assert.deepEqual(Object.keys(payload.motifs).sort(), ['littleBajie', 'littleWukong', 'xiangfeiGourd']);
+  assert.deepEqual(Object.keys(payload.motifs).sort(), ['xiangfeiGourd']);
   assert.match(payload.theme.name, /\S/);
   assert.match(payload.variables, /--forge-paper:#[0-9a-f]{6}/i);
   assert.match(payload.variables, /--forge-scene-count:11/);
@@ -90,11 +99,8 @@ test('minimal managed package imports independently and omits development surfac
   assert.match(payload.variables, /--forge-art-great-sage-staff:var\(--forge-bg-2\)/);
   assert.equal((payload.variables.match(/data:image\/jpeg;base64,/g) || []).length, 11, 'each gallery image must be embedded only once');
   assert.match(payload.variables, /--forge-motif-xiangfei-gourd:url\("data:image\/webp;base64,/);
-  assert.match(payload.variables, /--forge-motif-little-wukong:url\("data:image\/webp;base64,/);
-  assert.match(payload.variables, /--forge-motif-little-bajie:url\("data:image\/webp;base64,/);
+  assert.doesNotMatch(payload.variables, /--forge-motif-little-(?:wukong|bajie):/);
   assert.equal(payload.theme.motifs.xiangfeiGourd, 'motifs/xiangfei-gourd-icon.webp');
-  assert.equal(payload.theme.motifs.littleWukong, 'motifs/pets/little-wukong-pet-v1.webp');
-  assert.equal(payload.theme.motifs.littleBajie, 'motifs/pets/little-bajie-pet-v1.webp');
   assert.deepEqual(payload.assets.map(asset => asset.tone), payload.theme.background.gallery.map(scene => scene.tone));
   const client = await import(pathToFileURL(path.join(target, 'runtime', 'cdp-client.mjs')));
   assert.equal(typeof client.getTargets, 'function');

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { commandTimeoutMs, isCodexTarget } from '../runtime/cdp-client.mjs';
+import { browserIdentity, isProcessAlive, runWatcher } from '../runtime/watch.mjs';
 
 const read = file => fs.readFileSync(file, 'utf8');
 const publicScripts = {
@@ -11,7 +12,8 @@ const publicScripts = {
   launch: read('scripts/launch.ps1'),
   disable: read('scripts/disable.ps1'),
   hook: read('scripts/install-chatgpt-hook.ps1'),
-  start: read('scripts/start.ps1')
+  start: read('scripts/start.ps1'),
+  nativePets: read('scripts/install-native-pets.ps1')
 };
 
 const parsePowerShell = file => {
@@ -31,6 +33,7 @@ test('all public and retained legacy lifecycle scripts parse', () => {
     'scripts/install-preserving.ps1',
     'scripts/launch.ps1',
     'scripts/start.ps1',
+    'scripts/install-native-pets.ps1',
     'scripts/install-chatgpt-hook.ps1',
     'scripts/disable.ps1',
     'scripts/install.ps1',
@@ -86,6 +89,10 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.match(publicScripts.launch, /--remote-debugging-port=0/);
   assert.match(publicScripts.launch, /CODEX_ELECTRON_USER_DATA_PATH/);
   assert.match(publicScripts.launch, /\.wukong-runtime/);
+  assert.match(publicScripts.launch, /profileMode = 'native-default'/);
+  assert.match(publicScripts.launch, /GetFolderPath\('ApplicationData'\)[\s\S]*Codex\\web\\Codex/);
+  assert.match(publicScripts.launch, /if \(\$Portable\)[\s\S]*--user-data-dir=[\s\S]*else \{[\s\S]*--remote-debugging-port=0/);
+  assert.match(publicScripts.launch, /already running without the managed loopback theme channel/);
   assert.match(
     publicScripts.launch,
     /foreach \(\$managedPath in @\(\$rootPath, \$stateRoot,/,
@@ -100,10 +107,15 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.match(publicScripts.launch, /\$verifyExitCode = \$LASTEXITCODE/);
   assert.match(publicScripts.launch, /\$applyExitCode = \$LASTEXITCODE/);
   assert.match(publicScripts.launch, /\$ErrorActionPreference = \$priorErrorActionPreference/);
-  assert.match(publicScripts.launch, /runtime\/injector\.mjs --apply \$port themes\/active\.json/);
+  assert.match(publicScripts.launch, /\$injectorPath = Join-Path \$rootPath 'runtime\\injector\.mjs'/);
+  assert.match(publicScripts.launch, /\$watcherPath = Join-Path \$rootPath 'runtime\\watch\.mjs'/);
+  assert.match(publicScripts.launch, /\$themePath = Join-Path \$rootPath 'themes\\active\.json'/);
+  assert.match(publicScripts.launch, /& \$node \$injectorPath --apply \$port \$themePath/);
+  assert.match(publicScripts.launch, /& \$node \$watcherPath \$port \$themePath \$disableRequest \$codexProcess\.Id/);
+  assert.match(publicScripts.launch, /Wait-ForManagedMainWindow -ManagedProcessId \$codexProcess\.Id/);
   assert.match(publicScripts.launch, /if \(\$reuseManagedProcess\)[\s\S]*CODEX_ELECTRON_USER_DATA_PATH = \$profilePath[\s\S]*Start-Process -FilePath \$chatGpt/);
   assert.ok(
-    publicScripts.launch.indexOf('runtime/injector.mjs --apply $port themes/active.json') <
+    publicScripts.launch.indexOf('& $node $injectorPath --apply $port $themePath') <
       publicScripts.launch.indexOf("Write-RuntimeEvent 'watching'"),
     'launch records watching before the first renderer has verified the active theme'
   );
@@ -113,6 +125,10 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.match(publicScripts.hook, /Copy-Item -LiteralPath \$shortcutPath -Destination \$backupPath/);
   assert.match(publicScripts.hook, /CreateShortcut\(\$shortcutPath\)/);
   assert.match(publicScripts.hook, /launcher-bridges/);
+  assert.match(publicScripts.hook, /LOCALAPPDATA[^\r\n]*WukongCodexForge/);
+  assert.match(publicScripts.hook, /GetFolderPath\('ApplicationData'\)[\s\S]*Codex\\web\\Codex/);
+  assert.match(publicScripts.hook, /managedPredicate/);
+  assert.match(publicScripts.hook, /--user-data-dir\(\?:=\|\\s\)/);
   assert.match(publicScripts.hook, /chatgpt-entry-\$bridgeId\.ps1/);
   assert.match(publicScripts.hook, /WriteAllText\(\$bridgePath, \$bridgeScript/);
   assert.match(publicScripts.hook, /function Get-PortableSha256/);
@@ -124,13 +140,35 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.match(publicScripts.hook, /\$watching = @\(Get-CimInstance Win32_Process -Filter "Name='node\.exe'"/);
   assert.match(publicScripts.hook, /runtime\[\\\\\/\]watch\\\.mjs/);
   assert.match(publicScripts.hook, /\$managed\.Count -eq 1 -and `\$watching\.Count -ge 1/);
+  assert.match(publicScripts.hook, /codex:\/\/launch/);
+  assert.match(publicScripts.hook, /--user-data-dir=/);
+  assert.match(publicScripts.hook, /Wait-ForManagedMainWindow -ManagedProcessId `\$managed\[0\]\.ProcessId/);
+  assert.doesNotMatch(publicScripts.hook, /ShowWindowAsync|SetForegroundWindow|user32\.dll/i);
   assert.match(publicScripts.hook, /`\$env:CODEX_ELECTRON_USER_DATA_PATH = `\$profile/);
   assert.match(publicScripts.hook, /SetEnvironmentVariable\('CODEX_ELECTRON_USER_DATA_PATH', `\$null, 'Process'\)/);
   assert.match(publicScripts.hook, /Management\.Automation\.Language\.Parser\]::ParseInput\(\$bridgeScript/);
   assert.match(publicScripts.hook, /Generated ChatGPT launch bridge is invalid/);
   assert.match(publicScripts.hook, /Start-Process -FilePath `\$official/);
   assert.match(publicScripts.start, /install-chatgpt-hook\.ps1/);
+  assert.match(publicScripts.start, /install-native-pets\.ps1/);
   assert.match(publicScripts.start, /launch\.ps1/);
+  assert.match(publicScripts.nativePets, /New-Item -ItemType Junction/);
+  assert.match(publicScripts.nativePets, /spriteVersionNumber 2/);
+  assert.match(publicScripts.nativePets, /native-pet-links\.jsonl/);
+  assert.match(publicScripts.nativePets, /Get-WebpDimensions/);
+  assert.match(publicScripts.nativePets, /1536x2288/);
+  assert.match(publicScripts.nativePets, /validation\.json/);
+  assert.match(publicScripts.nativePets, /package-proof\.json/);
+  assert.match(publicScripts.nativePets, /transparent_rgb_residue_pixels/);
+  assert.match(publicScripts.nativePets, /Assert-NoReparseSegments/);
+  assert.ok(
+    publicScripts.nativePets.indexOf('$plans = @()') < publicScripts.nativePets.indexOf('New-Item -ItemType Junction'),
+    'native pet junction creation begins before package preflight finishes'
+  );
+  assert.doesNotMatch(publicScripts.nativePets, /Remove-Item|Move-Item|Copy-Item[^\r\n]*-Force/);
+  assert.match(publicScripts.nativePets, /payload\/spritesheet\.webp/);
+  assert.match(publicScripts.nativePets, /source-pet\.json/);
+  assert.doesNotMatch(publicScripts.nativePets, /Copy-Item[^\r\n]*spritesheet\.webp/);
 
   const packager = read('scripts/package-runtime.mjs');
   assert.doesNotMatch(packager, /node_modules/);
@@ -157,7 +195,7 @@ test('disable is fail-closed and records success only after native-state verific
     disable.indexOf('runtime/injector.mjs --assert-native $port') < disable.indexOf("state = 'disable-confirmed'"),
     'disable success is recorded before native state is verified'
   );
-  assert.match(launch, /runtime\/injector\.mjs --assert-native \$port/);
+  assert.match(launch, /\$injectorPath --assert-native \$port/);
   assert.match(launch, /Write-RuntimeEvent 'disable-failed'/);
   assert.match(injector, /--assert-native/);
   assert.match(injector, /states\.every\(isNativeThemeState\)/);
@@ -212,7 +250,100 @@ test('renderer refreshes are structural, throttled, and layout-loop free', () =>
   assert.doesNotMatch(runtime, /addEventListener\('input', scheduleRefresh/);
 
   const watcher = read('runtime/watch.mjs');
-  assert.match(watcher, /let emptyTargetPasses = 0/);
-  assert.match(watcher, /if \(!targets\.length\)[\s\S]*emptyTargetPasses >= 8/);
-  assert.match(watcher, /watcher stopped with the visible Codex lifecycle/);
+  assert.doesNotMatch(watcher, /emptyTargetPasses|targets\.length\s*>=?\s*8/);
+  assert.match(watcher, /if \(!rootAlive\)/);
+  assert.match(watcher, /rootIsAlive\(rootPid\)/);
+  assert.match(watcher, /WUKONG_BROWSER_IDENTITY_CHANGED/);
+  assert.match(watcher, /if \(!targets\.length\)[\s\S]*await pause\(intervalMs\)[\s\S]*continue/);
+});
+
+test('watcher survives an unlimited renderer-free tray interval and reapplies to the next page', async () => {
+  const target = { type: 'page', url: 'app://codex/index.html' };
+  let targetReads = 0;
+  let applyCount = 0;
+  let rootAlive = true;
+  let pauses = 0;
+  const result = await runWatcher({
+    port: 17777,
+    themePath: 'unused.json',
+    disableRequest: '',
+    rootPid: process.pid,
+    expression: 'APPLY',
+    intervalMs: 1,
+    dependencies: {
+      getBrowserVersion: async () => ({ Browser: 'Codex/test', webSocketDebuggerUrl: 'ws://127.0.0.1:17777/devtools/browser/stable' }),
+      getTargets: async () => (++targetReads <= 12 ? [] : [target]),
+      evaluateTarget: async (_target, expression) => {
+        if (expression === 'APPLY') {
+          applyCount += 1;
+          rootAlive = false;
+          return true;
+        }
+        return false;
+      },
+      isCodexTarget: () => true,
+      isProcessAlive: () => rootAlive,
+      sleep: async () => { pauses += 1; },
+      log: () => {}
+    }
+  });
+  assert.equal(pauses, 12);
+  assert.equal(applyCount, 1);
+  assert.equal(result.reason, 'root-exited');
+});
+
+test('watcher binds the loopback endpoint to one browser identity', async () => {
+  let versionReads = 0;
+  await assert.rejects(() => runWatcher({
+    port: 17778,
+    themePath: 'unused.json',
+    disableRequest: '',
+    rootPid: process.pid,
+    expression: 'APPLY',
+    intervalMs: 1,
+    dependencies: {
+      getBrowserVersion: async () => ({
+        Browser: 'Codex/test',
+        webSocketDebuggerUrl: `ws://127.0.0.1:17778/devtools/browser/${++versionReads}`
+      }),
+      getTargets: async () => [],
+      isProcessAlive: () => true,
+      sleep: async () => {},
+      log: () => {}
+    }
+  }), /different browser instance/);
+});
+
+test('watcher process and browser identity helpers reject ambiguous ownership', () => {
+  assert.equal(isProcessAlive(process.pid), true);
+  assert.match(
+    browserIdentity({ Browser: 'Codex/test', webSocketDebuggerUrl: 'ws://127.0.0.1:17779/devtools/browser/a' }),
+    /Codex\/test/
+  );
+  assert.throws(() => browserIdentity({ webSocketDebuggerUrl: 'ws://example.com/devtools/browser/a' }), /non-loopback/);
+});
+
+test('watcher can disable cleanly while the native window is closed to tray', async () => {
+  const runRoot = path.resolve('artifacts', 'test-runs', `watcher-disable-no-renderer-${process.pid}-${Date.now()}`);
+  fs.mkdirSync(runRoot, { recursive: true });
+  const request = path.join(runRoot, 'disable.request');
+  fs.writeFileSync(request, 'test request\n', { encoding: 'utf8', flag: 'wx' });
+  const result = await runWatcher({
+    port: 17780,
+    themePath: 'unused.json',
+    disableRequest: request,
+    rootPid: process.pid,
+    expression: 'APPLY',
+    intervalMs: 1,
+    dependencies: {
+      getBrowserVersion: async () => ({ Browser: 'Codex/test', webSocketDebuggerUrl: 'ws://127.0.0.1:17780/devtools/browser/stable' }),
+      getTargets: async () => [],
+      isProcessAlive: () => true,
+      log: () => {}
+    }
+  });
+  const confirmation = JSON.parse(fs.readFileSync(`${request}.confirmed.json`, 'utf8'));
+  assert.equal(result.reason, 'disabled-no-renderer');
+  assert.equal(confirmation.targets, 0);
+  assert.equal(confirmation.deferredNative, true);
 });

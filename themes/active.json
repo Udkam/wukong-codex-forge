@@ -20,7 +20,7 @@
     "landingIntensity": 0.84,
     "primarySceneCount": 3,
     "gallery": [
-      { "id": "erlang-ink-duel", "asset": "assets/erlang-ink-duel.jpg", "position": "center center", "mode": "battle-primary", "tone": "celestial-ink" },
+      { "id": "erlang-ink-duel", "asset": "assets/erlang-ink-duel.jpg", "position": "68% center", "mode": "battle-primary", "tone": "celestial-ink" },
       { "id": "great-sage", "asset": "assets/great-sage-return.jpg", "position": "right center", "mode": "battle-primary", "tone": "sage-sepia" },
       { "id": "great-sage-staff", "asset": "assets/great-sage-staff.jpg", "position": "center center", "mode": "battle-primary", "tone": "staff-gold" },
       { "id": "yaksha-king-rift", "asset": "assets/yaksha-king-rift.jpg", "position": "center center", "mode": "battle-secondary", "tone": "yaksha-lacquer" },
@@ -34,9 +34,7 @@
     ]
   },
   "motifs": {
-    "xiangfeiGourd": "motifs/xiangfei-gourd-icon.webp",
-    "littleWukong": "motifs/pets/little-wukong-pet-v1.webp",
-    "littleBajie": "motifs/pets/little-bajie-pet-v1.webp"
+    "xiangfeiGourd": "motifs/xiangfei-gourd-icon.webp"
   },
   "accessibility": {
     "preset": "workbench",

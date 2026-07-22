@@ -1,5 +1,7 @@
 # Codex 26.715.2305.0 原生 UI 基线
 
+> **V11 现行解释。** “原生复刻”锁定的是信息架构、槽位坐标与宽高、padding、文字、图标、事件和回答无框状态，不是锁死圆角。V11 允许在同一 DOMRect 内替换圆角、切角、边线、材质和空伪元素；不得借此扩张组件、覆盖文字或增加交互 UI。下文要求“圆角不变”的句子是 V9/V10 历史合同。
+
 ## 审计方式
 
 - 2026-07-21 只读检查本机 Microsoft Store 包：`C:\Program Files\WindowsApps\OpenAI.Codex_26.715.2305.0_x64__2p2nqsd0c76g0`。
@@ -28,6 +30,13 @@
 - 已进入对话：存在可见 conversation/virtualized turn/assistant 节点。
 - `data-vscode-context*="supportsNewChatMenu"` 两种页面都可能出现，不能单独作为状态依据。
 - 路由 pathname 不是稳定合同，本实现不依赖它判断战斗境或风景境。
+
+## Windows 应用生命周期
+
+- 官方 `window-all-closed-*` 在 Windows 分支不调用 `app.quit()`；关闭最后一个窗口后 `ChatGPT.exe` 可以为托盘继续驻留。
+- 官方 bootstrap 使用 `requestSingleInstanceLock`，后续启动进入 `second-instance` 并把参数排入 `queueSecondInstanceArgs`；main 的窗口管理器负责 restore/show/focus。
+- 隔离实例是否命中同一个 single-instance 通道取决于同一 `CODEX_ELECTRON_USER_DATA_PATH`。只有 `--user-data-dir` 参数不足以代表 Codex 自身选定的 profile。
+- 主题合同据此区分“没有 renderer”“窗口隐藏但 renderer 存活”和“进程退出”：第一种约 13.6 秒后停 watcher；第二种保留同一 watcher，并由同 profile 的官方 launch intent 复显；第三种在 CDP 断开后停 watcher。主题不强制结束任何进程。
 
 ## 视觉差分原则
 

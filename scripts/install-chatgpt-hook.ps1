@@ -37,9 +37,10 @@ if (-not (Test-Path -LiteralPath $chatGpt)) { throw 'Official ChatGPT.exe was no
 
 $programs = [Environment]::GetFolderPath('Programs')
 $shortcutPath = Join-Path $programs 'ChatGPT.lnk'
-$historyRoot = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge\history\shortcut-backups'))
-$bridgeRoot = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge\history\launcher-bridges'))
-$eventPath = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge\history\shortcut-hook-events.jsonl'))
+$adapterRoot = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'WukongCodexForge'))
+$historyRoot = Join-Path $adapterRoot 'shortcut-backups'
+$bridgeRoot = Join-Path $adapterRoot 'launcher-bridges'
+$eventPath = Join-Path $adapterRoot 'shortcut-hook-events.jsonl'
 New-Item -ItemType Directory -Force -Path $historyRoot | Out-Null
 New-Item -ItemType Directory -Force -Path $bridgeRoot | Out-Null
 
@@ -48,34 +49,62 @@ $portableSwitch = if ($Portable) { ' -Portable' } else { '' }
 $managedProfile = if ($Portable) {
     Join-Path $rootPath '.wukong-runtime\profile'
 } else {
-    Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge\profile'
+    [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'))
 }
 $escapedProfile = $managedProfile.Replace("'", "''")
+$portableLiteral = if ($Portable) { '$true' } else { '$false' }
+$managedPredicate = if ($Portable) {
+    "`$_.CommandLine.IndexOf(`$profile, [StringComparison]::OrdinalIgnoreCase) -ge 0"
+} else {
+    "`$_.CommandLine -notmatch '(?:^|\s)--user-data-dir(?:=|\s)'"
+}
 $bridgeScript = @"
 `$ErrorActionPreference = 'Stop'
 `$themeRoot = '$escapedRoot'
 `$launcher = Join-Path `$themeRoot 'scripts\launch.ps1'
 `$marker = Join-Path `$themeRoot 'package.json'
 `$profile = '$escapedProfile'
+`$portable = $portableLiteral
 `$package = Get-AppxPackage -Name 'OpenAI.Codex' | Select-Object -First 1
 `$official = if (`$package) { Join-Path `$package.InstallLocation 'app\ChatGPT.exe' } else { `$null }
+function Invoke-OfficialManagedActivation {
+    if (`$portable) {
+        `$previousUserDataPath = `$env:CODEX_ELECTRON_USER_DATA_PATH
+        try {
+            `$env:CODEX_ELECTRON_USER_DATA_PATH = `$profile
+            Start-Process -FilePath `$official -ArgumentList @("--user-data-dir=```"`$profile```"", 'codex://launch') | Out-Null
+        }
+        finally {
+            if (`$null -eq `$previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', `$null, 'Process') }
+            else { `$env:CODEX_ELECTRON_USER_DATA_PATH = `$previousUserDataPath }
+        }
+    } else {
+        Start-Process -FilePath `$official -ArgumentList 'codex://launch' | Out-Null
+    }
+}
+function Wait-ForManagedMainWindow([int]`$ManagedProcessId, [int]`$Seconds) {
+    `$deadline = [DateTime]::UtcNow.AddSeconds(`$Seconds)
+    while ([DateTime]::UtcNow -lt `$deadline) {
+        `$managedProcess = Get-Process -Id `$ManagedProcessId -ErrorAction SilentlyContinue
+        if (`$managedProcess -and `$managedProcess.MainWindowHandle -ne 0) { return `$true }
+        Start-Sleep -Milliseconds 250
+    }
+    return `$false
+}
 `$managed = @(Get-CimInstance Win32_Process -Filter "Name='ChatGPT.exe'" -ErrorAction SilentlyContinue | Where-Object {
-    `$_.CommandLine -and `$_.CommandLine.IndexOf(`$profile, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and `$_.CommandLine -notmatch '(?:^|\s)--type='
+    `$_.CommandLine -and
+    `$_.CommandLine -notmatch '(?:^|\s)--type=' -and
+    $managedPredicate
 })
 `$watching = @(Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue | Where-Object {
     `$_.CommandLine -and `$_.CommandLine.IndexOf(`$themeRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and `$_.CommandLine -match 'runtime[\\/]watch\.mjs'
 })
 if (`$managed.Count -eq 1 -and `$watching.Count -ge 1 -and `$official -and (Test-Path -LiteralPath `$official)) {
-    `$previousUserDataPath = `$env:CODEX_ELECTRON_USER_DATA_PATH
-    try {
-        `$env:CODEX_ELECTRON_USER_DATA_PATH = `$profile
-        Start-Process -FilePath `$official | Out-Null
-    }
-    finally {
-        if (`$null -eq `$previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', `$null, 'Process') }
-        else { `$env:CODEX_ELECTRON_USER_DATA_PATH = `$previousUserDataPath }
-    }
-    exit 0
+    Invoke-OfficialManagedActivation
+    if (Wait-ForManagedMainWindow -ManagedProcessId `$managed[0].ProcessId -Seconds 6) { exit 0 }
+    Invoke-OfficialManagedActivation
+    if (Wait-ForManagedMainWindow -ManagedProcessId `$managed[0].ProcessId -Seconds 6) { exit 0 }
+    exit 4
 }
 if ((Test-Path -LiteralPath `$launcher) -and (Test-Path -LiteralPath `$marker)) {
     try {
@@ -84,9 +113,14 @@ if ((Test-Path -LiteralPath `$launcher) -and (Test-Path -LiteralPath `$marker)) 
     }
     catch {
         `$managed = @(Get-CimInstance Win32_Process -Filter "Name='ChatGPT.exe'" -ErrorAction SilentlyContinue | Where-Object {
-            `$_.CommandLine -and `$_.CommandLine.IndexOf(`$profile, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and `$_.CommandLine -notmatch '(?:^|\s)--type='
+            `$_.CommandLine -and
+            `$_.CommandLine -notmatch '(?:^|\s)--type=' -and
+            $managedPredicate
         })
-        if (`$managed.Count -gt 0) { exit 1 }
+        if (`$managed.Count -gt 0 -and `$official -and (Test-Path -LiteralPath `$official)) {
+            Invoke-OfficialManagedActivation
+            exit 1
+        }
     }
 }
 if (-not `$package) { exit 2 }

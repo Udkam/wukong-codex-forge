@@ -3,11 +3,12 @@ import path from 'node:path';
 import process from 'node:process';
 import { getBrowserVersion, getTargets, commandTarget, evaluateTarget, isCodexTarget } from './cdp-client.mjs';
 
-const [,, portRaw, providedOutput] = process.argv;
+const [,, portRaw, providedOutput, targetKind = 'main'] = process.argv;
 const port = Number(portRaw);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) {
-  throw new Error('Use capture-live.mjs <loopback-port> [output.png].');
+  throw new Error('Use capture-live.mjs <loopback-port> [output.png] [main|overlay].');
 }
+if (!['main', 'overlay'].includes(targetKind)) throw new Error('Capture target must be main or overlay.');
 const root = path.resolve(process.cwd());
 const output = path.resolve(providedOutput || 'docs/logs/live-codex-theme.png');
 const relative = path.relative(root, output);
@@ -17,7 +18,12 @@ if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
 
 await getBrowserVersion(port);
 const targets = (await getTargets(port)).filter(isCodexTarget);
-const target = targets.find(item => /^app:\/\/codex\//.test(item.url || '')) || targets[0];
+const target = targetKind === 'overlay'
+  ? targets.find(item => /[?&]initialRoute=%2Favatar-overlay(?:&|$)/i.test(item.url || ''))
+  : targets.find(item => /^app:\/\/codex\//.test(item.url || '')) ||
+    targets.find(item => item.url === 'app://-/index.html') ||
+    targets.find(item => !/[?&]initialRoute=%2Favatar-overlay(?:&|$)/i.test(item.url || '')) ||
+    targets[0];
 if (!target) throw new Error('No Codex renderer target was found.');
 // Retained diagnostic call: await commandTarget(target, 'Page.enable');
 // Electron's app:// renderer can leave Page.enable unanswered; captureScreenshot works directly.
@@ -36,9 +42,7 @@ const summary = await evaluateTarget(target, `(() => ({
   surface: document.documentElement.dataset.forgeSurface || null,
   mode: document.documentElement.dataset.forgeMode || null,
   scene: document.documentElement.dataset.forgeScene || null,
-  companions: {
-    wukongSafe: document.documentElement.dataset.forgeWukongSafe || null,
-    bajieSafe: document.documentElement.dataset.forgeBajieSafe || null,
+  motifs: {
     gourdSafe: document.documentElement.dataset.forgeGourdSafe || null
   },
   stylePresent: Boolean(document.getElementById('wukong-forge-style')),
