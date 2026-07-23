@@ -1,6 +1,63 @@
 # 大圣归来 · 潇湘双境 — 设计与实现
 
-> **0.11.0 / V12 现行设计。** V11 及更早章节保留为演变记录；冲突处以本节为准。
+> **0.12.3 / V13.3 现行设计。** V13.2 及更早章节保留为演变记录；冲突处以 `CURRENT_GOAL.md` 和本节为准。
+
+## V13.3：原生背景状态机、资源硬预算与首帧可靠的新建页
+
+V13.1 的活动范围只有全窗背景与用户明确授权的新建页题字/图案，不恢复任何旧 sidebar、composer、环境卡、消息、按钮或滚动条样式。页面增加一个 `aria-hidden`、`inert`、`pointer-events:none` 的 `#wukong-forge-background`；覆盖层仍有两个 image/veil layer，画面 `cover` 全窗，战斗池为索引 0–5，风景池为索引 6–10。
+
+### 官方 UI 源锚点与完整覆盖
+
+只读检查 `OpenAI.Codex_26.715.2305.0` 的 `app.asar` 后，V13.1 不再通过猜测祖先来清透明度。官方 `app-shell-CHGA5kyS.js` 创建 `<main class="main-surface">`，官方 CSS 为它绘制 `--color-token-main-surface-primary`；这正是用户截图中只剩侧栏可见背景的黑块。活动 CSS 直接命中 `main.main-surface` 与 `[data-app-shell-main-content-top-fade]`，只把 `background-color/background-image` 清空，圆角、阴影、overflow、尺寸与事件全部继续由 Codex 管理。
+
+新建页使用官方 `app-main-B98AP2a1.js` 的两个稳定节点：`[data-testid="home-icon"]` 是 56×56 原图标位，`[data-feature="game-source"]` 是原 headline 位。图案原位绘制两端带赤金箍纹的金箍棒与三道墨尾，题字原位显示“此去，欲破何局？”。实现只用伪元素：原始文字节点、原始 SVG、原生 hover 容器和 DOMRect 均保留，停用时还原 aria 与所有标记。官方 headline 内的项目选择按钮自带点状下划线；主题激活时只把这条原生装饰透明化，避免它穿过替换题字，停用后由移除样式完整恢复。完整只读证据见 `artifacts/asar-ui-audit-20260724T0225/AUDIT.md`。
+
+官方 hero 通过 280 ms opacity 动画进入。V13.3 以“有布局但尚未绘制”作为稳定节点判据，并把 `game-source`、`home-icon` 与新建任务容器加入结构监听；另有 120/420 ms 两次 renderer 内启动探测作为有界兜底，之后页面不轮询。题字与图案的 CSS 锚点改为主题自有 `data-forge-title-copy` / `data-forge-mark`，不再依赖 React 后续 commit 可能覆写的 `className`。因此首次启动、路由切换、延迟挂载和动画后 class 回写都不再依赖窗口缩放。
+
+V13 重写了切换状态机：
+
+1. 读取 session 游标时把负数、字符串和越界状态归一到 `-1`，随后在各自池内安全推进。
+2. landing 优先于旧 thread 证据；祖先链上的 `hidden`、`aria-hidden`、`inert`、`display:none`、`visibility:hidden` 或 `opacity≤.01` 都会使旧 turn 失效。
+3. 普通侧栏按钮不再触发换图；只有真实新任务、路由/历史变化、任务树导航或 composer 提交安排有限次复核。
+4. 非首帧先通过 `Image` 加载并尝试 `decode()`；成功后才翻转双层 opacity。切换进行中只保留最后一个待提交场景，避免快速导航造成黑帧。
+5. 覆盖层缺失或层数不为 2 时原位重建；watcher 探针同时检查 style、runtime、两层、活动层和非空活动图。
+6. ResizeObserver 只在 workspace 身份变化时重绑，不在每次 refresh 中断开再观察；稳定页面必须达到 refresh quiescence。
+7. 杨戬白场使用更高 specificity 的 veil，避免被后置主题变量覆盖；forced-colors 下背景隐藏并恢复系统 `Canvas`。
+
+### V13.3 资源硬预算
+
+活动图库的 11 张图片压缩共 2.45 MiB，但全部展开为 RGBA 约 84.76 MiB。旧实现首次 `refresh()` 会主动创建 11 个 `Image` 并解码全部背景；两个全屏层在淡变后仍保留上一张图片，且永久使用 `will-change`、滤镜和轻微缩放。这些成本会在反复调试重注入时叠加。
+
+V13.2–V13.3 改为：
+
+1. 首屏直接使用当前 CSS 背景，不额外构造预载 `Image`。
+2. 只有真实场景切换才解码目标一张；任意时刻最多一个请求，新请求先取消旧请求。
+3. 成功、失败、超时、请求替换和 runtime dispose 共用同一清理路径：清 timeout、事件处理器、`src` 和 in-flight 记录。
+4. 图层行内只保存短 `var(--forge-bg-N)`，不再复制完整 base64 URL。
+5. 过渡结束立即把退场层的图片、veil、位置、亮度与场景数据清空；稳态只有一张图片。
+6. `will-change: opacity` 只在 `data-forge-transitioning=true` 的 820 ms 过渡内存在；全屏 `filter` 与 `scale(1.001)` 被移除，色调只由廉价 veil 完成。
+
+资源合同的理论上限是稳态约 7.91–10.19 MiB RGBA，过渡期约 15.82–20.38 MiB；不做相邻场景或跨模式预取。
+
+V13.3 在真实 Codex renderer 稳态采样时为 `loadedLayers=1`、`preloadInFlight=0`、`transitioning=false`，V8 heap 使用约 126.3 MiB。另一个完整调试 Codex 实例会带起 48 个进程，稳定工作集约 2.93 GiB；这不是单张主题背景的占用，却会直接造成双窗口卡顿。因此开发期常态只保留控制窗口：调试实例仅在实机截图与指标采集期间临时启动，完成后立即关闭，并独立核验其 watcher、子进程与专用端口均已释放。
+
+### V8 composer 预览边界
+
+V7 因 footer 分隔线、透明可读性和控件遮挡被整体否决。V8 的“残卷墨界 / 石印绳契 / 丹炉铜契”只在 `docs/design/composer-options/v8-black-myth-silhouette-study-20260723/` 审稿：宿主仍为原生 `736×96`，装饰限制在 0–7 px 与 89–96 px 的安全边缘，placeholder、plus、权限、模型、麦克风和发送键保持原位。用户未选择前，V13 runtime 和最小包不加载 V8 CSS。
+
+### 开发期启动适配器（非最终交付）
+
+现有稳定安装仍把最小包写入新的 `releases/<版本-时间>/app` 并保留 hash bridge，供临时调试实例回归。调试窗口不能在截图或指标采集后继续保留；关闭后必须核验 launcher、watcher、子进程和专用端口均已释放。`capture-live-playwright.mjs` 的普通模式只连接、截图而不擅自关闭任意窗口；只有显式提供临时 root PID、launcher PID、disable request 且 CDP browser PID 匹配时，`--close-debug-after-capture true` 才会先等待原生恢复，再关闭该一次性 browser，并验证 root、owner 与端口释放。该入口是开发期工具，不再宣称为“下载即用”的最终启动集成。按用户要求，最终随 Codex 启动而启动、随 Codex 关闭而关闭的宿主级方案必须等全部背景、新建页、composer 和 Hatch Pet 视觉工作完成后再单独设计与验证，且不能只依赖 PowerShell。
+
+开发期 watcher 当前仍每 1700 ms 检查一次 loopback renderer，并在目标新建或主题状态缺失时重应用；真实采样中它的工作集约 51.8 MiB，launcher 约 115.1 MiB。这是临时审计链的已知成本，不与“renderer 页面没有常驻布局/动画轮询”混为一谈，也不满足最终最小资源启动合同。最终宿主方案必须消除 PowerShell launcher 与低频 CDP 轮询，而不是仅调整间隔后宣称完成。
+
+该适配器只覆盖这两个经过验证的入口；Store AppX、AUMID、协议或第三方固定项可绕过它。已经运行且没有远程调试端口的普通 Codex renderer 不能被文件复制热附加，安装器因此不关闭或伪装修改当前控制窗口；V13 在下一次从受管入口启动时生效。
+
+### 新录制的动作证据边界
+
+`Replay 2026-07-24 00-30-17.mkv` 是用户为小天命人补录的动作参考。跑动可以提取步频、支撑脚、躯干起伏和持棍惯性；棍花只有背面视角，只能证明背部剪影、重心转移、脚步与棍路连续性。它不能单独证明正面握法、脸部、厌火套正面细节或被身体遮挡的神锋棍段。动作审计可以追加逐帧证据，但在完整基础角色通过前不得生成或写入 canonical atlas。
+
+> **0.11.0 / V12 历史设计。** 以下章节继续保留；冲突处以 V13 为准。
 
 ## V12：背景正式化，组件先审后装
 

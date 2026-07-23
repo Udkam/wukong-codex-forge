@@ -44,12 +44,14 @@ if (-not (Test-Path -LiteralPath $chatGpt)) { throw 'Official ChatGPT.exe was no
 
 $programs = [Environment]::GetFolderPath('Programs')
 $shortcutPath = Join-Path $programs 'ChatGPT.lnk'
+$themeShortcutPath = Join-Path $programs 'ChatGPT - Wukong Theme.lnk'
 $adapterRoot = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'WukongCodexForge'))
 $historyRoot = Join-Path $adapterRoot 'shortcut-backups'
 $bridgeRoot = Join-Path $adapterRoot 'launcher-bridges'
 $eventPath = Join-Path $adapterRoot 'shortcut-hook-events.jsonl'
 Assert-DirectManagedPath -Path $programs -Label 'Start Menu Programs directory'
 Assert-DirectManagedPath -Path $shortcutPath -Label 'ChatGPT Start Menu shortcut'
+Assert-DirectManagedPath -Path $themeShortcutPath -Label 'explicit Wukong Start Menu shortcut'
 Assert-DirectManagedPath -Path $adapterRoot -Label 'launch adapter root'
 Assert-DirectManagedPath -Path $historyRoot -Label 'shortcut backup directory'
 Assert-DirectManagedPath -Path $bridgeRoot -Label 'launcher bridge directory'
@@ -177,46 +179,69 @@ if ($expectedArguments.Length -ge 900) {
 }
 
 $shell = New-Object -ComObject WScript.Shell
-$alreadyCurrent = $false
-if (Test-Path -LiteralPath $shortcutPath) {
-    $current = $shell.CreateShortcut($shortcutPath)
-    $alreadyCurrent = (
+function Test-ShortcutCurrent([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path)) { return $false }
+    $current = $shell.CreateShortcut($Path)
+    return (
         [string]::Equals([IO.Path]::GetFullPath($current.TargetPath), [IO.Path]::GetFullPath($expectedTarget), [StringComparison]::OrdinalIgnoreCase) -and
         [string]::Equals($current.Arguments, $expectedArguments, [StringComparison]::Ordinal)
     )
 }
 
-$backupPath = $null
-if (-not $alreadyCurrent) {
-    if (Test-Path -LiteralPath $shortcutPath) {
-        $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss-fffffff')
-        $backupPath = Join-Path $historyRoot "ChatGPT-before-wukong-$stamp.lnk"
-        Copy-Item -LiteralPath $shortcutPath -Destination $backupPath
+function Install-PreservedShortcut([string]$Path, [string]$BackupPrefix, [string]$Description) {
+    $alreadyCurrent = Test-ShortcutCurrent -Path $Path
+    $backupPath = $null
+    if (-not $alreadyCurrent) {
+        if (Test-Path -LiteralPath $Path) {
+            $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss-fffffff')
+            $backupPath = Join-Path $historyRoot "$BackupPrefix-$stamp.lnk"
+            Copy-Item -LiteralPath $Path -Destination $backupPath
+        }
+        $shortcut = $shell.CreateShortcut($Path)
+        $shortcut.TargetPath = $expectedTarget
+        $shortcut.Arguments = $expectedArguments
+        $shortcut.WorkingDirectory = $env:USERPROFILE
+        $shortcut.IconLocation = "$chatGpt,0"
+        $shortcut.Description = $Description
+        $shortcut.WindowStyle = 7
+        $shortcut.Save()
     }
-    $shortcut = $shell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = $expectedTarget
-    $shortcut.Arguments = $expectedArguments
-    $shortcut.WorkingDirectory = $env:USERPROFILE
-    $shortcut.IconLocation = "$chatGpt,0"
-    $shortcut.Description = 'ChatGPT - Wukong Codex Forge launch adapter'
-    $shortcut.WindowStyle = 7
-    $shortcut.Save()
+    return [pscustomobject]@{
+        changed = -not $alreadyCurrent
+        backup = $backupPath
+    }
 }
+
+$defaultShortcut = Install-PreservedShortcut `
+    -Path $shortcutPath `
+    -BackupPrefix 'ChatGPT-before-wukong' `
+    -Description 'ChatGPT - Wukong Codex Forge launch adapter'
+$explicitShortcut = Install-PreservedShortcut `
+    -Path $themeShortcutPath `
+    -BackupPrefix 'ChatGPT-Wukong-Theme-before-current' `
+    -Description 'ChatGPT - Wukong Theme (current retained release)'
 
 $event = [ordered]@{
     at = (Get-Date).ToString('o')
     managedBy = 'WukongCodexForgeLaunchAdapter'
     shortcutPath = $shortcutPath
+    themeShortcutPath = $themeShortcutPath
     themeRoot = $rootPath
     portable = [bool]$Portable
     bridgePath = $bridgePath
     bridgeHash = Get-PortableSha256 $bridgePath
     shortcutArgumentsLength = $expectedArguments.Length
-    changed = -not $alreadyCurrent
-    preservedBackup = $backupPath
+    changed = [bool]($defaultShortcut.changed -or $explicitShortcut.changed)
+    defaultShortcutChanged = [bool]$defaultShortcut.changed
+    explicitShortcutChanged = [bool]$explicitShortcut.changed
+    preservedBackup = $defaultShortcut.backup
+    preservedExplicitBackup = $explicitShortcut.backup
     shortcutHash = Get-PortableSha256 $shortcutPath
+    themeShortcutHash = Get-PortableSha256 $themeShortcutPath
 } | ConvertTo-Json -Compress
 [IO.File]::AppendAllText($eventPath, $event + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 
 Write-Host "ChatGPT launch adapter is active at $shortcutPath"
-if ($backupPath) { Write-Host "The prior shortcut was preserved at $backupPath" }
+Write-Host "The unambiguous themed entry is active at $themeShortcutPath"
+if ($defaultShortcut.backup) { Write-Host "The prior shortcut was preserved at $($defaultShortcut.backup)" }
+if ($explicitShortcut.backup) { Write-Host "The prior themed entry was preserved at $($explicitShortcut.backup)" }

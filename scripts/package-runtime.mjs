@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url';
 const runtimeFiles = [
   'runtime/cdp-client.mjs',
   'runtime/forge-runtime.mjs',
-  'runtime/forge-background-v12.css',
-  'runtime/injection-plan-v12.mjs',
+  'runtime/forge-background-v13.css',
+  'runtime/injection-plan-v13.mjs',
   'runtime/injector.mjs',
   'runtime/watch.mjs',
   'shared/theme-model.mjs',
@@ -16,6 +16,7 @@ const runtimeFiles = [
   'scripts/start.ps1',
   'scripts/install-native-pets.ps1',
   'scripts/install-chatgpt-hook.ps1',
+  'scripts/verify-launch-adapter.ps1',
   'scripts/disable.ps1',
   'themes/active.json',
   'themes/ink-mountain.json',

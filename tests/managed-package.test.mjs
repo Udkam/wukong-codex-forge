@@ -17,13 +17,14 @@ test('minimal managed package imports independently and omits development surfac
     assert.equal(fs.existsSync(path.join(target, omitted)), false, `development-only path copied: ${omitted}`);
   }
   for (const required of [
-    'runtime/forge-background-v12.css',
-    'runtime/injection-plan-v12.mjs',
+    'runtime/forge-background-v13.css',
+    'runtime/injection-plan-v13.mjs',
     'runtime/watch.mjs',
     'scripts/launch.ps1',
     'scripts/start.ps1',
     'scripts/install-native-pets.ps1',
     'scripts/install-chatgpt-hook.ps1',
+    'scripts/verify-launch-adapter.ps1',
     'scripts/disable.ps1',
     'start-theme.cmd',
     'stop-theme.cmd',
@@ -51,7 +52,7 @@ test('minimal managed package imports independently and omits development surfac
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client.mjs')), false, 'superseded ws bundle was packaged');
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client-node.mjs')), false, 'diagnostic ws bundle was packaged');
   const packagedManifest = JSON.parse(fs.readFileSync(path.join(target, 'package.json'), 'utf8'));
-  assert.equal(packagedManifest.version, '0.11.0');
+  assert.equal(packagedManifest.version, '0.12.3');
   assert.deepEqual(packagedManifest.dependencies, {});
   for (const rejected of [
     'themes/assets/erlang-meishan.jpg',

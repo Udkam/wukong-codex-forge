@@ -1,5 +1,53 @@
 # Local work log
 
+## 2026-07-24 — V13.3 新建任务首帧修复与调试窗口即时回收
+
+- 用户实机发现：首次启动只有背景，缩放窗口后题字和图案才出现；项目选择按钮的原生点状下划线会穿过替换题字；缺口金箍图案视觉不合格。
+- 根因来自官方 hero 的 280 ms opacity 入场与延迟挂载。运行时现按布局识别淡入中的稳定节点，并监听 `game-source`、`home-icon` 与新建任务容器；另加 120/420 ms 两次有界启动探测，不形成常驻轮询。
+- 主题激活时只隐藏 headline 内部原生文字、边框与下划线绘制，保留 DOM、项目选择热区和尺寸；停用后随主题样式移除恢复原生。
+- 并行复核进一步复现 React 在入场动画后重写 `className`：旧 CSS 因依赖 `forge-landing-*` class 会再次消失，而 active probe 仍认为背景有效。V13.3 改以主题自有 data 属性承载题字/图案绘制；定向测试在启动探针结束后主动覆写两处 class，题字、图案和横线抑制仍成立，restore 后原生下划线与边框恢复。
+- 56×56 图案撤销残缺金箍，重绘为带赤金箍纹的金箍棒与三道墨尾。定向新增“父级 opacity 0、节点延迟挂载、没有 resize”场景并通过；其余四项背景运行时场景分别定向通过。
+- 用户追加资源纪律：常态不保留调试窗口；实机截图和指标采样后立即关闭，并验证 watcher、子进程与专用端口全部释放。长期记忆与 `docs/CURRENT_GOAL.md` 已同步。
+- 一次性真实 Codex 首屏证据 `docs/screenshots/live-codex-v13-3-initial-20260724-0458.png` 证明无需 resize 即有题字/图案，原项目下划线消失；背景为 `cover`，侧栏 275 px、输入器 736×98，活动 runtime 标记 4 个。
+- 同一临时实例稳态为 1 个已加载背景、0 个解码请求、无过渡，V8 heap 使用约 126.3 MiB。完整第二个 Codex 进程树稳定约 48 个进程/2.93 GiB 工作集，说明双窗口本身是主要风险；截图与采样后已关闭根进程、launcher、watcher 和滞后 GPU 子进程，21505 端口释放，控制窗口未触碰。
+- 为后续调试补上 fail-closed 自动回收选项：普通截图仍只断开 CDP，不会关控制窗口；只有显式传入临时 root/launcher/disable request，且 `SystemInfo.getProcessInfo` 返回的 browser PID 精确匹配时，才触发原生恢复与 `Browser.close`，随后验证 root、owner 和端口释放。未重新开启调试窗口测试该选项，当前只通过 Node 语法与静态生命周期合同。
+- 资源审查澄清：renderer 内 120/420 ms 启动探测是有界的，但开发期 watcher 仍有 1700 ms loopback 生命周期探测（实测约 51.8 MiB，launcher 约 115.1 MiB）。该链继续明确标注为临时审计工具；最终随 Codex 启停阶段必须移除 PowerShell launcher 与常驻 CDP 轮询。
+
+## 2026-07-24 — V13.2 背景资源硬预算与会话资源清理
+
+- 用户报告每轮主题调试可能因资源占用过大而崩溃，并要求先清理本项目会话资源、核对目标和进度，再继续视觉实现。
+- 以父 PID、命令行、监听端口和内存独立核验：主题调试实例、watcher 与 45411 均已退出；随后关闭 37 个明确无用的重复 Playwright、Chrome DevTools、Context7、Serena 与空闲 Node REPL 根进程，共 98 个后代，清理前工作集约 4.36 GiB。Codex 主界面、renderer、GPU 与 app-server 未触碰。
+- 11 张活动背景压缩共 2.45 MiB，全量 RGBA 展开约 84.76 MiB。旧 runtime 首次刷新会并发解码全部 11 张，并在淡变后长期保留两张全屏纹理、永久 `will-change`、滤镜与缩放。
+- V13.2 删除全量预载，首屏不再创建额外 `Image`；切换只解码目标一张，任意时刻最多一个请求，新请求、超时、restore 和 dispose 都会清理 handler、timeout、`src` 与 in-flight 记录。
+- 图层改存短 `var(--forge-bg-N)`；过渡结束清空退场层图片、veil 与场景数据。永久全屏 `will-change`、`filter` 和 `scale(1.001)` 已移除。
+- 新增资源遥测：持图层数量、过渡状态和 in-flight 解码数。定向浏览器测试 4/4 通过，证明首屏 0 预载、请求上限 1、稳态 1 张、过渡最多 2 张、取消/restore 完整清理。
+- 测试结束后无 Node、Chromium、watcher 或相关端口残留；用户自行打开的 Typora 文档窗口被识别为无关进程并保留。
+- 新增 `docs/CURRENT_GOAL.md`，把用户历次补充形成的最终目标、顺序与不可违反约束固化为唯一执行基线。
+- 全程未删除、移动或覆盖任何文件。
+
+## 2026-07-24 — V13.1 全窗覆盖与新建页题字/图案
+
+- 用户截图证明战斗背景只穿透侧栏，中央内容区仍被原生黑色 surface 遮住；问题不是素材尺寸或 `cover` 失效。
+- 只读解包核对官方 `OpenAI.Codex 26.715.2305.0` renderer：`app-shell-CHGA5kyS.js` 创建 `main.main-surface`，官方 CSS 为其绘制实体背景，另有 `[data-app-shell-main-content-top-fade]`；`app-main-B98AP2a1.js` 暴露 56×56 `[data-testid="home-icon"]` 与 `[data-feature="game-source"]`。
+- V13.1 只清除 main surface 与 top fade 的背景绘制，保留圆角、阴影、overflow、布局与 hit box；没有恢复侧栏、环境卡、消息、composer 或按钮主题样式。
+- 新建页原位显示“此去，欲破何局？”，原 56×56 图标位改为缺口金箍、墨痕和朱点；原文字节点与 SVG 保留，停用时恢复 aria、class 与 dataset，不新增卡片、按钮、栏位或 emoji。
+- 定向浏览器测试 3/3 通过：覆盖层 `cover`、主表面透明、820 ms 双层过渡、6+5 场景池、DOMRect/原文字节点不变、restore、forced-colors 与 refresh quiescence。
+- 最终随 Codex 启动集成按用户要求移至全部视觉与宠物完成之后；现有 PowerShell bridge 继续只作开发调试入口，不再宣称最终方案。
+- 本轮仍未删除、移动或覆盖任何文件；官方 app.asar/ChatGPT.exe/WindowsApps 仅只读。
+
+## 2026-07-24 — V13 背景状态机、启动适配器与新动作录制
+
+- 独立背景审计确认仓库 6 张战斗图与 5 张风景图均为不同 SHA，但本机受管目录仍停在 0.8.0；旧 V12 从未进入当前窗口。
+- V13 保持“背景是唯一活动主题层”，修复隐藏旧对话误判、任意侧栏点击换图、负/损坏游标、ResizeObserver 自循环、覆盖层损坏、杨戬白场 veil 被覆盖、未解码切换及快速切换闪帧。
+- 浏览器定向测试真实检查双层中点 opacity、820 ms 交叉淡变、6+5 独立轮换、overlay 自修复、refresh quiescence、reduced-motion 与 forced-colors，3/3 通过。
+- 生命周期、最小包、保留安装和原生宠物门禁定向合同 18/18 通过；测试使用 Codex bundled Node，不依赖机器全局 Node。
+- 新增安装后 `verify-launch-adapter.ps1`；普通 `ChatGPT.lnk` 与名称明确的 `ChatGPT - Wukong Theme.lnk` 必须指向同一 hash bridge 和同一 retained release，hook event 与 release marker 不一致即失败。
+- 已追加安装 `0.12.0-20260724-012825`；旧普通入口先复制到 `C:\Users\Alex Chen\AppData\Local\WukongCodexForge\shortcut-backups\`，新 bridge 为 `chatgpt-entry-236e3ba177cff7b9db28.ps1`。安装后 verifier 返回 `verified:true`。
+- 当前控制窗口 PID 9592 仍是无 CDP 参数的官方 AppX 原生实例，未关闭、未重启、未注入。V13 将在下一次从已验证的受管入口启动时加载；不声称能拦截 AppX/AUMID 等绕过入口。
+- V7 composer 经独立视觉审计否决；V8 新增残卷墨界、石印绳契、丹炉铜契三个 `736×96`、零外扩、零控件位移预览及 battle/scenery 上下文证据，尚未进入 runtime。
+- 用户提供新录制 `E:\GameRecord\Black Myth Wukong\新汇总\Replay 2026-07-24 00-30-17.mkv`，142,279,116 bytes，SHA-256 `FCC257977C4A34C2AB2813D018770DDE17CD5E5CBCE1941AC7E207965C92A7E5`。只读抽取仅用于跑动和背面棍花节奏；不从背面外推正面握法、夜叉套或神锋遮挡段。
+- 全程未删除或移动任何本地文件；旧 release、快捷方式、候选、录制、游戏资源和失败证据均原位保留。
+
 ## 2026-07-23 — V12 背景收敛、输入框再设计与保留式升级
 
 - 用户将正式活动范围收敛为背景替换；侧栏、顶部栏、环境信息、消息、按钮、滚动条与 composer 的 V11 样式全部退出活动 runtime，旧文件原样保留。

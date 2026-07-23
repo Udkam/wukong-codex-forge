@@ -1,6 +1,16 @@
 # 素材来源与发布边界
 
-## 0.11.0 / V12 背景与组件审稿素材
+## 0.12.3 / V13.3 背景、新建页、输入框与动作证据
+
+- V13 runtime 继续只发布 `themes/assets/` 中 6 张战斗图与 5 张风景图；11 个源文件 SHA-256 均不同。runtime 不读取本机素材目录，不进行网络请求或视频解码。
+- V8 composer 三案及上下文证据位于 `docs/design/composer-options/v8-black-myth-silhouette-study-20260723/`。这些是纯 UI 形状预览，不包含夜叉套、神锋或金箍棒的生成替身，不进入 0.12.3 最小运行包。
+- 新建页当前候选图案为项目内联的 56×56 SVG：一根带赤金箍纹的横置长棍与三道墨尾。它不复制游戏、手办或被否决的神锋贴图，也不新增位图解码；用户尚未确认前只视为首屏审稿候选。其放置节点、主表面与 top-fade 选择器来自对本机官方 `app.asar` 的只读 UI 审计；证据、字节数和 SHA-256 位于 `artifacts/asar-ui-audit-20260724T0225/AUDIT.md`。
+- `E:\GameRecord\Black Myth Wukong\图片\封面.png` 与 `金箍.jpg` 本轮只读用于观察黑底金绘、赤金箍纹和长棍比例；未新增复制或重编码文件。历史上被用户否决的 `themes/motifs/fanged-cyan-staff.png` 继续保留但不引用。
+- 用户新录制源文件为 `E:\GameRecord\Black Myth Wukong\新汇总\Replay 2026-07-24 00-30-17.mkv`，142,279,116 bytes，SHA-256 `FCC257977C4A34C2AB2813D018770DDE17CD5E5CBCE1941AC7E207965C92A7E5`。源文件保持原位只读；所有 contact sheet、时间码和分析只能新增到项目 `artifacts/wukong-user-recording-audit-20260724T003017+0800/`。
+- 该录像可用于跑动步频、支撑脚、躯干起伏、持棍惯性，以及背面棍花的剪影、脚步、重心和棍路连续性。棍花没有正面视角，不能证明正面握法、面部、厌火套正面或身体遮挡后的神锋结构，不能据此修补基础立绘。
+- 本轮没有继续搜索、扫描或抽取其他本地视频；用户此前否决的视频结论保持不变。游戏安装目录、截图、模组、旧候选和录像均不得删除、移动或覆盖。
+
+## 0.11.0 / V12 历史背景与组件审稿素材
 
 - 活动背景只使用 `themes/assets/` 中已纳入项目的 11 张画面：6 张战斗场景和 5 张风景场景。用户本地 `E:\GameRecord\Black Myth Wukong\TipsImg` 与 `图片` 只作为审稿和场景筛选来源，不由 runtime 直接读取。
 - 本轮只读素材索引与 contact sheet 位于 `artifacts/asset-audit-20260723/`。它们用于识别真实游戏器物、材质和构图，不等于获批 UI 资产。

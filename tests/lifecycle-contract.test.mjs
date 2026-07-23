@@ -12,6 +12,7 @@ const publicScripts = {
   launch: read('scripts/launch.ps1'),
   disable: read('scripts/disable.ps1'),
   hook: read('scripts/install-chatgpt-hook.ps1'),
+  verifyAdapter: read('scripts/verify-launch-adapter.ps1'),
   start: read('scripts/start.ps1'),
   nativePets: read('scripts/install-native-pets.ps1')
 };
@@ -35,6 +36,7 @@ test('all public and retained legacy lifecycle scripts parse', () => {
     'scripts/start.ps1',
     'scripts/install-native-pets.ps1',
     'scripts/install-chatgpt-hook.ps1',
+    'scripts/verify-launch-adapter.ps1',
     'scripts/disable.ps1',
     'scripts/install.ps1',
     'scripts/restore.ps1'
@@ -42,6 +44,22 @@ test('all public and retained legacy lifecycle scripts parse', () => {
     const result = parsePowerShell(file);
     assert.equal(result.status, 0, file + ' parse failure: ' + result.stdout + result.stderr);
   }
+});
+
+test('live capture closes only an explicitly owned transient debug session', () => {
+  const capture = read('scripts/capture-live-playwright.mjs');
+  assert.match(capture, /close-debug-after-capture/);
+  assert.match(capture, /debug-root-pid/);
+  assert.match(capture, /debug-owner-pid/);
+  assert.match(capture, /disable-\[0-9a-f\]\{32\}/i);
+  assert.match(capture, /SystemInfo\.getProcessInfo/);
+  assert.match(capture, /Transient cleanup PID mismatch/);
+  assert.match(capture, /Browser\.close/);
+  assert.match(capture, /rootReleased/);
+  assert.match(capture, /ownerReleased/);
+  assert.match(capture, /portReleased/);
+  assert.match(capture, /flag:\s*'wx'/);
+  assert.doesNotMatch(capture, /taskkill|Stop-Process|process\.kill\([^,]+,\s*['"]SIGKILL/i);
 });
 
 test('public entries route only to the preserving and verified-disable lifecycle', () => {
@@ -125,9 +143,9 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.match(publicScripts.disable, /\.wukong-runtime/);
   assert.match(publicScripts.install, /install-chatgpt-hook\.ps1/);
   assert.match(publicScripts.install, /appTarget 'scripts\\install-native-pets\.ps1'/);
-  assert.match(publicScripts.hook, /ChatGPT-before-wukong-/);
-  assert.match(publicScripts.hook, /Copy-Item -LiteralPath \$shortcutPath -Destination \$backupPath/);
-  assert.match(publicScripts.hook, /CreateShortcut\(\$shortcutPath\)/);
+  assert.match(publicScripts.hook, /BackupPrefix 'ChatGPT-before-wukong'/);
+  assert.match(publicScripts.hook, /Copy-Item -LiteralPath \$Path -Destination \$backupPath/);
+  assert.match(publicScripts.hook, /CreateShortcut\(\$Path\)/);
   assert.match(publicScripts.hook, /launcher-bridges/);
   assert.match(publicScripts.hook, /LOCALAPPDATA[^\r\n]*WukongCodexForge/);
   assert.match(publicScripts.hook, /Assert-DirectManagedPath/);
@@ -249,19 +267,24 @@ test('large runtime expressions receive a bounded 45 second transport window', (
 });
 
 test('renderer refreshes are structural, throttled, and layout-loop free', () => {
-  const runtime = read('runtime/injection-plan-v12.mjs');
-  assert.match(runtime, /const delay = Math\.max\(160, 650 - elapsed\)/);
+  const runtime = read('runtime/injection-plan-v13.mjs');
+  assert.match(runtime, /const delay = Math\.max\(140, 520 - elapsed\)/);
   assert.match(runtime, /new MutationObserver\(/);
   assert.match(runtime, /observer\.observe\(document\.body, \{ childList: true, subtree: true \}\)/);
   assert.match(runtime, /nodeTouchesThemeStructure/);
   assert.match(runtime, /data-local-conversation-final-assistant/);
   assert.match(runtime, /new ResizeObserver\(/);
+  assert.match(runtime, /setResizeTargets/);
+  assert.match(runtime, /observedResizeTargets/);
   assert.doesNotMatch(runtime, /attributes:\s*true|characterData:\s*true/);
   assert.doesNotMatch(runtime, /window\.addEventListener\('scroll', scheduleRefresh/);
   assert.match(runtime, /visualViewport\?\.addEventListener\('resize', scheduleRefresh/);
   assert.doesNotMatch(runtime, /visualViewport\?\.addEventListener\('scroll', scheduleRefresh/);
   assert.match(runtime, /addEventListener\('keydown', scheduleComposerKeyboardSubmit/);
   assert.doesNotMatch(runtime, /addEventListener\('input', scheduleRefresh/);
+  assert.match(runtime, /history\.pushState = function/);
+  assert.match(runtime, /preloadBackground/);
+  assert.match(runtime, /transitionInFlight/);
 
   const watcher = read('runtime/watch.mjs');
   assert.doesNotMatch(watcher, /emptyTargetPasses|targets\.length\s*>=?\s*8/);
@@ -301,7 +324,11 @@ test('watcher survives an unlimited renderer-free tray interval and reapplies to
       log: () => {}
     }
   });
-  assert.equal(pauses, 12);
+  assert.equal(
+    pauses,
+    13,
+    'twelve renderer-free polls plus one paced poll after the first successful reapply'
+  );
   assert.equal(applyCount, 1);
   assert.equal(result.reason, 'root-exited');
 });

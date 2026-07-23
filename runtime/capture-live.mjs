@@ -15,6 +15,11 @@ const relative = path.relative(root, output);
 if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
   throw new Error('Screenshot output must stay inside the current working directory.');
 }
+for (const retainedPath of [output, `${output}.json`]) {
+  if (fs.existsSync(retainedPath)) {
+    throw new Error(`Refusing to overwrite retained evidence: ${retainedPath}`);
+  }
+}
 
 await getBrowserVersion(port);
 const targets = (await getTargets(port)).filter(isCodexTarget);
@@ -42,24 +47,50 @@ const summary = await evaluateTarget(target, `(() => ({
   surface: document.documentElement.dataset.forgeSurface || null,
   mode: document.documentElement.dataset.forgeMode || null,
   scene: document.documentElement.dataset.forgeScene || null,
-  motifs: {
-    gourdSafe: document.documentElement.dataset.forgeGourdSafe || null
-  },
   stylePresent: Boolean(document.getElementById('wukong-forge-style')),
   styleLength: document.getElementById('wukong-forge-style')?.textContent.length || 0,
   markedElements: document.querySelectorAll('[data-forge-mark]').length,
+  runtime: {
+    v12: Boolean(window.__wukongCodexForgeRuntimeV12),
+    v13: Boolean(window.__wukongCodexForgeRuntimeV13),
+    refreshCount: window.__wukongCodexForgeRuntimeV13?.refreshCount || 0,
+    renderCount: window.__wukongCodexForgeRuntimeV13?.renderCount || 0,
+    transitionInFlight: Boolean(window.__wukongCodexForgeRuntimeV13?.transitionInFlight)
+  },
   geometry: Object.fromEntries([
-    ['sidebar', '.forge-sidebar'],
-    ['composer', '.forge-composer'],
-    ['environment', '.forge-right-card']
+    ['sidebar', '.app-shell-left-panel'],
+    ['workspace', '.forge-workspace, [role="main"], main'],
+    ['composer', '.composer-surface-chrome'],
+    ['environment', '[data-pip-obstacle="thread-summary-panel"]']
   ].map(([name, selector]) => {
     const rect = document.querySelector(selector)?.getBoundingClientRect();
     return [name, rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null];
   })),
-  assistantFrameless: [...document.querySelectorAll('.forge-assistant-message')].every(element => {
+  assistantFrameless: [...document.querySelectorAll('[data-local-conversation-final-assistant]')].every(element => {
     const style = getComputedStyle(element);
     return style.backgroundImage === 'none' && style.backgroundColor === 'rgba(0, 0, 0, 0)' && style.boxShadow === 'none';
   }),
+  background: (() => {
+    const overlay = document.getElementById('wukong-forge-background');
+    const layers = [...(overlay?.querySelectorAll(':scope > [data-forge-background-layer]') || [])];
+    const active = layers.find(layer => layer.dataset.forgeActive === 'true') || null;
+    const image = active?.querySelector('[data-forge-background-image]') || null;
+    const overlayStyle = overlay ? getComputedStyle(overlay) : null;
+    const imageStyle = image ? getComputedStyle(image) : null;
+    return {
+      present: Boolean(overlay),
+      inert: Boolean(overlay?.inert),
+      ariaHidden: overlay?.getAttribute('aria-hidden') || null,
+      pointerEvents: overlayStyle?.pointerEvents || null,
+      layerCount: layers.length,
+      activeLayer: overlay?.dataset.forgeActiveLayer || null,
+      activeScene: active?.dataset.forgeScene || null,
+      activeMode: active?.dataset.forgeMode || null,
+      activeImagePresent: Boolean(image?.style.backgroundImage && image.style.backgroundImage !== 'none'),
+      backgroundSize: imageStyle?.backgroundSize || null,
+      backgroundPosition: imageStyle?.backgroundPosition || null
+    };
+  })(),
   viewport: { width: innerWidth, height: innerHeight, scale: devicePixelRatio }
 }))()`);
 fs.writeFileSync(`${output}.json`, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');

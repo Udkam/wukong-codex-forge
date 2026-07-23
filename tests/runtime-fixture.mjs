@@ -409,6 +409,9 @@ export const runtimeFixtureHtml = String.raw`
                   <section class="landing-native">
                     <div class="landing-hero">
                       <small>新建任务</small>
+                      <div data-testid="home-icon" aria-hidden="true" style="position:relative;width:56px;height:56px;margin:0 auto 12px">
+                        <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="13"/></svg>
+                      </div>
                       <div class="heading-xl" data-feature="game-source"><span>我们该构建什么？</span></div>
                       <p>描述目标，Codex 会在当前项目中开始工作。</p>
                     </div>

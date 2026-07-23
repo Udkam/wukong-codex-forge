@@ -9,6 +9,7 @@ test('public install and disable entry points preserve every existing file', () 
   const launch = read('scripts/launch.ps1');
   const disable = read('scripts/disable.ps1');
   const hook = read('scripts/install-chatgpt-hook.ps1');
+  const verifyAdapter = read('scripts/verify-launch-adapter.ps1');
   const start = read('scripts/start.ps1');
   const nativePets = read('scripts/install-native-pets.ps1');
   const prepareNativePets = read('scripts/prepare-native-pets.mjs');
@@ -17,7 +18,7 @@ test('public install and disable entry points preserve every existing file', () 
   const startCmd = read('start-theme.cmd');
   const stopCmd = read('stop-theme.cmd');
 
-  for (const [name, script] of Object.entries({ install, launch, disable, hook, start, nativePets })) {
+  for (const [name, script] of Object.entries({ install, launch, disable, hook, verifyAdapter, start, nativePets })) {
     assert.doesNotMatch(script, /\bRemove-Item\b|\bMove-Item\b|\.Delete\(|rmSync|unlinkSync|rmdirSync/, `${name} contains a destructive file operation`);
   }
   assert.match(install, /releases/);
@@ -53,9 +54,13 @@ test('public install and disable entry points preserve every existing file', () 
   assert.doesNotMatch(removeCmd, /-Portable/);
   assert.match(disable, /\$PSBoundParameters\.ContainsKey\('Portable'\)/);
   assert.match(install, /install-chatgpt-hook\.ps1/);
+  assert.match(install, /verify-launch-adapter\.ps1/);
+  assert.match(start, /verify-launch-adapter\.ps1/);
   assert.match(install, /appTarget 'scripts\\install-native-pets\.ps1'/);
-  assert.match(hook, /ChatGPT-before-wukong-/);
-  assert.match(hook, /Copy-Item -LiteralPath \$shortcutPath -Destination \$backupPath/);
+  assert.match(hook, /BackupPrefix 'ChatGPT-before-wukong'/);
+  assert.match(hook, /Copy-Item -LiteralPath \$Path -Destination \$backupPath/);
+  assert.match(hook, /ChatGPT - Wukong Theme\.lnk/);
+  assert.match(hook, /preservedExplicitBackup/);
   assert.match(hook, /launcher-bridges/);
   assert.match(hook, /LOCALAPPDATA[^\r\n]*WukongCodexForge/);
   assert.match(hook, /Assert-DirectManagedPath/);
@@ -74,6 +79,10 @@ test('public install and disable entry points preserve every existing file', () 
   assert.doesNotMatch(hook, /EncodedCommand/);
   assert.match(hook, /\$managed\.Count -eq 1 -and `\$watching\.Count -ge 1/);
   assert.match(hook, /if \(\(Test-Path -LiteralPath `\$launcher\)/);
+  assert.match(verifyAdapter, /default and explicit theme entries point to different bridges/);
+  assert.match(verifyAdapter, /bridge root is stale/);
+  assert.match(verifyAdapter, /latest hook event points to a stale release/);
+  assert.match(verifyAdapter, /"verified"\s*=\s*\$true|verified = \$true/);
 });
 
 test('managed lifecycle uses Codex embedded Node and no WebSocket dependency tree', () => {
@@ -90,14 +99,16 @@ test('managed lifecycle uses Codex embedded Node and no WebSocket dependency tre
   assert.doesNotMatch(read('package-lock.json'), /"node_modules\/ws"|"ws"\s*:/);
 });
 
-test('V12 watcher and disable path prove native restoration before reporting success', () => {
+test('V13 watcher repairs complete background state and proves native restoration before reporting success', () => {
   const watcher = read('runtime/watch.mjs');
   const launch = read('scripts/launch.ps1');
   const disable = read('scripts/disable.ps1');
   const injector = read('runtime/injector.mjs');
 
-  assert.match(watcher, /__wukongCodexForgeRuntimeV12/);
-  assert.match(watcher, /forge-background-v12\.css/);
+  assert.match(watcher, /ACTIVE_PROBE_EXPRESSION/);
+  assert.match(watcher, /forge-background-v13\.css/);
+  assert.match(read('runtime/injection-plan-v13.mjs'), /__wukongCodexForgeRuntimeV13/);
+  assert.match(read('runtime/injection-plan-v13.mjs'), /backgroundActiveImage/);
   assert.doesNotMatch(watcher, /emptyTargetPasses/);
   assert.match(watcher, /rootIsAlive\(rootPid\)/);
   assert.match(launch, /& \$node \$watcherPath \$port \$themePath \$disableRequest \$codexProcess\.Id/);

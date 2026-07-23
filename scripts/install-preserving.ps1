@@ -28,7 +28,8 @@ foreach ($required in @(
     (Join-Path $source 'scripts\native-theme.mjs'),
     (Join-Path $source 'scripts\launch.ps1'),
     (Join-Path $source 'scripts\install-native-pets.ps1'),
-    (Join-Path $source 'scripts\install-chatgpt-hook.ps1')
+    (Join-Path $source 'scripts\install-chatgpt-hook.ps1'),
+    (Join-Path $source 'scripts\verify-launch-adapter.ps1')
 )) {
     if (-not (Test-Path -LiteralPath $required)) { throw "Required install file is missing: $required" }
 }
@@ -74,6 +75,7 @@ $release = [ordered]@{
 
 if (-not $NoShortcut) {
     & (Join-Path $source 'scripts\install-chatgpt-hook.ps1') -Root $appTarget
+    & (Join-Path $source 'scripts\verify-launch-adapter.ps1') -Root $appTarget
 }
 
 # Preserve evidence from any legacy color-token installation without changing the user's

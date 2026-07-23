@@ -5,14 +5,15 @@ import { fileURLToPath } from 'node:url';
 import { getBrowserVersion, getTargets, evaluateTarget, isCodexTarget } from './cdp-client.mjs';
 import { payloadFromThemeFile } from './forge-runtime.mjs';
 import {
+  ACTIVE_PROBE_EXPRESSION,
   isNativeThemeState,
   makeApplyExpression,
   RESTORE_EXPRESSION,
   THEME_STATE_EXPRESSION
-} from './injection-plan-v12.mjs';
+} from './injection-plan-v13.mjs';
 
 const DEFAULT_INTERVAL_MS = 1700;
-const DEFAULT_PROBE = 'Boolean(document.getElementById("wukong-forge-style") && window.__wukongCodexForgeRuntimeV12)';
+const DEFAULT_PROBE = ACTIVE_PROBE_EXPRESSION;
 
 export const browserIdentity = version => {
   const endpoint = String(version?.webSocketDebuggerUrl || '');
@@ -141,6 +142,7 @@ export async function runWatcher({
         const active = await evaluate(target, probe).catch(() => false);
         if (!active) await evaluate(target, expression);
       }
+      await pause(intervalMs);
     } catch (error) {
       if (error?.code === 'WUKONG_BROWSER_IDENTITY_CHANGED') throw error;
       retryCount += 1;
@@ -164,7 +166,7 @@ async function main() {
   const rootPid = Number(rootPidRaw);
   const themePath = providedTheme || 'themes/active.json';
   const expression = makeApplyExpression({
-    styleSheet: fs.readFileSync(new URL('./forge-background-v12.css', import.meta.url), 'utf8'),
+    styleSheet: fs.readFileSync(new URL('./forge-background-v13.css', import.meta.url), 'utf8'),
     variables: payloadFromThemeFile(themePath).variables
   });
   let stopping = false;

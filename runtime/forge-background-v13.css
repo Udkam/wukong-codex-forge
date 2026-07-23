@@ -1,0 +1,229 @@
+/*
+ * Wukong Codex Forge V13
+ *
+ * Native-layout runtime. The active scope is the full-window background plus
+ * the explicitly approved landing title/icon skin. Native composer, sidebar,
+ * toolbar, messages, menus, environment cards, buttons, scrollbars, spacing
+ * and geometry remain untouched until the user selects a composer preview.
+ */
+:root.forge-ink-mountain {
+  --forge-paper: #101210;
+  --forge-scene-brightness: 1;
+  --forge-background-transition: 820ms;
+  --forge-mode-veil:
+    linear-gradient(90deg, rgba(8, 10, 9, .34), rgba(12, 14, 13, .18) 30%, rgba(12, 14, 13, .18) 70%, rgba(8, 10, 9, .32)),
+    linear-gradient(180deg, rgba(8, 10, 9, .22), rgba(8, 10, 9, .09) 22%, rgba(8, 10, 9, .12) 78%, rgba(8, 10, 9, .28));
+  --forge-scene-veil:
+    linear-gradient(90deg, rgba(11, 13, 12, .7) 0%, rgba(17, 19, 18, .42) 25%, rgba(17, 19, 18, .42) 75%, rgba(11, 13, 12, .66) 100%),
+    linear-gradient(180deg, rgba(15, 17, 16, .4), rgba(18, 20, 19, .24) 18%, rgba(18, 20, 19, .27) 82%, rgba(15, 17, 16, .46));
+}
+
+:root.forge-ink-mountain[data-forge-mode="battle"] {
+  --forge-mode-veil:
+    linear-gradient(90deg, rgba(8, 10, 9, .12), rgba(12, 14, 13, .035) 29%, rgba(12, 14, 13, .035) 71%, rgba(8, 10, 9, .12)),
+    linear-gradient(180deg, rgba(9, 11, 10, .07), rgba(10, 12, 11, .018) 20%, rgba(10, 12, 11, .028) 80%, rgba(9, 11, 10, .09));
+}
+
+:root.forge-ink-mountain[data-forge-mode="scenery"] {
+  --forge-mode-veil:
+    linear-gradient(90deg, rgba(8, 11, 9, .4), rgba(12, 15, 13, .25) 25%, rgba(12, 15, 13, .25) 75%, rgba(8, 11, 9, .38)),
+    linear-gradient(180deg, rgba(9, 12, 10, .21), rgba(10, 13, 11, .12) 18%, rgba(10, 13, 11, .14) 82%, rgba(9, 12, 10, .26));
+}
+
+/*
+ * Scene 0 is the white Erlang ink duel. The additional `html` specificity is
+ * intentional: generated scene variables are appended after this stylesheet.
+ */
+html:root.forge-ink-mountain[data-forge-scene="0"] {
+  --forge-scene-veil:
+    linear-gradient(90deg, rgba(13, 15, 14, .79) 0%, rgba(17, 20, 18, .58) 27%, rgba(17, 20, 18, .54) 73%, rgba(13, 15, 14, .76) 100%),
+    linear-gradient(180deg, rgba(18, 21, 19, .44), rgba(18, 21, 19, .32) 22%, rgba(18, 21, 19, .35) 80%, rgba(18, 21, 19, .49));
+}
+
+:root.forge-ink-mountain,
+:root.forge-ink-mountain body,
+:root.forge-ink-mountain #root {
+  background-color: transparent !important;
+}
+
+:root.forge-ink-mountain body {
+  position: relative;
+}
+
+:root.forge-ink-mountain #wukong-forge-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none !important;
+  user-select: none !important;
+  overflow: clip;
+  contain: strict;
+  background: var(--forge-paper);
+}
+
+:root.forge-ink-mountain #wukong-forge-background > [data-forge-background-layer] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--forge-background-transition) cubic-bezier(.22, .61, .36, 1);
+}
+
+:root.forge-ink-mountain #wukong-forge-background[data-forge-transitioning="true"] > [data-forge-background-layer] {
+  will-change: opacity;
+}
+
+:root.forge-ink-mountain #wukong-forge-background > [data-forge-background-layer][data-forge-active="true"] {
+  opacity: 1;
+}
+
+:root.forge-ink-mountain [data-forge-background-image],
+:root.forge-ink-mountain [data-forge-background-veil] {
+  position: absolute;
+  inset: 0;
+}
+
+:root.forge-ink-mountain [data-forge-background-image] {
+  background-color: var(--forge-paper);
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+:root.forge-ink-mountain [data-forge-background-veil] {
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/*
+ * Keep the native root above the inert background without isolating body.
+ * Body-level native portals with their own z-index therefore retain their
+ * normal ordering relative to #root.
+ */
+:root.forge-ink-mountain #root {
+  position: relative;
+  z-index: 1;
+}
+
+:root.forge-ink-mountain #root > :first-child {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/*
+ * Codex 26.715.2305.0 paints the central column on <main class="main-surface">.
+ * The source-backed selector below clears only that paint and the decorative
+ * top fade. The native radius, shadow, clipping, size and hit boxes stay intact.
+ */
+:root.forge-ink-mountain main.main-surface {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+:root.forge-ink-mountain main.main-surface [data-app-shell-main-content-top-fade] {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+:root.forge-ink-mountain .forge-workspace,
+:root.forge-ink-mountain .forge-workspace.main-surface,
+:root.forge-ink-mountain .forge-workspace [data-app-shell-main-content-layout],
+:root.forge-ink-mountain .forge-workspace .app-shell-main-content-frame,
+:root.forge-ink-mountain .forge-workspace [data-vscode-context*="supportsNewChatMenu"],
+:root.forge-ink-mountain .forge-workspace [data-thread-find-target="conversation"] {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/*
+ * New-task hero: preserve the official 56×56 icon and title footprints while
+ * replacing only their paint. The motif is a gold-banded staff rising through
+ * three restrained ink tails: recognisable as Wukong without adding a badge,
+ * panel or decorative rail.
+ */
+:root.forge-ink-mountain [data-forge-title-copy] {
+  position: relative !important;
+}
+
+:root.forge-ink-mountain [data-forge-title-copy] > *,
+:root.forge-ink-mountain [data-forge-title-copy] > * * {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  border-color: transparent !important;
+  text-decoration: none !important;
+  text-decoration-color: transparent !important;
+  text-shadow: none !important;
+}
+
+:root.forge-ink-mountain [data-forge-title-copy]::after {
+  content: attr(data-forge-title-copy);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e7dcc4;
+  font-family: "STKaiti", "KaiTi", "Microsoft YaHei UI", serif;
+  font-size: inherit;
+  font-weight: 500;
+  letter-spacing: .055em;
+  line-height: inherit;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow:
+    0 1px 0 rgba(12, 13, 12, .72),
+    0 0 18px rgba(202, 164, 92, .22);
+  pointer-events: none;
+}
+
+:root.forge-ink-mountain [data-testid="home-icon"][data-forge-mark="1"] {
+  position: relative !important;
+}
+
+:root.forge-ink-mountain [data-testid="home-icon"][data-forge-mark="1"] > * {
+  opacity: 0 !important;
+}
+
+:root.forge-ink-mountain [data-testid="home-icon"][data-forge-mark="1"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke-linecap='round'%3E%3Cpath d='M8.8 41.8c7.2-5.4 14.8-6.7 22.7-3.7' stroke='%23242624' stroke-width='3.6'/%3E%3Cpath d='M12.7 46c6.1-4.1 12.5-5.1 18.8-2.9' stroke='%23514a3d' stroke-width='1.45' opacity='.78'/%3E%3Cpath d='M10.6 35.6c5.8-3.5 11.6-4.2 17.2-2.2' stroke='%23857458' stroke-width='.8' opacity='.72'/%3E%3Cg transform='rotate(38 28 28)'%3E%3Cpath d='M28 7.7v40.6' stroke='%23775a2e' stroke-width='4'/%3E%3Cpath d='M28 7.7v40.6' stroke='%23d1a757' stroke-width='2.7'/%3E%3Cpath d='M27.45 8.5v38.8' stroke='%23f0d69a' stroke-width='.65' opacity='.88'/%3E%3Cpath d='M24.8 11.4h6.4M24.8 15.1h6.4M24.8 40.9h6.4M24.8 44.6h6.4' stroke='%238a332c' stroke-width='2.1'/%3E%3Cpath d='M25.6 8h4.8M25.6 48h4.8' stroke='%23e2bd6c' stroke-width='2.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root.forge-ink-mountain { --forge-background-transition: 0ms; }
+
+  :root.forge-ink-mountain #wukong-forge-background > [data-forge-background-layer] {
+    transition: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :root.forge-ink-mountain #wukong-forge-background { display: none !important; }
+
+  :root.forge-ink-mountain body,
+  :root.forge-ink-mountain #root,
+  :root.forge-ink-mountain #root > :first-child,
+  :root.forge-ink-mountain .forge-workspace,
+  :root.forge-ink-mountain main.main-surface {
+    background-color: Canvas !important;
+  }
+
+  :root.forge-ink-mountain [data-forge-title-copy] > * {
+    color: CanvasText !important;
+    -webkit-text-fill-color: CanvasText !important;
+  }
+
+  :root.forge-ink-mountain [data-forge-title-copy]::after,
+  :root.forge-ink-mountain [data-testid="home-icon"][data-forge-mark="1"]::before {
+    content: none !important;
+  }
+
+  :root.forge-ink-mountain [data-testid="home-icon"][data-forge-mark="1"] > * {
+    opacity: revert !important;
+  }
+}
