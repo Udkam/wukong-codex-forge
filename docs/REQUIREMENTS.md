@@ -9,7 +9,7 @@
 | V13-03 | 背景 `cover` 全窗；非首帧切换先完成图片解码，再进行 820 ms 双层真实 opacity 交叉淡变；快速请求排队且不得闪黑 | 淡变中点 alpha、解码、排队与 reduced-motion 测试 |
 | V13-04 | 隐藏、`aria-hidden`、`inert` 或透明旧对话不得把新任务页误判为 thread；普通侧栏点击不得无故换图 | 隐藏旧 turn 与非路由点击 fixture |
 | V13-05 | 覆盖层被移除或层数损坏后自动恢复为 2 层；稳定布局不得形成 ResizeObserver 自循环 | 自修复与 refresh quiescence 测试 |
-| V13-06 | composer 候选在用户选择前只作为预览，不进入 runtime。V8 必须保持 `736×96` / `560×96`、原控件坐标、提示词、footer 和命中区不变 | 预览几何 JSON、上下文截图与运行包清单 |
+| V13-06 | composer 候选在用户选择前只作为预览，不进入 runtime。V9 审稿覆盖 `736×98` / `560×98` 与 `154 px` 多行增长态，生产不得锁死高度；主题前后 host/editor/footer/五个按钮 DOMRect、原文字、ARIA、提示词、overflow 与命中区必须完全一致 | V9 双宽双高几何 JSON、五点命中测试、上下文/盲审截图与运行包清单 |
 | V13-07 | 被否决的小天命人基础立绘和所有派生图集继续冻结；完整神锋前端、握持段、后棍身、尾端及双足厌火魔足未同时成立前不得扩展动作或发行 | 基础角色四项连续性审查与三重发布白名单 |
 | V13-08 | 用户新录制只用于跑动和背面棍花的节奏、重心、脚步、剪影及棍路；不得从背面视角臆造正面握法、脸部、夜叉套正面或武器遮挡段 | 原录像只读 hash、逐帧相位表和“可证 / 不可证”边界 |
 | V13-09 | 稳定安装追加 retained release，写前备份普通入口，同时建立唯一名称主题入口；安装后 verifier 必须证明两个入口指向同一 bridge 和同一 release。绕过入口的 AppX/AUMID 不作虚假保证 | 安装后 JSON、快捷方式/bridge/release SHA 与进程命令行 |
@@ -21,6 +21,7 @@
 | V13-15 | 全屏层不得永久使用 `will-change`、滤镜或缩放；`will-change` 只允许在交叉淡变期间出现，结束后恢复 `auto` | 过渡前/中/后 computed style 与持图层数量断言 |
 | V13-16 | 每次调试前后、长阶段至少每 30 分钟及收尾前检查本项目进程、监听端口和物理内存；只释放可证明属于本项目的调试/测试/工具资源 | 父进程、命令行、端口与内存的前后独立核验 |
 | V13-17 | 常态只保留当前控制窗口；主题调试窗口仅在截图或指标采集时临时开启，完成后立即关闭，不得在大型项目工作期间保留第二个 Codex 窗口；自动回收路径必须先以 CDP process info 核对临时 root PID，普通截图路径不得擅自关闭控制窗口 | 关闭前记录调试 root/launcher/watcher/端口；关闭后分别确认 root、owner、子进程、watcher 与专用端口均不存在，控制窗口根 PID 保持不变；静态合同验证 opt-in 与 PID fail-closed |
+| V13-18 | composer 候选与最终选案不得引入外部网络请求、候选位图解码、JS timer、持续动画、filter 或 `will-change`；装饰层不接收事件，reduced-motion 与 forced-colors 必须安全回退 | 候选 CSS 静态审计、浏览器请求/计时器计数、pseudo computed style、reduced-motion 与 forced-colors 证据 |
 
 > **0.11.0 / V12 历史验收合同。** 下表继续保留；冲突处以 V13 为准。
 

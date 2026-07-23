@@ -7,7 +7,11 @@
 | `background_runtime_audit` | 只读核对 6+5 素材、V12 实际安装状态和场景状态机 | 证明源码 11 张素材 SHA 均不同，但本机仍是旧 0.8；定位 ResizeObserver 循环、白场 veil 覆盖、误判、任意点击换图、坏游标与未解码切换等缺陷 |
 | `startup_chain_audit_v2` | 只读核对当前进程、普通/AppX 入口、旧 bridge 和受管 release | 证明当前控制窗口由 AppX 原生入口启动且无 CDP/watcher；指出旧 shortcut 仍锁定 Temp 0.9，要求 retained release + 唯一名称入口 + 安装后 verifier |
 | `v7_composer_audit` | 独立审查 V7 原生尺寸输入框 | 否决两案：footer 横线、控件遮挡、透明可读性和伪 4× 证据不合格；未改 runtime |
-| 主对话 · V8 | 在原生 736×96 内制作零外扩预览 | 形成残卷墨界、石印绳契、丹炉铜契三案及 battle/scenery 上下文；仅供审稿，未集成 |
+| 主对话 · V8 | 在 736×96 fixture 内制作零外扩预览 | 形成残卷墨界、石印绳契、丹炉铜契三案，但后续证明 fixture 改变 overflow、产生 1–2 px 几何漂移并使用伪图标；整体冻结，未集成 |
+| `composer_art_direction` | 只读提出不依赖贴图的黑神话结构方向 | 给出章回残墨、金箍锁锋与大圣翎影的核心锚点；要求凝墨留白、残纸/朱点、器物断口优先于古风金框 |
+| `composer_geometry_audit` | 只读对照真实 composer 与 V8 fixture | 证明生产实测为 736×98，V8 固定 96 px 不可信；制定主题前后 DOMRect/文字/ARIA/五点命中区全等与零重资源门槛 |
+| `composer_critic` | 隐名复核 V1–V8 的黑神话识别度 | 严格否决八轮泛古风、器物切片和暗色锯齿方案；要求下一轮隐藏标题后仍能靠结构辨识 |
+| 主对话 · composer V9 | 合并美术、几何与资源审计，制作三案双宽度预览和浏览器证据 | 章回残墨 / 金箍锁锋 / 大圣翎影已通过 736/560、98/154、DOMRect、ARIA、命中区和零重资源合同；仅供用户选择，未改 runtime |
 | `recorded_motion_audit` | 只读审计用户新录制的跑动与背面棍花 | 只允许追加逐帧证据；背面视角不得外推正面握法、脸部、厌火套正面或被遮挡武器段 |
 | 主对话 · V13.1 | 只读核对官方 renderer 源、修复主表面覆盖、原位替换 landing 题字/图案、定向测试、临时调试窗口实审、文档与 Git | 源码定位 `main.main-surface` / top fade / 56×56 icon / headline；全窗覆盖实机证据已完成，旧调试窗口已回收 |
 | `resource_runtime_audit` | 只读核对背景运行时、GPU 图层和取消路径 | 定位全量预载、双层常驻、不可取消解码、永久 `will-change`、全屏滤镜/缩放与 base64 行内复制 |

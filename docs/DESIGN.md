@@ -41,9 +41,19 @@ V13.2–V13.3 改为：
 
 V13.3 在真实 Codex renderer 稳态采样时为 `loadedLayers=1`、`preloadInFlight=0`、`transitioning=false`，V8 heap 使用约 126.3 MiB。另一个完整调试 Codex 实例会带起 48 个进程，稳定工作集约 2.93 GiB；这不是单张主题背景的占用，却会直接造成双窗口卡顿。因此开发期常态只保留控制窗口：调试实例仅在实机截图与指标采集期间临时启动，完成后立即关闭，并独立核验其 watcher、子进程与专用端口均已释放。
 
-### V8 composer 预览边界
+### Composer V9：原生几何纠偏与三案审稿
 
-V7 因 footer 分隔线、透明可读性和控件遮挡被整体否决。V8 的“残卷墨界 / 石印绳契 / 丹炉铜契”只在 `docs/design/composer-options/v8-black-myth-silhouette-study-20260723/` 审稿：宿主仍为原生 `736×96`，装饰限制在 0–7 px 与 89–96 px 的安全边缘，placeholder、plus、权限、模型、麦克风和发送键保持原位。用户未选择前，V13 runtime 和最小包不加载 V8 CSS。
+V7 因 footer 分隔线、透明可读性和控件遮挡被整体否决。对 V8 的独立复核又证明其 fixture 不是可信原生基线：它把 composer 固定为 `736×96`、把原生 `overflow:hidden` 改为 `auto`，1 px 主题边框使 host 内的 editor/footer 发生 1 px 位移并把可见宽度收窄 2 px，预览图标也不是当前 Codex 的真实控件。V8 三案因此冻结为失败历史，不进入 runtime。
+
+V9 位于 `docs/design/composer-options/v9-black-myth-native-proposals-20260724/`，先以只读官方 UI 锚点和 [Interface In Game 的《黑神话：悟空》UI 归档](https://interfaceingame.com/games/black-myth-wukong/)校正形状语汇：实际界面更接近凝墨留白、短幅残纸选中带、朱砂点和器物断口，而不是整圈金框、武器缩略图或发光 HUD。三个候选分别为：
+
+| 方案 | 结构识别点 | 刻意不做 |
+| --- | --- | --- |
+| A · 章回残墨 | 单向凝墨、短残纸选中带、朱点与破边朱批 | 不做卷轴、全幅金线或中央贴图 |
+| B · 金箍锁锋 | 原 32 px 发送座内的暗红漆芯与两道磨损金箍 | 不横画完整金箍棒，不改向上箭头 |
+| C · 大圣翎影 | 烟褐旧纸断口与发送侧双翎负形 | 不放人物或装备贴图，不新增按钮 |
+
+V9 的审稿尺寸是当前实机常见的 `736×98` 与 `560×98`，同时验证 `154 px` 多行增长态；生产实现不得锁死这些高度。主题注入前后 host、editor、footer 和五个按钮的 DOMRect、原始文字、ARIA、placeholder 与五点命中区必须全等，`overflow:hidden` 保持不变。候选只使用 CSS 静态层和内嵌矢量线条：零外部请求、零候选位图解码、零 JS timer、零动画、零 filter、零 `will-change`；reduced-motion 为零过渡，forced-colors 隐藏装饰回退原生面。用户选择前，V13 runtime 和最小包均不加载 V9 CSS。
 
 ### 开发期启动适配器（非最终交付）
 

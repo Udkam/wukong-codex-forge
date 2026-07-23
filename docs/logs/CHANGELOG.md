@@ -1,5 +1,14 @@
 # Local work log
 
+## 2026-07-24 — Composer V9 原生几何纠偏与三案审稿
+
+- V8 经独立几何和盲审复核后正式否决：fixture 固定 `736×96`、把 `overflow:hidden` 改成 `auto`，主题边框使 editor/footer 位移 1 px、可见宽度收窄 2 px，并使用非当前 Codex 的伪图标；其三案继续原位保留但不进入 runtime。
+- 只读结合官方 composer 锚点与 Interface In Game 的黑神话 UI 归档重新归纳结构语汇：凝墨留白、短残纸选中带、朱点、器物断口优先于整圈金框、武器缩略图和发光 HUD。
+- 新增 V9 三案：A“章回残墨”使用单向凝墨、短残纸与破边朱批；B“金箍锁锋”只把两道磨损金箍收进原 32 px 发送座；C“大圣翎影”以烟褐断口和双翎负形呼应大圣。三案只用于用户审稿，未写入 `runtime/forge-background-v13.css` 或最小包。
+- 审稿覆盖 `736×98`、`560×98` 与 `154 px` 多行增长态；生产标准改为主题前后 host/editor/footer/五个按钮 DOMRect、原文字、ARIA、placeholder、overflow 与五点命中区全等，不再把任一高度写成生产常量。
+- 定向脚本 `capture-and-verify-v9-20260724.mjs` 通过：3 案、2 宽、2 高，几何/文字/ARIA/命中区全等；零外部请求、零候选位图、零 timer、零 animation/filter，reduced-motion 与 forced-colors 回退均通过。
+- 本轮仅启动无头 Playwright 截图，完成后立即关闭；复核为 0 个相关 Node/Chromium 进程、0 个监听端口残留，未打开第二个 Codex 调试窗口。旧 portrait-leaf 草稿、既有失败候选和全部用户素材均原位保留，未删除或移动。
+
 ## 2026-07-24 — V13.3 新建任务首帧修复与调试窗口即时回收
 
 - 用户实机发现：首次启动只有背景，缩放窗口后题字和图案才出现；项目选择按钮的原生点状下划线会穿过替换题字；缺口金箍图案视觉不合格。
