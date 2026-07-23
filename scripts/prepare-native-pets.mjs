@@ -40,6 +40,9 @@ const pets = [
     description: '身着旧青衣、手持完整九齿钉耙的可爱小八戒。'
   }
 ];
+const releasedPetIds = new Set([
+  'little-bajie-v3-inart'
+]);
 
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 const jsonBytes = value => Buffer.from(`${JSON.stringify(value, null, 2)}\n`, 'utf8');
@@ -150,7 +153,7 @@ function writeNewOrIdentical(file, bytes, label) {
   return 'created';
 }
 
-const prepared = pets.map(spec => {
+const prepared = pets.filter(spec => releasedPetIds.has(spec.id)).map(spec => {
   const runRoot = path.join(repositoryRoot, spec.run);
   const atlasPath = path.join(runRoot, ...spec.atlas.split('/'));
   const validationPath = path.join(runRoot, ...spec.validation.split('/'));
@@ -212,6 +215,10 @@ const prepared = pets.map(spec => {
   });
   return { spec, atlasBytes, validationBytes, manifestBytes, proofBytes };
 });
+
+for (const spec of pets.filter(candidate => !releasedPetIds.has(candidate.id))) {
+  console.log(`${spec.id}: frozen; retained source and package files were not read or modified`);
+}
 
 assertDirectDirectory(packageRoot, 'Native pet package root');
 for (const item of prepared) {

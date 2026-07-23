@@ -12,7 +12,13 @@ const expectedIds = [
   'little-bajie-v3-inart',
   'little-wukong-yaksha-shenfeng'
 ];
-const expectedInstallIds = expectedIds.map(id => `${id}-wukong-forge`);
+const releasedIds = [
+  'little-bajie-v3-inart'
+];
+const frozenIds = [
+  'little-wukong-yaksha-shenfeng'
+];
+const expectedInstallIds = releasedIds.map(id => `${id}-wukong-forge`);
 const approvedSources = Object.freeze({
   'little-bajie-v3-inart': {
     atlasSha256: '511bc2b8ca7c197407ab8e3be194aaa5f2036428c05fdcb811400525005c2277',
@@ -71,7 +77,7 @@ function assertDirectFile(file, label) {
   return fs.readFileSync(file);
 }
 
-test('the release contains exactly two direct, proof-bound Hatch Pet v2 packages', () => {
+test('the repository retains exactly two direct, proof-bound Hatch Pet v2 packages', () => {
   const actualIds = fs.readdirSync(petRoot, { withFileTypes: true })
     .filter(item => item.isDirectory())
     .map(item => item.name)
@@ -174,7 +180,7 @@ test('Windows linker reuses retained identical content without creating duplicat
 
   const installedNames = fs.readdirSync(path.join(codexHome, 'pets')).sort();
   assert.deepEqual(installedNames, expectedInstallIds, 'content-identical retained releases must reuse the discoverable install ids');
-  for (const id of expectedIds) {
+  for (const id of releasedIds) {
     const installId = `${id}-wukong-forge`;
     const installedPath = path.join(codexHome, 'pets', installId);
     const payloadName = `payload-${approvedSources[id].atlasSha256.slice(0, 16)}`;
@@ -212,15 +218,15 @@ test('Windows linker reuses retained identical content without creating duplicat
     .filter(entry => entry.isDirectory())
     .map(entry => entry.name)
     .sort();
-  assert.deepEqual(officiallyDiscoverable, expectedInstallIds, 'official Dirent.isDirectory discovery must see both custom pets');
+  assert.deepEqual(officiallyDiscoverable, expectedInstallIds, 'official Dirent.isDirectory discovery must see only released custom pets');
 
   const records = roots.flatMap(releaseRoot => fs.readFileSync(
     path.join(releaseRoot, '.wukong-runtime', 'native-pet-links.jsonl'),
     'utf8'
   ).trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line)));
-  assert.equal(records.length, 6);
-  assert.equal(records.filter(record => record.action === 'linked-versioned-payload').length, 2);
-  assert.equal(records.filter(record => record.action === 'already-present').length, 4);
+  assert.equal(records.length, 3);
+  assert.equal(records.filter(record => record.action === 'linked-versioned-payload').length, 1);
+  assert.equal(records.filter(record => record.action === 'already-present').length, 2);
   assert.ok(records.every(record => record.spriteVersionNumber === 2));
   assert.ok(records.every(record => record.installMode === 'versioned-linked-payload'));
 
@@ -228,7 +234,7 @@ test('Windows linker reuses retained identical content without creating duplicat
   const legacyCodexHome = path.join(retained, 'codex-home-legacy-copy');
   fs.mkdirSync(legacyReleaseRoot, { recursive: true });
   fs.cpSync(petRoot, path.join(legacyReleaseRoot, 'pets'), { recursive: true, errorOnExist: true, force: false });
-  for (const id of expectedIds) {
+  for (const id of releasedIds) {
     const legacyInstallPath = path.join(legacyCodexHome, 'pets', `${id}-wukong-forge`);
     fs.mkdirSync(path.dirname(legacyInstallPath), { recursive: true });
     fs.cpSync(path.join(legacyReleaseRoot, 'pets', id), legacyInstallPath, {
@@ -245,7 +251,7 @@ test('Windows linker reuses retained identical content without creating duplicat
     '-CodexHome', legacyCodexHome
   ], { encoding: 'utf8', windowsHide: true });
   assert.equal(legacyResult.status, 0, `legacy migration\nstdout: ${legacyResult.stdout}\nstderr: ${legacyResult.stderr}`);
-  for (const id of expectedIds) {
+  for (const id of releasedIds) {
     const migratedPath = path.join(legacyCodexHome, 'pets', `${id}-wukong-forge`);
     const payloadName = `payload-${approvedSources[id].atlasSha256.slice(0, 16)}`;
     assert.equal(fs.existsSync(path.join(migratedPath, 'spritesheet.webp')), true, 'retained copied atlas must not be deleted');
@@ -264,14 +270,14 @@ test('Windows linker reuses retained identical content without creating duplicat
     path.join(legacyReleaseRoot, '.wukong-runtime', 'native-pet-links.jsonl'),
     'utf8'
   ).trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
-  assert.equal(legacyRecords.length, 2);
+  assert.equal(legacyRecords.length, 1);
   assert.ok(legacyRecords.every(record => record.action === 'migrated-retained-copy'));
   assert.ok(legacyRecords.every(record => record.installMode === 'versioned-linked-payload'));
 
   const upgradeRoot = path.join(retained, 'release-upgrade');
   fs.mkdirSync(upgradeRoot, { recursive: true });
   fs.cpSync(petRoot, path.join(upgradeRoot, 'pets'), { recursive: true, errorOnExist: true, force: false });
-  const upgradeId = 'little-wukong-yaksha-shenfeng';
+  const upgradeId = 'little-bajie-v3-inart';
   const upgradePackage = path.join(upgradeRoot, 'pets', upgradeId);
   const upgradeManifestPath = path.join(upgradePackage, 'pet.json');
   const upgradeAtlasPath = path.join(upgradePackage, 'spritesheet.webp');
@@ -283,7 +289,7 @@ test('Windows linker reuses retained identical content without creating duplicat
   const upgradeManifestBytes = Buffer.from(`${JSON.stringify(upgradeManifest, null, 2)}\n`, 'utf8');
   fs.writeFileSync(upgradeManifestPath, upgradeManifestBytes, { flag: 'w' });
   fs.copyFileSync(
-    path.join(upgradeRoot, 'pets', 'little-bajie-v3-inart', 'spritesheet.webp'),
+    path.join(upgradeRoot, 'pets', 'little-wukong-yaksha-shenfeng', 'spritesheet.webp'),
     upgradeAtlasPath
   );
   const upgradeAtlasBytes = fs.readFileSync(upgradeAtlasPath);
@@ -323,7 +329,7 @@ test('Windows linker reuses retained identical content without creating duplicat
     'utf8'
   ).trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
   assert.equal(upgradeRecords.filter(record => record.action === 'upgraded-retained-payload').length, 1);
-  assert.equal(upgradeRecords.filter(record => record.action === 'already-present').length, 1);
+  assert.equal(upgradeRecords.filter(record => record.action === 'already-present').length, 0);
   assert.ok(upgradeRecords.every(record => record.installMode === 'versioned-linked-payload'));
   assert.deepEqual(fs.readdirSync(path.join(codexHome, 'pets')).sort(), expectedInstallIds, 'upgrade must not add duplicate discovery ids');
 
@@ -331,7 +337,7 @@ test('Windows linker reuses retained identical content without creating duplicat
   const conflictCodexHome = path.join(retained, 'codex-home-conflict');
   fs.mkdirSync(conflictRoot, { recursive: true });
   fs.cpSync(petRoot, path.join(conflictRoot, 'pets'), { recursive: true, errorOnExist: true, force: false });
-  const foreignInstallPath = path.join(conflictCodexHome, 'pets', 'little-wukong-yaksha-shenfeng-wukong-forge');
+  const foreignInstallPath = path.join(conflictCodexHome, 'pets', 'little-bajie-v3-inart-wukong-forge');
   fs.mkdirSync(foreignInstallPath, { recursive: true });
   fs.writeFileSync(path.join(foreignInstallPath, 'foreign-pet.txt'), 'retained foreign content\n', { encoding: 'utf8', flag: 'wx' });
 
@@ -349,4 +355,37 @@ test('Windows linker reuses retained identical content without creating duplicat
   );
   assert.deepEqual(fs.readdirSync(foreignInstallPath), ['foreign-pet.txt'], 'foreign content must remain byte-for-byte and no managed files may be added');
   assert.equal(fs.existsSync(path.join(conflictRoot, '.wukong-runtime')), false, 'conflict preflight must not create runtime state');
+});
+
+test('Windows linker leaves a pre-existing frozen Wukong discovery directory byte-for-byte untouched', {
+  skip: process.platform !== 'win32'
+}, t => {
+  const retained = fs.mkdtempSync(path.join(os.tmpdir(), 'wukong-frozen-pet-proof-'));
+  const releaseRoot = path.join(retained, 'release');
+  const codexHome = path.join(retained, 'codex-home');
+  const frozenInstallPath = path.join(codexHome, 'pets', `${frozenIds[0]}-wukong-forge`);
+  fs.mkdirSync(releaseRoot, { recursive: true });
+  fs.cpSync(petRoot, path.join(releaseRoot, 'pets'), { recursive: true, errorOnExist: true, force: false });
+  fs.mkdirSync(frozenInstallPath, { recursive: true });
+  const frozenSentinelPath = path.join(frozenInstallPath, 'retained-invalid-pet.txt');
+  const frozenSentinel = Buffer.from('must remain unchanged\n', 'utf8');
+  fs.writeFileSync(frozenSentinelPath, frozenSentinel, { flag: 'wx' });
+  const beforeEntries = fs.readdirSync(frozenInstallPath).sort();
+
+  const result = spawnSync('powershell.exe', [
+    '-NoProfile',
+    '-ExecutionPolicy', 'Bypass',
+    '-File', path.join(root, 'scripts', 'install-native-pets.ps1'),
+    '-Root', releaseRoot,
+    '-CodexHome', codexHome
+  ], { encoding: 'utf8', windowsHide: true });
+  assert.equal(result.status, 0, `frozen Wukong preservation\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+  assert.deepEqual(fs.readdirSync(frozenInstallPath).sort(), beforeEntries);
+  assert.deepEqual(fs.readFileSync(frozenSentinelPath), frozenSentinel);
+
+  const records = fs.readFileSync(
+    path.join(releaseRoot, '.wukong-runtime', 'native-pet-links.jsonl'),
+    'utf8'
+  ).trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
+  assert.ok(records.every(record => record.petId !== frozenIds[0]));
 });

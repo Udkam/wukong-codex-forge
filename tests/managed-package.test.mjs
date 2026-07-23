@@ -30,10 +30,6 @@ test('minimal managed package imports independently and omits development surfac
     'remove-theme.cmd',
     'PORTABLE-README.txt',
     'themes/active.json',
-    'pets/little-wukong-yaksha-shenfeng/pet.json',
-    'pets/little-wukong-yaksha-shenfeng/spritesheet.webp',
-    'pets/little-wukong-yaksha-shenfeng/validation.json',
-    'pets/little-wukong-yaksha-shenfeng/package-proof.json',
     'pets/little-bajie-v3-inart/pet.json',
     'pets/little-bajie-v3-inart/spritesheet.webp',
     'pets/little-bajie-v3-inart/validation.json',
@@ -42,6 +38,14 @@ test('minimal managed package imports independently and omits development surfac
     ...Object.values(sourceTheme.motifs || {}).map(asset => `themes/${asset}`)
   ]) {
     assert.equal(fs.existsSync(path.join(target, required)), true, `managed file missing: ${required}`);
+  }
+  for (const frozenPetFile of [
+    'pets/little-wukong-yaksha-shenfeng/pet.json',
+    'pets/little-wukong-yaksha-shenfeng/spritesheet.webp',
+    'pets/little-wukong-yaksha-shenfeng/validation.json',
+    'pets/little-wukong-yaksha-shenfeng/package-proof.json'
+  ]) {
+    assert.equal(fs.existsSync(path.join(target, frozenPetFile)), false, `frozen pet file packaged: ${frozenPetFile}`);
   }
   assert.equal(fs.existsSync(path.join(target, 'node_modules', 'ws')), false, 'ws runtime dependency was packaged');
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client.mjs')), false, 'superseded ws bundle was packaged');

@@ -6,9 +6,10 @@
 
 - **正式运行时已收敛为背景层**：保留 Codex 原生顶部栏、侧栏、工作区、环境信息、对话、composer、按钮、文字、图标、尺寸和交互。V11 对侧栏、输入器、发送键、环境卡、消息和滚动条的样式替换全部退出活动链。
 - **双场景图库**：新建任务从 6 张战斗图轮换，进入对话从 5 张风景图轮换；每组使用独立 session 游标，双固定层以 820 ms 交叉淡入淡出，始终 `cover` 全窗。
-- **输入框仍在独立审稿**：V1–V4 均已否决并原样保留。V4 把夜叉衣甲和神锋继续压成狭长裁片，造成服装、护腕与武器结构失真；活动 runtime 尚未加载任何候选 composer 样式，也不会再把装备缩成装饰边条。
-- **下一版 composer 尚未立项集成**：必须先取得可追溯、足够分辨率且不需要猜画的夜叉套、兽棍·神锋和金箍棒结构参考，再在原生 `736×96` / `560×96` 内重新做整体形状。不得外扩、加栏、改字、改命中区或用生成图补造装备细节。
-- **Hatch Pet 分开验收**：小八戒 repair-v2 已形成独立候选，一手持完整九齿钉耙、一手捧腹完成“大笑奶龙式”动作；小天命人 repair-v2 仍未达到真实跑动和棍花要求，不进入 `pets/`。后者必须依据连续实机帧重做，同时全行保持同一夜叉套、脸、比例和神锋。
+- **输入框仍在独立审稿**：V1–V6 均已否决并原样保留。V4 把夜叉衣甲和神锋压成狭长裁片；V5 仍是泛用棱角面板；V6 的“厌火襟匣”读成宝石徽章、“如意棍枕”读成科幻状态条。活动 runtime 尚未加载任何候选 composer 样式。
+- **下一版 composer 不再堆道具**：夜叉套与兽棍·神锋由 Hatch Pet 小天命人完整表现，金箍棒由战斗背景完整表现；输入框只在原生 `736×96` / `560×96` 内承接游戏 UI 的留白、墨迹、器物边缘与信息层级。不得外扩、加栏、改字、改命中区或用生成图补造装备细节。
+- **Hatch Pet 分开验收**：小八戒 repair-v2 已形成独立候选，一手持完整九齿钉耙、一手捧腹完成“大笑奶龙式”动作；小天命人现有基础立绘同时缺少神锋后棍身/尾端和角色右脚厌火魔足，base 与 repair-v2 全部冻结，不进入 `pets/`。本地录像已由用户确认不符合动作参考要求，动作线暂停，等待用户后续录制，不再继续筛片或生成 repair-v3。
+- **错误小天命人已设发布门禁**：仓库中的旧 `pets/little-wukong-yaksha-shenfeng` 四个文件原样保留，但 V12 打包、准备和安装均采用显式白名单，只处理小八戒；不会新装、迁移、升级或写事件记录到旧小天命人 discovery 目录，也不改变用户当前宠物选择。
 - **保留式生命周期**：稳定安装使用追加 release、hash 版本化宠物 payload 与写前 metadata history；不删除旧文件。普通开始菜单入口将在安装 0.11.0 后指向 retained bridge，主题根缺失时回退官方原生 ChatGPT。
 - **本地素材只读**：`E:\GameRecord\Black Myth Wukong` 与 `D:\SteamLibrary\steamapps\common\BlackMythWukong` 可用于索引、比对和复制式抽帧；项目不得删除、移动或覆盖其中任何原文件。
 
@@ -38,7 +39,7 @@ fixture 只用于稳定复核 landing/thread 两类 DOM。真实 Codex renderer 
 - [小八戒原生宠物层](docs/screenshots/live-codex-v11-bajie-pet-linked-payload-20260722.png)与[小悟空原生宠物层](docs/screenshots/live-codex-v11-wukong-pet-linked-payload-20260722.png)
 - [小八戒 11 行动作表](docs/pets/little-bajie-v3-inart/contact-sheet.png)、[小悟空 11 行动作表](docs/pets/little-wukong-yaksha-shenfeng/contact-sheet.png)
 
-`start-theme.cmd` 会先运行 `scripts/install-native-pets.ps1`。官方 Codex 只扫描 `Dirent.isDirectory()` 为真的顶层目录，因此安装器建立真实发现目录，并在其内部放置名为 `payload` 的目录 junction；派生 `pet.json` 指向 `payload/spritesheet.webp`。这样不需要管理员或 Developer Mode，不复制多兆字节 atlas，主题源目录不存在后图集自然不可读。若检测到早期直接副本，安装器先把原 manifest 逐字节保存在 `source-pet.json`，旧 atlas 也原位保留，再迁移到 payload 路径；不删除、不移动任何已有文件。安装记录只追加到包内 `.wukong-runtime/native-pet-links.jsonl`，内容冲突时 fail closed。
+`start-theme.cmd` 会先运行 `scripts/install-native-pets.ps1`。V12 发布白名单当前只包含已保留的小八戒包；被否决的小天命人源包仍留在仓库，但不会被新发行物复制或被安装器读取。官方 Codex 只扫描 `Dirent.isDirectory()` 为真的顶层目录，因此安装器为白名单包建立真实发现目录，并在其内部放置 hash 版本化 `payload-*` 目录 junction；派生 `pet.json` 指向对应 `payload-*/spritesheet.webp`。这样不需要管理员或 Developer Mode，不复制多兆字节 atlas。若检测到白名单宠物的早期直接副本，安装器先把原 manifest 逐字节保存在 `source-pet.json`，旧 atlas 也原位保留，再迁移到 payload 路径；不删除、不移动任何已有文件。安装记录只追加到包内 `.wukong-runtime/native-pet-links.jsonl`，内容冲突时 fail closed。
 
 ## 0.9.0 / V10 历史交付（保留）
 

@@ -237,8 +237,19 @@ if ($eventItem -and (($eventItem.Attributes -band [IO.FileAttributes]::ReparsePo
     throw "Refusing a linked or non-file native pet event log: $eventPath"
 }
 
-$packages = @(Get-ChildItem -LiteralPath $packagesRoot -Directory | Sort-Object Name)
-if ($packages.Count -eq 0) { throw 'No Hatch Pet packages were found.' }
+$releasedPetIds = @(
+    'little-bajie-v3-inart'
+)
+$packages = @(
+    foreach ($releasedPetId in $releasedPetIds) {
+        $releasedPackagePath = Join-Path $packagesRoot $releasedPetId
+        $releasedPackage = Get-Item -LiteralPath $releasedPackagePath -Force -ErrorAction SilentlyContinue
+        if (-not $releasedPackage -or -not $releasedPackage.PSIsContainer) {
+            throw "Released Hatch Pet package is missing: $releasedPetId"
+        }
+        $releasedPackage
+    }
+)
 
 $plans = @()
 foreach ($package in $packages) {

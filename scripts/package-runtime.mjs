@@ -29,16 +29,15 @@ const runtimeFiles = [
   'remove-theme.cmd'
 ];
 
-const nativePetFiles = [
-  'pets/little-wukong-yaksha-shenfeng/pet.json',
-  'pets/little-wukong-yaksha-shenfeng/spritesheet.webp',
-  'pets/little-wukong-yaksha-shenfeng/validation.json',
-  'pets/little-wukong-yaksha-shenfeng/package-proof.json',
-  'pets/little-bajie-v3-inart/pet.json',
-  'pets/little-bajie-v3-inart/spritesheet.webp',
-  'pets/little-bajie-v3-inart/validation.json',
-  'pets/little-bajie-v3-inart/package-proof.json'
+const releasedNativePetIds = [
+  'little-bajie-v3-inart'
 ];
+const nativePetFiles = releasedNativePetIds.flatMap(id => [
+  `pets/${id}/pet.json`,
+  `pets/${id}/spritesheet.webp`,
+  `pets/${id}/validation.json`,
+  `pets/${id}/package-proof.json`
+]);
 
 const inside = (parent, child) => {
   const relative = path.relative(parent, child);

@@ -6,10 +6,17 @@
 - 新增 V12 双固定背景层：6 张战斗图用于新建任务、5 张风景图用于对话，两池独立轮换、`cover` 全窗并以 820 ms 交叉淡变。
 - 只读核对当前 `OpenAI.Codex 26.715.2305.0` app.asar，确认 composer 原生 surface、footer/测量节点和 Hatch Pet identity 由 discovery 目录名决定。
 - 输入框 V1–V4 均被否决并原样保留：V4 把夜叉衣甲、护腕与神锋裁成极窄碎片后出现明显失真，不进入 runtime，停止“装备切片贴边”路线。
+- 输入框 V5、V6 继续在 1× 盲审失败：V5 为泛用棱角面板；V6 的夜叉案读成宝石徽章、金箍棒案读成科幻状态条。两版仅保留审计证据，未进入 runtime。
+- 修正元素落点合同：夜叉套与神锋由 Hatch Pet 小天命人完整表现，金箍棒由战斗背景完整表现；composer 不再同时堆三件道具，只承接游戏 UI 的形状与信息层级。
 - 宠物首轮 row 1/2/4 候选通过图集验证但视觉不合格：小天命人跑动行换成不同 Q 版角色，小八戒持耙动作失真；候选保留且未写入 canonical。
 - 小八戒 repair-v2 已形成独立候选：一手持完整九齿钉耙、一手捧腹，模仿“大笑奶龙”的前俯—后仰—肩腹弹起节奏；atlas SHA-256 为 `e553bf09e234bcaff67f43a2f3a2f6ae446a5abc70ddec322b7682edf0ca478a`，尚未写入 canonical。
 - 小天命人 repair-v2 保持了同一角色身份，但跑动和棍花仍未达到游戏动作保真要求，继续否决；下一版改用用户本地录像连续帧和真实动作族名称建立相位图。
+- 用户确认本地视频均不符合本次动作参考要求；已停止继续扫描、取帧和 repair-v3 生成，现有 contact 只作为失败/辅助记录，等待用户后续录制。
+- 用户指出小天命人现有基础立绘的两个源头缺陷：兽棍·神锋缺少握持点后的后棍身/尾端，角色右腿与右脚缺少厌火魔足。该 base 及所有派生动作候选冻结，下一轮必须先重建完整基础角色。
+- V12 为错误小天命人增加三重发布白名单：准备脚本不再读取旧 spec，最小包不再复制旧四文件，安装器不再处理该 ID；仓库文件和用户已有 discovery 目录全部保留，当前宠物选择不修改。
+- 定向验证通过 18/18：最小包确认悟空四文件缺席，安装器只处理白名单小八戒，预置旧悟空 discovery 目录与 sentinel 字节级不变；生命周期与保留式合同继续通过。
 - `D:\SteamLibrary\steamapps\common\BlackMythWukong` 与 `E:\GameRecord\Black Myth Wukong` 纳入只读素材范围；允许索引、hash、复制式抽帧和项目内新增派生物，禁止删除、移动或覆盖任意原文件。
+- 本地夜叉资源只读审计确认 4 个 mod 为 UE Pak v11，可验证 `T_WuKong_YeChaWang_*` 索引与纹理族；本机无可信 FModel/umodel/UnrealPak/repak，未解包、未预览、未下载陌生工具，也未处理加密或 DRM。
 - 官方来源重新分栏：黑神话官方微博“天命人·夜叉王厌火套 1/12”是厌火套主锚点；INART `Yaksha King 1/12` 是夜叉王 Boss 本体，不能作为天命人衣甲依据。此前混用结论全部作废。
 - 修复稳定/便携 disable 判定、停止/恢复入口、install-phase 宠物注册与开始菜单 bridge reparse 防护。
 - 宠物升级改为稳定 discovery 目录 + hash 版本 payload；current metadata 写前复制到唯一 history，旧 payload 和 metadata 不删除。

@@ -4,11 +4,12 @@
 
 - 活动背景只使用 `themes/assets/` 中已纳入项目的 11 张画面：6 张战斗场景和 5 张风景场景。用户本地 `E:\GameRecord\Black Myth Wukong\TipsImg` 与 `图片` 只作为审稿和场景筛选来源，不由 runtime 直接读取。
 - 本轮只读素材索引与 contact sheet 位于 `artifacts/asset-audit-20260723/`。它们用于识别真实游戏器物、材质和构图，不等于获批 UI 资产。
-- composer V1–V4 全部保留在 `docs/design/composer-options/`。V3 把复杂装备压成不可识别的细边条；V4 又通过裁切、旋转和压缩把夜叉衣甲、护腕与神锋变成失真的微型纹理。两版均为失败历史，不进入运行包。
-- 后续 composer 只允许确定性还原夜叉衣甲、金箍棒端箍/棍身和神锋棍首。参考分辨率不足时先补充高分来源，不得用 imagegen 猜造缺失装备结构，也不得把完整装备压成 64×8、22×18 或 40×40 的装饰碎片。
+- composer V1–V6 全部保留在 `docs/design/composer-options/`。V3/V4 把复杂装备压成不可识别的细边条；V5 是泛用棱角面板；V6 的夜叉案读成宝石徽章、金箍棒案读成科幻状态条。六版均为失败历史，不进入运行包。
+- 后续 composer 不再承担夜叉套、神锋、金箍棒三件道具的微缩展示。夜叉套与神锋由小天命人完整承担，金箍棒由战斗背景完整承担；输入框只提炼本地原生游戏画面中“展开经卷、单侧墨蚀断口、断续细线、单枚铜铸焦点”的形状语言。不得用 imagegen 猜造装备细节，也不得把完整装备压成 64×8、22×18 或 40×40 的装饰碎片。
+- 静态形状审查位于 `artifacts/black-myth-ui-shape-audit-20260723T232750/`：11 张精选来源均来自用户本地 `TipsImg` / `图片`，排除普通战斗画面，只用于设计研究。联系表和报告不进入最小运行包，源文件未删除、移动或覆盖。
 - INART/游科/游戏截图只用于结构校准；第三方页面的攻略图不作为可再发布运行资产。项目发布的透明 UI 资产必须记录来源裁图、处理步骤、alpha 边缘与最终 hash。
 - `D:\SteamLibrary\steamapps\common\BlackMythWukong` 只读审计未发现可直接使用的松散 PNG/JPG/视频；核心资源为签名 PAK，不修改、不替换、不绕过加密。`E:\GameRecord\Black Myth Wukong` 中用户自有录像和截图可复制到项目追加式审计目录并抽取连续动作帧，源文件始终原位保留。
-- 本地模组索引中可见 `AS_Wukong_ComboA_q1_sprint`、`AS_Wukong_ComboC_q1_run` 与 `AS_Wukong_ComboC_q*_start/loop/end` 等真实动作族名称；这些名称只用于锁定跑动/棍花语义，最终宠物动作仍须以用户录像的连续实机画面作视觉依据。
+- 本地模组索引中可见 `AS_Wukong_ComboA_q1_sprint`、`AS_Wukong_ComboC_q1_run` 与 `AS_Wukong_ComboC_q*_start/loop/end` 等真实动作族名称；这些名称只用于锁定跑动/棍花语义。用户已确认现有本地视频均不符合本次动作参考要求，因此停止扫描，等待用户后续录制。
 - 天命人厌火套的官方主锚点为[黑神话 BLACKMYTH 官方微博](https://www.weibo.com/7972761955/Q5qbwbjOC)正文中的“天命人·夜叉王厌火套 1/12 收藏手办”。[INART Yaksha King 1/12](https://global.inart.studio/products/yaksha-king-1-12-action-figure)是夜叉王 Boss 本体，不是天命人厌火套，严禁再把它当作厌火绣衫、魔手或魔足依据。
 - [BWIKI 厌火套装页](https://wiki.biligame.com/wukong/%E5%8E%8C%E7%81%AB%E5%A5%97%E8%A3%85)只用于交叉核对四件命名：厌火夜叉面、厌火绣衫、厌火魔手、厌火魔足；它是开放编辑的非官方来源。金箍棒动作结构可参考[INART 天命人 1/12](https://global.inart.studio/products/black-myth-wukong-the-destined-one-1-12)，但该手办也不是厌火套。
 

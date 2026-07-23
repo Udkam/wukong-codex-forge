@@ -5,12 +5,14 @@
 | 工作流 | 本轮责任 | 当前结论 / 门槛 |
 | --- | --- | --- |
 | `startup_release_audit` | 只读核对普通启动失效、release、快捷方式桥接与官方宠物 identity | 发现开始菜单仍指向旧 Temp bridge；官方 identity 来自顶层 discovery 目录名，必须稳定；审计未改文件 |
-| `composer_concepts` | 保留 V1–V3，产出真实素材映射与 V4 单一精修稿 | V1–V4 全部失败并冻结；V4 的装备裁条造成失真，未改 runtime |
+| `composer_concepts` | 以真实 Codex 几何产出并盲审候选 | V1–V6 全部失败并冻结；V5 为泛用棱角面板，V6 为宝石徽章/科幻武器条，均未改 runtime |
 | `composer_art_direction_critic` | 独立只读美术审计 | 确认 V3 是贴图套壳；给出 1× 可识别、神锋三层结构和零外扩验收门槛 |
 | `pet_hover_repair` | 只改 v2 row 1、2、4 动作候选 | 小八戒 repair-v2 已形成独立候选；小天命人 repair-v2 因真实跑动/棍花不足继续否决 |
-| `wukong_motion_reference` | 只读审计用户录像与游戏动作族，提取跑动/棍花连续帧相位图 | 只向项目追加抽帧和报告；不改录像、游戏、PAK 或模组 |
-| `yaksha_local_resource_audit` | 只读核对本地夜叉套模组纹理族和安全提取边界 | 不下载或执行不可信工具，不绕过加密，不改任何 PAK |
+| `wukong_motion_reference` | 只读审计用户录像与游戏动作族 | 用户确认本地视频均不符合要求，已停止扫描；既有 contact 仅为失败/辅助证据，等待用户新录制 |
+| `yaksha_local_resource_audit` | 只读核对本地夜叉套模组纹理族和安全提取边界 | 仅验证 UE Pak v11 索引与纹理族；无可信解包器，未解包、未预览、不绕过加密或 DRM |
+| `black_myth_ui_shape_audit` | 只读筛选 TipsImg/图片中的原生 UI 形状参考 | 仅追加 contact sheet 与报告；不扫视频，不改 runtime/pets/tests/docs |
 | `yaksha_official_reference` | 核对游科/官方授权手办的夜叉套、神锋与金箍棒结构 | 只给出结构参考与来源，不直接写入运行包 |
+| `invalid_pet_release_gate` | 只读审计错误小天命人进入发行/安装链的路径 | 已落地三重白名单；旧包与已有 discovery 保留，新 V12 不读取、不复制、不迁移、不升级 |
 | 主对话 | V12 背景、保留式安装、候选视觉否决/集成、真实窗口审计、文档与 Git | 未通过 contact sheet / 真实 1× 视觉审查的候选不得进入 canonical 或 runtime |
 
 所有子工作流只能创建追加式候选与证据；共享正式目录、安装、精确暂存、commit 和 push 只由主对话执行。任何被否决文件原位保留。
