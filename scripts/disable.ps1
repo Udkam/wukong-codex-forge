@@ -7,6 +7,13 @@ param(
 $ErrorActionPreference = 'Stop'
 $controlled = [IO.Path]::GetFullPath((Join-Path $env:USERPROFILE '.codex\themes\wukong-codex-forge'))
 $appRoot = [IO.Path]::GetFullPath($Root)
+$releaseMarker = Join-Path (Split-Path $appRoot -Parent) 'release.json'
+$isPortable = if ($PSBoundParameters.ContainsKey('Portable')) {
+    [bool]$Portable
+}
+else {
+    -not (Test-Path -LiteralPath $releaseMarker)
+}
 $packageDefinition = Join-Path $appRoot 'package.json'
 if (-not (Test-Path -LiteralPath $packageDefinition)) {
     throw 'Theme package marker package.json is missing.'
@@ -15,7 +22,7 @@ $themePackage = Get-Content -LiteralPath $packageDefinition -Raw -Encoding UTF8 
 if ([string]$themePackage.name -ne 'wukong-codex-forge') {
     throw 'Theme package marker is invalid.'
 }
-$stateRoot = if ($Portable) { Join-Path $appRoot '.wukong-runtime' } else { $controlled }
+$stateRoot = if ($isPortable) { Join-Path $appRoot '.wukong-runtime' } else { $controlled }
 $injector = Join-Path $appRoot 'runtime\injector.mjs'
 if (-not (Test-Path -LiteralPath $injector)) {
     throw "Managed injector is missing: $injector"
@@ -26,7 +33,7 @@ if (-not $package) { throw 'Official OpenAI.Codex Store package was not found.' 
 $node = Join-Path $package.InstallLocation 'app\resources\cua_node\bin\node.exe'
 if (-not (Test-Path -LiteralPath $node)) { throw 'The Node runtime bundled with OpenAI.Codex was not found.' }
 
-$profilePath = if ($Portable) {
+$profilePath = if ($isPortable) {
     Join-Path $stateRoot 'profile'
 } else {
     [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'))
@@ -119,7 +126,7 @@ foreach ($requestPath in $requests) {
 
 $managedCodex = @(Get-CimInstance Win32_Process -Filter "Name='ChatGPT.exe'" -ErrorAction SilentlyContinue | Where-Object {
     if (-not $_.CommandLine -or $_.CommandLine -match '(?:^|\s)--type=') { return $false }
-    if ($Portable) { return $_.CommandLine.IndexOf($profilePath, [StringComparison]::OrdinalIgnoreCase) -ge 0 }
+    if ($isPortable) { return $_.CommandLine.IndexOf($profilePath, [StringComparison]::OrdinalIgnoreCase) -ge 0 }
     return $_.CommandLine -notmatch '(?:^|\s)--user-data-dir(?:=|\s)'
 })
 $port = $null
@@ -154,7 +161,7 @@ $disableEvent = [ordered]@{
     port = $port
     profilePath = $profilePath
     appPath = $appRoot
-    portable = [bool]$Portable
+    portable = [bool]$isPortable
     signaledRequests = @($requests)
     retained = $true
 } | ConvertTo-Json -Compress

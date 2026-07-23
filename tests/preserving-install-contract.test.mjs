@@ -36,8 +36,10 @@ test('public install and disable entry points preserve every existing file', () 
   assert.match(nativePets, /New-Item -ItemType Junction/);
   assert.match(nativePets, /native-pet-links\.jsonl/);
   assert.doesNotMatch(nativePets, /Remove-Item|Move-Item|Copy-Item[^\r\n]*-Force/);
-  assert.match(nativePets, /payload\/spritesheet\.webp/);
+  assert.match(nativePets, /payloadName[\s\S]*spritesheet\.webp/);
   assert.match(nativePets, /source-pet\.json/);
+  assert.match(nativePets, /managed-upgrade/);
+  assert.match(nativePets, /history/);
   assert.doesNotMatch(nativePets, /Copy-Item[^\r\n]*spritesheet\.webp/);
   assert.match(nativePets, /1536x2288/);
   assert.match(nativePets, /validation\.json/);
@@ -47,12 +49,22 @@ test('public install and disable entry points preserve every existing file', () 
   assert.doesNotMatch(prepareNativePets, /rmSync|unlinkSync|rmdirSync|\.rm\(|\.unlink\(/);
   assert.match(prepareNativePets, /flag: 'wx'/);
   assert.match(stopCmd, /disable\.ps1/);
-  assert.match(stopCmd, /-Portable/);
+  assert.doesNotMatch(stopCmd, /-Portable/);
+  assert.doesNotMatch(removeCmd, /-Portable/);
+  assert.match(disable, /\$PSBoundParameters\.ContainsKey\('Portable'\)/);
   assert.match(install, /install-chatgpt-hook\.ps1/);
+  assert.match(install, /appTarget 'scripts\\install-native-pets\.ps1'/);
   assert.match(hook, /ChatGPT-before-wukong-/);
   assert.match(hook, /Copy-Item -LiteralPath \$shortcutPath -Destination \$backupPath/);
   assert.match(hook, /launcher-bridges/);
   assert.match(hook, /LOCALAPPDATA[^\r\n]*WukongCodexForge/);
+  assert.match(hook, /Assert-DirectManagedPath/);
+  assert.match(hook, /Start Menu Programs directory/);
+  assert.match(hook, /ChatGPT Start Menu shortcut/);
+  assert.match(hook, /launch adapter root/);
+  assert.match(hook, /shortcut backup directory/);
+  assert.match(hook, /launcher bridge directory/);
+  assert.match(hook, /ReparsePoint/);
   assert.match(launch, /profileMode = 'native-default'/);
   assert.match(launch, /GetFolderPath\('ApplicationData'\)[\s\S]*Codex\\web\\Codex/);
   assert.match(hook, /function Get-PortableSha256/);
@@ -78,13 +90,14 @@ test('managed lifecycle uses Codex embedded Node and no WebSocket dependency tre
   assert.doesNotMatch(read('package-lock.json'), /"node_modules\/ws"|"ws"\s*:/);
 });
 
-test('V11 watcher and disable path prove native restoration before reporting success', () => {
+test('V12 watcher and disable path prove native restoration before reporting success', () => {
   const watcher = read('runtime/watch.mjs');
   const launch = read('scripts/launch.ps1');
   const disable = read('scripts/disable.ps1');
   const injector = read('runtime/injector.mjs');
 
-  assert.match(watcher, /__wukongCodexForgeRuntimeV11/);
+  assert.match(watcher, /__wukongCodexForgeRuntimeV12/);
+  assert.match(watcher, /forge-background-v12\.css/);
   assert.doesNotMatch(watcher, /emptyTargetPasses/);
   assert.match(watcher, /rootIsAlive\(rootPid\)/);
   assert.match(launch, /& \$node \$watcherPath \$port \$themePath \$disableRequest \$codexProcess\.Id/);

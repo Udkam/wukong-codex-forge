@@ -1,5 +1,20 @@
 # Local work log
 
+## 2026-07-23 — V12 背景收敛、输入框再设计与保留式升级
+
+- 用户将正式活动范围收敛为背景替换；侧栏、顶部栏、环境信息、消息、按钮、滚动条与 composer 的 V11 样式全部退出活动 runtime，旧文件原样保留。
+- 新增 V12 双固定背景层：6 张战斗图用于新建任务、5 张风景图用于对话，两池独立轮换、`cover` 全窗并以 820 ms 交叉淡变。
+- 只读核对当前 `OpenAI.Codex 26.715.2305.0` app.asar，确认 composer 原生 surface、footer/测量节点和 Hatch Pet identity 由 discovery 目录名决定。
+- 输入框 V1–V4 均被否决并原样保留：V4 把夜叉衣甲、护腕与神锋裁成极窄碎片后出现明显失真，不进入 runtime，停止“装备切片贴边”路线。
+- 宠物首轮 row 1/2/4 候选通过图集验证但视觉不合格：小天命人跑动行换成不同 Q 版角色，小八戒持耙动作失真；候选保留且未写入 canonical。
+- 小八戒 repair-v2 已形成独立候选：一手持完整九齿钉耙、一手捧腹，模仿“大笑奶龙”的前俯—后仰—肩腹弹起节奏；atlas SHA-256 为 `e553bf09e234bcaff67f43a2f3a2f6ae446a5abc70ddec322b7682edf0ca478a`，尚未写入 canonical。
+- 小天命人 repair-v2 保持了同一角色身份，但跑动和棍花仍未达到游戏动作保真要求，继续否决；下一版改用用户本地录像连续帧和真实动作族名称建立相位图。
+- `D:\SteamLibrary\steamapps\common\BlackMythWukong` 与 `E:\GameRecord\Black Myth Wukong` 纳入只读素材范围；允许索引、hash、复制式抽帧和项目内新增派生物，禁止删除、移动或覆盖任意原文件。
+- 官方来源重新分栏：黑神话官方微博“天命人·夜叉王厌火套 1/12”是厌火套主锚点；INART `Yaksha King 1/12` 是夜叉王 Boss 本体，不能作为天命人衣甲依据。此前混用结论全部作废。
+- 修复稳定/便携 disable 判定、停止/恢复入口、install-phase 宠物注册与开始菜单 bridge reparse 防护。
+- 宠物升级改为稳定 discovery 目录 + hash 版本 payload；current metadata 写前复制到唯一 history，旧 payload 和 metadata 不删除。
+- 定向生命周期、保留式安装与原生宠物合同 16/16 通过；视觉候选仍以人工审查为门槛。
+
 ## 2026-07-20 — 大圣归来深度主题重构
 
 - 判定旧版只达到“背景可显示与可恢复”的技术线，不满足深度视觉设计。

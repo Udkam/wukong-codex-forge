@@ -105,7 +105,8 @@ function Assert-NoReparseSegments([string]$Path, [string]$Label) {
 function Test-InstalledPetContent(
     [string]$Path,
     [hashtable]$ExpectedHashes,
-    [string]$DerivedManifestHash
+    [string]$DerivedManifestHash,
+    [string]$PayloadName
 ) {
     $directoryItem = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
     if (-not $directoryItem -or -not $directoryItem.PSIsContainer -or ($directoryItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
@@ -126,7 +127,7 @@ function Test-InstalledPetContent(
     if ((Get-PortableSha256 $validationPath) -ne [string]$ExpectedHashes['validation.json']) { return $false }
     if ((Get-PortableSha256 $proofPath) -ne [string]$ExpectedHashes['package-proof.json']) { return $false }
 
-    $payloadPath = Join-Path $Path 'payload'
+    $payloadPath = Join-Path $Path $PayloadName
     $payloadItem = Get-Item -LiteralPath $payloadPath -Force -ErrorAction SilentlyContinue
     if (-not $payloadItem -or -not $payloadItem.PSIsContainer -or -not ($payloadItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
         return $false
@@ -158,15 +159,50 @@ function Test-LegacyCopiedPetContent(
 
 function Get-ExistingPetDisposition(
     [string]$Path,
+    [string]$PetId,
     [hashtable]$ExpectedHashes,
-    [string]$DerivedManifestHash
+    [string]$DerivedManifestHash,
+    [string]$PayloadName
 ) {
     $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
     if (-not $item) { return 'absent' }
     if (-not $item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return 'conflict' }
-    if (Test-InstalledPetContent $Path $ExpectedHashes $DerivedManifestHash) { return 'same' }
+    if (Test-InstalledPetContent $Path $ExpectedHashes $DerivedManifestHash $PayloadName) { return 'same' }
     if (Test-LegacyCopiedPetContent $Path $ExpectedHashes) { return 'legacy-copy' }
-    return 'conflict'
+
+    $installedManifestPath = Join-Path $Path 'pet.json'
+    $sourceManifestPath = Join-Path $Path 'source-pet.json'
+    $validationPath = Join-Path $Path 'validation.json'
+    $proofPath = Join-Path $Path 'package-proof.json'
+    foreach ($directPath in @($installedManifestPath, $sourceManifestPath, $validationPath, $proofPath)) {
+        $directItem = Get-Item -LiteralPath $directPath -Force -ErrorAction SilentlyContinue
+        if (-not $directItem -or $directItem.PSIsContainer -or ($directItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            return 'conflict'
+        }
+    }
+    try {
+        $installedManifest = Get-Content -LiteralPath $installedManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $sourceManifest = Get-Content -LiteralPath $sourceManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $installedProof = Get-Content -LiteralPath $proofPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    }
+    catch {
+        return 'conflict'
+    }
+    if (
+        [string]$installedManifest.id -ne $PetId -or
+        [string]$sourceManifest.id -ne $PetId -or
+        [string]$installedProof.petId -ne $PetId
+    ) {
+        return 'conflict'
+    }
+    $retainedPayloads = @(
+        Get-ChildItem -LiteralPath $Path -Directory -Force -ErrorAction SilentlyContinue | Where-Object {
+            ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) -and
+            $_.Name -match '^payload(?:-[a-f0-9]{12,64})?$'
+        }
+    )
+    if ($retainedPayloads.Count -eq 0) { return 'conflict' }
+    return 'managed-upgrade'
 }
 
 $rootPath = [IO.Path]::GetFullPath($Root)
@@ -259,10 +295,9 @@ foreach ($package in $packages) {
 
     $sourcePath = [IO.Path]::GetFullPath($package.FullName)
     # Official Codex filters custom pets with Dirent.isDirectory(), so the top-level
-    # discovery folder must be direct. Its lexical path guard still permits a nested
-    # payload junction. Point the derived manifest at payload/spritesheet.webp: Codex
-    # discovers a real directory, the multi-megabyte atlas stays in the retained theme,
-    # and an absent theme root makes the pet unreadable instead of leaving a stale copy.
+    # discovery folder must be direct. Every atlas gets an append-only, hash-versioned
+    # nested payload junction. Upgrades point pet.json at the new payload while the old
+    # junction and every prior metadata byte remain available as retained evidence.
     $installId = "${petId}-wukong-forge"
     $linkPath = Join-Path $petsRoot $installId
     $expectedHashes = @{
@@ -271,19 +306,20 @@ foreach ($package in $packages) {
         'validation.json' = $validationHash
         'package-proof.json' = $proofHash
     }
+    $payloadName = 'payload-' + $atlasHash.Substring(0, 16)
     $derivedManifest = [ordered]@{
         id = $petId
         displayName = [string]$manifest.displayName
         description = [string]$manifest.description
         spriteVersionNumber = 2
-        spritesheetPath = 'payload/spritesheet.webp'
+        spritesheetPath = "$payloadName/spritesheet.webp"
     }
     $derivedManifestText = ($derivedManifest | ConvertTo-Json -Depth 8) + [Environment]::NewLine
     $derivedManifestBytes = [Text.UTF8Encoding]::new($false).GetBytes($derivedManifestText)
     $derivedManifestHash = Get-BytesSha256 $derivedManifestBytes
-    $disposition = Get-ExistingPetDisposition $linkPath $expectedHashes $derivedManifestHash
+    $disposition = Get-ExistingPetDisposition $linkPath $petId $expectedHashes $derivedManifestHash $payloadName
     if ($disposition -eq 'conflict') {
-        throw "A different retained pet already uses install id $installId. No existing path was changed; publish the new content under a new manifest id."
+        throw "A different retained pet already uses discovery directory id $installId. No existing path was changed; publish the new content under a new discovery/install directory id."
     }
 
     $plans += [pscustomobject]@{
@@ -299,6 +335,7 @@ foreach ($package in $packages) {
         atlasSha256 = $atlasHash
         validationSha256 = $validationHash
         proofSha256 = $proofHash
+        payloadName = $payloadName
     }
 }
 
@@ -310,6 +347,23 @@ New-Item -ItemType Directory -Force -Path $petsRoot | Out-Null
 New-Item -ItemType Directory -Force -Path $runtimeRoot | Out-Null
 foreach ($createdRoot in @($codexHomePath, $petsRoot, $runtimeRoot)) {
     Assert-NoReparseSegments $createdRoot 'Native pet install path'
+}
+
+function Ensure-VersionedPayload([string]$ParentPath, [pscustomobject]$Plan) {
+    $payloadPath = Join-Path $ParentPath $Plan.payloadName
+    $existingPayload = Get-Item -LiteralPath $payloadPath -Force -ErrorAction SilentlyContinue
+    if (-not $existingPayload) {
+        New-Item -ItemType Junction -Path $payloadPath -Target $Plan.sourcePath | Out-Null
+    }
+    elseif (
+        -not $existingPayload.PSIsContainer -or
+        -not ($existingPayload.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+        -not (Test-Path -LiteralPath (Join-Path $payloadPath 'spritesheet.webp') -PathType Leaf) -or
+        (Get-PortableSha256 (Join-Path $payloadPath 'spritesheet.webp')) -ne [string]$Plan.expectedHashes['spritesheet.webp']
+    ) {
+        throw "The retained versioned payload conflicts with the requested atlas: $payloadPath"
+    }
+    return $payloadPath
 }
 
 foreach ($plan in $plans) {
@@ -324,12 +378,12 @@ foreach ($plan in $plans) {
             [string]$plan.derivedManifestText,
             [Text.UTF8Encoding]::new($false)
         )
-        New-Item -ItemType Junction -Path (Join-Path $stagePath 'payload') -Target $plan.sourcePath | Out-Null
-        if (-not (Test-InstalledPetContent $stagePath $plan.expectedHashes $plan.derivedManifestHash)) {
+        New-Item -ItemType Junction -Path (Join-Path $stagePath $plan.payloadName) -Target $plan.sourcePath | Out-Null
+        if (-not (Test-InstalledPetContent $stagePath $plan.expectedHashes $plan.derivedManifestHash $plan.payloadName)) {
             throw "The payload-junction stage failed validation and was preserved for audit: $stagePath"
         }
         [IO.Directory]::Move($stagePath, $plan.linkPath)
-        $action = 'linked-payload'
+        $action = 'linked-versioned-payload'
     }
     elseif ($plan.disposition -eq 'legacy-copy') {
         # Preserve the previously installed manifest byte-for-byte before deriving the
@@ -345,26 +399,79 @@ foreach ($plan in $plans) {
             throw "The retained source manifest conflicts with migration evidence: $sourceManifestPath"
         }
 
-        $payloadPath = Join-Path $plan.linkPath 'payload'
-        $existingPayload = Get-Item -LiteralPath $payloadPath -Force -ErrorAction SilentlyContinue
-        if (-not $existingPayload) {
-            New-Item -ItemType Junction -Path $payloadPath -Target $plan.sourcePath | Out-Null
-        }
-        elseif (-not $existingPayload.PSIsContainer -or -not ($existingPayload.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
-            -not (Test-Path -LiteralPath (Join-Path $payloadPath 'spritesheet.webp') -PathType Leaf) -or
-            (Get-PortableSha256 (Join-Path $payloadPath 'spritesheet.webp')) -ne [string]$plan.expectedHashes['spritesheet.webp']) {
-            throw "The retained payload path conflicts with migration evidence: $payloadPath"
-        }
+        Ensure-VersionedPayload $plan.linkPath $plan | Out-Null
 
         [IO.File]::WriteAllText(
             (Join-Path $plan.linkPath 'pet.json'),
             [string]$plan.derivedManifestText,
             [Text.UTF8Encoding]::new($false)
         )
-        if (-not (Test-InstalledPetContent $plan.linkPath $plan.expectedHashes $plan.derivedManifestHash)) {
+        if (-not (Test-InstalledPetContent $plan.linkPath $plan.expectedHashes $plan.derivedManifestHash $plan.payloadName)) {
             throw "The retained copied package migration failed validation and all intermediate evidence was preserved: $($plan.linkPath)"
         }
         $action = 'migrated-retained-copy'
+    }
+    elseif ($plan.disposition -eq 'managed-upgrade') {
+        $historyRoot = Join-Path $plan.linkPath 'history'
+        $historyRootItem = Get-Item -LiteralPath $historyRoot -Force -ErrorAction SilentlyContinue
+        if ($historyRootItem -and (-not $historyRootItem.PSIsContainer -or ($historyRootItem.Attributes -band [IO.FileAttributes]::ReparsePoint))) {
+            throw "The retained pet history path is not a direct directory: $historyRoot"
+        }
+        if (-not $historyRootItem) { New-Item -ItemType Directory -Path $historyRoot | Out-Null }
+
+        $priorManifestPath = Join-Path $plan.linkPath 'pet.json'
+        $priorManifestHash = Get-PortableSha256 $priorManifestPath
+        $historyId = (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmmssfff') +
+            '-' + $priorManifestHash.Substring(0, 12) +
+            '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
+        $historyPath = Join-Path $historyRoot $historyId
+        New-Item -ItemType Directory -Path $historyPath | Out-Null
+        foreach ($metadataName in @('pet.json', 'source-pet.json', 'validation.json', 'package-proof.json')) {
+            Copy-Item -LiteralPath (Join-Path $plan.linkPath $metadataName) -Destination (Join-Path $historyPath $metadataName) -ErrorAction Stop
+        }
+
+        $payloadPath = Ensure-VersionedPayload $plan.linkPath $plan
+        $upgradeRecord = [ordered]@{
+            at = (Get-Date).ToString('o')
+            petId = $plan.petId
+            priorManifestSha256 = $priorManifestHash
+            nextManifestSha256 = $plan.derivedManifestHash
+            nextAtlasSha256 = $plan.atlasSha256
+            nextPayload = $plan.payloadName
+            nextPayloadPath = $payloadPath
+            sourcePath = $plan.sourcePath
+            retainedMetadata = @('pet.json', 'source-pet.json', 'validation.json', 'package-proof.json')
+        }
+        [IO.File]::WriteAllText(
+            (Join-Path $historyPath 'upgrade.json'),
+            (($upgradeRecord | ConvertTo-Json -Depth 8) + [Environment]::NewLine),
+            [Text.UTF8Encoding]::new($false)
+        )
+
+        # pet.json is written last. Until that final write succeeds, Codex keeps
+        # resolving the prior payload; every replaced metadata byte already exists
+        # in the append-only history directory above.
+        [IO.File]::WriteAllBytes(
+            (Join-Path $plan.linkPath 'source-pet.json'),
+            [IO.File]::ReadAllBytes((Join-Path $plan.sourcePath 'pet.json'))
+        )
+        [IO.File]::WriteAllBytes(
+            (Join-Path $plan.linkPath 'validation.json'),
+            [IO.File]::ReadAllBytes((Join-Path $plan.sourcePath 'validation.json'))
+        )
+        [IO.File]::WriteAllBytes(
+            (Join-Path $plan.linkPath 'package-proof.json'),
+            [IO.File]::ReadAllBytes((Join-Path $plan.sourcePath 'package-proof.json'))
+        )
+        [IO.File]::WriteAllText(
+            (Join-Path $plan.linkPath 'pet.json'),
+            [string]$plan.derivedManifestText,
+            [Text.UTF8Encoding]::new($false)
+        )
+        if (-not (Test-InstalledPetContent $plan.linkPath $plan.expectedHashes $plan.derivedManifestHash $plan.payloadName)) {
+            throw "The append-only pet upgrade did not validate; prior metadata and payloads remain at $historyPath"
+        }
+        $action = 'upgraded-retained-payload'
     }
     else {
         $action = 'already-present'
@@ -375,9 +482,10 @@ foreach ($plan in $plans) {
         petId = $plan.petId
         installId = $plan.installId
         action = $action
-        installMode = 'linked-payload'
+        installMode = 'versioned-linked-payload'
         linkPath = $plan.linkPath
         sourcePath = $plan.sourcePath
+        payloadName = $plan.payloadName
         manifestSha256 = $plan.manifestSha256
         atlasSha256 = $plan.atlasSha256
         validationSha256 = $plan.validationSha256
@@ -392,4 +500,4 @@ foreach ($plan in $plans) {
     Write-Host "Hatch Pet $($plan.petId): $action at $($plan.linkPath)"
 }
 
-Write-Host 'Native Hatch Pet packages use direct Codex discovery folders with nested payload junctions. Atlases remain in the retained theme package; no existing file was deleted or moved.'
+Write-Host 'Native Hatch Pet packages use direct Codex discovery folders with hash-versioned payload junctions. Prior payloads and metadata histories remain in place; no existing file was deleted or moved.'

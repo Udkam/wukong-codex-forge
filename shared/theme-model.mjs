@@ -83,7 +83,6 @@ export const DEFAULT_THEME = {
     dim: 0.3,
     taskIntensity: 0.7,
     landingIntensity: 0.84,
-    primarySceneCount: 3,
     gallery: [
       { id: 'erlang-ink-duel', asset: 'assets/erlang-ink-duel.jpg', position: '68% center', mode: 'battle-primary', tone: 'celestial-ink' },
       { id: 'great-sage', asset: 'assets/great-sage-return.jpg', position: 'right center', mode: 'battle-primary', tone: 'sage-sepia' },
@@ -98,15 +97,12 @@ export const DEFAULT_THEME = {
       { id: 'sunset-ravine', asset: 'assets/sunset-ravine.jpg', position: 'center center', mode: 'scenery', tone: 'sunset-copper' }
     ]
   },
-  motifs: {
-    xiangfeiGourd: 'motifs/xiangfei-gourd-icon.webp'
-  },
   accessibility: {
     preset: 'workbench',
     reducedMotion: false
   },
   companion: {
-    enabled: true,
+    enabled: false,
     side: 'right',
     size: 72,
     motion: 'quiet'
@@ -161,10 +157,6 @@ export function validateTheme(value) {
       ids.add(entry.id);
     }
   }
-  if (
-    b.primarySceneCount !== undefined &&
-    (!Number.isInteger(b.primarySceneCount) || b.primarySceneCount < 1 || b.primarySceneCount >= (b.gallery?.length || 1))
-  ) throw Error('Invalid background.primarySceneCount');
   if (value.motifs !== undefined) {
     if (!value.motifs || typeof value.motifs !== 'object' || Array.isArray(value.motifs)) {
       throw Error('Invalid motifs');
@@ -224,10 +216,6 @@ export function cssFor(theme, assetInput = '', motifInput = {}) {
   const taskWash = visible ? clamp(b.dim + (1 - b.taskIntensity) * 0.16) : 1;
   const landingWash = visible ? clamp(Math.max(0.2, b.dim - b.landingIntensity * 0.34)) : 1;
   const assets = visible ? visibleAssets : [{ id: 'solid', url: '', position: b.position }];
-  const threadSceneCount = Math.max(0, assets.length - 1);
-  const primarySceneCount = threadSceneCount
-    ? Math.min(b.primarySceneCount ?? Math.min(2, threadSceneCount), threadSceneCount)
-    : 0;
   const assetVariables = assets.map((entry, index) => (
     `--forge-bg-${index}:${entry.url ? cssEscapeUrl(entry.url) : 'none'};` +
     `--forge-art-${entry.id}:var(--forge-bg-${index});` +
@@ -243,6 +231,10 @@ export function cssFor(theme, assetInput = '', motifInput = {}) {
   const sceneryScenes = sceneList('scenery') || '0';
   const primaryBattleScenes = sceneList('battle-primary') || (assets.length > 1 ? '1' : '0');
   const secondaryBattleScenes = sceneList('battle-secondary');
+  const battleScenes = assets
+    .map((entry, index) => String(entry.mode || '').startsWith('battle') ? index : null)
+    .filter(index => index !== null)
+    .join(' ') || primaryBattleScenes;
   const sceneRules = assets.map((entry, index) => {
     const tone = SCENE_TONES[entry.tone] || SCENE_TONES['celestial-ink'];
     const [veil, edge, center, top, bottom] = tone.veil;
@@ -265,9 +257,9 @@ export function cssFor(theme, assetInput = '', motifInput = {}) {
     `--forge-gold:${p.gold};--forge-paper:${p.paper};` +
     assetVariables +
     motifVariables +
-    `--forge-scene-count:${assets.length};--forge-primary-scene-count:${primarySceneCount};` +
+    `--forge-scene-count:${assets.length};` +
     `--forge-scenery-scenes:${sceneryScenes};--forge-battle-primary-scenes:${primaryBattleScenes};` +
-    `--forge-battle-secondary-scenes:${secondaryBattleScenes || 'none'};` +
+    `--forge-battle-secondary-scenes:${secondaryBattleScenes || 'none'};--forge-battle-scenes:${battleScenes};` +
     `--forge-scene-bg:var(--forge-bg-0);` +
     `--forge-scene-position:var(--forge-position-0);--forge-bg:var(--forge-bg-0);` +
     `--forge-position:${b.position};--forge-landing-position:${b.landingPosition};` +

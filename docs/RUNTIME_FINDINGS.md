@@ -1,5 +1,24 @@
 # Codex 样式运行时调查
 
+> **2026-07-23 V12 当前结论。** V11 及更早调查继续保留为历史。
+
+## V12 官方 UI 与背景运行时
+
+- 只读检查当前 `OpenAI.Codex 26.715.2305.0` 的 `app.asar`：composer 实体仍为 `.composer-surface-chrome`；多行布局使用原生 `--composer-border-radius: var(--radius-3xl)`，footer 由容器查询调整，隐藏测量节点可能产生越界。候选必须围绕这些原生节点工作，而不是重建一个伪 composer。
+- 官方 Hatch Pet loader 返回 `id: custom:${directoryName}`；`pet.json.id` 只参与显示回退，不决定持久 identity。因此升级必须保持 `${petId}-wukong-forge` discovery 目录名稳定。
+- 当前普通开始菜单 `ChatGPT.lnk` 仍指向旧 0.9.0 Temp bridge，保留 release 最高仍为 0.8.0。只有安装本轮 0.11.0 后，普通入口才会加载 V12；当前控制窗口不被强制关闭或重写。
+- V12 runtime 使用双背景层，不再对 sidebar/composer/right card 等节点注入活动样式。旧 mark classes 只用于彻底清除历史标记并验证回归。
+- 战斗池与风景池分别保存 cursor；landing/thread 状态只切换场景池，不因标题流式变化重新选图。
+- 游戏安装目录当前以签名 PAK 为主，没有可直接读取的松散角色贴图或动画视频；本轮不修改 PAK、不替换游戏文件、不绕过加密。真实跑动与棍花动作优先从用户自有录像复制式抽帧，原录像保持不变。
+
+## 保留式安装新结论
+
+- 宠物 atlas 升级用 `payload-<atlasSha256前16位>` 新建内部 junction，既有 payload 不删除、不改指向。
+- 变更当前 manifest/validation/proof 前，先将三者逐字节复制到唯一 `history/<timestamp>-<hash>-<guid>`；旧 metadata 与 payload 均可追溯。
+- `stop-theme.cmd` 和 `remove-theme.cmd` 不再硬编码 `-Portable`；`disable.ps1` 根据 release marker 自动识别稳定/便携路径。
+- retained install 在发布 release 后执行同一 release 内的原生宠物安装器；开始菜单 bridge 和其 backup/history/adapter root 新增 reparse-point fail-closed 检查。
+- 本轮新增全局资源纪律：`E:\GameRecord\Black Myth Wukong`、`D:\SteamLibrary\steamapps\common\BlackMythWukong` 和所有旧候选只允许读、索引与复制；任何实现脚本都不得把这些目录作为删除、移动或覆盖目标。
+
 > **2026-07-22 V11 当前结论。** 下方 V10、V9 调查作为历史保留。
 
 ## V11 DOM 与视觉修正

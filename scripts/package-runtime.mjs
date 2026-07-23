@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url';
 const runtimeFiles = [
   'runtime/cdp-client.mjs',
   'runtime/forge-runtime.mjs',
-  'runtime/forge-theme.css',
-  'runtime/injection-plan.mjs',
+  'runtime/forge-background-v12.css',
+  'runtime/injection-plan-v12.mjs',
   'runtime/injector.mjs',
   'runtime/watch.mjs',
   'shared/theme-model.mjs',

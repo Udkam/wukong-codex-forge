@@ -17,7 +17,8 @@ test('minimal managed package imports independently and omits development surfac
     assert.equal(fs.existsSync(path.join(target, omitted)), false, `development-only path copied: ${omitted}`);
   }
   for (const required of [
-    'runtime/forge-theme.css',
+    'runtime/forge-background-v12.css',
+    'runtime/injection-plan-v12.mjs',
     'runtime/watch.mjs',
     'scripts/launch.ps1',
     'scripts/start.ps1',
@@ -38,7 +39,7 @@ test('minimal managed package imports independently and omits development surfac
     'pets/little-bajie-v3-inart/validation.json',
     'pets/little-bajie-v3-inart/package-proof.json',
     ...sourceTheme.background.gallery.map(entry => `themes/${entry.asset}`),
-    ...Object.values(sourceTheme.motifs).map(asset => `themes/${asset}`)
+    ...Object.values(sourceTheme.motifs || {}).map(asset => `themes/${asset}`)
   ]) {
     assert.equal(fs.existsSync(path.join(target, required)), true, `managed file missing: ${required}`);
   }
@@ -46,7 +47,7 @@ test('minimal managed package imports independently and omits development surfac
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client.mjs')), false, 'superseded ws bundle was packaged');
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client-node.mjs')), false, 'diagnostic ws bundle was packaged');
   const packagedManifest = JSON.parse(fs.readFileSync(path.join(target, 'package.json'), 'utf8'));
-  assert.equal(packagedManifest.version, '0.10.0');
+  assert.equal(packagedManifest.version, '0.11.0');
   assert.deepEqual(packagedManifest.dependencies, {});
   for (const rejected of [
     'themes/assets/erlang-meishan.jpg',
@@ -72,7 +73,7 @@ test('minimal managed package imports independently and omits development surfac
   const runtime = await import(pathToFileURL(path.join(target, 'runtime', 'forge-runtime.mjs')));
   const payload = runtime.payloadFromThemeFile(path.join(target, 'themes', 'active.json'));
   assert.match(payload.variables, /data:image\/jpeg;base64/);
-  assert.match(payload.variables, /data:image\/webp;base64/);
+  assert.doesNotMatch(payload.variables, /data:image\/webp;base64/);
   assert.equal(payload.assets.length, 11);
   assert.deepEqual(payload.assets.map(asset => asset.id), [
     'erlang-ink-duel',
@@ -87,20 +88,21 @@ test('minimal managed package imports independently and omits development surfac
     'stone-buddhas',
     'sunset-ravine'
   ]);
-  assert.deepEqual(Object.keys(payload.motifs).sort(), ['xiangfeiGourd']);
+  assert.deepEqual(payload.motifs, {});
   assert.match(payload.theme.name, /\S/);
   assert.match(payload.variables, /--forge-paper:#[0-9a-f]{6}/i);
   assert.match(payload.variables, /--forge-scene-count:11/);
-  assert.match(payload.variables, /--forge-primary-scene-count:3/);
+  assert.doesNotMatch(payload.variables, /--forge-primary-scene-count:/);
   assert.match(payload.variables, /--forge-scenery-scenes:6 7 8 9 10/);
   assert.match(payload.variables, /--forge-battle-primary-scenes:0 1 2/);
   assert.match(payload.variables, /--forge-battle-secondary-scenes:3 4 5/);
+  assert.match(payload.variables, /--forge-battle-scenes:0 1 2 3 4 5/);
   assert.match(payload.variables, /--forge-art-yaksha-king-rift:var\(--forge-bg-3\)/);
   assert.match(payload.variables, /--forge-art-great-sage-staff:var\(--forge-bg-2\)/);
   assert.equal((payload.variables.match(/data:image\/jpeg;base64,/g) || []).length, 11, 'each gallery image must be embedded only once');
-  assert.match(payload.variables, /--forge-motif-xiangfei-gourd:url\("data:image\/webp;base64,/);
+  assert.match(payload.variables, /--forge-motif-xiangfei-gourd:none/);
   assert.doesNotMatch(payload.variables, /--forge-motif-little-(?:wukong|bajie):/);
-  assert.equal(payload.theme.motifs.xiangfeiGourd, 'motifs/xiangfei-gourd-icon.webp');
+  assert.equal('motifs' in payload.theme, false);
   assert.deepEqual(payload.assets.map(asset => asset.tone), payload.theme.background.gallery.map(scene => scene.tone));
   const client = await import(pathToFileURL(path.join(target, 'runtime', 'cdp-client.mjs')));
   assert.equal(typeof client.getTargets, 'function');

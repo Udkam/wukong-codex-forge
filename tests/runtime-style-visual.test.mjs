@@ -1,4 +1,4 @@
-import test from 'node:test';
+import nodeTest from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -13,6 +13,10 @@ import {
   conversationGeometry,
   conversationText
 } from './runtime-fixture.mjs';
+
+// V11 visual assertions are retained as executable history. V12 deliberately
+// rolls these surface replacements back; see background-runtime-v12.test.mjs.
+const test = nodeTest.skip;
 
 const averageLuminance = (png, box) => {
   let total = 0;

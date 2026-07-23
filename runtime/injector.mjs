@@ -8,7 +8,7 @@ import {
   makeApplyExpression,
   RESTORE_EXPRESSION,
   THEME_STATE_EXPRESSION
-} from './injection-plan.mjs';
+} from './injection-plan-v12.mjs';
 
 const [,, mode, portRaw, providedTheme] = process.argv;
 const port = Number(portRaw);
@@ -40,7 +40,7 @@ if (mode === '--state' || mode === '--assert-native') {
 const expression = mode === '--restore'
   ? RESTORE_EXPRESSION
   : makeApplyExpression({
-      styleSheet: fs.readFileSync(new URL('./forge-theme.css', import.meta.url), 'utf8'),
+      styleSheet: fs.readFileSync(new URL('./forge-background-v12.css', import.meta.url), 'utf8'),
       variables: payloadFromThemeFile(themePath).variables
     });
 await Promise.all(targets.map(target => evaluateTarget(target, expression)));

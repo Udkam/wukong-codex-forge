@@ -27,6 +27,7 @@ foreach ($required in @(
     (Join-Path $source 'scripts\package-runtime.mjs'),
     (Join-Path $source 'scripts\native-theme.mjs'),
     (Join-Path $source 'scripts\launch.ps1'),
+    (Join-Path $source 'scripts\install-native-pets.ps1'),
     (Join-Path $source 'scripts\install-chatgpt-hook.ps1')
 )) {
     if (-not (Test-Path -LiteralPath $required)) { throw "Required install file is missing: $required" }
@@ -68,6 +69,8 @@ $release = [ordered]@{
     (($release | ConvertTo-Json -Depth 8) + [Environment]::NewLine),
     [Text.UTF8Encoding]::new($false)
 )
+
+& (Join-Path $appTarget 'scripts\install-native-pets.ps1') -Root $appTarget
 
 if (-not $NoShortcut) {
     & (Join-Path $source 'scripts\install-chatgpt-hook.ps1') -Root $appTarget

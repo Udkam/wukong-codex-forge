@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { MAX_MOTIF_BYTES, payloadFromThemeFile } from '../runtime/forge-runtime.mjs';
+import { payloadFromThemeFile } from '../runtime/forge-runtime.mjs';
 import {
   applyNativeTheme,
   loadThemeDefinition,
@@ -13,24 +13,17 @@ const definition = loadThemeDefinition('themes/native-wukong.json');
 const activeThemePath = 'themes/active.json';
 const activeTheme = JSON.parse(fs.readFileSync(activeThemePath, 'utf8').replace(/^\uFEFF/, ''));
 
-test('V11 theme packages only the Xiangfei page motif; characters are native pets', () => {
-  const expectedMotifs = ['xiangfeiGourd'];
-  assert.deepEqual(Object.keys(activeTheme.motifs).sort(), expectedMotifs);
-
-  const motifFiles = Object.values(activeTheme.motifs);
-  assert.ok(motifFiles.every(asset => asset.endsWith('.webp')), 'V11 motifs must use compact alpha WebP assets');
-  assert.equal(activeTheme.motifs.xiangfeiGourd, 'motifs/xiangfei-gourd-icon.webp');
-  assert.equal(activeTheme.companion.enabled, true, 'Xiangfei page motif must be enabled');
-  assert.ok(motifFiles.every(asset => fs.statSync(`themes/${asset}`).isFile()));
-  const motifBytes = motifFiles.reduce((total, asset) => total + fs.statSync(`themes/${asset}`).size, 0);
-  assert.ok(motifBytes <= MAX_MOTIF_BYTES, `V11 motif payload exceeds ${MAX_MOTIF_BYTES} bytes`);
-
+test('V12 active page payload contains backgrounds only; pets remain native packages', () => {
+  assert.equal('motifs' in activeTheme, false);
+  assert.equal(activeTheme.companion.enabled, false);
   const payload = payloadFromThemeFile(activeThemePath);
-  assert.deepEqual(Object.keys(payload.motifs).sort(), expectedMotifs);
-  for (const motif of Object.values(payload.motifs)) assert.match(motif, /^data:image\/webp;base64,/);
-  assert.match(payload.variables, /--forge-motif-xiangfei-gourd:url\(/);
+  assert.deepEqual(payload.motifs, {});
+  assert.match(payload.variables, /--forge-motif-xiangfei-gourd:none/);
   assert.doesNotMatch(payload.variables, /--forge-motif-little-(?:wukong|bajie):/);
   assert.doesNotMatch(payload.variables, /forge-motif-(?:yaksha|fanged-cyan)/);
+  assert.match(payload.variables, /--forge-battle-scenes:0 1 2 3 4 5/);
+  assert.match(payload.variables, /--forge-scenery-scenes:6 7 8 9 10/);
+  assert.doesNotMatch(payload.variables, /--forge-primary-scene-count:/);
 
   const modes = activeTheme.background.gallery.map(scene => scene.mode);
   assert.ok(modes.includes('battle-primary'));

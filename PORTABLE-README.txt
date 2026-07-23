@@ -1,4 +1,18 @@
-Wukong Codex Forge 0.10.0 - portable use
+Wukong Codex Forge 0.11.0 - portable use
+
+CURRENT V12 INSTRUCTIONS
+
+1. Keep this extracted directory intact.
+2. Double-click start-theme.cmd once. It starts the managed theme path and safely adapts the user's normal Start Menu ChatGPT shortcut.
+3. V12 changes only the full-window background in the active runtime. It does not style the sidebar, top bar, Environment card, messages, composer or buttons.
+4. New-task pages rotate through the battle pool. Conversation pages rotate through the scenery pool. Both layers use cover and a bounded crossfade.
+5. Composer redesigns remain review-only until explicitly approved; no rejected V1, V2 or V3 composer asset is injected.
+6. Double-click stop-theme.cmd to restore the open managed renderer to native appearance. No file is deleted.
+7. If this extracted theme directory is absent, the retained launch bridge starts the official Store ChatGPT.exe in native mode.
+
+Native Hatch Pet packages use a stable discovery directory and hash-versioned payload junctions. A changed atlas creates a new payload while every prior payload remains. Before current metadata changes, its exact bytes are copied to a unique history directory; no prior pet payload or metadata record is deleted. The official custom-pet identity is the top-level discovery directory name, so that directory stays stable across upgrades.
+
+The currently open unmanaged Codex window is not force-closed or rewritten. Installing 0.11.0 updates the retained package and Start Menu bridge for the next managed launch; it does not modify ChatGPT.exe, app.asar, WindowsApps or official configuration.
 
 CURRENT V11 INSTRUCTIONS
 

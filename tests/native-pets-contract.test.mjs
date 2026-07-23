@@ -177,12 +177,13 @@ test('Windows linker reuses retained identical content without creating duplicat
   for (const id of expectedIds) {
     const installId = `${id}-wukong-forge`;
     const installedPath = path.join(codexHome, 'pets', installId);
+    const payloadName = `payload-${approvedSources[id].atlasSha256.slice(0, 16)}`;
     const installed = fs.lstatSync(installedPath);
     assert.equal(installed.isDirectory(), true, `${installId} must be a direct directory visible to Codex discovery`);
     assert.equal(installed.isSymbolicLink(), false, `${installId} discovery directory must not be linked`);
     assert.deepEqual(fs.readdirSync(installedPath).sort(), [
       'package-proof.json',
-      'payload',
+      payloadName,
       'pet.json',
       'source-pet.json',
       'validation.json'
@@ -192,16 +193,16 @@ test('Windows linker reuses retained identical content without creating duplicat
       assert.equal(installedFile.isFile(), true, `${installId}/${file} must be readable as a file`);
       assert.equal(installedFile.isSymbolicLink(), false, `${installId}/${file} must be direct`);
     }
-    const payloadPath = path.join(installedPath, 'payload');
-    assert.equal(fs.lstatSync(payloadPath).isSymbolicLink(), true, `${installId}/payload must be a retained junction`);
-    assert.equal(fs.statSync(payloadPath).isDirectory(), true, `${installId}/payload must resolve to a package directory`);
+    const payloadPath = path.join(installedPath, payloadName);
+    assert.equal(fs.lstatSync(payloadPath).isSymbolicLink(), true, `${installId}/${payloadName} must be a retained junction`);
+    assert.equal(fs.statSync(payloadPath).isDirectory(), true, `${installId}/${payloadName} must resolve to a package directory`);
     const sourceManifest = JSON.parse(fs.readFileSync(path.join(installedPath, 'source-pet.json'), 'utf8'));
     const installedManifest = JSON.parse(fs.readFileSync(path.join(installedPath, 'pet.json'), 'utf8'));
     assert.equal(installedManifest.id, sourceManifest.id);
     assert.equal(installedManifest.displayName, sourceManifest.displayName);
     assert.equal(installedManifest.description, sourceManifest.description);
     assert.equal(installedManifest.spriteVersionNumber, 2);
-    assert.equal(installedManifest.spritesheetPath, 'payload/spritesheet.webp');
+    assert.equal(installedManifest.spritesheetPath, `${payloadName}/spritesheet.webp`);
     const resolvedAtlas = path.resolve(installedPath, installedManifest.spritesheetPath);
     const relativeAtlas = path.relative(installedPath, resolvedAtlas);
     assert.ok(relativeAtlas && relativeAtlas !== '..' && !relativeAtlas.startsWith(`..${path.sep}`) && !path.isAbsolute(relativeAtlas));
@@ -218,10 +219,10 @@ test('Windows linker reuses retained identical content without creating duplicat
     'utf8'
   ).trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line)));
   assert.equal(records.length, 6);
-  assert.equal(records.filter(record => record.action === 'linked-payload').length, 2);
+  assert.equal(records.filter(record => record.action === 'linked-versioned-payload').length, 2);
   assert.equal(records.filter(record => record.action === 'already-present').length, 4);
   assert.ok(records.every(record => record.spriteVersionNumber === 2));
-  assert.ok(records.every(record => record.installMode === 'linked-payload'));
+  assert.ok(records.every(record => record.installMode === 'versioned-linked-payload'));
 
   const legacyReleaseRoot = path.join(retained, 'release-legacy-copy');
   const legacyCodexHome = path.join(retained, 'codex-home-legacy-copy');
@@ -246,11 +247,12 @@ test('Windows linker reuses retained identical content without creating duplicat
   assert.equal(legacyResult.status, 0, `legacy migration\nstdout: ${legacyResult.stdout}\nstderr: ${legacyResult.stderr}`);
   for (const id of expectedIds) {
     const migratedPath = path.join(legacyCodexHome, 'pets', `${id}-wukong-forge`);
+    const payloadName = `payload-${approvedSources[id].atlasSha256.slice(0, 16)}`;
     assert.equal(fs.existsSync(path.join(migratedPath, 'spritesheet.webp')), true, 'retained copied atlas must not be deleted');
-    assert.equal(fs.lstatSync(path.join(migratedPath, 'payload')).isSymbolicLink(), true);
+    assert.equal(fs.lstatSync(path.join(migratedPath, payloadName)).isSymbolicLink(), true);
     assert.equal(
       JSON.parse(fs.readFileSync(path.join(migratedPath, 'pet.json'), 'utf8')).spritesheetPath,
-      'payload/spritesheet.webp'
+      `${payloadName}/spritesheet.webp`
     );
     assert.equal(
       sha256(fs.readFileSync(path.join(migratedPath, 'source-pet.json'))),
@@ -264,31 +266,87 @@ test('Windows linker reuses retained identical content without creating duplicat
   ).trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
   assert.equal(legacyRecords.length, 2);
   assert.ok(legacyRecords.every(record => record.action === 'migrated-retained-copy'));
-  assert.ok(legacyRecords.every(record => record.installMode === 'linked-payload'));
+  assert.ok(legacyRecords.every(record => record.installMode === 'versioned-linked-payload'));
+
+  const upgradeRoot = path.join(retained, 'release-upgrade');
+  fs.mkdirSync(upgradeRoot, { recursive: true });
+  fs.cpSync(petRoot, path.join(upgradeRoot, 'pets'), { recursive: true, errorOnExist: true, force: false });
+  const upgradeId = 'little-wukong-yaksha-shenfeng';
+  const upgradePackage = path.join(upgradeRoot, 'pets', upgradeId);
+  const upgradeManifestPath = path.join(upgradePackage, 'pet.json');
+  const upgradeAtlasPath = path.join(upgradePackage, 'spritesheet.webp');
+  const upgradeProofPath = path.join(upgradePackage, 'package-proof.json');
+  const priorInstalledPath = path.join(codexHome, 'pets', `${upgradeId}-wukong-forge`);
+  const priorInstalledManifestBytes = fs.readFileSync(path.join(priorInstalledPath, 'pet.json'));
+  const upgradeManifest = JSON.parse(fs.readFileSync(upgradeManifestPath, 'utf8'));
+  upgradeManifest.description = `${upgradeManifest.description} append-only-upgrade-proof`;
+  const upgradeManifestBytes = Buffer.from(`${JSON.stringify(upgradeManifest, null, 2)}\n`, 'utf8');
+  fs.writeFileSync(upgradeManifestPath, upgradeManifestBytes, { flag: 'w' });
+  fs.copyFileSync(
+    path.join(upgradeRoot, 'pets', 'little-bajie-v3-inart', 'spritesheet.webp'),
+    upgradeAtlasPath
+  );
+  const upgradeAtlasBytes = fs.readFileSync(upgradeAtlasPath);
+  const upgradeAtlasHash = sha256(upgradeAtlasBytes);
+  const upgradeProof = JSON.parse(fs.readFileSync(upgradeProofPath, 'utf8'));
+  upgradeProof.manifestSha256 = sha256(upgradeManifestBytes);
+  upgradeProof.atlasSha256 = upgradeAtlasHash;
+  fs.writeFileSync(upgradeProofPath, `${JSON.stringify(upgradeProof, null, 2)}\n`, { encoding: 'utf8', flag: 'w' });
+
+  const upgradeResult = spawnSync('powershell.exe', [
+    '-NoProfile',
+    '-ExecutionPolicy', 'Bypass',
+    '-File', path.join(root, 'scripts', 'install-native-pets.ps1'),
+    '-Root', upgradeRoot,
+    '-CodexHome', codexHome
+  ], { encoding: 'utf8', windowsHide: true });
+  assert.equal(upgradeResult.status, 0, `append-only upgrade\nstdout: ${upgradeResult.stdout}\nstderr: ${upgradeResult.stderr}`);
+  const upgradedManifest = JSON.parse(fs.readFileSync(path.join(priorInstalledPath, 'pet.json'), 'utf8'));
+  const upgradedPayloadName = `payload-${upgradeAtlasHash.slice(0, 16)}`;
+  assert.equal(upgradedManifest.spritesheetPath, `${upgradedPayloadName}/spritesheet.webp`);
+  assert.equal(fs.lstatSync(path.join(priorInstalledPath, upgradedPayloadName)).isSymbolicLink(), true);
+  assert.equal(
+    fs.lstatSync(path.join(priorInstalledPath, `payload-${approvedSources[upgradeId].atlasSha256.slice(0, 16)}`)).isSymbolicLink(),
+    true,
+    'prior payload junction must remain after upgrade'
+  );
+  const upgradeHistoryRoot = path.join(priorInstalledPath, 'history');
+  const upgradeHistoryDirectories = fs.readdirSync(upgradeHistoryRoot, { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .map(entry => entry.name);
+  assert.equal(upgradeHistoryDirectories.length, 1);
+  const upgradeHistoryPath = path.join(upgradeHistoryRoot, upgradeHistoryDirectories[0]);
+  assert.deepEqual(fs.readFileSync(path.join(upgradeHistoryPath, 'pet.json')), priorInstalledManifestBytes);
+  assert.equal(fs.existsSync(path.join(upgradeHistoryPath, 'upgrade.json')), true);
+  const upgradeRecords = fs.readFileSync(
+    path.join(upgradeRoot, '.wukong-runtime', 'native-pet-links.jsonl'),
+    'utf8'
+  ).trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
+  assert.equal(upgradeRecords.filter(record => record.action === 'upgraded-retained-payload').length, 1);
+  assert.equal(upgradeRecords.filter(record => record.action === 'already-present').length, 1);
+  assert.ok(upgradeRecords.every(record => record.installMode === 'versioned-linked-payload'));
+  assert.deepEqual(fs.readdirSync(path.join(codexHome, 'pets')).sort(), expectedInstallIds, 'upgrade must not add duplicate discovery ids');
 
   const conflictRoot = path.join(retained, 'release-conflict');
+  const conflictCodexHome = path.join(retained, 'codex-home-conflict');
   fs.mkdirSync(conflictRoot, { recursive: true });
   fs.cpSync(petRoot, path.join(conflictRoot, 'pets'), { recursive: true, errorOnExist: true, force: false });
-  const conflictPackage = path.join(conflictRoot, 'pets', 'little-wukong-yaksha-shenfeng');
-  const conflictManifestPath = path.join(conflictPackage, 'pet.json');
-  const conflictProofPath = path.join(conflictPackage, 'package-proof.json');
-  const conflictManifest = JSON.parse(fs.readFileSync(conflictManifestPath, 'utf8'));
-  conflictManifest.description = `${conflictManifest.description} retained-conflict-proof`;
-  const conflictManifestBytes = Buffer.from(`${JSON.stringify(conflictManifest, null, 2)}\n`, 'utf8');
-  fs.writeFileSync(conflictManifestPath, conflictManifestBytes, { flag: 'w' });
-  const conflictProof = JSON.parse(fs.readFileSync(conflictProofPath, 'utf8'));
-  conflictProof.manifestSha256 = sha256(conflictManifestBytes);
-  fs.writeFileSync(conflictProofPath, `${JSON.stringify(conflictProof, null, 2)}\n`, { encoding: 'utf8', flag: 'w' });
+  const foreignInstallPath = path.join(conflictCodexHome, 'pets', 'little-wukong-yaksha-shenfeng-wukong-forge');
+  fs.mkdirSync(foreignInstallPath, { recursive: true });
+  fs.writeFileSync(path.join(foreignInstallPath, 'foreign-pet.txt'), 'retained foreign content\n', { encoding: 'utf8', flag: 'wx' });
 
   const conflictResult = spawnSync('powershell.exe', [
     '-NoProfile',
     '-ExecutionPolicy', 'Bypass',
     '-File', path.join(root, 'scripts', 'install-native-pets.ps1'),
     '-Root', conflictRoot,
-    '-CodexHome', codexHome
+    '-CodexHome', conflictCodexHome
   ], { encoding: 'utf8', windowsHide: true });
-  assert.notEqual(conflictResult.status, 0, 'different content with the same manifest id must fail closed');
-  assert.match(`${conflictResult.stdout}\n${conflictResult.stderr}`, /different retained pet already uses install id/i);
-  assert.deepEqual(fs.readdirSync(path.join(codexHome, 'pets')).sort(), expectedInstallIds, 'a conflict must not add a duplicate pet folder');
+  assert.notEqual(conflictResult.status, 0, 'an unmanaged directory with the same install id must fail closed');
+  assert.match(
+    `${conflictResult.stdout}\n${conflictResult.stderr}`,
+    /different retained pet already uses discovery directory id/i,
+  );
+  assert.deepEqual(fs.readdirSync(foreignInstallPath), ['foreign-pet.txt'], 'foreign content must remain byte-for-byte and no managed files may be added');
   assert.equal(fs.existsSync(path.join(conflictRoot, '.wukong-runtime')), false, 'conflict preflight must not create runtime state');
 });

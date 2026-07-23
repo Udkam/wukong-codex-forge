@@ -9,10 +9,10 @@ import {
   makeApplyExpression,
   RESTORE_EXPRESSION,
   THEME_STATE_EXPRESSION
-} from './injection-plan.mjs';
+} from './injection-plan-v12.mjs';
 
 const DEFAULT_INTERVAL_MS = 1700;
-const DEFAULT_PROBE = 'Boolean(document.getElementById("wukong-forge-style") && window.__wukongCodexForgeRuntimeV11)';
+const DEFAULT_PROBE = 'Boolean(document.getElementById("wukong-forge-style") && window.__wukongCodexForgeRuntimeV12)';
 
 export const browserIdentity = version => {
   const endpoint = String(version?.webSocketDebuggerUrl || '');
@@ -164,7 +164,7 @@ async function main() {
   const rootPid = Number(rootPidRaw);
   const themePath = providedTheme || 'themes/active.json';
   const expression = makeApplyExpression({
-    styleSheet: fs.readFileSync(new URL('./forge-theme.css', import.meta.url), 'utf8'),
+    styleSheet: fs.readFileSync(new URL('./forge-background-v12.css', import.meta.url), 'utf8'),
     variables: payloadFromThemeFile(themePath).variables
   });
   let stopping = false;

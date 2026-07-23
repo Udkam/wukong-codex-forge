@@ -56,7 +56,10 @@ test('public entries route only to the preserving and verified-disable lifecycle
   assert.doesNotMatch(removeEntry, /scripts\\restore\.ps1|-Uninstall/i);
   assert.match(startEntry, /scripts\\start\.ps1/i);
   assert.match(stopEntry, /scripts\\disable\.ps1/i);
-  assert.match(stopEntry, /-Portable/i);
+  assert.doesNotMatch(stopEntry, /-Portable/i);
+  assert.doesNotMatch(removeEntry, /-Portable/i);
+  assert.match(publicScripts.disable, /\$PSBoundParameters\.ContainsKey\('Portable'\)/);
+  assert.match(publicScripts.disable, /\$releaseMarker/);
 
   for (const [name, script] of Object.entries({ install: publicScripts.install, launch: publicScripts.launch, disable: publicScripts.disable })) {
     assert.match(script, /Get-AppxPackage -Name 'OpenAI\.Codex'/, `${name} does not resolve the official Codex package`);
@@ -121,11 +124,19 @@ test('public entries route only to the preserving and verified-disable lifecycle
   );
   assert.match(publicScripts.disable, /\.wukong-runtime/);
   assert.match(publicScripts.install, /install-chatgpt-hook\.ps1/);
+  assert.match(publicScripts.install, /appTarget 'scripts\\install-native-pets\.ps1'/);
   assert.match(publicScripts.hook, /ChatGPT-before-wukong-/);
   assert.match(publicScripts.hook, /Copy-Item -LiteralPath \$shortcutPath -Destination \$backupPath/);
   assert.match(publicScripts.hook, /CreateShortcut\(\$shortcutPath\)/);
   assert.match(publicScripts.hook, /launcher-bridges/);
   assert.match(publicScripts.hook, /LOCALAPPDATA[^\r\n]*WukongCodexForge/);
+  assert.match(publicScripts.hook, /Assert-DirectManagedPath/);
+  assert.match(publicScripts.hook, /Start Menu Programs directory/);
+  assert.match(publicScripts.hook, /ChatGPT Start Menu shortcut/);
+  assert.match(publicScripts.hook, /launch adapter root/);
+  assert.match(publicScripts.hook, /shortcut backup directory/);
+  assert.match(publicScripts.hook, /launcher bridge directory/);
+  assert.match(publicScripts.hook, /ReparsePoint/);
   assert.match(publicScripts.hook, /GetFolderPath\('ApplicationData'\)[\s\S]*Codex\\web\\Codex/);
   assert.match(publicScripts.hook, /managedPredicate/);
   assert.match(publicScripts.hook, /--user-data-dir\(\?:=\|\\s\)/);
@@ -166,8 +177,10 @@ test('public entries route only to the preserving and verified-disable lifecycle
     'native pet junction creation begins before package preflight finishes'
   );
   assert.doesNotMatch(publicScripts.nativePets, /Remove-Item|Move-Item|Copy-Item[^\r\n]*-Force/);
-  assert.match(publicScripts.nativePets, /payload\/spritesheet\.webp/);
+  assert.match(publicScripts.nativePets, /payloadName[\s\S]*spritesheet\.webp/);
   assert.match(publicScripts.nativePets, /source-pet\.json/);
+  assert.match(publicScripts.nativePets, /managed-upgrade/);
+  assert.match(publicScripts.nativePets, /versioned-linked-payload/);
   assert.doesNotMatch(publicScripts.nativePets, /Copy-Item[^\r\n]*spritesheet\.webp/);
 
   const packager = read('scripts/package-runtime.mjs');
@@ -236,7 +249,7 @@ test('large runtime expressions receive a bounded 45 second transport window', (
 });
 
 test('renderer refreshes are structural, throttled, and layout-loop free', () => {
-  const runtime = read('runtime/injection-plan.mjs');
+  const runtime = read('runtime/injection-plan-v12.mjs');
   assert.match(runtime, /const delay = Math\.max\(160, 650 - elapsed\)/);
   assert.match(runtime, /new MutationObserver\(/);
   assert.match(runtime, /observer\.observe\(document\.body, \{ childList: true, subtree: true \}\)/);
@@ -245,7 +258,8 @@ test('renderer refreshes are structural, throttled, and layout-loop free', () =>
   assert.match(runtime, /new ResizeObserver\(/);
   assert.doesNotMatch(runtime, /attributes:\s*true|characterData:\s*true/);
   assert.doesNotMatch(runtime, /window\.addEventListener\('scroll', scheduleRefresh/);
-  assert.match(runtime, /visualViewport\?\.addEventListener\('scroll', scheduleRefresh/);
+  assert.match(runtime, /visualViewport\?\.addEventListener\('resize', scheduleRefresh/);
+  assert.doesNotMatch(runtime, /visualViewport\?\.addEventListener\('scroll', scheduleRefresh/);
   assert.match(runtime, /addEventListener\('keydown', scheduleComposerKeyboardSubmit/);
   assert.doesNotMatch(runtime, /addEventListener\('input', scheduleRefresh/);
 

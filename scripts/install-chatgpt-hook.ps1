@@ -19,6 +19,13 @@ function Get-PortableSha256([string]$Path) {
     }
 }
 
+function Assert-DirectManagedPath([string]$Path, [string]$Label) {
+    $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+    if ($item -and ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+        throw "Refusing ChatGPT launch adapter install: ${Label} is a reparse point: $Path"
+    }
+}
+
 $rootPath = [IO.Path]::GetFullPath($Root)
 $packageDefinition = Join-Path $rootPath 'package.json'
 $launcherPath = Join-Path $rootPath 'scripts\launch.ps1'
@@ -41,8 +48,16 @@ $adapterRoot = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'WukongCodexF
 $historyRoot = Join-Path $adapterRoot 'shortcut-backups'
 $bridgeRoot = Join-Path $adapterRoot 'launcher-bridges'
 $eventPath = Join-Path $adapterRoot 'shortcut-hook-events.jsonl'
+Assert-DirectManagedPath -Path $programs -Label 'Start Menu Programs directory'
+Assert-DirectManagedPath -Path $shortcutPath -Label 'ChatGPT Start Menu shortcut'
+Assert-DirectManagedPath -Path $adapterRoot -Label 'launch adapter root'
+Assert-DirectManagedPath -Path $historyRoot -Label 'shortcut backup directory'
+Assert-DirectManagedPath -Path $bridgeRoot -Label 'launcher bridge directory'
 New-Item -ItemType Directory -Force -Path $historyRoot | Out-Null
 New-Item -ItemType Directory -Force -Path $bridgeRoot | Out-Null
+Assert-DirectManagedPath -Path $adapterRoot -Label 'launch adapter root'
+Assert-DirectManagedPath -Path $historyRoot -Label 'shortcut backup directory'
+Assert-DirectManagedPath -Path $bridgeRoot -Label 'launcher bridge directory'
 
 $escapedRoot = $rootPath.Replace("'", "''")
 $portableSwitch = if ($Portable) { ' -Portable' } else { '' }

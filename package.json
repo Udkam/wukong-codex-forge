@@ -1,6 +1,6 @@
 {
   "name": "wukong-codex-forge",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,8 +12,8 @@
     "test:theme": "node --test tests/native-theme.test.mjs",
     "test:lifecycle": "node --test tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs tests/preserving-install-contract.test.mjs",
     "test:native": "node --test tests/native-theme.test.mjs tests/lifecycle-contract.test.mjs tests/restore-path.test.mjs",
-    "test:runtime-states": "node --test tests/injection-fixture.test.mjs tests/runtime-style-visual.test.mjs tests/scene-palette.test.mjs",
-    "test:runtime-visual": "node --test tests/runtime-style-visual.test.mjs",
+    "test:runtime-states": "node --test tests/background-runtime-v12.test.mjs tests/scene-palette.test.mjs",
+    "test:runtime-visual": "node --test tests/background-runtime-v12.test.mjs",
     "test:managed-package": "node --test tests/managed-package.test.mjs",
     "test:native-pets": "node --test tests/native-pets-contract.test.mjs",
     "prepare:native-pets": "node scripts/prepare-native-pets.mjs",

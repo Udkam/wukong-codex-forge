@@ -18,7 +18,6 @@
     "dim": 0.3,
     "taskIntensity": 0.7,
     "landingIntensity": 0.84,
-    "primarySceneCount": 3,
     "gallery": [
       { "id": "erlang-ink-duel", "asset": "assets/erlang-ink-duel.jpg", "position": "68% center", "mode": "battle-primary", "tone": "celestial-ink" },
       { "id": "great-sage", "asset": "assets/great-sage-return.jpg", "position": "right center", "mode": "battle-primary", "tone": "sage-sepia" },
@@ -33,15 +32,12 @@
       { "id": "sunset-ravine", "asset": "assets/sunset-ravine.jpg", "position": "center center", "mode": "scenery", "tone": "sunset-copper" }
     ]
   },
-  "motifs": {
-    "xiangfeiGourd": "motifs/xiangfei-gourd-icon.webp"
-  },
   "accessibility": {
     "preset": "workbench",
     "reducedMotion": false
   },
   "companion": {
-    "enabled": true,
+    "enabled": false,
     "side": "right",
     "size": 72,
     "motion": "quiet"
