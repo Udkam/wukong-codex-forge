@@ -107,5 +107,5 @@
 - V15 侧栏/顶部入口状态矩阵已按当前 ASAR 补齐：五个顶部入口、一级项目/无项目对话、二级项目对话、四个应用菜单触发器均覆盖默认、hover、focus、selected/open、expanded/collapsed、disabled，以及原生 unread/running indicator；尾部菜单单独禁用不会误禁整行，Windows forced-colors 会压过所有组合状态。无头视觉证据为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`，仍待用户实机视觉验收。
 - 当前 Electron 的“文件/编辑/视图/帮助”下拉内容由主进程原生菜单绘制，不在 renderer DOM 中；本阶段只对四个原生触发页签做材质替换，不能把测试夹具伪装成已改造原生下拉菜单。
 - 金箍棒图案已从旧版约 40×34 px 的有效占位放大到原生槽位内约 50×42 px，112×112 资源为 3.2 KiB；1× fixture 可辨认完整端箍且无边缘裁切，原生几何不变。无头证据位于 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-49-40-653Z/`，用户实机验收仍未完成。
-- 宠物高保真外观与动作仍待重做。
+- 宠物已进入 Hatch Pet v2 全量重做：新建 `little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725` 与 `little-bajie-v4-inart-game-motion` 两个独立 run，旧 canonical/atlas 全部冻结且不复用。当前都只开放 base；小天命人必须先同时通过完整神锋前端/握持/后棍身/尾端与两腿双足门，小八戒必须先通过成年游戏骨相与完整九齿钉耙门，才允许扩展动作。
 - 最终随 Codex 启停方案尚未开始，按要求留到所有视觉内容完成后处理。
