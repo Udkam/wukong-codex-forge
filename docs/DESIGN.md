@@ -100,6 +100,7 @@ V13.2–V13.3 改为：
 4. 图层行内只保存短 `var(--forge-bg-N)`，不再复制完整 base64 URL。
 5. 过渡结束立即把退场层的图片、veil、位置、亮度与场景数据清空；稳态只有一张图片。
 6. `will-change: opacity` 只在 `data-forge-transitioning=true` 的 820 ms 过渡内存在；全屏 `filter` 与 `scale(1.001)` 被移除，色调只由廉价 veil 完成。
+7. 导航/提交后的有界复核只保留最新一组，新的 route event 会清除旧的 3 个 follow-up timer；快速连续操作不会按事件数累计 timer。
 
 资源合同的理论上限是稳态约 7.91–10.19 MiB RGBA，过渡期约 15.82–20.38 MiB；不做相邻场景或跨模式预取。
 

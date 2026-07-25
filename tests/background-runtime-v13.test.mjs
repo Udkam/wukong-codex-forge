@@ -648,6 +648,39 @@ test('V13 prefers a visible conversation over an opacity-zero retained home hero
   await page.evaluate(RESTORE_EXPRESSION);
 });
 
+test('V13 bounds rapid navigation follow-up timers to the latest three probes', async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+  await page.route('http://wukong-route-timers.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.goto('http://wukong-route-timers.test/');
+  await page.evaluate(expression);
+
+  await page.evaluate(() => {
+    const row = document.querySelector('[data-app-action-sidebar-thread-row]');
+    for (let index = 0; index < 100; index += 1) {
+      row.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }
+  });
+  assert.ok(
+    await page.evaluate(() => window.__wukongCodexForgeRuntimeV13.routeTimers.size <= 3)
+  );
+
+  await page.evaluate(() => {
+    for (let index = 0; index < 100; index += 1) {
+      history.pushState({}, '', `#rapid-${index}`);
+    }
+  });
+  assert.ok(
+    await page.evaluate(() => window.__wukongCodexForgeRuntimeV13.routeTimers.size <= 3)
+  );
+  await page.waitForTimeout(1400);
+  assert.equal(
+    await page.evaluate(() => window.__wukongCodexForgeRuntimeV13.routeTimers.size),
+    0
+  );
+
+  await page.evaluate(RESTORE_EXPRESSION);
+});
+
 test('V13 rotates six battle and five scenery scenes in independent pools without motion', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 }, reducedMotion: 'reduce' });
   await page.route('http://wukong-rotation.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));

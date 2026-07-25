@@ -272,6 +272,8 @@ test('renderer refreshes are structural, throttled, and layout-loop free', () =>
   assert.match(runtime, /const naturalDelay = Math\.max\(140, 520 - elapsed\)/);
   assert.match(runtime, /timerDueAt/);
   assert.match(runtime, /scheduleRefresh\(0\)/);
+  assert.match(runtime, /state\.routeTimers\.forEach\(timer => clearTimeout\(timer\)\)/);
+  assert.match(runtime, /state\.routeTimers\.clear\(\)/);
   assert.match(runtime, /new MutationObserver\(/);
   const observerConfig = runtime.match(/observer\.observe\(document\.body,\s*(\{[\s\S]*?\})\s*\);/)?.[1] || '';
   assert.match(observerConfig, /childList:\s*true/);

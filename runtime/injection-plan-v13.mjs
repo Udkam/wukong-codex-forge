@@ -965,6 +965,12 @@ function applyRuntime(payload) {
     }, delay);
   };
   const queueRefreshes = delays => {
+    /*
+     * Only the newest navigation/submit needs bounded follow-up probes. Rapid
+     * clicks must not retain one timer set per event until every old deadline.
+     */
+    state.routeTimers.forEach(timer => clearTimeout(timer));
+    state.routeTimers.clear();
     scheduleRefresh();
     for (const delay of delays) {
       const timer = window.setTimeout(() => {
