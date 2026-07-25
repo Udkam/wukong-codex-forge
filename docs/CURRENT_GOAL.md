@@ -104,6 +104,8 @@
 - 已把 sidebar 生产映射收口到当前 ASAR 的 `data-app-action-sidebar-*` 结构：项目条、无项目对话和项目内对话不再依赖测试假属性或 `nth-child`；active、expanded、collapsed 的属性变化可在不缩放窗口的情况下刷新材质。
 - V15 已把用户最终参考的纸面与目录材质接入原生 composer、上下文条、一级/二级侧栏条目及应用菜单，当前仅通过 headless 几何/状态门禁，尚未通过用户实机视觉验收。
 - V15 输入相关四类纸面已统一暗化到目标综合色阶，移除 composer 常驻 CSS filter，并通过像素、纹理、原生几何、forced-colors 和最小包定向门禁；该结果仍需用户实机视觉验收。
+- V15 侧栏/顶部入口状态矩阵已按当前 ASAR 补齐：五个顶部入口、一级项目/无项目对话、二级项目对话、四个应用菜单触发器均覆盖默认、hover、focus、selected/open、expanded/collapsed、disabled，以及原生 unread/running indicator；尾部菜单单独禁用不会误禁整行，Windows forced-colors 会压过所有组合状态。无头视觉证据为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`，仍待用户实机视觉验收。
+- 当前 Electron 的“文件/编辑/视图/帮助”下拉内容由主进程原生菜单绘制，不在 renderer DOM 中；本阶段只对四个原生触发页签做材质替换，不能把测试夹具伪装成已改造原生下拉菜单。
 - 金箍棒图案已独立重绘为 2.4 KiB 真实模型缩略资产，1× fixture 可辨认端箍且原生几何不变；用户实机验收仍未完成。
 - 宠物高保真外观与动作仍待重做。
 - 最终随 Codex 启停方案尚未开始，按要求留到所有视觉内容完成后处理。

@@ -175,6 +175,41 @@ export const runtimeFixtureHtml = String.raw`
     .sidebar-row .icon,
     [data-app-action-sidebar-project-row] .icon,
     [data-app-action-sidebar-thread-row] .icon { color: #999f9c; }
+    .sidebar-row .sidebar-main-action {
+      display: flex;
+      min-width: 0;
+      flex: 1;
+      align-items: center;
+      gap: 8px;
+      color: inherit;
+      text-align: left;
+    }
+    .sidebar-row .sidebar-trailing-action {
+      display: flex;
+      width: 20px;
+      height: 20px;
+      flex: 0 0 20px;
+      align-items: center;
+      justify-content: center;
+      color: inherit;
+    }
+    .native-status-slot {
+      display: flex;
+      width: 20px;
+      height: 20px;
+      margin-left: auto;
+      flex: 0 0 20px;
+      align-items: center;
+      justify-content: center;
+    }
+    .native-status-slot .animate-spin {
+      display: inline-flex;
+      width: fit-content;
+      height: fit-content;
+      animation: fixture-spin 2s linear infinite;
+    }
+    .native-status-slot svg { width: 12px; height: 12px; }
+    @keyframes fixture-spin { to { transform: rotate(360deg); } }
     .sidebar-section {
       margin: 18px 8px 6px;
       color: #6e7370;
@@ -480,27 +515,31 @@ export const runtimeFixtureHtml = String.raw`
           <div class="sidebar-header"><span class="brand">Codex <svg class="icon" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></span><svg class="icon" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4"/><path d="m10 10 3 3"/></svg></div>
           <div class="sidebar-scroll vertical-scroll-fade-mask" data-app-action-sidebar-scroll>
             <nav class="sidebar-nav" aria-label="Codex navigation">
-              <button class="sidebar-row" aria-label="新建任务" data-native-slot="new-task"><svg class="icon" viewBox="0 0 16 16"><path d="M3 12.5h3l7-7-3-3-7 7v3Z"/><path d="m8.8 3.7 3 3"/></svg>新建任务</button>
-              <button class="sidebar-row"><svg class="icon" viewBox="0 0 16 16"><path d="M5 2.5 3 5l2 2.5M11 2.5 13 5l-2 2.5M3 11h10"/></svg>拉取请求</button>
-              <button class="sidebar-row"><svg class="icon" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4" height="4" rx="1"/><rect x="9.5" y="2.5" width="4" height="4" rx="1"/><rect x="2.5" y="9.5" width="4" height="4" rx="1"/><rect x="9.5" y="9.5" width="4" height="4" rx="1"/></svg>站点</button>
-              <button class="sidebar-row"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg>已安排</button>
-              <button class="sidebar-row" aria-expanded="false"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1.8v3M8 11.2v3M1.8 8h3M11.2 8h3"/></svg>插件</button>
+              <div class="sidebar-row" data-native-slot="new-task-row">
+                <button class="sidebar-main-action" aria-label="新建任务" data-native-slot="new-task"><svg class="icon" viewBox="0 0 16 16"><path d="M3 12.5h3l7-7-3-3-7 7v3Z"/><path d="m8.8 3.7 3 3"/></svg>新建任务</button>
+                <button class="sidebar-trailing-action" aria-label="新建任务菜单" aria-haspopup="menu"
+                  data-state="closed" data-native-slot="new-task-menu">···</button>
+              </div>
+              <button class="sidebar-row" data-native-slot="pull-requests"><svg class="icon" viewBox="0 0 16 16"><path d="M5 2.5 3 5l2 2.5M11 2.5 13 5l-2 2.5M3 11h10"/></svg>拉取请求</button>
+              <button class="sidebar-row" data-native-slot="sites"><svg class="icon" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4" height="4" rx="1"/><rect x="9.5" y="2.5" width="4" height="4" rx="1"/><rect x="2.5" y="9.5" width="4" height="4" rx="1"/><rect x="9.5" y="9.5" width="4" height="4" rx="1"/></svg>站点</button>
+              <button class="sidebar-row" data-native-slot="scheduled"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg>已安排</button>
+              <button class="sidebar-row" data-native-slot="plugins"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1.8v3M8 11.2v3M1.8 8h3M11.2 8h3"/></svg>插件</button>
               <section data-app-action-sidebar-section data-app-action-sidebar-section-heading="Tasks">
                 <p class="sidebar-section">置顶</p>
-                <button class="sidebar-row" data-app-action-sidebar-thread-row><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg><span data-thread-title>每日通知与时事汇总</span></button>
+                <button class="sidebar-row" data-app-action-sidebar-thread-row><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg><span data-thread-title>每日通知与时事汇总</span><span class="native-status-slot" data-native-status="unread"><span class="icon-xs relative scale-50"><span class="absolute inset-0 rounded-full" style="display:block;width:8px;height:8px;border-radius:50%;background-color:var(--vscode-textLink-foreground)"></span></span></span></button>
                 <button class="sidebar-row" data-app-action-sidebar-thread-row><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg><span data-thread-title>磁盘审计</span></button>
               </section>
               <section data-app-action-sidebar-section data-app-action-sidebar-section-heading="Projects">
                 <p class="sidebar-section">项目</p>
-                <div data-app-action-sidebar-project-row aria-expanded="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>wukong-codex-forge</div>
+                <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-project-row aria-expanded="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>wukong-codex-forge<button type="button" aria-label="项目更多操作" data-app-action-sidebar-project-show-all-toggle data-native-slot="project-internal-control">···</button></div>
                 <div data-app-action-sidebar-project-list-id="wukong-codex-forge">
-                  <div data-app-action-sidebar-thread-row data-app-action-sidebar-thread-active="true" aria-current="page" data-native-slot="project-active"><span data-thread-title>重设计黑神话悟空主题</span></div>
+                  <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-thread-row data-app-action-sidebar-thread-active="true" aria-current="page" data-native-slot="project-active"><span data-thread-title>重设计黑神话悟空主题</span><span class="native-status-slot" data-native-status="running"><span class="animate-spin"><svg viewBox="0 0 24 24" fill="none"><path opacity=".3" d="M18 12A6 6 0 1 1 12 6" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 8 8" stroke="currentColor" stroke-width="2"/></svg></span></span></div>
                 </div>
-                <div data-app-action-sidebar-project-row aria-expanded="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-temple-run</div>
+                <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-project-row aria-expanded="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-temple-run</div>
                 <div data-app-action-sidebar-project-list-id="reproduction-temple-run">
-                  <div data-app-action-sidebar-thread-row data-native-slot="project-temple-child"><span data-thread-title>接管 Temple 总控并归档修复</span></div>
+                  <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-thread-row data-native-slot="project-temple-child"><span data-thread-title>接管 Temple 总控并归档修复</span></div>
                 </div>
-                <div data-app-action-sidebar-project-row aria-expanded="false" data-app-action-sidebar-project-collapsed="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-tetris</div>
+                <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-project-row aria-expanded="false" data-app-action-sidebar-project-collapsed="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-tetris</div>
               </section>
             </nav>
           </div>

@@ -93,11 +93,38 @@ test('local ChatGPT.exe ASAR remains the authoritative native geometry contract'
     /^\\webview\\assets\\app-shell-.*\.js$/i,
     'group/application-menu-top-bar'
   );
+  const navList = readMatchingAsset(
+    entries,
+    /^\\webview\\assets\\nav-list-.*\.js$/i,
+    '"aria-current":'
+  );
+  const worktreeInitRow = readMatchingAsset(
+    entries,
+    /^\\webview\\assets\\worktree-init-row-.*\.js$/i,
+    '"aria-disabled":'
+  );
+  const taskRowStatusIndicator = readMatchingAsset(
+    entries,
+    /^\\webview\\assets\\task-row-status-indicator-.*\.js$/i,
+    '--vscode-textLink-foreground'
+  );
+  const spinner = readMatchingAsset(
+    entries,
+    /^\\webview\\assets\\spinner-.*\.js$/i,
+    'animate-spin'
+  );
 
   assert.ok(baseCss, 'official base CSS with Codex geometry tokens must exist');
   assert.ok(composerLayout, 'official composer layout asset must exist');
   assert.ok(composerAdapter, 'official composer adapter asset must exist');
   assert.ok(appShell, 'official application-shell asset must exist');
+  assert.ok(navList, 'official navigation-list state asset must exist');
+  assert.ok(worktreeInitRow, 'official worktree task-row asset must exist');
+  assert.ok(
+    taskRowStatusIndicator,
+    'official task-row status-indicator asset must exist'
+  );
+  assert.ok(spinner, 'official native spinner asset must exist');
 
   for (const token of [
     '--spacing:.25rem',
@@ -136,6 +163,82 @@ test('local ChatGPT.exe ASAR remains the authoritative native geometry contract'
   assert.ok(appShell.includes('px-2.5 py-1 text-base font-normal leading-none'));
   assert.ok(appShell.includes('"aria-haspopup":`menu`'));
   assert.ok(appShell.includes('"aria-expanded":'));
+
+  for (const fragment of [
+    'disabled:cursor-not-allowed',
+    '"aria-current":',
+    'disabled:'
+  ]) {
+    assert.ok(
+      navList.includes(fragment),
+      `missing native navigation state contract: ${fragment}`
+    );
+  }
+  assert.match(
+    navList,
+    /\?`page`:void 0/,
+    'active navigation items must expose aria-current="page"'
+  );
+
+  for (const fragment of [
+    'dataAttributes:',
+    'role:`button`',
+    'tabIndex:',
+    '"aria-disabled":',
+    '"aria-current":'
+  ]) {
+    assert.ok(
+      worktreeInitRow.includes(fragment),
+      `missing native task-row state contract: ${fragment}`
+    );
+  }
+  assert.match(
+    worktreeInitRow,
+    /\{\.\.\.\w+,className:[^{}]+role:`button`,tabIndex:[^,]+,"aria-disabled":[^,]+,"aria-current":/,
+    'task-row data attributes and interactive ARIA state must share the row'
+  );
+
+  assert.match(
+    taskRowStatusIndicator,
+    /\(\w+\.unreadCount\?\?0\)>0/,
+    'native task status must render unread counts'
+  );
+  assert.match(
+    taskRowStatusIndicator,
+    /\w+\.type===`loading`/,
+    'native task status must render the loading/running indicator'
+  );
+  assert.match(
+    taskRowStatusIndicator,
+    /\w+\.unread===!0/,
+    'native task status must render the unread dot'
+  );
+  assert.ok(
+    taskRowStatusIndicator.includes('var(--vscode-textLink-foreground)'),
+    'native unread states must inherit the text-link foreground token'
+  );
+  assert.ok(
+    taskRowStatusIndicator.includes(
+      'backgroundColor:`color-mix(in srgb, var(--vscode-textLink-foreground) 18%, transparent)`'
+    ),
+    'native unread count must derive its surface from the text-link token'
+  );
+  assert.ok(
+    taskRowStatusIndicator.includes(
+      'boxShadow:`inset 0 0 0 1px color-mix(in srgb, var(--vscode-textLink-foreground) 72%, transparent)`'
+    ),
+    'native unread count must derive its outline from the text-link token'
+  );
+
+  assert.ok(
+    spinner.includes('animate-spin'),
+    'native loading indicator must preserve its spinner animation class'
+  );
+  assert.match(
+    spinner,
+    /width:24,height:24,viewBox:`0 0 24 24`/,
+    'native loading indicator must preserve its 24 by 24 SVG geometry'
+  );
 
   assert.deepEqual(nativeUiBaseline, {
     source: 'ChatGPT.exe 26.715.2305.0 app.asar',

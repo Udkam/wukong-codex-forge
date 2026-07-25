@@ -625,11 +625,11 @@ function applyRuntime(payload) {
   const sidebarSelected = element => Boolean(
     element.matches?.(
       '[data-app-action-sidebar-thread-active="true"], ' +
-      '[aria-current="page"], [aria-selected="true"], [data-state="active"]'
+      '[aria-current="page"], [aria-selected="true"]'
     ) ||
     element.querySelector?.(
       '[data-app-action-sidebar-thread-active="true"], ' +
-      '[aria-current="page"], [aria-selected="true"], [data-state="active"]'
+      '[aria-current="page"], [aria-selected="true"]'
     )
   );
   const explicitProjectRow = element => Boolean(
@@ -713,6 +713,11 @@ function applyRuntime(payload) {
       '[class~="group/chats-section-header"]',
       '[data-sidebar-section-header]'
     ].join(',');
+    const excludedControl = [
+      '[data-app-action-sidebar-section-toggle]',
+      '[data-app-action-sidebar-project-show-all-toggle]',
+      '[data-app-action-sidebar-select-project]'
+    ].join(',');
     const candidates = [
       ...scroll.querySelectorAll([
         '[data-app-action-sidebar-project-row]',
@@ -733,14 +738,23 @@ function applyRuntime(payload) {
     ];
     const bySurface = new Map();
     for (const candidate of candidates) {
-      if (!layoutPresent(candidate) || candidate.closest(excludedHeader)) continue;
+      if (
+        !layoutPresent(candidate) ||
+        candidate.closest(excludedHeader) ||
+        candidate.closest(excludedControl)
+      ) continue;
       const productionRow = candidate.matches(
         '[data-app-action-sidebar-project-row], [data-app-action-sidebar-thread-row]'
       );
       const surface = productionRow
         ? candidate
         : compactPaintSurface(candidate, scroll, sidebarRect.width * .48);
-      if (!surface || surface.closest(excludedHeader) || !textOf(surface)) continue;
+      if (
+        !surface ||
+        surface.closest(excludedHeader) ||
+        surface.matches(excludedControl) ||
+        !textOf(surface)
+      ) continue;
       const rect = surface.getBoundingClientRect();
       if (
         rect.left < sidebarRect.left - 1 ||
@@ -982,7 +996,10 @@ function applyRuntime(payload) {
       'aria-current',
       'aria-selected',
       'aria-expanded',
+      'aria-disabled',
+      'disabled',
       'data-state',
+      'data-disabled',
       'data-app-action-sidebar-thread-active',
       'data-app-action-sidebar-project-collapsed'
     ]

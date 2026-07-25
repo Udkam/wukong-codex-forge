@@ -1,5 +1,14 @@
 # Local work log
 
+## 2026-07-25 — V15 sidebar / topbar 原生状态矩阵
+
+- 只读复核当前 ASAR 的 `nav-list`、`worktree-init-row`、`task-row-status-indicator` 与 `spinner`，把 `aria-current`、disabled/aria-disabled、role/tabIndex/dataAttributes、未读 token、loading 分支和 24×24 spinner 纳入漂移合同。
+- 五个顶部入口保持原生 DOM/文字/图标/30 px row；真实“外层行 + 主按钮 + 尾部菜单”结构进入 fixture。内部 section/project 操作按钮被显式排除，项目容器不会因内部控件被误画。
+- 补齐 topbar 与 sidebar 的 default、hover、focus、open/selected、expanded/collapsed、disabled、unread/running。修复尾部菜单禁用误伤整行、折叠项目缺少 focus/press、浏览器白色矩形焦点框和 `data-state=active` 误当当前页。
+- Windows forced-colors 回退提高到足以压过所有组合态的 `#root` specificity，强制移除位图、阴影和主题 opacity，恢复系统焦点轮廓与系统颜色。
+- 定向结果：ASAR 合同 1/1、原生表面/状态/响应式/首次挂载/forced-colors 7/7、背景/最小包/原生主题相关回归 11/11。视觉证据为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。
+- 截图仅由无头 fixture 生成，browser 关闭后项目调试端口为 0；本轮没有打开第二个 Codex 窗口。Electron 下拉菜单本体不在 renderer DOM，当前只完成四个触发页签，真实 Codex 用户验收仍待进行。
+
 ## 2026-07-25 — V15 真实金箍棒 landing mark
 
 - 否决第二版“通用暗金短棍”：虽然去掉亮红卡通色，但 56×56 下仍缺少《黑神话：悟空》的器物辨识度。

@@ -6,6 +6,11 @@
 | --- | --- | --- |
 | 主对话 · native geometry | 只读解析当前 `ChatGPT.exe/app.asar`，把官方 token、class 结构和响应式公式写入 fixture/漂移合同 | 已完成 composer/topbar/基础 sidebar baseline；任何尺寸改动必须先有本机源码证据 |
 | `composer_edge_audit_v11` | 只读补齐 sidebar 项目/对话 hierarchy、class 与状态锚点 | 已完成；确认生产 `data-app-action-sidebar-*` 锚点、Tasks/Projects 层级及 active/expanded/collapsed 状态，主对话已写入正式 fixture 与运行时 |
+| `sidebar_state_audit` | 只读核对一级/二级/顶部入口的原生 current、disabled、unread、running 与内部控件边界 | 已完成；确认未读/运行由原生 trailing indicator 负责，内部 section/project 控件不能被误画成整行 |
+| `topbar_menu_audit` | 只读核对四个应用菜单触发器和 Electron 下拉边界 | 已完成；触发器使用 `aria-haspopup=menu` / `aria-expanded`，下拉本体由主进程原生菜单绘制，不在 renderer DOM |
+| `css_state_review` | 只读复核状态 selector、forced-colors specificity 与禁用传播风险 | 已完成；发现并修复尾部按钮误禁整行、expanded/collapsed focus 被吞和高对比回退优先级 |
+| `asar_state_contract` | 为当前 ASAR 的 nav/task/status/spinner 增加漂移合同 | 已完成并定向通过；不绑定压缩变量名，不修改或覆盖应用包 |
+| 主对话 · sidebar/topbar states | 实现完整 paint 状态、动态刷新、几何/热区/ARIA 门禁和状态截图 | headless 7/7、相关背景/原生主题/最小包 11/11 通过；独立状态截图已生成，用户实机视觉仍待验收 |
 | 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已把四类输入纸面统一暗化到目标中位色并通过像素、几何、状态、forced-colors 和最小包门禁；真实 Codex 视觉仍待多轮验收 |
 | 主对话 · landing mark | 把卡通短棍替换为真实金箍棒模型缩略资产 | 2.4 KiB 透明 WebP、56×56 原生槽位、1× fixture、最小包与资源门禁通过；独立 commit/push 后仍待用户实机验收 |
 | 主对话 · pets | 使用 Hatch Pet v2 重做小天命人和小八戒 | 输入器/侧栏/背景通过后开始；现有错误角色与动作不得扩散 |

@@ -55,6 +55,13 @@ const selectors = {
   voice: '[data-native-slot="composer-voice"]',
   send: '.composer-footer .send',
   newTask: '[data-native-slot="new-task"]',
+  newTaskRow: '[data-native-slot="new-task-row"]',
+  newTaskMenu: '[data-native-slot="new-task-menu"]',
+  pullRequests: '[data-native-slot="pull-requests"]',
+  sites: '[data-native-slot="sites"]',
+  scheduled: '[data-native-slot="scheduled"]',
+  plugins: '[data-native-slot="plugins"]',
+  projectInternalControl: '[data-native-slot="project-internal-control"]',
   menuFile: '[data-native-slot="menu-file"]',
   menuEdit: '[data-native-slot="menu-edit"]',
   menuView: '[data-native-slot="menu-view"]',
@@ -71,6 +78,12 @@ const hitSelectors = [
   selectors.voice,
   selectors.send,
   selectors.newTask,
+  selectors.newTaskMenu,
+  selectors.pullRequests,
+  selectors.sites,
+  selectors.scheduled,
+  selectors.plugins,
+  selectors.projectInternalControl,
   selectors.menuFile,
   selectors.menuEdit,
   selectors.menuView,
@@ -202,6 +215,12 @@ test('V15 maps reference materials without changing native geometry, semantics, 
       add: 0,
       send: 0,
       newTask: 0,
+      newTaskMenu: 0,
+      pullRequests: 0,
+      sites: 0,
+      scheduled: 0,
+      plugins: 0,
+      projectInternalControl: 0,
       menuFile: 0,
       menuEdit: 0,
       menuView: 0,
@@ -216,6 +235,18 @@ test('V15 maps reference materials without changing native geometry, semantics, 
       });
     document.querySelector('[data-native-slot="new-task"]')
       .addEventListener('click', () => { window.__forgeClicks.newTask += 1; });
+    document.querySelector('[data-native-slot="new-task-menu"]')
+      .addEventListener('click', () => { window.__forgeClicks.newTaskMenu += 1; });
+    document.querySelector('[data-native-slot="pull-requests"]')
+      .addEventListener('click', () => { window.__forgeClicks.pullRequests += 1; });
+    document.querySelector('[data-native-slot="sites"]')
+      .addEventListener('click', () => { window.__forgeClicks.sites += 1; });
+    document.querySelector('[data-native-slot="scheduled"]')
+      .addEventListener('click', () => { window.__forgeClicks.scheduled += 1; });
+    document.querySelector('[data-native-slot="plugins"]')
+      .addEventListener('click', () => { window.__forgeClicks.plugins += 1; });
+    document.querySelector('[data-native-slot="project-internal-control"]')
+      .addEventListener('click', () => { window.__forgeClicks.projectInternalControl += 1; });
     document.querySelector('[data-native-slot="menu-file"]')
       .addEventListener('click', () => { window.__forgeClicks.menuFile += 1; });
     document.querySelector('[data-native-slot="menu-edit"]')
@@ -309,16 +340,26 @@ test('V15 maps reference materials without changing native geometry, semantics, 
     'the fixture must not depend on superseded fake sidebar attributes'
   );
   assert.equal(
-    await page.locator('[data-native-slot="new-task"].forge-sidebar-action').count(),
+    await page.locator('[data-native-slot="new-task-row"].forge-sidebar-action').count(),
     1,
     'top native navigation must receive its own themed action-row mapping'
   );
   assert.equal(
-    await page.locator(
-      '.sidebar-row[aria-expanded="false"].forge-sidebar-action'
-    ).count(),
+    await page.locator('[data-native-slot="plugins"].forge-sidebar-action').count(),
     1,
-    'a generic expanded-state top navigation button must not be mistaken for a project'
+    'a top navigation action without project expansion semantics must retain action mapping'
+  );
+  assert.equal(
+    await page.locator('[data-native-slot="plugins"][aria-expanded]').count(),
+    0,
+    'the fixture must not invent project expansion semantics for Plugins'
+  );
+  assert.equal(
+    await page.locator(
+      '[data-app-action-sidebar-project-show-all-toggle][data-forge-mark]'
+    ).count(),
+    0,
+    'internal project controls must not be painted as sidebar rows'
   );
 
   const paint = await page.evaluate(() => ({
@@ -376,6 +417,12 @@ test('V15 maps reference materials without changing native geometry, semantics, 
   await page.locator(selectors.add).click();
   await page.locator(selectors.send).click();
   await page.locator(selectors.newTask).click();
+  await page.locator(selectors.newTaskMenu).click();
+  await page.locator(selectors.pullRequests).click();
+  await page.locator(selectors.sites).click();
+  await page.locator(selectors.scheduled).click();
+  await page.locator(selectors.plugins).click();
+  await page.locator(selectors.projectInternalControl).click();
   await page.locator(selectors.menuFile).click();
   await page.locator(selectors.menuEdit).click();
   await page.locator(selectors.menuView).click();
@@ -386,6 +433,12 @@ test('V15 maps reference materials without changing native geometry, semantics, 
       add: 1,
       send: 1,
       newTask: 1,
+      newTaskMenu: 1,
+      pullRequests: 1,
+      sites: 1,
+      scheduled: 1,
+      plugins: 1,
+      projectInternalControl: 1,
       menuFile: 1,
       menuEdit: 1,
       menuView: 1,
@@ -398,6 +451,323 @@ test('V15 maps reference materials without changing native geometry, semantics, 
   assert.equal(await page.locator('[data-forge-mark]').count(), 0);
   assert.equal(await page.locator('#wukong-forge-background').count(), 0);
   assertRectsEqual(await snapshot(page), before);
+  await page.close();
+});
+
+test('V15 preserves native topbar and sidebar state semantics while painting the full state matrix', async () => {
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 820 },
+    deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
+  });
+  await page.route('http://wukong-v15-state-matrix.test/**', route => route.fulfill({
+    body: runtimeFixtureHtml,
+    contentType: 'text/html; charset=utf-8'
+  }));
+  await page.goto('http://wukong-v15-state-matrix.test/');
+
+  const rectTargets = {
+    menuFile: selectors.menuFile,
+    menuEdit: selectors.menuEdit,
+    menuView: selectors.menuView,
+    menuHelp: selectors.menuHelp,
+    newTaskRow: selectors.newTaskRow,
+    newTask: selectors.newTask,
+    newTaskMenu: selectors.newTaskMenu,
+    pullRequests: selectors.pullRequests,
+    sites: selectors.sites,
+    scheduled: selectors.scheduled,
+    plugins: selectors.plugins,
+    rootThread: selectors.rootThread,
+    project: selectors.project,
+    childThread: selectors.childThread
+  };
+  const readRects = () => page.evaluate(targets => Object.fromEntries(
+    Object.entries(targets).map(([name, selector]) => {
+      const rect = document.querySelector(selector).getBoundingClientRect();
+      return [name, [rect.x, rect.y, rect.width, rect.height]];
+    })
+  ), rectTargets);
+  const beforeRects = await readRects();
+
+  await page.evaluate(expression);
+  await page.waitForFunction(() => (
+    document.querySelectorAll('.forge-topbar-menu-item').length === 4 &&
+    document.querySelectorAll('.forge-sidebar-action').length === 5 &&
+    document.querySelector('[data-native-slot="new-task-row"]')
+      ?.classList.contains('forge-sidebar-action')
+  ));
+
+  assert.equal(
+    await page.locator(
+      [
+        selectors.newTaskRow,
+        selectors.pullRequests,
+        selectors.sites,
+        selectors.scheduled,
+        selectors.plugins
+      ].map(selector => `${selector}.forge-sidebar-action`).join(',')
+    ).count(),
+    5,
+    'all five native sidebar entry surfaces must receive action-row paint'
+  );
+
+  const menuFile = page.locator(selectors.menuFile);
+  const menuEdit = page.locator(selectors.menuEdit);
+  const menuView = page.locator(selectors.menuView);
+  const menuHelp = page.locator(selectors.menuHelp);
+  const menuDefault = await menuFile.evaluate(element => ({
+    image: getComputedStyle(element).backgroundImage,
+    color: getComputedStyle(element).color,
+    shadow: getComputedStyle(element).boxShadow
+  }));
+
+  await menuFile.hover();
+  const menuHover = await menuFile.evaluate(element => ({
+    image: getComputedStyle(element).backgroundImage,
+    color: getComputedStyle(element).color
+  }));
+  assert.notEqual(menuHover.image, menuDefault.image);
+  assert.notEqual(menuHover.color, menuDefault.color);
+
+  await page.mouse.move(900, 450);
+  await menuEdit.focus();
+  assert.equal(await menuEdit.evaluate(element => element.matches(':focus-visible')), true);
+  assert.notEqual(
+    await menuEdit.evaluate(element => getComputedStyle(element).boxShadow),
+    menuDefault.shadow
+  );
+  assert.equal(
+    await menuEdit.evaluate(element => getComputedStyle(element).outlineStyle),
+    'none',
+    'native browser focus outline must be replaced by the themed focus paint'
+  );
+
+  await menuView.evaluate(element => element.setAttribute('aria-expanded', 'true'));
+  assert.notEqual(
+    await menuView.evaluate(element => getComputedStyle(element).backgroundImage),
+    menuDefault.image
+  );
+  await menuView.evaluate(element => element.setAttribute('aria-expanded', 'false'));
+
+  await menuHelp.evaluate(element => element.dataset.state = 'open');
+  assert.notEqual(
+    await menuHelp.evaluate(element => getComputedStyle(element).backgroundImage),
+    menuDefault.image,
+    'data-state=open must use the same selected-paper state as aria-expanded'
+  );
+  await menuHelp.evaluate(element => delete element.dataset.state);
+
+  await page.evaluate(() => {
+    window.__disabledMenuClicks = 0;
+    const menu = document.querySelector('[data-native-slot="menu-file"]');
+    menu.addEventListener('click', () => { window.__disabledMenuClicks += 1; });
+    menu.disabled = true;
+  });
+  await page.waitForFunction(() => (
+    document.querySelector('[data-native-slot="menu-file"]')?.disabled === true
+  ));
+  await menuFile.hover();
+  const disabledMenu = await menuFile.evaluate(element => ({
+    image: getComputedStyle(element).backgroundImage,
+    shadow: getComputedStyle(element).boxShadow,
+    opacity: getComputedStyle(element).opacity
+  }));
+  assert.equal(disabledMenu.image, menuDefault.image);
+  assert.equal(disabledMenu.shadow, 'none');
+  assert.equal(disabledMenu.opacity, '0.46');
+  await menuFile.evaluate(element => element.click());
+  assert.equal(await page.evaluate(() => window.__disabledMenuClicks), 0);
+  await menuFile.evaluate(element => { element.disabled = false; });
+
+  const newTaskRow = page.locator(selectors.newTaskRow);
+  const newTask = page.locator(selectors.newTask);
+  const newTaskMenu = page.locator(selectors.newTaskMenu);
+  const actionDefault = await newTaskRow.evaluate(element => ({
+    image: getComputedStyle(element).backgroundImage,
+    shadow: getComputedStyle(element).boxShadow
+  }));
+
+  await newTaskRow.hover();
+  assert.notEqual(
+    await newTaskRow.evaluate(element => getComputedStyle(element).backgroundImage),
+    actionDefault.image
+  );
+  await page.mouse.move(900, 450);
+  await newTask.focus();
+  assert.equal(await newTask.evaluate(element => element.matches(':focus-visible')), true);
+  assert.notEqual(
+    await newTaskRow.evaluate(element => getComputedStyle(element).boxShadow),
+    actionDefault.shadow
+  );
+
+  await newTaskMenu.evaluate(element => element.dataset.state = 'open');
+  assert.notEqual(
+    await newTaskRow.evaluate(element => getComputedStyle(element).backgroundImage),
+    actionDefault.image,
+    'a native trailing menu must open the paint state on its existing outer row'
+  );
+  await newTaskMenu.evaluate(element => element.dataset.state = 'closed');
+
+  await newTaskMenu.evaluate(element => { element.disabled = true; });
+  assert.equal(
+    await newTaskRow.evaluate(element => getComputedStyle(element).opacity),
+    '1',
+    'disabling only the native trailing menu must not disable the whole action row'
+  );
+  await newTaskMenu.evaluate(element => { element.disabled = false; });
+
+  await newTask.evaluate(element => { element.disabled = true; });
+  assert.equal(
+    await newTaskRow.evaluate(element => getComputedStyle(element).opacity),
+    '0.46',
+    'disabling the direct native main action must expose the disabled row state'
+  );
+  await newTask.evaluate(element => { element.disabled = false; });
+
+  await page.locator(selectors.pullRequests).evaluate(element => {
+    element.setAttribute('aria-current', 'page');
+  });
+  await page.waitForFunction(() => (
+    document.querySelector('[data-native-slot="pull-requests"]')
+      ?.classList.contains('forge-sidebar-action-active')
+  ));
+  assert.notEqual(
+    await page.locator(selectors.pullRequests).evaluate(
+      element => getComputedStyle(element).backgroundImage
+    ),
+    actionDefault.image
+  );
+  await page.locator(selectors.pullRequests).evaluate(element => {
+    element.removeAttribute('aria-current');
+  });
+  await page.waitForFunction(() => (
+    !document.querySelector('[data-native-slot="pull-requests"]')
+      ?.classList.contains('forge-sidebar-action-active')
+  ));
+
+  await page.locator(selectors.sites).evaluate(element => {
+    element.dataset.state = 'active';
+  });
+  await page.waitForTimeout(80);
+  assert.equal(
+    await page.locator(`${selectors.sites}.forge-sidebar-action-active`).count(),
+    0,
+    'generic data-state=active must not be mistaken for native current navigation'
+  );
+  await page.locator(selectors.sites).evaluate(element => {
+    delete element.dataset.state;
+  });
+
+  await page.evaluate(() => {
+    window.__disabledSidebarClicks = 0;
+    const action = document.querySelector('[data-native-slot="plugins"]');
+    action.addEventListener('click', () => { window.__disabledSidebarClicks += 1; });
+    action.disabled = true;
+  });
+  const plugins = page.locator(selectors.plugins);
+  await plugins.hover();
+  const disabledAction = await plugins.evaluate(element => ({
+    image: getComputedStyle(element).backgroundImage,
+    shadow: getComputedStyle(element).boxShadow,
+    opacity: getComputedStyle(element).opacity
+  }));
+  assert.equal(disabledAction.image, actionDefault.image);
+  assert.equal(disabledAction.shadow, 'none');
+  assert.equal(disabledAction.opacity, '0.46');
+  await plugins.evaluate(element => element.click());
+  assert.equal(await page.evaluate(() => window.__disabledSidebarClicks), 0);
+  await plugins.evaluate(element => { element.disabled = false; });
+
+  const projectRows = page.locator(
+    '[data-app-action-sidebar-project-row].forge-sidebar-level1'
+  );
+  const expandedProjectImage = await projectRows.nth(0).evaluate(
+    element => getComputedStyle(element).backgroundImage
+  );
+  const collapsedProjectImage = await projectRows.nth(2).evaluate(
+    element => getComputedStyle(element).backgroundImage
+  );
+  assert.notEqual(
+    expandedProjectImage,
+    collapsedProjectImage,
+    'expanded and collapsed project rows need distinguishable native directory states'
+  );
+  const collapsedProjectShadow = await projectRows.nth(2).evaluate(
+    element => getComputedStyle(element).boxShadow
+  );
+  await projectRows.nth(2).hover();
+  assert.notEqual(
+    await projectRows.nth(2).evaluate(element => getComputedStyle(element).backgroundImage),
+    collapsedProjectImage,
+    'collapsed project rows must retain a visible hover state'
+  );
+  await page.mouse.move(900, 450);
+  await projectRows.nth(2).focus();
+  assert.equal(
+    await projectRows.nth(2).evaluate(element => element.matches(':focus-visible')),
+    true
+  );
+  assert.notEqual(
+    await projectRows.nth(2).evaluate(element => getComputedStyle(element).boxShadow),
+    collapsedProjectShadow,
+    'collapsed project rows must retain a keyboard focus state'
+  );
+  assert.equal(
+    await projectRows.nth(2).evaluate(element => getComputedStyle(element).outlineStyle),
+    'none',
+    'project focus must not leak the browser default rectangular ring'
+  );
+
+  const level2 = page.locator('[data-native-slot="project-temple-child"]');
+  const level2Default = await level2.evaluate(element => ({
+    image: getComputedStyle(element).backgroundImage,
+    shadow: getComputedStyle(element).boxShadow
+  }));
+  await level2.hover();
+  assert.notEqual(
+    await level2.evaluate(element => getComputedStyle(element).backgroundImage),
+    level2Default.image
+  );
+  await page.mouse.move(900, 450);
+  await level2.focus();
+  assert.equal(await level2.evaluate(element => element.matches(':focus-visible')), true);
+  assert.notEqual(
+    await level2.evaluate(element => getComputedStyle(element).boxShadow),
+    level2Default.shadow
+  );
+
+  const nativeIndicators = await page.evaluate(() => {
+    const unread = document.querySelector('[data-native-status="unread"] span span');
+    const spinner = document.querySelector('[data-native-status="running"] .animate-spin');
+    const spinnerStyle = getComputedStyle(spinner);
+    return {
+      unreadColor: getComputedStyle(unread).backgroundColor,
+      spinnerColor: spinnerStyle.color,
+      spinnerAnimationName: spinnerStyle.animationName,
+      spinnerAnimationDuration: spinnerStyle.animationDuration
+    };
+  });
+  assert.equal(nativeIndicators.unreadColor, 'rgb(167, 75, 48)');
+  assert.equal(nativeIndicators.spinnerColor, 'rgb(179, 84, 55)');
+  assert.equal(nativeIndicators.spinnerAnimationName, 'fixture-spin');
+  assert.equal(nativeIndicators.spinnerAnimationDuration, '2s');
+  assert.equal(
+    await page.locator('[data-native-slot="project-internal-control"][data-forge-mark]').count(),
+    0
+  );
+
+  const afterRects = await readRects();
+  for (const [name, before] of Object.entries(beforeRects)) {
+    afterRects[name].forEach((value, index) => {
+      assert.ok(
+        Math.abs(value - before[index]) <= 0.25,
+        `${name} rect[${index}] changed from ${before[index]} to ${value}`
+      );
+    });
+  }
+
+  await page.evaluate(RESTORE_EXPRESSION);
+  assert.equal(await page.locator('[data-forge-mark]').count(), 0);
   await page.close();
 });
 
@@ -500,11 +870,11 @@ test('V14 updates dynamic composer states and moves current-conversation materia
     document.querySelector('[data-native-slot="new-task"]').setAttribute('aria-current', 'page');
   });
   await page.waitForFunction(() => (
-    document.querySelector('[data-native-slot="new-task"]')
+    document.querySelector('[data-native-slot="new-task-row"]')
       ?.classList.contains('forge-sidebar-action-active')
   ));
   assert.equal(
-    await page.locator('[data-native-slot="new-task"].forge-sidebar-selected').count(),
+    await page.locator('[data-native-slot="new-task-row"].forge-sidebar-selected').count(),
     0
   );
 
@@ -740,29 +1110,49 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
     contentType: 'text/html; charset=utf-8'
   }));
   await page.goto('http://wukong-v14-forced-colors.test/');
+  await page.evaluate(() => {
+    document.querySelector('[data-native-slot="menu-file"]').disabled = true;
+    document.querySelector('[data-native-slot="menu-view"]')
+      .setAttribute('aria-expanded', 'true');
+    document.querySelector('[data-native-slot="menu-help"]').dataset.state = 'open';
+    document.querySelector('[data-native-slot="new-task-menu"]').dataset.state = 'open';
+    document.querySelector('[data-native-slot="plugins"]').disabled = true;
+  });
   const before = await snapshot(page);
   await page.evaluate(expression);
   await page.waitForFunction(() => (
     document.querySelectorAll('.forge-topbar-menu-item').length === 4 &&
     document.querySelector('.forge-composer-frame')
   ));
+  await page.locator(
+    '[data-app-action-sidebar-project-row][aria-expanded="false"]'
+  ).hover();
+  await page.locator('[data-native-slot="project-active"]').focus();
 
   const forcedPaint = await page.evaluate(() => {
-    const targets = [
+    const selector = [
       '.forge-composer-frame',
+      '.forge-composer-context',
+      '.forge-composer-panel',
+      '.forge-plan-pill',
+      '.forge-diff-summary',
+      '.forge-composer-submit',
       '.forge-topbar-menu-item',
+      '.forge-sidebar-shell',
       '.forge-sidebar-action',
       '.forge-sidebar-level1',
       '.forge-sidebar-level2',
       '.forge-sidebar-selected'
-    ];
-    return targets.map(selector => {
-      const style = getComputedStyle(document.querySelector(selector));
+    ].join(',');
+    return [...new Set(document.querySelectorAll(selector))].map((element, index) => {
+      const style = getComputedStyle(element);
       return {
-        selector,
+        selector: `${element.className}#${index}`,
         backgroundImage: style.backgroundImage,
         boxShadow: style.boxShadow,
-        color: style.color
+        color: style.color,
+        opacity: style.opacity,
+        forcedColorAdjust: style.forcedColorAdjust
       };
     });
   });
@@ -770,7 +1160,16 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
     assert.equal(paint.backgroundImage, 'none', `${paint.selector} retained a bitmap`);
     assert.equal(paint.boxShadow, 'none', `${paint.selector} retained a decorative shadow`);
     assert.notEqual(paint.color, 'rgba(0, 0, 0, 0)', `${paint.selector} lost readable text`);
+    assert.equal(paint.opacity, '1', `${paint.selector} retained theme opacity`);
+    assert.equal(paint.forcedColorAdjust, 'auto', `${paint.selector} blocks system colors`);
   }
+  assert.notEqual(
+    await page.locator('[data-native-slot="project-active"]').evaluate(
+      element => getComputedStyle(element).outlineStyle
+    ),
+    'none',
+    'forced-colors focus must return to the system outline'
+  );
   assertRectsEqual(await snapshot(page), before);
 
   await page.evaluate(RESTORE_EXPRESSION);

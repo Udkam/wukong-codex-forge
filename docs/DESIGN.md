@@ -46,7 +46,11 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。活动
 
 生产 hierarchy 以当前 ASAR 的稳定属性为锚点：`data-app-action-sidebar-project-row` 是项目条，`data-app-action-sidebar-thread-row` 位于 `data-app-action-sidebar-project-list-id` 内时是项目下对话，位于 `data-app-action-sidebar-section-heading="Tasks"` 且不在项目列表内时是无项目对话。选中态读取 `data-app-action-sidebar-thread-active` / `aria-current`，展开与折叠读取 `aria-expanded` / `data-app-action-sidebar-project-collapsed`；不使用 `nth-child` 或测试专用属性作为生产判断。
 
-当前运行时已经覆盖默认、hover、focus、selected、expanded、collapsed 和 menu open；disabled/unread/running 的完整视觉对应仍是下一验收门，不得因静态截图好看而标记完成。
+当前运行时已覆盖默认、hover、focus、selected、expanded、collapsed、menu open、disabled 与原生 unread/running。`nav-list` 的 current/disabled、`worktree-init-row` 的 `role=button` / `tabIndex` / `aria-disabled` / `aria-current`、`task-row-status-indicator` 的未读 token 与 loading 分支、以及 24×24 原生 spinner 都由 `native-asar-ui-contract` 直接读取本机 ASAR 锁定。
+
+交互态只改 paint：focus 使用朱砂内缘替代浏览器矩形默认框；expanded/collapsed 保持一级目录材质但以左缘朱砂、明暗和按压阴影区分；selected 使用浅纸带；disabled 保留所在层级的底材并降墨色。对于“外层 row + 主按钮 + 尾部菜单”的原生结构，只有 surface 本身或直属主操作禁用才会禁用整行，尾部菜单独立禁用不会误伤。未读圆点/计数继续继承 `--vscode-textLink-foreground`，running 只着色原生 24×24 spinner，不制造新徽章。
+
+Windows forced-colors 使用 `#root` 高优先级回退压过 hover/focus/open/expanded/disabled 的 `!important` 组合，移除位图、阴影和主题 opacity，并把焦点轮廓交回系统。当前无头状态矩阵见 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/09-sidebar-state-matrix.png` 与 `10-topbar-state-matrix.png`。Electron 应用菜单的下拉内容由主进程原生菜单绘制，不存在于 renderer DOM；V15 目前只替换四个原生菜单触发页签，后续若要改下拉本体必须另立主进程级可逆方案，不能用伪 DOM 宣称完成。
 
 ### 新建页印记
 

@@ -124,7 +124,9 @@ try {
     composerContext: path.join(outputDirectory, '05-composer-context.png'),
     composerProgress: path.join(outputDirectory, '06-composer-progress.png'),
     composerGuided: path.join(outputDirectory, '07-composer-guided.png'),
-    landingMark: path.join(outputDirectory, '08-landing-mark-56.png')
+    landingMark: path.join(outputDirectory, '08-landing-mark-56.png'),
+    sidebarStateMatrix: path.join(outputDirectory, '09-sidebar-state-matrix.png'),
+    topbarStateMatrix: path.join(outputDirectory, '10-topbar-state-matrix.png')
   };
   await page.screenshot({ path: files.fullDefault, fullPage: true });
   await page.locator('aside.app-shell-left-panel').screenshot({ path: files.sidebar });
@@ -137,6 +139,38 @@ try {
   await page.locator('[data-native-slot="project-temple-child"]').hover();
   await page.locator('[class~="group/application-menu-top-bar"]')
     .screenshot({ path: files.topbarOpen });
+
+  await page.evaluate(() => {
+    document.querySelector('[data-native-slot="menu-file"]').disabled = true;
+    document.querySelector('[data-native-slot="menu-view"]')
+      .setAttribute('aria-expanded', 'true');
+    document.querySelector('[data-native-slot="menu-help"]').dataset.state = 'open';
+
+    document.querySelector('[data-native-slot="new-task-menu"]').dataset.state = 'open';
+    document.querySelector('[data-native-slot="project-active"]')
+      .removeAttribute('aria-current');
+    document.querySelector('[data-native-slot="project-active"]')
+      .removeAttribute('data-app-action-sidebar-thread-active');
+    document.querySelector('[data-native-slot="pull-requests"]')
+      .setAttribute('aria-current', 'page');
+    document.querySelector('[data-native-slot="scheduled"]').disabled = true;
+  });
+  await page.waitForFunction(() => (
+    document.querySelector('[data-native-slot="pull-requests"]')
+      ?.classList.contains('forge-sidebar-action-active') &&
+    !document.querySelector('[data-native-slot="project-active"]')
+      ?.classList.contains('forge-sidebar-selected')
+  ));
+  await page.locator('[data-native-slot="menu-help"]').focus();
+  await page.locator('[data-native-slot="menu-edit"]').hover();
+  await page.locator('[class~="group/application-menu-top-bar"]')
+    .screenshot({ path: files.topbarStateMatrix });
+  await page.locator(
+    '[data-app-action-sidebar-project-row][aria-expanded="false"]'
+  ).focus();
+  await page.locator('[data-native-slot="plugins"]').hover();
+  await page.locator('aside.app-shell-left-panel')
+    .screenshot({ path: files.sidebarStateMatrix });
 
   const metrics = await page.evaluate(() => {
     const count = selector => document.querySelectorAll(selector).length;
@@ -152,6 +186,14 @@ try {
       sidebarLevel2: count('.forge-sidebar-level2'),
       sidebarSelected: count('.forge-sidebar-selected'),
       composerFrames: count('.forge-composer-frame'),
+      disabledTopbarItems: count('.forge-topbar-menu-item:disabled'),
+      openTopbarItems: count(
+        '.forge-topbar-menu-item[aria-expanded="true"], .forge-topbar-menu-item[data-state="open"]'
+      ),
+      activeSidebarActions: count('.forge-sidebar-action-active'),
+      disabledSidebarActions: count('.forge-sidebar-action:disabled'),
+      runningIndicators: count('[data-native-status="running"] .animate-spin'),
+      unreadIndicators: count('[data-native-status="unread"]'),
       topbarRect: rect('[class~="group/application-menu-top-bar"]'),
       sidebarRect: rect('aside.app-shell-left-panel'),
       composerRect: rect('.composer-surface-chrome')
