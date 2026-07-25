@@ -179,24 +179,24 @@
     },
     "landing_mark": {
       "path": "themes/ui/v15/landing-jingubang.webp",
-      "bytes": 2476,
+      "bytes": 3218,
       "size": [
         112,
         112
       ],
       "metrics": {
-        "opaque_pixels": 615,
+        "opaque_pixels": 1039,
         "median_rgb": [
-          82.0,
-          68.0,
-          44.0
+          81.0,
+          67.0,
+          41.0
         ],
         "std_rgb": [
-          25.82,
-          25.2,
-          16.65
+          27.31,
+          26.33,
+          17.83
         ],
-        "median_luminance": 68.67
+        "median_luminance": 68.02
       }
     }
   }

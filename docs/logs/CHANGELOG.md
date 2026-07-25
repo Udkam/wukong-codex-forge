@@ -1,5 +1,12 @@
 # Local work log
 
+## 2026-07-25 — V15 真实金箍棒原生槽位占比修正
+
+- 用户指出前一版虽然使用真实模型，但在 56×56 槽位内仍像过小的卡通短棍。保持官方槽位、原节点、DOMRect 和 aria 不变，只把离线生成参数从 48×7 调整为 60×9，继续使用 39° 方向。
+- 新 112×112 资源为 3,218 bytes；`alpha>16` 边界为 100×84，映射到原生槽位约 50×42 px，左右约 3 px、上下约 7 px，完整保留两端兽纹端箍。
+- 像素合同新增四边透明、边距对称、主轴角度 138°–144°、可见面积 9%–13% 和不允许 CSS 改写 width/height/transform 的门禁。素材/像素 4/4、landing 1/1、原生表面/最小包/原生主题相关回归 14/14 通过。
+- 无头证据位于 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-49-40-653Z/`。capture 完成后 browser 已关闭，未打开第二个 Codex 窗口；真实 Codex 用户视觉验收仍待进行。
+
 ## 2026-07-25 — V15 sidebar / topbar 原生状态矩阵
 
 - 只读复核当前 ASAR 的 `nav-list`、`worktree-init-row`、`task-row-status-indicator` 与 `spinner`，把 `aria-current`、disabled/aria-disabled、role/tabIndex/dataAttributes、未读 token、loading 分支和 24×24 spinner 纳入漂移合同。

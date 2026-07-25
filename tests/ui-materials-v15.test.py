@@ -69,8 +69,50 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
             self.assertEqual(image.size, (112, 112))
             rgba = np.asarray(image.convert("RGBA"))
         visible = rgba[..., 3] > 16
-        self.assertGreater(int(np.count_nonzero(visible)), 350)
-        self.assertLess(int(np.count_nonzero(visible)), 3200)
+        visible_y, visible_x = np.where(visible)
+        visible_bbox = (
+            int(visible_x.min()),
+            int(visible_y.min()),
+            int(visible_x.max()) + 1,
+            int(visible_y.max()) + 1,
+        )
+        visible_width = visible_bbox[2] - visible_bbox[0]
+        visible_height = visible_bbox[3] - visible_bbox[1]
+        self.assertGreaterEqual(visible_width, 96)
+        self.assertLessEqual(visible_width, 106)
+        self.assertGreaterEqual(visible_height, 80)
+        self.assertLessEqual(visible_height, 92)
+        self.assertEqual(int(np.count_nonzero(visible[0, :])), 0)
+        self.assertEqual(int(np.count_nonzero(visible[-1, :])), 0)
+        self.assertEqual(int(np.count_nonzero(visible[:, 0])), 0)
+        self.assertEqual(int(np.count_nonzero(visible[:, -1])), 0)
+        left_margin = visible_bbox[0]
+        right_margin = 112 - visible_bbox[2]
+        top_margin = visible_bbox[1]
+        bottom_margin = 112 - visible_bbox[3]
+        self.assertLessEqual(abs(left_margin - right_margin), 2)
+        self.assertLessEqual(abs(top_margin - bottom_margin), 2)
+        self.assertLessEqual(visible_bbox[2], 110)
+        self.assertLessEqual(visible_bbox[3], 110)
+        self.assertGreater(int(np.count_nonzero(visible)), 1_200)
+        self.assertLess(int(np.count_nonzero(visible)), 4_500)
+        visible_ratio = float(np.mean(visible))
+        self.assertGreaterEqual(visible_ratio, 0.09)
+        self.assertLessEqual(visible_ratio, 0.13)
+        centered = np.column_stack(
+            (
+                visible_x - np.mean(visible_x),
+                visible_y - np.mean(visible_y),
+            )
+        )
+        covariance = np.cov(centered, rowvar=False)
+        eigenvalues, eigenvectors = np.linalg.eigh(covariance)
+        principal = eigenvectors[:, int(np.argmax(eigenvalues))]
+        principal_angle = float(
+            np.degrees(np.arctan2(principal[1], principal[0])) % 180
+        )
+        self.assertGreaterEqual(principal_angle, 138)
+        self.assertLessEqual(principal_angle, 144)
         self.assertLess(path.stat().st_size, 8_192)
 
         metrics = json.loads(

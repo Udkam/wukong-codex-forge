@@ -22,6 +22,7 @@ test('V15 landing mark uses the real Jingu Bang asset in the native slot', () =>
   assert.match(rule, /inset:\s*0/);
   assert.match(rule, /background-size:\s*contain/);
   assert.match(rule, /pointer-events:\s*none/);
+  assert.doesNotMatch(rule, /(?:^|[;\s])(?:width|height|transform|scale)\s*:/);
 
   const activeTheme = JSON.parse(
     fs.readFileSync(new URL('../themes/active.json', import.meta.url), 'utf8')

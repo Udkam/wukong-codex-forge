@@ -17,6 +17,11 @@ LANDING_MARK_SOURCE = OUTPUT_ROOT / "sources" / "jingubang-model.png"
 PAPER_CHANNEL_OFFSET = (-82, -69, -49)
 PAPER_MATTE = (127, 113, 97)
 PAPER_TARGET_MEDIAN = (126, 112, 96)
+LANDING_MARK_RENDER_SCALE = 4
+LANDING_MARK_NATIVE_SIZE = 56
+LANDING_MARK_NATIVE_LENGTH = 60
+LANDING_MARK_NATIVE_THICKNESS = 9
+LANDING_MARK_ROTATION = 39
 
 
 def crop(image: Image.Image, box: tuple[int, int, int, int]) -> Image.Image:
@@ -69,15 +74,29 @@ def build_landing_mark(image: Image.Image) -> Image.Image:
     if not alpha_box:
         raise ValueError("Landing mark source has no visible pixels")
     source = source.crop(alpha_box)
-    scale = 4
-    staff = source.resize((48 * scale, 7 * scale), Image.Resampling.LANCZOS)
+    scale = LANDING_MARK_RENDER_SCALE
+    staff = source.resize(
+        (
+            LANDING_MARK_NATIVE_LENGTH * scale,
+            LANDING_MARK_NATIVE_THICKNESS * scale,
+        ),
+        Image.Resampling.LANCZOS,
+    )
     staff = ImageEnhance.Contrast(staff).enhance(1.12)
+    staff = ImageEnhance.Sharpness(staff).enhance(1.18)
     staff = staff.rotate(
-        39,
+        LANDING_MARK_ROTATION,
         expand=True,
         resample=Image.Resampling.BICUBIC,
     )
-    canvas = Image.new("RGBA", (56 * scale, 56 * scale), (0, 0, 0, 0))
+    canvas = Image.new(
+        "RGBA",
+        (
+            LANDING_MARK_NATIVE_SIZE * scale,
+            LANDING_MARK_NATIVE_SIZE * scale,
+        ),
+        (0, 0, 0, 0),
+    )
     canvas.alpha_composite(
         staff,
         (
