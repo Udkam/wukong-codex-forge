@@ -123,11 +123,13 @@ try {
     topbarOpen: path.join(outputDirectory, '04-topbar-open.png'),
     composerContext: path.join(outputDirectory, '05-composer-context.png'),
     composerProgress: path.join(outputDirectory, '06-composer-progress.png'),
-    composerGuided: path.join(outputDirectory, '07-composer-guided.png')
+    composerGuided: path.join(outputDirectory, '07-composer-guided.png'),
+    landingMark: path.join(outputDirectory, '08-landing-mark-56.png')
   };
   await page.screenshot({ path: files.fullDefault, fullPage: true });
   await page.locator('aside.app-shell-left-panel').screenshot({ path: files.sidebar });
   await page.locator('.composer-area').screenshot({ path: files.composerDefault });
+  await page.locator('[data-testid="home-icon"]').screenshot({ path: files.landingMark });
 
   await page.locator('[data-native-slot="menu-view"]').evaluate(element => {
     element.setAttribute('aria-expanded', 'true');

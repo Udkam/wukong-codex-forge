@@ -19,7 +19,8 @@
   },
   "source_files": {
     "composer": "themes/ui/v14/sources/composer-paper-sheet-alpha-contract.png",
-    "sidebar_rows": "themes/ui/v14/sources/sidebar-row-sheet-alpha-contract.png"
+    "sidebar_rows": "themes/ui/v14/sources/sidebar-row-sheet-alpha-contract.png",
+    "landing_mark": "themes/ui/v15/sources/jingubang-model.png"
   },
   "outputs": {
     "composer_main": {
@@ -174,6 +175,28 @@
           1.28
         ],
         "median_luminance": 19.5
+      }
+    },
+    "landing_mark": {
+      "path": "themes/ui/v15/landing-jingubang.webp",
+      "bytes": 2476,
+      "size": [
+        112,
+        112
+      ],
+      "metrics": {
+        "opaque_pixels": 615,
+        "median_rgb": [
+          82.0,
+          68.0,
+          44.0
+        ],
+        "std_rgb": [
+          25.82,
+          25.2,
+          16.65
+        ],
+        "median_luminance": 68.67
       }
     }
   }

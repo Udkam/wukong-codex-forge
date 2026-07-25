@@ -38,6 +38,7 @@ const variables = [
   `--forge-ui-sidebar-level1:${tinyScene(4)};`,
   `--forge-ui-sidebar-selected:${tinyScene(5)};`,
   `--forge-ui-sidebar-level2-hover:${tinyScene(6)};`,
+  `--forge-ui-landing-mark:${tinyScene(7)};`,
   ...Array.from({ length: 11 }, (_, index) => (
     `--forge-bg-${index}:${tinyScene(index)};--forge-position-${index}:${index === 0 ? '68% center' : 'center center'};`
   )),

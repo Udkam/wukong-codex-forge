@@ -21,6 +21,7 @@ test('active page payload contains backgrounds and paint-only UI assets; pets re
   assert.deepEqual(Object.keys(payload.uiAssets), Object.keys(activeTheme.uiAssets));
   assert.match(payload.variables, /--forge-ui-composer-main:url\("data:image\/webp;base64,/);
   assert.match(payload.variables, /--forge-ui-sidebar-selected:url\("data:image\/webp;base64,/);
+  assert.match(payload.variables, /--forge-ui-landing-mark:url\("data:image\/webp;base64,/);
   assert.match(payload.variables, /--forge-motif-xiangfei-gourd:none/);
   assert.doesNotMatch(payload.variables, /--forge-motif-little-(?:wukong|bajie):/);
   assert.doesNotMatch(payload.variables, /forge-motif-(?:yaksha|fanged-cyan)/);

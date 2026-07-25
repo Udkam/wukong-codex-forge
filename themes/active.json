@@ -39,7 +39,8 @@
     "paperTile": "ui/v15/paper-tile.webp",
     "sidebarLevel1": "ui/v15/sidebar-level1.webp",
     "sidebarSelected": "ui/v15/sidebar-selected.webp",
-    "sidebarLevel2Hover": "ui/v15/sidebar-level2-hover.webp"
+    "sidebarLevel2Hover": "ui/v15/sidebar-level2-hover.webp",
+    "landingMark": "ui/v15/landing-jingubang.webp"
   },
   "accessibility": {
     "preset": "workbench",

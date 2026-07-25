@@ -7,7 +7,8 @@ export const UI_ASSET_KEYS = [
   'paperTile',
   'sidebarLevel1',
   'sidebarSelected',
-  'sidebarLevel2Hover'
+  'sidebarLevel2Hover',
+  'landingMark'
 ];
 
 export const SCENE_TONES = {
@@ -79,7 +80,8 @@ const UI_ASSET_CSS_NAMES = {
   paperTile: 'paper-tile',
   sidebarLevel1: 'sidebar-level1',
   sidebarSelected: 'sidebar-selected',
-  sidebarLevel2Hover: 'sidebar-level2-hover'
+  sidebarLevel2Hover: 'sidebar-level2-hover',
+  landingMark: 'landing-mark'
 };
 
 export const DEFAULT_THEME = {

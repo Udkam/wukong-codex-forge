@@ -63,6 +63,28 @@ def contrast_ratio(left: np.ndarray, right: np.ndarray) -> np.ndarray:
 
 
 class V15DarkPaperMaterialTest(unittest.TestCase):
+    def test_landing_mark_is_a_small_transparent_real_model_asset(self) -> None:
+        path = UI_ROOT / "landing-jingubang.webp"
+        with Image.open(path) as image:
+            self.assertEqual(image.size, (112, 112))
+            rgba = np.asarray(image.convert("RGBA"))
+        visible = rgba[..., 3] > 16
+        self.assertGreater(int(np.count_nonzero(visible)), 350)
+        self.assertLess(int(np.count_nonzero(visible)), 3200)
+        self.assertLess(path.stat().st_size, 8_192)
+
+        metrics = json.loads(
+            (UI_ROOT / "asset-metrics.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            metrics["source_files"]["landing_mark"],
+            "themes/ui/v15/sources/jingubang-model.png",
+        )
+        self.assertEqual(
+            metrics["outputs"]["landing_mark"]["size"],
+            [112, 112],
+        )
+
     def test_generated_paper_assets_match_dark_reference_palette(self) -> None:
         metrics = json.loads(
             (UI_ROOT / "asset-metrics.json").read_text(encoding="utf-8")

@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageEnhance
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +13,7 @@ OUTPUT_ROOT = ROOT / "themes" / "ui" / "v15"
 
 COMPOSER_SOURCE = SOURCE_ROOT / "composer-paper-sheet-alpha-contract.png"
 SIDEBAR_ROW_SOURCE = SOURCE_ROOT / "sidebar-row-sheet-alpha-contract.png"
+LANDING_MARK_SOURCE = OUTPUT_ROOT / "sources" / "jingubang-model.png"
 PAPER_CHANNEL_OFFSET = (-82, -69, -49)
 PAPER_MATTE = (127, 113, 97)
 PAPER_TARGET_MEDIAN = (126, 112, 96)
@@ -62,6 +63,37 @@ def save_webp(
     return destination
 
 
+def build_landing_mark(image: Image.Image) -> Image.Image:
+    source = image.convert("RGBA")
+    alpha_box = source.getchannel("A").getbbox()
+    if not alpha_box:
+        raise ValueError("Landing mark source has no visible pixels")
+    source = source.crop(alpha_box)
+    scale = 4
+    staff = source.resize((48 * scale, 7 * scale), Image.Resampling.LANCZOS)
+    staff = ImageEnhance.Contrast(staff).enhance(1.12)
+    staff = staff.rotate(
+        39,
+        expand=True,
+        resample=Image.Resampling.BICUBIC,
+    )
+    canvas = Image.new("RGBA", (56 * scale, 56 * scale), (0, 0, 0, 0))
+    canvas.alpha_composite(
+        staff,
+        (
+            (canvas.width - staff.width) // 2,
+            (canvas.height - staff.height) // 2,
+        ),
+    )
+    return canvas.resize((112, 112), Image.Resampling.LANCZOS)
+
+
+def save_alpha_webp(image: Image.Image, name: str) -> Path:
+    destination = OUTPUT_ROOT / name
+    image.save(destination, "WEBP", quality=92, method=6, exact=True)
+    return destination
+
+
 def opaque_metrics(image: Image.Image) -> dict[str, object]:
     pixels = np.asarray(image.convert("RGBA"))
     opaque = pixels[..., 3] >= 240
@@ -87,6 +119,7 @@ def main() -> None:
     OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
     composer_sheet = Image.open(COMPOSER_SOURCE).convert("RGBA")
     sidebar_row_sheet = Image.open(SIDEBAR_ROW_SOURCE).convert("RGBA")
+    landing_mark_source = Image.open(LANDING_MARK_SOURCE).convert("RGBA")
 
     # The accepted dark reference averages around RGB(126, 112, 96) in its
     # open paper field. Rebuild every paper surface from the same transparent
@@ -155,6 +188,10 @@ def main() -> None:
             (768, 52),
             (20, 18, 18),
         ),
+        "landing_mark": save_alpha_webp(
+            build_landing_mark(landing_mark_source),
+            "landing-jingubang.webp",
+        ),
     }
 
     metrics = {
@@ -167,6 +204,7 @@ def main() -> None:
         "source_files": {
             "composer": str(COMPOSER_SOURCE.relative_to(ROOT)).replace("\\", "/"),
             "sidebar_rows": str(SIDEBAR_ROW_SOURCE.relative_to(ROOT)).replace("\\", "/"),
+            "landing_mark": str(LANDING_MARK_SOURCE.relative_to(ROOT)).replace("\\", "/"),
         },
         "outputs": {
             key: {
