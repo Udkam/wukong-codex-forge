@@ -113,6 +113,28 @@ const waitForRuntime = (page, predicate, argument) => page.waitForFunction(
   { timeout: 5000 }
 );
 
+const backgroundCoverage = page => page.evaluate(() => {
+  const overlay = document.getElementById('wukong-forge-background');
+  const active = overlay?.querySelector('[data-forge-background-layer][data-forge-active="true"]');
+  const image = active?.querySelector('[data-forge-background-image]');
+  const veil = active?.querySelector('[data-forge-background-veil]');
+  const read = element => {
+    const { x, y, width, height } = element.getBoundingClientRect();
+    return { x, y, width, height };
+  };
+  return {
+    viewport: { x: 0, y: 0, width: innerWidth, height: innerHeight },
+    overlay: read(overlay),
+    active: read(active),
+    image: read(image),
+    veil: read(veil),
+    activeImage: image.style.backgroundImage,
+    layerCount: overlay.querySelectorAll(':scope > [data-forge-background-layer]').length,
+    overflow: getComputedStyle(overlay).overflow,
+    contain: getComputedStyle(overlay).contain
+  };
+});
+
 test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay, and reaches refresh quiescence', async () => {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
   await page.route('http://wukong.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
@@ -333,6 +355,36 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(await page.locator('[data-forge-title-copy],[data-forge-original-aria-label]').count(), 0);
 });
 
+test('V13 covers the complete viewport on its first commit and after a window resize', async () => {
+  const page = await browser.newPage({ viewport: { width: 1536, height: 864 } });
+  await page.route('http://wukong-viewport-cover.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.goto('http://wukong-viewport-cover.test/');
+
+  await page.evaluate(expression);
+  const initial = await backgroundCoverage(page);
+  assert.equal(initial.activeImage, 'var(--forge-bg-0)');
+  assert.equal(initial.layerCount, 2);
+  assert.equal(initial.overflow, 'clip');
+  assert.equal(initial.contain, 'strict');
+  assert.deepEqual(initial.overlay, initial.viewport);
+  assert.deepEqual(initial.active, initial.viewport);
+  assert.deepEqual(initial.image, initial.viewport);
+  assert.deepEqual(initial.veil, initial.viewport);
+
+  await page.setViewportSize({ width: 1001, height: 733 });
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  const resized = await backgroundCoverage(page);
+  assert.equal(resized.activeImage, 'var(--forge-bg-0)');
+  assert.equal(resized.layerCount, 2);
+  assert.deepEqual(resized.overlay, resized.viewport);
+  assert.deepEqual(resized.active, resized.viewport);
+  assert.deepEqual(resized.image, resized.viewport);
+  assert.deepEqual(resized.veil, resized.viewport);
+
+  await page.evaluate(RESTORE_EXPRESSION);
+  assert.equal(await page.locator('#wukong-forge-background').count(), 0);
+});
+
 test('V13 skins a delayed animated home hero without waiting for a resize', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
   await page.route('http://wukong-delayed-hero.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
@@ -340,6 +392,7 @@ test('V13 skins a delayed animated home hero without waiting for a resize', asyn
   await page.evaluate(() => document.querySelector('.landing-native')?.remove());
   await page.evaluate(expression);
   await page.evaluate(() => {
+    window.__forgeDelayedHeroInsertedAt = performance.now();
     const landing = document.createElement('section');
     landing.className = 'landing-native';
     landing.style.opacity = '0';
@@ -364,6 +417,8 @@ test('V13 skins a delayed animated home hero without waiting for a resize', asyn
     const title = document.querySelector('.forge-landing-title');
     const button = title.querySelector('button');
     return {
+      parentOpacity: getComputedStyle(document.querySelector('.landing-native')).opacity,
+      mountToSkinMs: performance.now() - window.__forgeDelayedHeroInsertedAt,
       titleCopy: title.dataset.forgeTitleCopy,
       titlePseudo: getComputedStyle(title, '::after').content,
       iconPseudo: getComputedStyle(document.querySelector('.forge-landing-icon'), '::before').backgroundImage,
@@ -373,6 +428,8 @@ test('V13 skins a delayed animated home hero without waiting for a resize', asyn
       refreshCount: window.__wukongCodexForgeRuntimeV13.refreshCount
     };
   });
+  assert.equal(skin.parentOpacity, '0');
+  assert.ok(skin.mountToSkinMs < 300, `delayed hero skin took ${skin.mountToSkinMs.toFixed(1)} ms`);
   assert.equal(skin.titleCopy, '此去，欲破何局？');
   assert.match(skin.titlePseudo, /此去，欲破何局/);
   assert.match(skin.iconPseudo, /data:image\/svg\+xml/);
@@ -430,6 +487,69 @@ test('V13 skins a delayed animated home hero without waiting for a resize', asyn
   assert.equal(restored.iconPseudo, 'none');
   assert.equal(restored.nativeDecorationLine, 'underline');
   assert.equal(restored.nativeBorderBottomColor, 'rgb(220, 220, 220)');
+});
+
+test('V13 detects content mounted inside an existing home-title shell after startup probes finish', async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+  await page.route('http://wukong-late-title-content.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.goto('http://wukong-late-title-content.test/');
+  await page.evaluate(() => {
+    document.querySelector('.landing-native')?.remove();
+    const landing = document.createElement('section');
+    landing.className = 'landing-native';
+    landing.innerHTML = `
+      <div class="landing-hero">
+        <div data-testid="home-icon" aria-hidden="true" style="position:relative;width:56px;height:56px"></div>
+        <h1 class="heading-xl" data-feature="game-source"></h1>
+      </div>`;
+    document.querySelector('.route-host').prepend(landing);
+    window.__forgeResizeEvents = 0;
+    window.addEventListener('resize', () => { window.__forgeResizeEvents += 1; });
+  });
+  await page.evaluate(expression);
+  await page.waitForTimeout(800);
+
+  await page.evaluate(() => {
+    const title = document.querySelector('[data-feature="game-source"]');
+    const span = document.createElement('span');
+    span.textContent = '我们该构建什么？';
+    title.append(span);
+  });
+  await page.waitForFunction(() => (
+    document.querySelector('[data-feature="game-source"]')?.dataset.forgeTitleCopy === '此去，欲破何局？'
+  ), null, { timeout: 1000 });
+  assert.equal(await page.evaluate(() => window.__forgeResizeEvents), 0);
+  assert.match(
+    await page.locator('[data-feature="game-source"]').evaluate(element => getComputedStyle(element, '::after').content),
+    /此去，欲破何局/
+  );
+
+  await page.evaluate(RESTORE_EXPRESSION);
+});
+
+test('V13 prefers a visible conversation over an opacity-zero retained home hero', async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+  await page.route('http://wukong-overlap-route.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.goto('http://wukong-overlap-route.test/');
+  await page.evaluate(expression);
+  await enterThreadState(page);
+  await page.evaluate(() => {
+    const landing = document.createElement('section');
+    landing.className = 'landing-native';
+    landing.style.opacity = '0';
+    landing.innerHTML = `
+      <div class="landing-hero">
+        <div data-testid="home-icon" aria-hidden="true" style="position:relative;width:56px;height:56px"></div>
+        <h1 class="heading-xl" data-feature="game-source"><span>我们该构建什么？</span></h1>
+      </div>`;
+    document.querySelector('.route-host').prepend(landing);
+  });
+
+  await waitForRuntime(page, 'surface', 'thread');
+  assert.equal(await page.locator('html').getAttribute('data-forge-mode'), 'scenery');
+  assert.equal(await page.locator('[data-feature="game-source"]').getAttribute('data-forge-title-copy'), null);
+
+  await page.evaluate(RESTORE_EXPRESSION);
 });
 
 test('V13 rotates six battle and five scenery scenes in independent pools without motion', async () => {

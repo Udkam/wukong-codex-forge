@@ -74,7 +74,9 @@ V13.1 的活动范围只有全窗背景与用户明确授权的新建页题字/�
 
 新建页使用官方 `app-main-B98AP2a1.js` 的两个稳定节点：`[data-testid="home-icon"]` 是 56×56 原图标位，`[data-feature="game-source"]` 是原 headline 位。图案原位绘制两端带赤金箍纹的金箍棒与三道墨尾，题字原位显示“此去，欲破何局？”。实现只用伪元素：原始文字节点、原始 SVG、原生 hover 容器和 DOMRect 均保留，停用时还原 aria 与所有标记。官方 headline 内的项目选择按钮自带点状下划线；主题激活时只把这条原生装饰透明化，避免它穿过替换题字，停用后由移除样式完整恢复。完整只读证据见 `artifacts/asar-ui-audit-20260724T0225/AUDIT.md`。
 
-官方 hero 通过 280 ms opacity 动画进入。V13.3 以“有布局但尚未绘制”作为稳定节点判据，并把 `game-source`、`home-icon` 与新建任务容器加入结构监听；另有 120/420 ms 两次 renderer 内启动探测作为有界兜底，之后页面不轮询。题字与图案的 CSS 锚点改为主题自有 `data-forge-title-copy` / `data-forge-mark`，不再依赖 React 后续 commit 可能覆写的 `className`。因此首次启动、路由切换、延迟挂载和动画后 class 回写都不再依赖窗口缩放。
+官方 hero 通过 280 ms opacity 动画进入。V13.3 以“有布局但尚未绘制”作为稳定节点判据，并把 `game-source`、`home-icon` 与新建任务容器加入结构监听；另有 120/420 ms 两次 renderer 内启动探测作为有界兜底，之后页面不轮询。刷新调度器记录下一次到期时间，较早探针会替换较晚的合并 timer，因此两次探针不再被错误折叠成约 520 ms 的单次刷新。MutationObserver 同时检查 `childList` 的目标外壳，ResizeObserver 观察零尺寸原始标题/图标，所以 React 只向既有外壳补入内容时也能自动映射。题字与图案的 CSS 锚点改为主题自有 `data-forge-title-copy` / `data-forge-mark`，不再依赖 React 后续 commit 可能覆写的 `className`。当透明旧 hero 与可见对话短暂共存时，可见且含 turn 的对话是更强路由证据，避免背景误回战斗池。
+
+覆盖合同不仅检查 `fixed + inset:0 + cover` 的 computed style，还在首次提交与窗口 resize 后分别要求 overlay、活动 layer、image 和 veil 的 DOMRect 与 viewport 完全一致；中央 `main.main-surface` 与 top fade 只清除 paint，不改变原生圆角、阴影、裁切、几何或命中区。
 
 V13 重写了切换状态机：
 

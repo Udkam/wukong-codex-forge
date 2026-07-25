@@ -29,7 +29,7 @@ V15-05 当前技术候选使用真实金箍棒模型生成 112×112 / 3,218-byte
 | V13-01 | 活动 runtime 只替换全窗背景与用户明确授权的新建页题字/图案；顶部栏、侧栏、环境信息、消息、composer、按钮、尺寸、命中区和回答无框状态保持原生 | 注入前后 DOMRect、原始文本节点与非授权 computed style 深比较 |
 | V13-02 | 新建任务严格轮换 6 张战斗图，对话严格轮换 5 张风景图；两池独立且损坏游标归一为安全首项 | 浏览器状态机测试与 6+5 唯一 SHA 清单 |
 | V13-03 | 背景 `cover` 全窗；非首帧切换先完成图片解码，再进行 820 ms 双层真实 opacity 交叉淡变；快速请求排队且不得闪黑 | 淡变中点 alpha、解码、排队与 reduced-motion 测试 |
-| V13-04 | 隐藏、`aria-hidden`、`inert` 或透明旧对话不得把新任务页误判为 thread；普通侧栏点击不得无故换图 | 隐藏旧 turn 与非路由点击 fixture |
+| V13-04 | 隐藏、`aria-hidden`、`inert` 或透明旧对话不得把新任务页误判为 thread；反向重叠时，可见且含 turn 的对话必须优先于仍在布局但 `opacity:0` 的旧新建页；普通侧栏点击不得无故换图 | 双向旧页面重叠 fixture、可见性判据与非路由点击 fixture |
 | V13-05 | 覆盖层被移除或层数损坏后自动恢复为 2 层；稳定布局不得形成 ResizeObserver 自循环 | 自修复与 refresh quiescence 测试 |
 | V13-06 | composer 候选在用户选择前只作为预览，不进入 runtime。V9 审稿覆盖 `736×98` / `560×98` 与 `154 px` 多行增长态，生产不得锁死高度；主题前后 host/editor/footer/五个按钮 DOMRect、原文字、ARIA、提示词、overflow 与命中区必须完全一致 | V9 双宽双高几何 JSON、五点命中测试、上下文/盲审截图与运行包清单 |
 | V13-07 | 被否决的小天命人基础立绘和所有派生图集继续冻结；完整神锋前端、握持段、后棍身、尾端及双足厌火魔足未同时成立前不得扩展动作或发行 | 基础角色四项连续性审查与三重发布白名单 |
@@ -37,7 +37,8 @@ V15-05 当前技术候选使用真实金箍棒模型生成 112×112 / 3,218-byte
 | V13-09 | 稳定安装追加 retained release，写前备份普通入口，同时建立唯一名称主题入口；安装后 verifier 必须证明两个入口指向同一 bridge 和同一 release。绕过入口的 AppX/AUMID 不作虚假保证 | 安装后 JSON、快捷方式/bridge/release SHA 与进程命令行 |
 | V13-10 | 公共执行路径不删除、移动本地任何文件，不修改 ChatGPT.exe、app.asar、WindowsApps 或 Codex 配置；每轮只跑相关测试并精确 commit/push | PowerShell/Node 静态合同、Git cached diff 与远端 SHA |
 | V13-11 | 背景必须穿透官方 `main.main-surface` 与其顶部装饰 fade，不能只显示在侧栏；只清除二者的 paint，不改圆角、阴影、overflow、DOMRect 或 hit box | 官方 app.asar 只读源码审计 + 主表面 computed style + 真实窗口截图 |
-| V13-12 | 新建页原 56×56 图标位显示横置金箍棒与三道墨尾候选，题字显示“此去，欲破何局？”；官方 280 ms 淡入、延迟挂载及 React 后续 class 回写时必须在首次启动自行保持，不依赖 resize；不得新增面板、按钮、emoji 或改写原文字节点，原项目按钮下划线不得穿过题字 | 稳定 data selector、延迟挂载/父级 opacity 0、className 覆写、无 resize、DOMRect、`textContent`、装饰透明、aria 与 restore 测试 |
+| V13-12 | 新建页原 56×56 图标位显示真实金箍棒候选，题字显示“此去，欲破何局？”；官方 280 ms 淡入、零尺寸外壳、既有外壳内部补挂内容及 React 后续 class 回写时必须在首次启动自行保持，不依赖 resize；120/420 ms 有界探针必须按期执行，不得合并成迟到的单次刷新；不得新增面板、按钮、emoji 或改写原文字节点，原项目按钮下划线不得穿过题字 | 稳定 data selector、延迟/内部挂载、父级 opacity 0、className 覆写、<300 ms 无 resize、DOMRect、`textContent`、装饰透明、aria 与 restore 测试 |
+| V13-19 | 背景 overlay、活动 layer、image 与 veil 在首次提交和任何窗口 resize 后必须与当前 viewport DOMRect 完全一致；不得因中央原生 carrier、DPR 或窗口比例出现只覆盖侧栏/中央黑块/边缘漏底 | 初始与 resize 后四层 DOMRect、`fixed/inset/cover`、主表面 paint 清除及后续单窗口真实 Codex 多比例验收 |
 | V13-13 | 最终随 Codex 启动集成必须排在全部视觉/宠物验收之后；现有 PowerShell bridge 与 1700 ms CDP watcher 只作开发入口，不能当最终方案；正式交付不得以换一个轮询间隔冒充宿主生命周期绑定 | 里程碑顺序审计、进程/端口/内存差值与最终宿主级生命周期测试 |
 | V13-14 | 背景首屏不得全量预载；解码请求最多 1 个，稳态持图层必须为 1，过渡期最多 2；请求替换、超时和停用均须取消并释放解码器 | 可计数/悬挂 `Image` 定向测试、THEME_STATE 资源遥测和真实进程差值 |
 | V13-15 | 全屏层不得永久使用 `will-change`、滤镜或缩放；`will-change` 只允许在交叉淡变期间出现，结束后恢复 `auto` | 过渡前/中/后 computed style 与持图层数量断言 |

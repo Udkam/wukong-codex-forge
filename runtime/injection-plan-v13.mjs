@@ -427,13 +427,22 @@ function applyRuntime(payload) {
   };
   const classifySurface = workspace => {
     const landingTitle = findLandingTitle(workspace);
-    const landingMain = [...document.querySelectorAll('[data-vscode-context*="supportsNewChatMenu"] [role="main"]')].some(visible);
     const threadEvidence = [...document.querySelectorAll([
       '[data-thread-find-target="conversation"]',
       threadSelectors
     ].join(','))].find(element => visible(element) && conversationHasTurns(element));
-    const surface = landingTitle || landingMain ? 'landing' : (threadEvidence ? 'thread' : 'landing');
-    return { surface, threadEvidence, landingTitle };
+    /*
+     * React can leave the prior home hero in layout at opacity 0 while a
+     * conversation is already visible. A visible thread is stronger route
+     * evidence than that retained layout node; the opposite case remains safe
+     * because hidden stale conversations fail `visible()`.
+     */
+    const surface = threadEvidence ? 'thread' : 'landing';
+    return {
+      surface,
+      threadEvidence,
+      landingTitle: surface === 'landing' ? landingTitle : null
+    };
   };
   const commonAncestor = (first, second) => {
     if (!(first instanceof Element) || !(second instanceof Element)) return null;
@@ -854,7 +863,18 @@ function applyRuntime(payload) {
       requestScene(state.currentScene, mode, true);
     }
 
-    setResizeTargets([workspace, ...topbarTargets, ...composerTargets, ...sidebarTargets]);
+    const landingMountTargets = [...document.querySelectorAll([
+      '[data-feature="game-source"]',
+      '[data-testid="home-icon"]',
+      '[data-vscode-context*="supportsNewChatMenu"] [role="main"]'
+    ].join(','))];
+    setResizeTargets([
+      workspace,
+      ...topbarTargets,
+      ...composerTargets,
+      ...sidebarTargets,
+      ...landingMountTargets
+    ]);
   };
 
   const state = {
@@ -863,6 +883,7 @@ function applyRuntime(payload) {
     observedResizeTargets: [],
     lastRefreshAt: 0,
     timer: 0,
+    timerDueAt: 0,
     routeTimers: new Set(),
     landingEpoch: 0,
     sceneCursors: readCursorState(),
@@ -882,12 +903,21 @@ function applyRuntime(payload) {
     refresh,
     dispose: null
   };
-  const scheduleRefresh = () => {
-    if (state.timer) return;
+  const scheduleRefresh = maximumDelay => {
     const elapsed = performance.now() - state.lastRefreshAt;
-    const delay = Math.max(140, 520 - elapsed);
+    const naturalDelay = Math.max(140, 520 - elapsed);
+    const delay = Number.isFinite(maximumDelay)
+      ? Math.min(naturalDelay, Math.max(0, maximumDelay))
+      : naturalDelay;
+    const dueAt = performance.now() + delay;
+    if (state.timer) {
+      if (state.timerDueAt <= dueAt + 1) return;
+      clearTimeout(state.timer);
+    }
+    state.timerDueAt = dueAt;
     state.timer = window.setTimeout(() => {
       state.timer = 0;
+      state.timerDueAt = 0;
       refresh();
     }, delay);
   };
@@ -896,7 +926,7 @@ function applyRuntime(payload) {
     for (const delay of delays) {
       const timer = window.setTimeout(() => {
         state.routeTimers.delete(timer);
-        scheduleRefresh();
+        scheduleRefresh(0);
       }, delay);
       state.routeTimers.add(timer);
     }
@@ -975,6 +1005,11 @@ function applyRuntime(payload) {
     if (node.matches('[data-forge-owned], [data-forge-owned] *')) return false;
     return node.matches(refreshStructureSelector) || Boolean(node.querySelector(refreshStructureSelector));
   };
+  const nodeIsWithinThemeStructure = node => {
+    if (node.nodeType !== Node.ELEMENT_NODE) return false;
+    if (node.matches('[data-forge-owned], [data-forge-owned] *')) return false;
+    return node.matches(refreshStructureSelector) || Boolean(node.closest(refreshStructureSelector));
+  };
   const observer = new MutationObserver(records => {
     if (records.some(record => (
       record.type === 'attributes'
@@ -984,7 +1019,10 @@ function applyRuntime(payload) {
               '.app-shell-left-panel, [data-thread-find-composer="true"]'
             ))
           )
-        : [...record.addedNodes, ...record.removedNodes].some(nodeTouchesThemeStructure)
+        : (
+            nodeIsWithinThemeStructure(record.target) ||
+            [...record.addedNodes, ...record.removedNodes].some(nodeTouchesThemeStructure)
+          )
     ))) scheduleRefresh();
   });
   const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(scheduleRefresh) : null;
@@ -998,6 +1036,8 @@ function applyRuntime(payload) {
       'aria-expanded',
       'aria-disabled',
       'disabled',
+      'hidden',
+      'inert',
       'data-state',
       'data-disabled',
       'data-app-action-sidebar-thread-active',

@@ -5,6 +5,9 @@
 | 工作流 | 本轮责任 | 当前结论 / 门槛 |
 | --- | --- | --- |
 | 主对话 · native geometry | 只读解析当前 `ChatGPT.exe/app.asar`，把官方 token、class 结构和响应式公式写入 fixture/漂移合同 | 已完成 composer/topbar/基础 sidebar baseline；任何尺寸改动必须先有本机源码证据 |
+| `background_first_frame_audit` | 只读复核首屏探针、延迟挂载、背景解码与 overlay 自修复竞态 | 定位 120/420 ms 探针被折叠、既有外壳内部挂载漏触发、透明旧 hero 路由优先级及首图 ready 风险；主对话先修复前三项，首图 ready/overlay generation 进入下一小里程碑 |
+| `background_contract_tests_audit` | 只读复核全窗、首帧、分类、过渡、恢复与静止期测试合同 | 确认旧 fixture 未覆盖真实 viewport DOMRect 与透明 hero/可见 thread 重叠；主对话已增加初始/resize 全视口、<300 ms 延迟挂载、内部挂载及路由重叠用例 |
+| `background_resource_audit` | 只读量化 11 图、CDP 注入、双层纹理、观察器、watcher 与调试实例成本 | 11 图压缩 2.454 MiB；当前稳态/过渡持图策略合理。主要成本为 3.7 MiB 单次注入峰值和开发期额外进程；Blob/分批注册须先过 CSP 与逐像素等价验证，未贸然集成 |
 | `composer_edge_audit_v11` | 只读补齐 sidebar 项目/对话 hierarchy、class 与状态锚点 | 已完成；确认生产 `data-app-action-sidebar-*` 锚点、Tasks/Projects 层级及 active/expanded/collapsed 状态，主对话已写入正式 fixture 与运行时 |
 | `sidebar_state_audit` | 只读核对一级/二级/顶部入口的原生 current、disabled、unread、running 与内部控件边界 | 已完成；确认未读/运行由原生 trailing indicator 负责，内部 section/project 控件不能被误画成整行 |
 | `topbar_menu_audit` | 只读核对四个应用菜单触发器和 Electron 下拉边界 | 已完成；触发器使用 `aria-haspopup=menu` / `aria-expanded`，下拉本体由主进程原生菜单绘制，不在 renderer DOM |
@@ -45,7 +48,7 @@
 | `resource_runtime_audit` | 只读核对背景运行时、GPU 图层和取消路径 | 定位全量预载、双层常驻、不可取消解码、永久 `will-change`、全屏滤镜/缩放与 base64 行内复制 |
 | `asset_budget_audit` | 只读统计 11 张活动背景的压缩与 RGBA 成本 | 压缩 2.45 MiB、全量展开 84.76 MiB；制定稳态 1 张、过渡最多 2 张且不预取的预算 |
 | 主对话 · V13.2 | 清理会话资源、实现单请求按需解码、旧层释放、过渡期合成提示和资源遥测 | 已释放 98 个重复工具后代；资源定向测试 4/4；稳态 1 图层、0 解码请求的真实 renderer 证据已完成 |
-| 主对话 · V13.3 | 修复新建页只在 resize 后替换、消除原生横线、重绘 56×56 候选图案、采集一次实机首帧与资源证据后立即回收调试实例 | 无 resize 首帧定向测试通过；实机首屏首次挂载即出现题字/图案；调试实例带起约 2.93 GiB/48 进程，已关闭并验证 watcher、子进程和 21505 端口释放 |
+| 主对话 · V13.3 | 修复新建页只在 resize 后替换、消除原生横线、重绘 56×56 候选图案、采集一次实机首帧与资源证据后立即回收调试实例 | 120/420 ms 探针、既有外壳内部挂载、透明旧 hero/可见 thread 优先级和初始/resize 全视口 DOMRect 已通过 8/8 定向测试；实机视觉仍保持待验收，不因 fixture 自动通过 |
 | 最终启动集成 | 全部视觉与宠物完成后再设计宿主级随启随停 | 当前 PowerShell bridge 仅为开发入口；本阶段不得把它包装成最终“下载即用”方案 |
 
 所有子工作流均不得删除、移动、覆盖源录像、游戏目录、旧候选或既有证据。共享正式目录、机器安装、精确暂存、commit 和 push 只由主对话执行。常态只保留控制窗口；实机调试窗口由主对话临时启动，截图/采样后立即关闭并完成资源核验。
