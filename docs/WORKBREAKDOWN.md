@@ -7,7 +7,7 @@
 | 主对话 · native geometry | 只读解析当前 `ChatGPT.exe/app.asar`，把官方 token、class 结构和响应式公式写入 fixture/漂移合同 | 已完成 composer/topbar/基础 sidebar baseline；任何尺寸改动必须先有本机源码证据 |
 | `background_first_frame_audit` | 只读复核首屏探针、延迟挂载、背景解码与 overlay 自修复竞态 | 定位 120/420 ms 探针折叠、既有外壳内部挂载、透明旧 hero 路由优先级、首图 ready 和 overlay generation 风险；主对话已逐项修复并写入 10 项背景状态机门禁 |
 | `background_contract_tests_audit` | 只读复核全窗、首帧、分类、过渡、恢复与静止期测试合同 | 确认旧 fixture 未覆盖真实 viewport DOMRect 与透明 hero/可见 thread 重叠；主对话已增加初始/resize 全视口、<300 ms 延迟挂载、内部挂载及路由重叠用例 |
-| `background_resource_audit` | 只读量化 11 图、CDP 注入、双层纹理、观察器、watcher 与调试实例成本 | 11 图压缩 2.454 MiB；当前稳态/过渡持图策略合理。主要成本为 3.7 MiB 单次注入峰值和开发期额外进程；Blob/分批注册须先过 CSP 与逐像素等价验证，未贸然集成 |
+| `background_resource_audit` | 只读量化 11 图、CDP 注入、双层纹理、观察器、watcher 与调试实例成本 | 11 图压缩 2.454 MiB；当前稳态/过渡持图策略合理。主对话已把单图/图库/双图过渡/UI 的解码像素门禁写入 payload 组装前；Blob/分批注册须先过 CSP 与逐像素等价验证，未贸然集成 |
 | `composer_edge_audit_v11` | 只读补齐 sidebar 项目/对话 hierarchy、class 与状态锚点 | 已完成；确认生产 `data-app-action-sidebar-*` 锚点、Tasks/Projects 层级及 active/expanded/collapsed 状态，主对话已写入正式 fixture 与运行时 |
 | `sidebar_state_audit` | 只读核对一级/二级/顶部入口的原生 current、disabled、unread、running 与内部控件边界 | 已完成；确认未读/运行由原生 trailing indicator 负责，内部 section/project 控件不能被误画成整行 |
 | `topbar_menu_audit` | 只读核对四个应用菜单触发器和 Electron 下拉边界 | 已完成；触发器使用 `aria-haspopup=menu` / `aria-expanded`，下拉本体由主进程原生菜单绘制，不在 renderer DOM |
@@ -17,6 +17,7 @@
 | 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已把四类输入纸面统一暗化到目标中位色并通过像素、几何、状态、forced-colors 和最小包门禁；真实 Codex 视觉仍待多轮验收 |
 | `landing_mark_audit` | 只读审计真实模型在 56×56 槽位的有效占比、边距、角度与测试门槛 | 建议锁定 60×9、39°；有效约 50×42 px，已把四边透明、居中差、主轴角度与可见面积写入像素合同；未启动窗口或服务 |
 | 主对话 · landing mark | 把卡通短棍替换为真实金箍棒模型缩略资产 | 3.2 KiB 透明 WebP、56×56 原生槽位、1× fixture、最小包与资源门禁通过；独立 commit/push 后仍待用户实机验收 |
+| 主对话 · decoded asset guard | 在不启动调试窗口的前提下阻断高压缩率超大位图造成的解码峰值 | 11 图总计 22,220,472 px、最坏双图 4,743,680 px；内存内超大 PNG 拒绝、实际 JPEG/WebP 头解析与最小包导入通过；1256×707 大圣图仍列为画质缺口 |
 | 主对话 · pets | 使用 Hatch Pet v2 重做小天命人和小八戒 | 已新建 v5 小天命人和 v4 小八戒独立 run；base 候选通过本地完整武器、双足/九齿、透明边缘和 192×208 留白门，等待用户母版审计；未通过前不扩散动作 |
 | 主对话 · startup | 最后实现非 PowerShell 的宿主生命周期绑定 | 视觉与宠物全部验收前不得开始或宣称完成 |
 
