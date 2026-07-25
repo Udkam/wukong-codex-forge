@@ -25,8 +25,8 @@ test('active page payload contains backgrounds and paint-only UI assets; pets re
   assert.match(payload.variables, /--forge-motif-xiangfei-gourd:none/);
   assert.doesNotMatch(payload.variables, /--forge-motif-little-(?:wukong|bajie):/);
   assert.doesNotMatch(payload.variables, /forge-motif-(?:yaksha|fanged-cyan)/);
-  assert.match(payload.variables, /--forge-battle-scenes:0 1 2 3 4 5/);
-  assert.match(payload.variables, /--forge-scenery-scenes:6 7 8 9 10/);
+  assert.match(payload.variables, /--forge-battle-scenes:0 1 2 3/);
+  assert.match(payload.variables, /--forge-scenery-scenes:4 5 6 7 8/);
   assert.doesNotMatch(payload.variables, /--forge-primary-scene-count:/);
 
   const modes = activeTheme.background.gallery.map(scene => scene.mode);
@@ -34,7 +34,7 @@ test('active page payload contains backgrounds and paint-only UI assets; pets re
   assert.ok(modes.includes('battle-secondary'));
   assert.ok(modes.includes('scenery'));
   assert.equal(activeTheme.schemaVersion, 3);
-  assert.equal(new Set(activeTheme.background.gallery.map(scene => scene.tone)).size, 11);
+  assert.equal(new Set(activeTheme.background.gallery.map(scene => scene.tone)).size, 9);
 });
 
 test('native definition stays within the current Codex chrome theme schema', () => {
@@ -43,7 +43,7 @@ test('native definition stays within the current Codex chrome theme schema', () 
   assert.ok(identities.includes('desktop.appearanceTheme'));
   assert.ok(identities.includes('desktop.appearanceDarkChromeTheme.accent'));
   assert.ok(identities.includes('desktop.appearanceDarkChromeTheme.semanticColors.skill'));
-  assert.equal(fs.statSync('themes/assets/great-sage-return.jpg').size < 100_000, true);
+  assert.equal(fs.statSync('themes/assets/great-sage-staff.jpg').size < 400_000, true);
 });
 
 test('install and uninstall round-trip only managed native appearance values', () => {

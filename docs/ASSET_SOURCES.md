@@ -1,5 +1,12 @@
 # 素材来源与发布边界
 
+## V15 当前活动背景边界
+
+- 活动 runtime 只发布 9 张画面：`erlang-ink-duel`、`great-sage-staff`、`storm-bearer`、`shadow-confrontation` 与 5 张风景图。
+- 用户否决的 `themes/assets/destined-afterimage.jpg` 与 `themes/assets/yaksha-king-rift.jpg` 不再被 active/default/native preview 引用，也不会进入最小运行包；本地文件原位保留，不删除、不移动、不覆盖。
+- 旧 `great-sage-return.jpg` 同样退出活动图库，避免 1256×707 画质缺口；默认预览使用 1920×1080 `great-sage-staff.jpg`。
+- 9 张活动图解码总量为 19,258,880 px，最大两张合计 4,743,680 px。用户指定的白场杨戬图为 2560×1043 超宽构图，其余活动图均至少 1920×1080。
+
 ## 0.12.3 / V13.3 背景、新建页、输入框与动作证据
 
 - V13 runtime 继续只发布 `themes/assets/` 中 6 张战斗图与 5 张风景图；11 个源文件 SHA-256 均不同。runtime 不读取本机素材目录，不进行网络请求或视频解码。

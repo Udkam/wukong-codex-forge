@@ -43,15 +43,25 @@ test('active gallery stays inside decoded-pixel and two-scene transition budgets
   assert.ok(totalPixels <= MAX_GALLERY_PIXELS, 'gallery exceeds its decoded-pixel budget');
   assert.ok(transitionPixels <= MAX_TRANSITION_PIXELS, 'crossfade exceeds its two-scene decoded-pixel budget');
 
-  const greatSage = unique.find(asset => asset.asset.endsWith('great-sage-return.jpg'));
+  const primaryGreatSage = unique.find(asset => asset.asset.endsWith('great-sage-staff.jpg'));
   assert.deepEqual(
-    { width: greatSage?.width, height: greatSage?.height },
-    { width: 1256, height: 707 },
-    'update this known-quality assertion when the approved 1080p-or-higher Great Sage replacement lands'
+    { width: primaryGreatSage?.width, height: primaryGreatSage?.height },
+    { width: 1920, height: 1080 },
+    'active Great Sage battle background must remain full HD'
   );
+  for (const asset of unique) {
+    const standard1080 = asset.width >= 1920 && asset.height >= 1080;
+    const approvedUltrawide = (
+      asset.asset.endsWith('erlang-ink-duel.jpg') &&
+      asset.width >= 2560 &&
+      asset.height >= 1000 &&
+      asset.pixels >= 1920 * 1080
+    );
+    assert.ok(standard1080 || approvedUltrawide, `${asset.asset} is below the active cinematic quality floor`);
+  }
   t.diagnostic(
     `decoded gallery: ${totalPixels.toLocaleString('en-US')} px; transition: ${transitionPixels.toLocaleString('en-US')} px; ` +
-    'great-sage-return.jpg remains a documented sub-1080p visual-quality gap'
+    'all active backgrounds satisfy the 1080p or approved 2560px-ultrawide quality floor'
   );
 
   assert.equal(payloadFromThemeFile(themePath).assets.length, theme.background.gallery.length);

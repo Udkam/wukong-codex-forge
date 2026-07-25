@@ -76,7 +76,7 @@ try {
 
     Copy-Item -LiteralPath $engine -Destination (Join-Path $target 'native-theme.mjs') -Force
     Copy-Item -LiteralPath $definition -Destination (Join-Path $target 'theme.json') -Force
-    Copy-Item -LiteralPath (Join-Path $source 'themes\assets\great-sage-return.jpg') -Destination (Join-Path $target 'preview.jpg') -Force
+    Copy-Item -LiteralPath (Join-Path $source 'themes\assets\great-sage-staff.jpg') -Destination (Join-Path $target 'preview.jpg') -Force
     Copy-Item -LiteralPath (Join-Path $source 'LICENSE') -Destination (Join-Path $target 'LICENSE') -Force
 
     $shortcutPath = $null

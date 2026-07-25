@@ -58,6 +58,12 @@ Windows forced-colors 使用 `#root` 高优先级回退压过 hover/focus/open/e
 
 `alpha>16` 的产物边界为 100×84 px，映射到原生槽位约 50×42 px，左右约 3 px、上下约 7 px。四条最外边必须全透明，水平与垂直安全边距差均不得超过 2 px，主轴角度锁定在 138°–144°，可见面积为全图 9%–13%。这使器物在不改变 56×56 槽位的前提下显著大于旧版约 40×34 px 的有效图案，同时保证两端完整、不贴边。
 
+### 活动图库边界
+
+V15 当前只组装 9 张背景：`erlang-ink-duel` 与 `great-sage-staff` 为主战斗池，`storm-bearer` 与 `shadow-confrontation` 为次级战斗池，5 张纯风景保持 thread 池。默认/原生预览统一指向 1920×1080 的 `great-sage-staff.jpg`。用户否决的 `destined-afterimage.jpg`、`yaksha-king-rift.jpg` 与旧 1256×707 `great-sage-return.jpg` 均保留在本地素材/历史证据中，但不生成 CSS 变量、不嵌入 payload、不复制到最小运行包。
+
+收敛后的图库解码总量为 19,258,880 px，交叉淡变最坏两图仍为 4,743,680 px。运行时仍只按需解码当前一图，过渡时最多保留两图；减少场景不会改变原生页面结构、路由判定或全窗 `cover` 合同。
+
 ### 成本与回退
 
 八张活动 UI WebP 合计约 271 KiB，其中 landing 金箍棒只有 3.2 KiB；解码像素合计约 136 万，单张最大 580,608 px。材质静态绘制，无 timer、动画、网络请求、常驻 filter 或持续合成提示。强制高对比模式隐藏全部材质并恢复系统面。葫芦已从当前目标删除，不进入活动主题或包。V15 当前只完成 fixture、像素与本机源码合同，不等于真实 Codex 用户验收。

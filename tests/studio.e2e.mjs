@@ -26,7 +26,7 @@ const stageBox = await page.locator('#preview').boundingBox();
 assert(stageBox.x === 0 && stageBox.width === 1440, 'Preview does not fill the full window after removing the editor column');
 assert(await page.locator('#preview').getAttribute('data-surface') === 'landing', 'Studio did not start in landing state');
 const defaultImage = await page.locator('#preview').evaluate(element => element.style.getPropertyValue('--studio-image'));
-assert(defaultImage.includes('great-sage-return.jpg'), 'Bundled user image was not loaded by default');
+assert(defaultImage.includes('great-sage-staff.jpg'), 'Bundled Great Sage staff image was not loaded by default');
 
 await page.evaluate(() => document.getElementById('showThread').click());
 assert(await page.locator('#preview').getAttribute('data-surface') === 'thread', 'Thread preview did not activate');

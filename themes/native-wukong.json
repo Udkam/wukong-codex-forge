@@ -3,7 +3,7 @@
   "id": "wukong-great-sage",
   "name": "大圣归来 · 潇湘双境",
   "description": "A balanced ink-iron, Xiangfei turquoise, weathered bronze and warm ivory baseline for the managed Wukong battle-and-scenery style layer.",
-  "previewAsset": "assets/great-sage-return.jpg",
+  "previewAsset": "assets/great-sage-staff.jpg",
   "settings": [
     { "section": "desktop", "key": "appearanceTheme", "value": "dark" },
     { "section": "desktop", "key": "appearanceDarkCodeThemeId", "value": "vesper" },

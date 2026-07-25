@@ -20,13 +20,10 @@ const contrast = (left, right) => {
   return (values[0] + .05) / (values[1] + .05);
 };
 
-test('all eleven cinematic scenes declare a validated adaptive tone', () => {
+test('all nine active cinematic scenes declare a validated adaptive tone', () => {
   assert.equal(active.schemaVersion, 3);
-  assert.equal(active.background.gallery.length, 11);
-  assert.deepEqual(
-    active.background.gallery.map(scene => scene.tone),
-    Object.keys(SCENE_TONES)
-  );
+  assert.equal(active.background.gallery.length, 9);
+  assert.equal(new Set(active.background.gallery.map(scene => scene.tone)).size, 9);
   for (const scene of active.background.gallery) {
     const tone = SCENE_TONES[scene.tone];
     for (const key of ['ink', 'inkSoft', 'lacquer', 'jade', 'jadeLight', 'gold', 'goldLight', 'paper', 'composer', 'sidebar', 'rightCard', 'veil', 'brightness']) {
@@ -39,7 +36,7 @@ test('all eleven cinematic scenes declare a validated adaptive tone', () => {
   assert.equal(active.background.gallery[0].position, '68% center');
 });
 
-test('all eleven scene veils keep primary copy readable over a worst-case white pixel', () => {
+test('all nine active scene veils keep primary copy readable over a worst-case white pixel', () => {
   for (const scene of active.background.gallery) {
     const tone = SCENE_TONES[scene.tone];
     const [, , sceneCenter] = tone.veil;
@@ -91,10 +88,10 @@ test('scene switching updates image, shell surfaces and text minerals together',
     }, index));
   }
 
-  assert.equal(new Set(states.map(state => state.composer)).size, 11);
-  assert.equal(new Set(states.map(state => state.sidebar)).size, 11);
-  assert.equal(new Set(states.map(state => state.rightCard)).size, 11);
-  assert.equal(new Set(states.map(state => state.paper)).size, 11);
+  assert.equal(new Set(states.map(state => state.composer)).size, 9);
+  assert.equal(new Set(states.map(state => state.sidebar)).size, 9);
+  assert.equal(new Set(states.map(state => state.rightCard)).size, 9);
+  assert.equal(new Set(states.map(state => state.paper)).size, 9);
   states.forEach((state, index) => {
     const tone = SCENE_TONES[active.background.gallery[index].tone];
     assert.equal(state.ink, tone.ink);
