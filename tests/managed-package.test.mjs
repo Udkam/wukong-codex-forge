@@ -36,7 +36,8 @@ test('minimal managed package imports independently and omits development surfac
     'pets/little-bajie-v3-inart/validation.json',
     'pets/little-bajie-v3-inart/package-proof.json',
     ...sourceTheme.background.gallery.map(entry => `themes/${entry.asset}`),
-    ...Object.values(sourceTheme.motifs || {}).map(asset => `themes/${asset}`)
+    ...Object.values(sourceTheme.motifs || {}).map(asset => `themes/${asset}`),
+    ...Object.values(sourceTheme.uiAssets || {}).map(asset => `themes/${asset}`)
   ]) {
     assert.equal(fs.existsSync(path.join(target, required)), true, `managed file missing: ${required}`);
   }
@@ -78,7 +79,7 @@ test('minimal managed package imports independently and omits development surfac
   const runtime = await import(pathToFileURL(path.join(target, 'runtime', 'forge-runtime.mjs')));
   const payload = runtime.payloadFromThemeFile(path.join(target, 'themes', 'active.json'));
   assert.match(payload.variables, /data:image\/jpeg;base64/);
-  assert.doesNotMatch(payload.variables, /data:image\/webp;base64/);
+  assert.match(payload.variables, /data:image\/webp;base64/);
   assert.equal(payload.assets.length, 11);
   assert.deepEqual(payload.assets.map(asset => asset.id), [
     'erlang-ink-duel',
@@ -94,6 +95,15 @@ test('minimal managed package imports independently and omits development surfac
     'sunset-ravine'
   ]);
   assert.deepEqual(payload.motifs, {});
+  assert.deepEqual(Object.keys(payload.uiAssets), [
+    'composerMain',
+    'composerStrip',
+    'composerPill',
+    'paperTile',
+    'sidebarLevel1',
+    'sidebarSelected',
+    'sidebarLevel2Hover'
+  ]);
   assert.match(payload.theme.name, /\S/);
   assert.match(payload.variables, /--forge-paper:#[0-9a-f]{6}/i);
   assert.match(payload.variables, /--forge-scene-count:11/);
@@ -106,6 +116,8 @@ test('minimal managed package imports independently and omits development surfac
   assert.match(payload.variables, /--forge-art-great-sage-staff:var\(--forge-bg-2\)/);
   assert.equal((payload.variables.match(/data:image\/jpeg;base64,/g) || []).length, 11, 'each gallery image must be embedded only once');
   assert.match(payload.variables, /--forge-motif-xiangfei-gourd:none/);
+  assert.match(payload.variables, /--forge-ui-composer-main:url\("data:image\/webp;base64,/);
+  assert.match(payload.variables, /--forge-ui-sidebar-level2-hover:url\("data:image\/webp;base64,/);
   assert.doesNotMatch(payload.variables, /--forge-motif-little-(?:wukong|bajie):/);
   assert.equal('motifs' in payload.theme, false);
   assert.deepEqual(payload.assets.map(asset => asset.tone), payload.theme.background.gallery.map(scene => scene.tone));

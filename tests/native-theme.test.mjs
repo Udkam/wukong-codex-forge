@@ -13,11 +13,14 @@ const definition = loadThemeDefinition('themes/native-wukong.json');
 const activeThemePath = 'themes/active.json';
 const activeTheme = JSON.parse(fs.readFileSync(activeThemePath, 'utf8').replace(/^\uFEFF/, ''));
 
-test('V12 active page payload contains backgrounds only; pets remain native packages', () => {
+test('active page payload contains backgrounds and paint-only UI assets; pets remain native packages', () => {
   assert.equal('motifs' in activeTheme, false);
   assert.equal(activeTheme.companion.enabled, false);
   const payload = payloadFromThemeFile(activeThemePath);
   assert.deepEqual(payload.motifs, {});
+  assert.deepEqual(Object.keys(payload.uiAssets), Object.keys(activeTheme.uiAssets));
+  assert.match(payload.variables, /--forge-ui-composer-main:url\("data:image\/webp;base64,/);
+  assert.match(payload.variables, /--forge-ui-sidebar-selected:url\("data:image\/webp;base64,/);
   assert.match(payload.variables, /--forge-motif-xiangfei-gourd:none/);
   assert.doesNotMatch(payload.variables, /--forge-motif-little-(?:wukong|bajie):/);
   assert.doesNotMatch(payload.variables, /forge-motif-(?:yaksha|fanged-cyan)/);

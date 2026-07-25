@@ -31,6 +31,13 @@ const variables = [
   '--forge-battle-primary-scenes:0 1 2;',
   '--forge-battle-secondary-scenes:3 4 5;',
   '--forge-scenery-scenes:6 7 8 9 10;',
+  `--forge-ui-composer-main:${tinyScene(0)};`,
+  `--forge-ui-composer-strip:${tinyScene(1)};`,
+  `--forge-ui-composer-pill:${tinyScene(2)};`,
+  `--forge-ui-paper-tile:${tinyScene(3)};`,
+  `--forge-ui-sidebar-level1:${tinyScene(4)};`,
+  `--forge-ui-sidebar-selected:${tinyScene(5)};`,
+  `--forge-ui-sidebar-level2-hover:${tinyScene(6)};`,
   ...Array.from({ length: 11 }, (_, index) => (
     `--forge-bg-${index}:${tinyScene(index)};--forge-position-${index}:${index === 0 ? '68% center' : 'center center'};`
   )),
@@ -54,16 +61,11 @@ test.after(async () => {
   await browserServer?.kill();
 });
 
-const nativeSurfaceStyle = page => page.evaluate(() => {
+const nativeLayoutStyle = page => page.evaluate(() => {
   const read = selector => {
     const style = getComputedStyle(document.querySelector(selector));
     return {
-      backgroundColor: style.backgroundColor,
-      backgroundImage: style.backgroundImage,
-      borderRadius: style.borderRadius,
-      boxShadow: style.boxShadow,
       clipPath: style.clipPath,
-      color: style.color,
       height: style.height,
       padding: style.padding,
       width: style.width
@@ -130,7 +132,7 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   });
 
   const beforeGeometry = await geometry(page);
-  const beforeStyle = await nativeSurfaceStyle(page);
+  const beforeStyle = await nativeLayoutStyle(page);
   const beforeText = await page.locator('body').innerText();
   const beforeBodyChildren = await page.locator('body > *').count();
   const beforeLandingGeometry = await page.evaluate(() => {
@@ -158,13 +160,15 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(activeState.preloadInFlight, 0);
   assert.equal(await page.evaluate(() => window.__forgePreloadImages.length), 0);
   assert.deepEqual(await geometry(page), beforeGeometry);
-  assert.deepEqual(await nativeSurfaceStyle(page), beforeStyle);
+  assert.deepEqual(await nativeLayoutStyle(page), beforeStyle);
   assert.equal(await page.locator('body').innerText(), beforeText);
   assert.equal(await page.locator('body > *').count(), beforeBodyChildren + 1);
   assert.equal(await page.locator('.forge-workspace').count(), 1);
   assert.equal(await page.locator('.forge-landing-title').count(), 1);
   assert.equal(await page.locator('.forge-landing-icon').count(), 1);
-  assert.equal(await page.locator('.forge-composer,.forge-input,.forge-sidebar,.forge-right-card,.forge-button').count(), 0);
+  assert.equal(await page.locator('.forge-composer').count(), 1);
+  assert.equal(await page.locator('.forge-sidebar').count(), 1);
+  assert.equal(await page.locator('.forge-input,.forge-right-card,.forge-button').count(), 0);
 
   const background = await page.evaluate(() => {
     const overlay = document.getElementById('wukong-forge-background');
@@ -289,7 +293,7 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(await page.locator('html').getAttribute('data-forge-mode'), 'scenery');
   assert.equal(await page.locator('html').getAttribute('data-forge-scene'), '6');
   assert.deepEqual(await geometry(page), beforeGeometry);
-  assert.deepEqual(await nativeSurfaceStyle(page), beforeStyle);
+  assert.deepEqual(await nativeLayoutStyle(page), beforeStyle);
   assert.deepEqual(await conversationGeometry(page), authored.geometry);
   assert.equal(await conversationText(page), authored.text);
   assert.equal(await page.locator('.forge-landing-title,.forge-landing-icon,.forge-landing-hero').count(), 0);
@@ -324,7 +328,7 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   const nativeState = await page.evaluate(THEME_STATE_EXPRESSION);
   assert.equal(isNativeThemeState(nativeState), true);
   assert.equal(await page.locator('#wukong-forge-background').count(), 0);
-  assert.deepEqual(await nativeSurfaceStyle(page), beforeStyle);
+  assert.deepEqual(await nativeLayoutStyle(page), beforeStyle);
   assert.equal(await page.locator('[data-forge-title-copy],[data-forge-original-aria-label]').count(), 0);
 });
 

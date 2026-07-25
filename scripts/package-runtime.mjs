@@ -80,7 +80,8 @@ export function packageRuntime({ source, destination }) {
   const themeReferences = [
     active.background?.asset,
     ...(active.background?.gallery || []).map(item => item.asset),
-    ...Object.values(active.motifs || {})
+    ...Object.values(active.motifs || {}),
+    ...Object.values(active.uiAssets || {})
   ].filter(Boolean).map(file => `themes/${file}`);
   const sourceRootReal = fs.realpathSync.native(sourceRoot);
   const packageFiles = [...new Set([...runtimeFiles, ...nativePetFiles, ...themeReferences])];

@@ -9,6 +9,7 @@ export const MAX_THEME_BYTES = 256 * 1024;
 export const MAX_ART_BYTES = 16 * 1024 * 1024;
 export const MAX_GALLERY_BYTES = 24 * 1024 * 1024;
 export const MAX_MOTIF_BYTES = 4 * 1024 * 1024;
+export const MAX_UI_ASSET_BYTES = 1024 * 1024;
 
 export function readThemeFile(themePath) {
   const raw = fs.readFileSync(themePath, 'utf8');
@@ -74,12 +75,31 @@ export function resolveThemeMotifs(themePath, theme) {
   }));
 }
 
+export function resolveThemeUiAssets(themePath, theme) {
+  if (!theme.uiAssets) return {};
+  let totalBytes = 0;
+  return Object.fromEntries(Object.entries(theme.uiAssets).map(([key, relativeAsset]) => {
+    const encoded = assetDataUrl(themePath, relativeAsset);
+    totalBytes += encoded.bytes;
+    if (totalBytes > MAX_UI_ASSET_BYTES) throw Error('Theme UI assets exceed size limit');
+    return [key, encoded.url];
+  }));
+}
+
 export function payloadFromThemeFile(themePath) {
   const theme = readThemeFile(themePath);
   const assets = resolveThemeAssets(themePath, theme);
   const motifs = resolveThemeMotifs(themePath, theme);
+  const uiAssets = resolveThemeUiAssets(themePath, theme);
   const assetUrl = assets[0]?.url || '';
-  return { theme, assetUrl, assets, motifs, variables: cssFor(theme, assets, motifs) };
+  return {
+    theme,
+    assetUrl,
+    assets,
+    motifs,
+    uiAssets,
+    variables: cssFor(theme, assets, motifs, uiAssets)
+  };
 }
 
 if (process.argv[2] === '--validate') {

@@ -1,6 +1,27 @@
 # 多对话分工与交付边界
 
-> **0.12.3 / V13.3 当前分工。** 旧分工继续保留为历史。
+> **V15 当前分工。** 旧分工继续保留为历史。
+
+| 工作流 | 本轮责任 | 当前结论 / 门槛 |
+| --- | --- | --- |
+| 主对话 · native geometry | 只读解析当前 `ChatGPT.exe/app.asar`，把官方 token、class 结构和响应式公式写入 fixture/漂移合同 | 已完成 composer/topbar/基础 sidebar baseline；任何尺寸改动必须先有本机源码证据 |
+| `composer_edge_audit_v11` | 只读补齐 sidebar 项目/对话 hierarchy、class 与状态锚点 | 已完成；确认生产 `data-app-action-sidebar-*` 锚点、Tasks/Projects 层级及 active/expanded/collapsed 状态，主对话已写入正式 fixture 与运行时 |
+| 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已接入七张静态 WebP；headless 几何/状态合同通过，真实 Codex 视觉仍待多轮验收 |
+| 主对话 · landing mark | 把卡通短棍替换为暗金箍纹棍身与墨势残影 | 待办；保持 56×56 原生槽位，独立测试、commit、push |
+| 主对话 · pets | 使用 Hatch Pet v2 重做小天命人和小八戒 | 输入器/侧栏/背景通过后开始；现有错误角色与动作不得扩散 |
+| 主对话 · startup | 最后实现非 PowerShell 的宿主生命周期绑定 | 视觉与宠物全部验收前不得开始或宣称完成 |
+
+### V15 小步推送门禁
+
+1. 原生尺寸与 fixture 基线。
+2. 新建页 56×56 印记。
+3. sidebar hierarchy 与完整状态矩阵。
+4. composer 1:1 材质与相邻条层级。
+5. 真实 Codex 单窗口截图、差异修正与资源核验。
+
+每一项只精确暂存自身路径，跑覆盖本项风险的测试后立即 commit/push；用户未验收的项继续标记为进行中，禁止合并成“整体完成”。
+
+> **0.12.3 / V13.3 历史分工。** 以下内容继续保留；冲突处以 V15 为准。
 
 | 工作流 | 本轮责任 | 当前结论 / 门槛 |
 | --- | --- | --- |

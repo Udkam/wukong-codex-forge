@@ -1,6 +1,60 @@
 # 大圣归来 · 潇湘双境 — 设计与实现
 
-> **0.12.3 / V13.3 现行设计。** V13.2 及更早章节保留为演变记录；冲突处以 `CURRENT_GOAL.md` 和本节为准。
+> **V15 现行设计。** V13.3 及更早章节保留为演变记录；冲突处以 `CURRENT_GOAL.md` 和本节为准。
+
+## V15：本机原生几何上的游记纸面系统
+
+V15 把“高保真复刻”分成两个互不混淆的真值源：
+
+1. **几何真值**只来自本机 `ChatGPT.exe 26.715.2305.0` 的只读 `app.asar`。宽高、间距、padding、位置、响应式公式、动态增长、圆角 token 和点击热区均由官方 DOM/CSS/JS决定。
+2. **视觉真值**来自用户最终确认的输入器三图和《黑神话：悟空》“游记”目录参考。纸张纤维、云纹、边角线、深墨条、浅纸选中带、旧金/烟褐/骨纸配色和交互状态由这些参考决定。
+
+### 当前本机几何基线
+
+| 项目 | 官方值 / 公式 |
+| --- | --- |
+| 基础 spacing / 正文字号 | `4px` / `14px`，行高 `1.5` |
+| 主工具栏 / 小工具栏 / pane 工具栏 | `46px` / `36px` / `40px` |
+| sidebar | `clamp(240px, 275px, min(520px, calc(100vw - 320px)))` |
+| sidebar row | `30px`，row radius `10px` |
+| thread 最大宽度 | `48rem`，即 `768px` |
+| composer 多行 editor 最小高度 | `2.75rem`，即 `44px` |
+| composer / send button | `28×28px` |
+| composer 单行 radius token | `22px` |
+
+fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。活动 CSS 不声明 composer/sidebar/topbar 的 width、height、min-height、grid、padding 或 absolute position；nine-slice 和纹理只覆盖 paint。`tests/native-asar-ui-contract.test.mjs` 直接读取安装包，官方 token 漂移时 fail closed，而不是继续用旧截图伪装通过。
+
+### 输入器与纸面层级
+
+- `composer-main.webp`：主输入器纸面。
+- `composer-strip.webp`：进行中目标、上下文与面板条。
+- `composer-pill.webp`：计划/变更摘要等小条。
+- `paper-tile.webp`：所有纸面统一底纹，避免三张参考之间出现不同“地面图案”。
+
+所有材质由用户最终参考的透明合同源裁切，并以 nine-slice 保持角纹和边线不随宽高拉伸。原生 editor、footer、按钮、文字、placeholder、ARIA 和 hit box 均保留。助手回答不套纸框。
+
+### 侧栏与顶部状态映射
+
+| 原生对象 | 游记映射 | 状态 |
+| --- | --- | --- |
+| 项目条、无项目对话 | 一级深墨目录条 | 默认深墨；hover/focus 提亮纸纤维；expanded 保持一级层级 |
+| 项目下对话 | 二级目录正文行 | 默认无整块底；hover 为窄深墨刷痕；selected 为浅纸选中带 |
+| 新建任务等顶部入口 | 一级目录操作行 | 保留原生图标/文字/30px row，只替换底材与状态 |
+| 文件/编辑/视图/帮助 | 小型目录页签 | 原生菜单 open 状态使用浅纸选中带，关闭后回到深墨 |
+
+生产 hierarchy 以当前 ASAR 的稳定属性为锚点：`data-app-action-sidebar-project-row` 是项目条，`data-app-action-sidebar-thread-row` 位于 `data-app-action-sidebar-project-list-id` 内时是项目下对话，位于 `data-app-action-sidebar-section-heading="Tasks"` 且不在项目列表内时是无项目对话。选中态读取 `data-app-action-sidebar-thread-active` / `aria-current`，展开与折叠读取 `aria-expanded` / `data-app-action-sidebar-project-collapsed`；不使用 `nth-child` 或测试专用属性作为生产判断。
+
+当前运行时已经覆盖默认、hover、focus、selected、expanded、collapsed 和 menu open；disabled/unread/running 的完整视觉对应仍是下一验收门，不得因静态截图好看而标记完成。
+
+### 新建页印记
+
+官方 `[data-testid="home-icon"]` 提供 56×56 原生槽位。现有 SVG 短棍因比例、饱和金红和圆润端头呈现卡通感，已否决。下一里程碑只在该槽位内重绘“暗金箍纹棍身 + 墨势残影”，保留原始 SVG 节点、DOMRect、aria 和 restore；该修改独立 commit/push，便于单独回退。
+
+### 成本与回退
+
+七张活动 UI WebP 合计约 273 KiB；材质静态绘制，无 timer、动画、网络请求或持续合成提示。强制高对比模式隐藏全部材质并恢复系统面。葫芦已从当前目标删除，不进入活动主题或包。V15 首轮只完成 fixture 与本机源码合同，不等于真实 Codex 视觉验收。
+
+> **0.12.3 / V13.3 历史设计。** 以下章节继续保留；冲突处以 V15 为准。
 
 ## V13.3：原生背景状态机、资源硬预算与首帧可靠的新建页
 

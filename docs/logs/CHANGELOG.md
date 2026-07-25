@@ -1,5 +1,22 @@
 # Local work log
 
+## 2026-07-25 — V15 生产 sidebar 锚点与原生几何检查点
+
+- 把项目条、无项目对话和项目下对话的分类从测试假属性收口到当前 `ChatGPT.exe 26.715.2305.0` ASAR 的 `data-app-action-sidebar-project-row`、`data-app-action-sidebar-thread-row`、`data-app-action-sidebar-project-list-id` 与 `data-app-action-sidebar-section-heading="Tasks"`。
+- 选中态读取生产 `data-app-action-sidebar-thread-active` / `aria-current`；项目展开与折叠读取 `aria-expanded` / `data-app-action-sidebar-project-collapsed`。属性变化由有限 attribute filter 触发刷新，不依赖窗口缩放，也不监听输入文字。
+- fixture 删除旧 `data-project-row` / `data-sidebar-thread-row` 等假生产锚点；V15 定向测试证明一级/二级/选中材质对应正确，项目容器不会误用浅纸选中带。
+- 原生表面门禁 6/6、ASAR/背景/最小包/主题合同 12/12 通过；测试后为 0 个项目 Node/Chromium 进程和 0 个项目监听端口。真实 Codex 视觉仍未验收，不标记整体完成。
+
+## 2026-07-24 — V15 本机 ASAR 几何基线与小步推送策略
+
+- 用户明确要求所有尺寸直接来自本机 `ChatGPT.exe` 内部 UI 数据。只读解析 `OpenAI.Codex 26.715.2305.0` 的 `app.asar`，锁定 spacing、toolbar、sidebar clamp、row、thread、composer editor/footer/button 与 radius token；fixture 改用这些源码值和当前 renderer 的 1.25 device scale。
+- 新增 `native-asar-ui-contract`：直接读取已安装 ASAR，官方 token/class 漂移时 fail closed；生产主题不再从 736×98 审稿图反推 width/height/padding。
+- V15 将用户最终三张输入器参考统一为一套纸面底纹，并把一级项目/无项目对话、二级项目对话、顶部原生入口和四个应用菜单映射到游记目录材质。当前只完成 headless 几何/状态门禁，未宣称实机视觉通过。
+- 用户取消葫芦方案；当前目标、验收合同和设计均删除活动葫芦范围。两只 Hatch Pet 和最终非 PowerShell 随启随停继续排在视觉验收之后。
+- 用户否决现有 56×56 卡通短棍；下一小里程碑重绘为暗金箍纹棍身与墨势残影，并单独 commit/push。
+- 高难度目标改为多轮验收和高频远端检查点：每个独立模块通过针对性测试后精确暂存、提交、推送，不堆积多轮实现；用户未验收项不标记整体完成。
+- 本轮 headless 截图完成后复核为 0 个项目 Chromium/Node 测试进程、0 个项目监听端口；没有打开或保留第二个 Codex 调试窗口，没有删除或移动文件。
+
 ## 2026-07-24 — Composer V9 原生几何纠偏与三案审稿
 
 - V8 经独立几何和盲审复核后正式否决：fixture 固定 `736×96`、把 `overflow:hidden` 改成 `auto`，主题边框使 editor/footer 位移 1 px、可见宽度收窄 2 px，并使用非当前 Codex 的伪图标；其三案继续原位保留但不进入 runtime。

@@ -1,10 +1,10 @@
 /*
  * Wukong Codex Forge V13
  *
- * Native-layout runtime. The active scope is the full-window background plus
- * the explicitly approved landing title/icon skin. Native composer, sidebar,
- * toolbar, messages, menus, environment cards, buttons, scrollbars, spacing
- * and geometry remain untouched until the user selects a composer preview.
+ * Native-layout runtime. The active scope is the full-window background, the
+ * approved landing title/icon skin, and paint-only Black Myth surfaces for the
+ * native composer and sidebar rows. Text, controls, hit boxes, spacing, scroll
+ * behavior and DOM order remain native.
  */
 :root.forge-ink-mountain {
   --forge-paper: #101210;
@@ -194,6 +194,383 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   pointer-events: none;
 }
 
+/*
+ * Native application menu: keep the official labels, spacing and hit boxes.
+ * The quiet state uses a dark journal tab; hover/focus/open uses the pale
+ * paper selection from the journal so the four platform menus read as a
+ * themed surface rather than a color-only override.
+ */
+:root.forge-ink-mountain .forge-topbar-menu-item {
+  --color-token-foreground: #c8c2b9;
+  --color-token-text-primary: #c8c2b9;
+  color: #c8c2b9 !important;
+  background-color: transparent !important;
+  background-image: var(--forge-ui-sidebar-level1) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain .forge-topbar-menu-item:hover,
+:root.forge-ink-mountain .forge-topbar-menu-item:focus-visible {
+  --color-token-foreground: #2f2822;
+  --color-token-text-primary: #2f2822;
+  color: #2f2822 !important;
+  background-image: var(--forge-ui-sidebar-selected) !important;
+  background-position: center !important;
+  background-size: 100% 100% !important;
+}
+
+:root.forge-ink-mountain .forge-topbar-menu-item[aria-expanded="true"],
+:root.forge-ink-mountain .forge-topbar-menu-item[data-state="open"] {
+  --color-token-foreground: #2f2822;
+  --color-token-text-primary: #2f2822;
+  color: #2f2822 !important;
+  background-image: var(--forge-ui-sidebar-selected) !important;
+  background-position: center !important;
+  background-size: 100% 100% !important;
+}
+
+/*
+ * Ancient-volume composer material. These rules replace paint only: the
+ * official composer owns every dimension, inset, line wrap, button and hit box.
+ */
+:root.forge-ink-mountain .forge-composer-frame {
+  --color-token-foreground: #34291b;
+  --color-token-text-primary: #34291b;
+  --color-token-text-secondary: #54432d;
+  --color-token-text-tertiary: #6b593f;
+  --color-token-description-foreground: #665238;
+  --color-token-input-placeholder-foreground: #75644a;
+  --color-token-icon-foreground: #443622;
+  --color-token-icon-secondary: #5b492f;
+  --color-token-icon-tertiary: #716047;
+  color: #34291b !important;
+  position: relative;
+  isolation: isolate;
+  background-color: #d1b78f !important;
+  background-image: var(--forge-ui-paper-tile) !important;
+  background-position: center !important;
+  background-repeat: repeat !important;
+  background-size: 384px 192px !important;
+  border-color: transparent !important;
+  border-radius: 2px !important;
+  box-shadow:
+    0 1px 0 rgba(255, 242, 204, .42) inset,
+    0 -1px 0 rgba(70, 48, 25, .46) inset,
+    0 2px 0 rgba(20, 14, 8, .34),
+    0 7px 20px rgba(5, 4, 3, .3) !important;
+}
+
+:root.forge-ink-mountain .forge-composer-frame::before,
+:root.forge-ink-mountain .forge-composer-context::before,
+:root.forge-ink-mountain .forge-composer-panel::before,
+:root.forge-ink-mountain .forge-plan-pill::before,
+:root.forge-ink-mountain .forge-diff-summary::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  pointer-events: none;
+  filter: contrast(1.16) saturate(.94);
+  content: "";
+}
+
+:root.forge-ink-mountain .forge-composer-frame::before {
+  border-image-source: var(--forge-ui-composer-main);
+  border-image-slice: 52 58 fill;
+  border-image-width: 18px 22px;
+  border-image-repeat: stretch;
+}
+
+:root.forge-ink-mountain .forge-composer-frame > *,
+:root.forge-ink-mountain .forge-composer-context > *,
+:root.forge-ink-mountain .forge-composer-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+:root.forge-ink-mountain .forge-composer-frame:focus-within {
+  box-shadow:
+    0 1px 0 rgba(255, 239, 195, .42) inset,
+    0 -1px 0 rgba(70, 48, 25, .42) inset,
+    0 0 0 1px rgba(111, 74, 37, .72) inset,
+    0 5px 18px rgba(5, 4, 3, .28) !important;
+}
+
+:root.forge-ink-mountain .forge-composer-frame .ProseMirror {
+  color: inherit !important;
+  text-shadow: 0 1px 0 rgba(255, 242, 205, .2);
+}
+
+:root.forge-ink-mountain .forge-composer-frame .ProseMirror p.is-editor-empty:first-child::before,
+:root.forge-ink-mountain .forge-composer-frame [data-placeholder]::before {
+  color: #75644a !important;
+}
+
+:root.forge-ink-mountain .forge-composer-context,
+:root.forge-ink-mountain .forge-composer-panel {
+  --color-token-foreground: #3b2d1c;
+  --color-token-text-primary: #3b2d1c;
+  --color-token-text-secondary: #5c4930;
+  --color-token-description-foreground: #6b573c;
+  --color-token-icon-foreground: #4a3923;
+  color: #3b2d1c !important;
+  position: relative;
+  isolation: isolate;
+  background-color: #cfb48a !important;
+  background-image: var(--forge-ui-paper-tile) !important;
+  background-position: center !important;
+  background-repeat: repeat !important;
+  background-size: 384px 192px !important;
+  border-color: transparent !important;
+  border-radius: 2px !important;
+  box-shadow:
+    0 1px 0 rgba(255, 239, 199, .34) inset,
+    0 -1px 0 rgba(75, 51, 27, .34) inset,
+    0 2px 0 rgba(20, 14, 8, .28),
+    0 4px 13px rgba(5, 4, 3, .24) !important;
+}
+
+:root.forge-ink-mountain .forge-composer-context::before,
+:root.forge-ink-mountain .forge-composer-panel::before {
+  border-image-source: var(--forge-ui-composer-strip);
+  border-image-slice: 44 52 fill;
+  border-image-width: 14px 18px;
+  border-image-repeat: stretch;
+}
+
+:root.forge-ink-mountain .forge-composer-context button,
+:root.forge-ink-mountain .forge-composer-context [role="button"],
+:root.forge-ink-mountain .forge-composer-panel button,
+:root.forge-ink-mountain .forge-composer-panel [role="button"] {
+  color: inherit !important;
+  background-color: rgba(239, 218, 175, .12) !important;
+  border-color: rgba(75, 51, 27, .2) !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain .forge-composer-context button,
+:root.forge-ink-mountain .forge-composer-context [role="button"] {
+  background-image: var(--forge-ui-composer-pill) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+}
+
+:root.forge-ink-mountain .forge-plan-pill,
+:root.forge-ink-mountain .forge-diff-summary {
+  --color-token-foreground: #3b2d1c;
+  --color-token-text-primary: #3b2d1c;
+  --color-token-text-secondary: #5c4930;
+  color: #3b2d1c !important;
+  position: relative;
+  isolation: isolate;
+  background-color: #cfb48a !important;
+  background-image: var(--forge-ui-paper-tile) !important;
+  background-position: center !important;
+  background-repeat: repeat !important;
+  background-size: 384px 192px !important;
+  border-color: transparent !important;
+  border-radius: 2px !important;
+  box-shadow:
+    0 1px 0 rgba(255, 239, 199, .34) inset,
+    0 -1px 0 rgba(75, 51, 27, .38) inset,
+    0 2px 0 rgba(20, 14, 8, .24),
+    0 4px 11px rgba(5, 4, 3, .24) !important;
+}
+
+:root.forge-ink-mountain .forge-plan-pill::before,
+:root.forge-ink-mountain .forge-diff-summary::before {
+  border-image-source: var(--forge-ui-composer-pill);
+  border-image-slice: 36 44 fill;
+  border-image-width: 12px 16px;
+  border-image-repeat: stretch;
+}
+
+:root.forge-ink-mountain .forge-composer-submit {
+  color: #dfc99e !important;
+  background-color: #49361f !important;
+  background-image: none !important;
+  border-color: rgba(47, 32, 17, .72) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 226, 169, .18) inset,
+    0 2px 7px rgba(21, 14, 8, .32) !important;
+}
+
+:root.forge-ink-mountain .forge-composer-submit:hover,
+:root.forge-ink-mountain .forge-composer-submit:focus-visible {
+  color: #f0dab0 !important;
+  background-color: #5a4327 !important;
+  box-shadow:
+    0 1px 0 rgba(255, 226, 169, .22) inset,
+    0 0 0 1px rgba(154, 112, 62, .45),
+    0 2px 8px rgba(21, 14, 8, .36) !important;
+}
+
+:root.forge-ink-mountain .forge-composer-submit:disabled,
+:root.forge-ink-mountain .forge-composer-submit[aria-disabled="true"] {
+  color: #8c7b61 !important;
+  background-color: #5f5548 !important;
+  border-color: rgba(47, 39, 29, .46) !important;
+  box-shadow: 0 1px 0 rgba(255, 235, 193, .1) inset !important;
+}
+
+/*
+ * Journal-directory sidebar mapping:
+ *   level 1 default/hover  -> thick dark ink paper
+ *   level 2 default        -> transparent with broken ink trace
+ *   level 2 hover          -> thin black brush stroke
+ *   current conversation   -> pale torn paper, regardless of hierarchy
+ * Project parents never receive the pale selected material.
+ */
+:root.forge-ink-mountain .forge-sidebar-shell {
+  --color-token-side-bar-background: rgba(14, 12, 9, .9);
+  --color-token-foreground: #d2cdc5;
+  --color-token-text-primary: #d2cdc5;
+  --color-token-text-secondary: #b8b2aa;
+  --color-token-description-foreground: #8f8a83;
+  --color-token-icon-foreground: #c8c2b9;
+  color: #d2cdc5;
+  background-color: rgba(14, 12, 9, .9) !important;
+  background-image: none !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-level1,
+:root.forge-ink-mountain .forge-sidebar-level2,
+:root.forge-ink-mountain .forge-sidebar-action,
+:root.forge-ink-mountain .forge-sidebar-selected {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-action {
+  --color-token-foreground: #d8d3cb;
+  --color-token-text-primary: #d8d3cb;
+  --color-token-text-secondary: #bbb5ad;
+  --color-token-description-foreground: #969087;
+  --color-token-icon-foreground: #d1cbc2;
+  color: #d8d3cb !important;
+  background-color: transparent !important;
+  background-image: var(--forge-ui-sidebar-level1) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-action:hover,
+:root.forge-ink-mountain .forge-sidebar-action:focus-within {
+  color: #eee8de !important;
+  background-image:
+    linear-gradient(rgba(255, 245, 228, .035), rgba(255, 245, 228, .035)),
+    var(--forge-ui-sidebar-level1) !important;
+  box-shadow: 0 0 0 1px rgba(218, 208, 194, .08) inset !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-action-active,
+:root.forge-ink-mountain .forge-sidebar-action-active:hover,
+:root.forge-ink-mountain .forge-sidebar-action-active:focus-within {
+  --color-token-foreground: #2f2822;
+  --color-token-text-primary: #2f2822;
+  --color-token-text-secondary: #4d4339;
+  --color-token-description-foreground: #655a50;
+  --color-token-icon-foreground: #3f352d;
+  color: #2f2822 !important;
+  background-image: var(--forge-ui-sidebar-selected) !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-level1 {
+  --color-token-foreground: #d8d3cb;
+  --color-token-text-primary: #d8d3cb;
+  --color-token-text-secondary: #bbb5ad;
+  --color-token-description-foreground: #969087;
+  --color-token-icon-foreground: #d1cbc2;
+  color: #d8d3cb !important;
+  background-color: transparent !important;
+  background-image: var(--forge-ui-sidebar-level1) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-level1:hover,
+:root.forge-ink-mountain .forge-sidebar-level1:focus-within {
+  color: #eee8de !important;
+  background-image:
+    linear-gradient(rgba(255, 245, 228, .035), rgba(255, 245, 228, .035)),
+    var(--forge-ui-sidebar-level1) !important;
+  box-shadow: 0 0 0 1px rgba(218, 208, 194, .08) inset !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-level1:active {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, .08), rgba(0, 0, 0, .08)),
+    var(--forge-ui-sidebar-level1) !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-level2 {
+  --color-token-foreground: #c4beb7;
+  --color-token-text-primary: #c4beb7;
+  --color-token-text-secondary: #a9a39c;
+  --color-token-description-foreground: #858078;
+  --color-token-icon-foreground: #bdb7af;
+  color: #c4beb7 !important;
+  background-color: transparent !important;
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent 0 4%,
+      rgba(72, 66, 56, .22) 4% 22%,
+      transparent 22% 28%,
+      rgba(72, 66, 56, .16) 28% 61%,
+      transparent 61% 69%,
+      rgba(72, 66, 56, .12) 69% 92%,
+      transparent 92% 100%
+    ) !important;
+  background-position: left calc(100% - 2px) !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 1px !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-level2:hover,
+:root.forge-ink-mountain .forge-sidebar-level2:focus-within {
+  --color-token-foreground: #d8d2ca;
+  --color-token-text-primary: #d8d2ca;
+  --color-token-text-secondary: #bbb5ad;
+  color: #d8d2ca !important;
+  background-image: var(--forge-ui-sidebar-level2-hover) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-selected,
+:root.forge-ink-mountain .forge-sidebar-selected:hover,
+:root.forge-ink-mountain .forge-sidebar-selected:focus-within {
+  --color-token-foreground: #2f2822;
+  --color-token-text-primary: #2f2822;
+  --color-token-text-secondary: #4d4339;
+  --color-token-description-foreground: #655a50;
+  --color-token-icon-foreground: #3f352d;
+  color: #2f2822 !important;
+  background-color: transparent !important;
+  background-image: var(--forge-ui-sidebar-selected) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+  box-shadow: 0 0 0 1px rgba(71, 57, 44, .1) inset !important;
+}
+
+:root.forge-ink-mountain .forge-sidebar-selected:hover,
+:root.forge-ink-mountain .forge-sidebar-selected:focus-within {
+  background-image:
+    linear-gradient(rgba(255, 250, 239, .035), rgba(255, 250, 239, .035)),
+    var(--forge-ui-sidebar-selected) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root.forge-ink-mountain { --forge-background-transition: 0ms; }
 
@@ -225,5 +602,25 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 
   :root.forge-ink-mountain [data-testid="home-icon"][data-forge-mark="1"] > * {
     opacity: revert !important;
+  }
+
+  :root.forge-ink-mountain .forge-composer-frame,
+  :root.forge-ink-mountain .forge-composer-context,
+  :root.forge-ink-mountain .forge-composer-panel,
+  :root.forge-ink-mountain .forge-plan-pill,
+  :root.forge-ink-mountain .forge-diff-summary,
+  :root.forge-ink-mountain .forge-composer-submit,
+  :root.forge-ink-mountain .forge-topbar-menu-item,
+  :root.forge-ink-mountain .forge-sidebar-shell,
+  :root.forge-ink-mountain .forge-sidebar-action,
+  :root.forge-ink-mountain .forge-sidebar-level1,
+  :root.forge-ink-mountain .forge-sidebar-level2,
+  :root.forge-ink-mountain .forge-sidebar-selected {
+    color: CanvasText !important;
+    background-color: Canvas !important;
+    background-image: none !important;
+    border-color: CanvasText !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 }

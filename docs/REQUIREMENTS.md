@@ -1,6 +1,21 @@
 # 大圣归来 Codex 样式层 — 需求与验收
 
-> **0.12.3 / V13.3 现行验收合同。** V13.2 及更早内容作为历史保留；冲突处以 `CURRENT_GOAL.md` 和本表为准。
+> **V15 现行验收合同。** V13.3 及更早内容作为历史保留；冲突处以 `CURRENT_GOAL.md` 和本表为准。
+
+| ID | V15 需求 | 验收方法 |
+| --- | --- | --- |
+| V15-01 | 所有布局几何来自本机 `ChatGPT.exe 26.715.2305.0` 的只读 `app.asar`：toolbar、sidebar、row、thread、composer editor/footer/buttons、间距、圆角 token 与响应式公式不得从审稿图反推 | `native-asar-ui-contract` 直接读取当前安装包并与 fixture baseline 对照；主题前后 DOMRect/命中区全等 |
+| V15-02 | 用户最终三张输入器参考允许直接实现；主输入器及所有相邻纸面统一使用第一张参考图的底纹、角纹、云纹和色阶，文本与控件仍由原生 DOM 绘制 | 1×/125% 宽窄与多行 fixture、像素对照、文本/ARIA/按钮矩形深比较 |
+| V15-03 | 一级侧栏条目映射项目条和无项目对话；二级条目映射项目下对话。默认、hover、focus、selected、expanded、disabled、unread/running 必须各有明确且一致的目录状态 | 结构优先选择器测试、动态状态矩阵、真实 sidebar 截图 |
+| V15-04 | “新建任务 / 拉取请求 / 站点 / 已安排 / 插件”和“文件 / 编辑 / 视图 / 帮助”只换材质与状态，不改文字、图标、DOM 顺序、原生尺寸或菜单行为 | 官方 topbar class/ARIA 锚点、open/close/hover/focus 测试与几何前后对照 |
+| V15-05 | 新建页保留原生 56×56 槽位；当前卡通短棍被否决，下一版必须为暗金箍纹棍身与墨势残影，不得像 emoji、贴纸或卡通图标 | 1× landing 局部盲审、槽位 DOMRect/原节点/restore 合同 |
+| V15-06 | 不实现葫芦；活动主题定义、运行包、注入器和后续视觉提案均不得引用葫芦 | active theme、package manifest 与 DOM 标记清单 |
+| V15-07 | 助手回答保持无框；提示词、回答、placeholder、项目名、菜单名和按钮可访问名称逐字不改 | 注入前后文本/ARIA 深比较 |
+| V15-08 | UI 材质使用静态 WebP/nine-slice；无网络请求、无逐帧动画、无 filter/will-change 常驻、无布局 JS；forced-colors 回退系统原生面 | 网络/计时器/动画计数、computed style 与强制高对比测试 |
+| V15-09 | 本轮属于多轮验收，不以 fixture 通过代替实机视觉通过；每个独立里程碑针对性测试后精确 commit/push，保留可回退 SHA | cached path 审计、测试记录、远端 SHA 与用户验收记录 |
+| V15-10 | 不删除、移动或覆盖本地文件；不修改 `ChatGPT.exe`、`app.asar`、WindowsApps 或官方配置；临时调试窗口截图后立即关闭并核验资源释放 | 文件/进程/父子树/端口前后审计 |
+
+> **0.12.3 / V13.3 历史验收合同。** 以下内容继续保留；冲突处以 V15 为准。
 
 | ID | V13 需求 | 验收方法 |
 | --- | --- | --- |

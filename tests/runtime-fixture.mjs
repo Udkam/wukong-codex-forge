@@ -1,11 +1,49 @@
+export const nativeUiBaseline = Object.freeze({
+  source: 'ChatGPT.exe 26.715.2305.0 app.asar',
+  rendererDeviceScaleFactor: 1.25,
+  spacing: 4,
+  toolbarHeight: 46,
+  smallToolbarHeight: 36,
+  paneToolbarHeight: 40,
+  sidebarPreferredWidth: 275,
+  sidebarMinWidth: 240,
+  sidebarMaxWidth: 520,
+  sidebarViewportReserve: 320,
+  sidebarRowHeight: 30,
+  sidebarRowRadius: 10,
+  threadContentMaxWidth: 768,
+  panelPadding: 20,
+  toolbarPadding: 16,
+  composerButtonSize: 28,
+  composerEditorMinHeight: 44,
+  composerMultilineRadius: 25,
+  composerSingleLineRadius: 22
+});
+
 export const runtimeFixtureHtml = String.raw`
   <style>
     :root {
       --spacing: 4px;
+      --text-base: 14px;
       --height-toolbar: 46px;
       --height-toolbar-sm: 36px;
+      --height-toolbar-pane: 40px;
       --thread-content-max-width: 48rem;
+      --spacing-token-sidebar: clamp(240px, 275px, min(520px, calc(100vw - 320px)));
+      --spacing-token-button-composer: 28px;
+      --spacing-token-button-composer-sm: 28px;
+      --spacing-token-button-composer-gap: 4px;
+      --padding-row-x: 8px;
+      --padding-row-y: 5px;
+      --height-token-nav-row: 31px;
+      --height-token-row: 30px;
+      --radius-token-row: 10px;
+      --padding-panel-base: 20px;
+      --padding-panel: var(--padding-panel-base);
       --padding-toolbar: 16px;
+      --composer-inline-overhang: 24px;
+      --home-composer-inline-inset: 13px;
+      --composer-adjacent-max-width: 790px;
       --radius-3xl: 25px;
       --radius-token-composer-single-line: 22px;
       --color-token-main-surface-primary: #181818;
@@ -15,6 +53,8 @@ export const runtimeFixtureHtml = String.raw`
       --color-token-foreground: #d8d8d5;
       --color-token-text-secondary: #a5a6a3;
       --color-token-text-tertiary: #7f817e;
+      --color-token-icon-foreground: #bfc1bd;
+      --color-token-status-warning: #d07a32;
       --color-token-border: rgba(255, 255, 255, .08);
     }
 
@@ -23,7 +63,7 @@ export const runtimeFixtureHtml = String.raw`
     body {
       background: var(--color-token-main-surface-primary);
       color: var(--color-token-foreground);
-      font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei UI", sans-serif;
+      font: var(--text-base)/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei UI", sans-serif;
       -webkit-font-smoothing: antialiased;
     }
     button, [contenteditable] { font: inherit; color: inherit; }
@@ -48,13 +88,27 @@ export const runtimeFixtureHtml = String.raw`
       height: var(--height-toolbar-sm);
       flex: 0 0 var(--height-toolbar-sm);
       align-items: center;
-      gap: 23px;
-      padding: 0 13px;
+      padding-inline: 0;
       background: #191d1f;
       color: #a3a6a6;
       box-shadow: inset 0 -1px rgba(255, 255, 255, .035);
     }
-    .application-menu .history { display: flex; gap: 13px; color: #6d7374; }
+    .application-menu > .icon { margin-inline: 8px 4px; }
+    .application-menu .history { display: flex; gap: 4px; color: #6d7374; }
+    .application-menu .application-menu-buttons {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding-inline: 4px 8px;
+    }
+    .application-menu .application-menu-buttons button {
+      border: 1px solid transparent;
+      padding: 4px 10px;
+      color: #a3a6a6;
+      background: transparent;
+      font: inherit;
+      line-height: 1;
+    }
     .application-menu .window-controls { margin-left: auto; display: flex; align-items: center; gap: 28px; color: #c7c9c8; }
     .application-menu .window-controls .icon { width: 14px; height: 14px; }
 
@@ -70,8 +124,8 @@ export const runtimeFixtureHtml = String.raw`
     .app-shell-left-panel {
       position: relative;
       display: flex;
-      width: 275px;
-      min-width: 275px;
+      width: var(--spacing-token-sidebar);
+      min-width: var(--spacing-token-sidebar);
       min-height: 0;
       flex-direction: column;
       overflow: hidden;
@@ -91,38 +145,58 @@ export const runtimeFixtureHtml = String.raw`
     .sidebar-header .brand { display: inline-flex; align-items: center; gap: 3px; }
     .sidebar-header .icon { color: #969b99; }
     .sidebar-scroll {
+      --height-token-row: 30px;
+      --radius-token-row: 10px;
       min-height: 0;
       flex: 1;
       overflow: hidden;
-      padding: 3px 7px 72px;
+      padding: 0 var(--padding-row-x) 72px;
     }
-    .sidebar-nav { height: 100%; }
+    .sidebar-nav { display: flex; height: 100%; flex-direction: column; gap: 4px; }
     .sidebar-row,
-    [role="treeitem"] {
+    [data-app-action-sidebar-project-row],
+    [data-app-action-sidebar-thread-row] {
       position: relative;
       display: flex;
       width: 100%;
-      min-height: 34px;
+      height: var(--height-token-row);
+      min-height: var(--height-token-row);
       align-items: center;
       gap: 8px;
-      padding: 6px 9px;
-      border-radius: 8px;
+      padding: 0 var(--padding-row-x);
+      border-radius: var(--radius-token-row);
       color: #b9bcba;
       text-align: left;
       white-space: nowrap;
     }
-    .sidebar-row:hover, [role="treeitem"]:hover { background: rgba(255, 255, 255, .04); }
-    .sidebar-row .icon, [role="treeitem"] .icon { color: #999f9c; }
+    .sidebar-row:hover,
+    [data-app-action-sidebar-project-row]:hover,
+    [data-app-action-sidebar-thread-row]:hover { background: rgba(255, 255, 255, .04); }
+    .sidebar-row .icon,
+    [data-app-action-sidebar-project-row] .icon,
+    [data-app-action-sidebar-thread-row] .icon { color: #999f9c; }
     .sidebar-section {
       margin: 18px 8px 6px;
       color: #6e7370;
       font-size: 12px;
       font-weight: 600;
     }
-    [role="tree"] { overflow: hidden; }
-    [role="treeitem"] { min-height: 31px; padding: 5px 9px 5px 30px; border-radius: 8px; }
-    [role="treeitem"].project-root { padding-left: 9px; color: #c4c6c3; font-weight: 560; }
-    [role="treeitem"][aria-selected="true"] { background: #303332; color: #e1e2df; }
+    [data-app-action-sidebar-section] { overflow: hidden; }
+    [data-app-action-sidebar-project-row] {
+      padding-left: var(--padding-row-x);
+      color: #c4c6c3;
+      font-weight: 560;
+    }
+    [data-app-action-sidebar-project-list-id] [data-app-action-sidebar-thread-row] {
+      padding-inline: 30px var(--padding-row-x);
+    }
+    [data-app-action-sidebar-section-heading="Tasks"] [data-app-action-sidebar-thread-row] {
+      padding-inline: var(--padding-row-x);
+    }
+    [data-app-action-sidebar-thread-row][data-app-action-sidebar-thread-active="true"] {
+      background: #303332;
+      color: #e1e2df;
+    }
     .sidebar-footer {
       position: absolute;
       inset: auto 0 0;
@@ -265,7 +339,7 @@ export const runtimeFixtureHtml = String.raw`
       position: absolute;
       inset: auto 50% 12px auto;
       z-index: 35;
-      width: min(768px, calc(100% - 32px));
+      width: min(100%, var(--thread-content-max-width));
       padding-inline: var(--padding-toolbar);
       transform: translateX(50%);
     }
@@ -275,47 +349,63 @@ export const runtimeFixtureHtml = String.raw`
       position: relative;
       display: flex;
       width: 100%;
-      min-height: 96px;
       flex-direction: column;
       overflow: hidden;
       border-radius: var(--radius-3xl);
       background: var(--color-token-input-background);
       box-shadow: 0 0 0 .5px rgba(255, 255, 255, .085), 0 10px 24px rgba(0, 0, 0, .2);
     }
-    .composer-input-wrap { min-height: 54px; padding: 12px 14px 4px; }
+    .composer-input-wrap {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 4px;
+      padding-inline: 12px;
+    }
     .ProseMirror {
-      min-height: 36px;
+      min-height: 44px;
       outline: 0;
       color: #dbdcd8;
+      line-height: 20px;
       white-space: pre-wrap;
     }
     .ProseMirror:empty::before { content: attr(data-placeholder); color: #777a76; }
     .composer-footer {
       display: grid;
-      min-height: 38px;
-      grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+      grid-template-columns: minmax(0, auto) auto minmax(0, 1fr);
       align-items: center;
-      gap: 5px;
-      padding: 0 8px 8px;
+      column-gap: 5px;
+      margin-bottom: 8px;
+      padding-inline: 8px;
+      user-select: none;
     }
     .composer-footer button {
       display: inline-flex;
-      min-width: 30px;
-      min-height: 30px;
+      height: var(--spacing-token-button-composer);
       align-items: center;
       justify-content: center;
       gap: 5px;
-      border-radius: 9px;
-      color: #bfc1bd;
+      padding: 0 8px;
+      border-radius: 8px;
+      color: var(--color-token-icon-foreground);
+      font-size: 12px;
+      line-height: 18px;
+    }
+    .composer-footer-action,
+    .composer-footer-actions,
+    .composer-footer-controls { display: flex; align-items: center; }
+    .composer-footer-actions { flex-shrink: 0; gap: 8px; }
+    .composer-footer-controls { min-width: 0; width: 100%; justify-content: flex-end; gap: 5px; }
+    .composer-footer .icon-only,
+    .composer-footer .send {
+      width: var(--spacing-token-button-composer);
+      padding: 0;
     }
     .composer-footer button:hover { background: rgba(255, 255, 255, .055); }
-    .composer-footer .access { color: #d07a32; }
-    .composer-footer .model { margin-left: auto; color: #b3b5b1; }
+    .composer-footer .access { color: var(--color-token-status-warning); }
+    .composer-footer .model {
+      color: var(--color-token-text-secondary);
+    }
     .composer-footer .send {
-      min-width: 32px;
-      width: 32px;
-      height: 32px;
-      margin-left: 3px;
       border-radius: 50%;
       background: #c8cac6;
       color: #4a4b48;
@@ -357,39 +447,61 @@ export const runtimeFixtureHtml = String.raw`
     }
     .summary-row:last-child { border: 0; }
     .summary-row .meta { margin-left: auto; color: #777b78; }
+
+    @media (max-width: 720px) {
+      .app-shell-left-panel,
+      .thread-summary-layer {
+        display: none;
+      }
+    }
   </style>
 
   <div id="root" class="electron-dark" data-codex-window-type="electron">
     <div class="app-window">
-      <header class="application-menu" data-native-slot="topbar">
+      <header class="application-menu app-header-tint draggable group/application-menu-top-bar"
+        data-native-slot="topbar">
         <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M6.5 2.5v11"/></svg>
         <span class="history"><svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m9.5 3.5-4.5 4.5 4.5 4.5M5 8h8"/></svg><svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m6.5 3.5 4.5 4.5-4.5 4.5M11 8H3"/></svg></span>
-        <span>文件</span><span>编辑</span><span>视图</span><span>帮助</span>
+        <div class="application-menu-buttons flex items-center gap-0.5 pr-2 pl-1">
+          <button type="button" aria-expanded="false" aria-haspopup="menu"
+            aria-label="文件" data-native-slot="menu-file">文件</button>
+          <button type="button" aria-expanded="false" aria-haspopup="menu"
+            aria-label="编辑" data-native-slot="menu-edit">编辑</button>
+          <button type="button" aria-expanded="false" aria-haspopup="menu"
+            aria-label="视图" data-native-slot="menu-view">视图</button>
+          <button type="button" aria-expanded="false" aria-haspopup="menu"
+            aria-label="帮助" data-native-slot="menu-help">帮助</button>
+        </div>
         <span class="window-controls"><svg class="icon" viewBox="0 0 16 16"><path d="M3 8h10"/></svg><svg class="icon" viewBox="0 0 16 16"><rect x="4" y="3" width="8" height="8" rx="1"/><path d="M2.5 5.5h7v8h-7z"/></svg><svg class="icon" viewBox="0 0 16 16"><path d="m4 4 8 8M12 4l-8 8"/></svg></span>
       </header>
 
       <div class="app-shell">
         <aside class="app-shell-left-panel" data-native-slot="sidebar">
           <div class="sidebar-header"><span class="brand">Codex <svg class="icon" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></span><svg class="icon" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4"/><path d="m10 10 3 3"/></svg></div>
-          <div class="sidebar-scroll">
+          <div class="sidebar-scroll vertical-scroll-fade-mask" data-app-action-sidebar-scroll>
             <nav class="sidebar-nav" aria-label="Codex navigation">
               <button class="sidebar-row" aria-label="新建任务" data-native-slot="new-task"><svg class="icon" viewBox="0 0 16 16"><path d="M3 12.5h3l7-7-3-3-7 7v3Z"/><path d="m8.8 3.7 3 3"/></svg>新建任务</button>
               <button class="sidebar-row"><svg class="icon" viewBox="0 0 16 16"><path d="M5 2.5 3 5l2 2.5M11 2.5 13 5l-2 2.5M3 11h10"/></svg>拉取请求</button>
               <button class="sidebar-row"><svg class="icon" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4" height="4" rx="1"/><rect x="9.5" y="2.5" width="4" height="4" rx="1"/><rect x="2.5" y="9.5" width="4" height="4" rx="1"/><rect x="9.5" y="9.5" width="4" height="4" rx="1"/></svg>站点</button>
               <button class="sidebar-row"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg>已安排</button>
-              <button class="sidebar-row"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1.8v3M8 11.2v3M1.8 8h3M11.2 8h3"/></svg>插件</button>
-              <p class="sidebar-section">置顶</p>
-              <button class="sidebar-row"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg>每日通知与时事汇总</button>
-              <button class="sidebar-row"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg>磁盘审计</button>
-              <p class="sidebar-section">项目</p>
-              <div role="tree" aria-label="项目">
-                <div role="treeitem" class="project-root"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>wukong-codex-forge</div>
-                <div role="treeitem" aria-selected="true" data-native-slot="project-active">重设计黑神话悟空主题</div>
-                <div role="treeitem" class="project-root"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-temple-run</div>
-                <div role="treeitem">接管 Temple 总控并归档修复</div>
-                <div role="treeitem" class="project-root"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-tetris</div>
-                <div role="treeitem">Tetris总控</div>
-              </div>
+              <button class="sidebar-row" aria-expanded="false"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1.8v3M8 11.2v3M1.8 8h3M11.2 8h3"/></svg>插件</button>
+              <section data-app-action-sidebar-section data-app-action-sidebar-section-heading="Tasks">
+                <p class="sidebar-section">置顶</p>
+                <button class="sidebar-row" data-app-action-sidebar-thread-row><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg><span data-thread-title>每日通知与时事汇总</span></button>
+                <button class="sidebar-row" data-app-action-sidebar-thread-row><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/></svg><span data-thread-title>磁盘审计</span></button>
+              </section>
+              <section data-app-action-sidebar-section data-app-action-sidebar-section-heading="Projects">
+                <p class="sidebar-section">项目</p>
+                <div data-app-action-sidebar-project-row aria-expanded="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>wukong-codex-forge</div>
+                <div data-app-action-sidebar-project-list-id="wukong-codex-forge">
+                  <div data-app-action-sidebar-thread-row data-app-action-sidebar-thread-active="true" aria-current="page" data-native-slot="project-active"><span data-thread-title>重设计黑神话悟空主题</span></div>
+                </div>
+                <div data-app-action-sidebar-project-row aria-expanded="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-temple-run</div>
+                <div data-app-action-sidebar-project-list-id="reproduction-temple-run">
+                  <div data-app-action-sidebar-thread-row data-native-slot="project-temple-child"><span data-thread-title>接管 Temple 总控并归档修复</span></div>
+                </div>
+                <div data-app-action-sidebar-project-row aria-expanded="false" data-app-action-sidebar-project-collapsed="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-tetris</div>
+              </section>
             </nav>
           </div>
           <div class="sidebar-footer"><span class="avatar"></span><span>4cer</span><svg class="icon help" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M6.8 6.2A1.5 1.5 0 0 1 8.2 5c1 0 1.8.6 1.8 1.5 0 1.3-2 1.4-2 2.7M8 11.8h.01"/></svg></div>
@@ -434,11 +546,17 @@ export const runtimeFixtureHtml = String.raw`
                       <div class="composer-surface-chrome composer-native" data-codex-composer data-native-slot="composer">
                         <div class="composer-input-wrap"><div class="ProseMirror" contenteditable="true" role="textbox" aria-label="Message composer" data-placeholder="随心输入"></div></div>
                         <div class="composer-footer" role="toolbar">
-                          <button aria-label="添加"><svg class="icon" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button>
-                          <button class="access">完全访问</button>
-                          <button class="model">5.6 Sol 极高<svg class="icon" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></button>
-                          <button aria-label="语音输入"><svg class="icon" viewBox="0 0 16 16"><rect x="5.5" y="2.5" width="5" height="7" rx="2.5"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2"/></svg></button>
-                          <button class="send" type="submit" aria-label="发送"><svg class="icon" viewBox="0 0 16 16"><path d="M8 13V3M4.5 6.5 8 3l3.5 3.5"/></svg></button>
+                          <div class="composer-footer-action">
+                            <button class="icon-only" data-native-slot="composer-add" aria-label="添加"><svg class="icon" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button>
+                          </div>
+                          <div class="composer-footer-actions">
+                            <button class="access" data-native-slot="composer-access">完全访问</button>
+                          </div>
+                          <div class="composer-footer-controls">
+                            <button class="model" data-native-slot="composer-model">5.6 Sol 极高<svg class="icon" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></button>
+                            <button class="icon-only" data-native-slot="composer-voice" aria-label="语音输入"><svg class="icon" viewBox="0 0 16 16"><rect x="5.5" y="2.5" width="5" height="7" rx="2.5"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2"/></svg></button>
+                            <button class="send" type="submit" aria-label="发送"><svg class="icon" viewBox="0 0 16 16"><path d="M8 13V3M4.5 6.5 8 3l3.5 3.5"/></svg></button>
+                          </div>
                         </div>
                       </div>
                     </div>

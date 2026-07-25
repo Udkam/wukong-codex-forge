@@ -5,8 +5,10 @@
  */
 export const MARK_CLASSES = [
   'forge-topbar',
+  'forge-topbar-menu-item',
   'forge-sidebar',
   'forge-sidebar-action',
+  'forge-sidebar-action-active',
   'forge-new-task',
   'forge-project-active',
   'forge-workspace',
@@ -15,8 +17,18 @@ export const MARK_CLASSES = [
   'forge-landing-icon',
   'forge-landing-title',
   'forge-composer',
+  'forge-composer-frame',
+  'forge-composer-context',
+  'forge-composer-panel',
+  'forge-plan-pill',
+  'forge-diff-summary',
+  'forge-composer-submit',
   'forge-composer-button',
   'forge-input',
+  'forge-sidebar-shell',
+  'forge-sidebar-level1',
+  'forge-sidebar-level2',
+  'forge-sidebar-selected',
   'forge-turn',
   'forge-user-message',
   'forge-assistant-message',
@@ -474,7 +486,7 @@ function applyRuntime(payload) {
     ));
   };
   const setResizeTargets = targets => {
-    const next = targets.filter(Boolean);
+    const next = [...new Set(targets.filter(Boolean))];
     if (
       next.length === state.observedResizeTargets.length &&
       next.every((target, index) => target === state.observedResizeTargets[index])
@@ -482,6 +494,305 @@ function applyRuntime(payload) {
     state.resizeObserver?.disconnect();
     state.observedResizeTargets = next;
     next.forEach(target => state.resizeObserver?.observe(target));
+  };
+  const commonAncestorOf = elements => {
+    if (!elements.length) return null;
+    return elements.slice(1).reduce(
+      (ancestor, element) => commonAncestor(ancestor, element),
+      elements[0]
+    );
+  };
+  const markTopbarMenus = () => {
+    const topbar = [...document.querySelectorAll(
+      '[class~="group/application-menu-top-bar"], .application-menu'
+    )]
+      .find(visible);
+    if (!topbar) return [];
+    mark(topbar, 'forge-topbar');
+    const labelPattern = /^(?:文件|编辑|视图|帮助|file|edit|view|help)$/i;
+    const nativeApplicationMenuItems = [
+      ...topbar.querySelectorAll('button[aria-haspopup="menu"][aria-expanded]')
+    ].filter(visible);
+    const fallbackSemanticItems = [
+      ...topbar.querySelectorAll(
+        '[role="menuitem"], [data-menu-id], button, [role="button"]'
+      )
+    ];
+    const directItems = [...topbar.children].filter(element => (
+      !element.matches('.history, .window-controls') &&
+      labelPattern.test(textOf(element))
+    ));
+    const menuItems = nativeApplicationMenuItems.length
+      ? nativeApplicationMenuItems
+      : [...new Set([...fallbackSemanticItems, ...directItems])]
+        .filter(element => visible(element) && labelPattern.test(textOf(element)));
+    menuItems
+      .forEach(element => mark(element, 'forge-topbar-menu-item'));
+    return [topbar];
+  };
+  const compactPaintSurface = (element, boundary, minimumWidth) => {
+    let cursor = element;
+    let match = null;
+    while (cursor && cursor !== boundary && cursor !== document.body) {
+      const rect = cursor.getBoundingClientRect();
+      if (rect.height >= 20 && rect.height <= 56 && rect.width >= minimumWidth) match = cursor;
+      if (rect.height > 72) break;
+      cursor = cursor.parentElement;
+    }
+    return match;
+  };
+  const markComposerSurfaces = () => {
+    const editorSelector =
+      '.composer-surface-chrome .ProseMirror[contenteditable="true"][role="textbox"],' +
+      '.composer-surface-chrome.ProseMirror[contenteditable="true"][role="textbox"]';
+    let composerRoot = null;
+    let editor = null;
+    for (const candidateRoot of document.querySelectorAll(
+      '[data-thread-find-composer="true"]'
+    )) {
+      if (!visible(candidateRoot)) continue;
+      const candidateEditor = [...candidateRoot.querySelectorAll(editorSelector)]
+        .find(visible);
+      if (!candidateEditor) continue;
+      composerRoot = candidateRoot;
+      editor = candidateEditor;
+      break;
+    }
+    if (!composerRoot) return [];
+
+    mark(composerRoot, 'forge-composer');
+    const surface = editor?.closest('.composer-surface-chrome');
+    if (surface && visible(surface)) mark(surface, 'forge-composer-frame');
+
+    const navigationTargets = [...composerRoot.querySelectorAll('[data-composer-navigation-target]')]
+      .filter(visible);
+    const context = navigationTargets.length >= 2
+      ? commonAncestorOf(navigationTargets)
+      : null;
+    if (
+      context &&
+      context !== composerRoot &&
+      context !== surface &&
+      context.getBoundingClientRect().height <= 64
+    ) mark(context, 'forge-composer-context');
+
+    const panelCandidates = [
+      ...composerRoot.querySelectorAll(
+        '.order-2.flex.min-w-0.flex-col > .relative.min-w-0.overflow-clip'
+      )
+    ].filter(visible);
+    panelCandidates.forEach(panel => mark(panel, 'forge-composer-panel'));
+
+    const compactCandidates = [
+      ...composerRoot.querySelectorAll('button, [role="button"], [data-state]')
+    ].filter(element => {
+      if (!visible(element)) return false;
+      const rect = element.getBoundingClientRect();
+      return rect.height >= 24 && rect.height <= 64 && rect.width >= 96 && rect.width <= 720;
+    });
+    const planPattern = /(?:第\s*\d+\s*\/\s*\d+\s*步|step\s*\d+\s*\/\s*\d+)/i;
+    const diffPattern = /(?:\d+\s*个文件(?:已)?(?:更改|修改)|\d+\s*files?\s+changed)/i;
+    compactCandidates.forEach(element => {
+      const text = textOf(element);
+      if (planPattern.test(text)) mark(element, 'forge-plan-pill');
+      else if (diffPattern.test(text)) mark(element, 'forge-diff-summary');
+    });
+
+    const submit = surface
+      ? [...surface.querySelectorAll('button[type="submit"]')].find(visible)
+      : null;
+    if (submit) mark(submit, 'forge-composer-submit');
+    return [composerRoot, surface, context, ...panelCandidates];
+  };
+  const firstTextLeft = element => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node) {
+      const value = node.nodeValue || '';
+      const start = value.search(/\S/);
+      if (start !== -1) {
+        const range = document.createRange();
+        range.setStart(node, start);
+        range.setEnd(node, Math.min(value.length, start + 1));
+        const rect = range.getBoundingClientRect();
+        range.detach?.();
+        if (rect.width > 0 && rect.height > 0) return rect.left;
+      }
+      node = walker.nextNode();
+    }
+    return element.getBoundingClientRect().left;
+  };
+  const sidebarSelected = element => Boolean(
+    element.matches?.(
+      '[data-app-action-sidebar-thread-active="true"], ' +
+      '[aria-current="page"], [aria-selected="true"], [data-state="active"]'
+    ) ||
+    element.querySelector?.(
+      '[data-app-action-sidebar-thread-active="true"], ' +
+      '[aria-current="page"], [aria-selected="true"], [data-state="active"]'
+    )
+  );
+  const explicitProjectRow = element => Boolean(
+    element.matches?.(
+      '[data-app-action-sidebar-project-row], ' +
+      '[data-project-row], [data-sidebar-project-row], [data-project-id], [data-project-key]'
+    ) ||
+    element.querySelector?.(
+      '[data-app-action-sidebar-project-row], ' +
+      '[data-project-row], [data-sidebar-project-row], [data-project-id], [data-project-key]'
+    )
+  );
+  const explicitThreadRow = element => Boolean(
+    element.matches?.(
+      '[data-app-action-sidebar-thread-row], ' +
+      '[data-sidebar-thread-row], [data-thread-id], [data-conversation-id], [data-task-id]'
+    ) ||
+    element.querySelector?.(
+      '[data-app-action-sidebar-thread-row], ' +
+      '[data-sidebar-thread-row], [data-thread-id], [data-conversation-id], [data-task-id]'
+    )
+  );
+  const explicitRootThreadRow = element => Boolean(
+    element.matches?.('[data-root-thread-row]') ||
+    element.querySelector?.('[data-root-thread-row]')
+  );
+  const closestFromEither = (surface, source, selector) => (
+    source.closest?.(selector) ||
+    surface.closest?.(selector) ||
+    null
+  );
+  const sidebarRowKind = (surface, source) => {
+    if (explicitProjectRow(surface) || explicitProjectRow(source)) return 'project';
+
+    const productionThread = (
+      source.matches?.('[data-app-action-sidebar-thread-row]') ||
+      surface.matches?.('[data-app-action-sidebar-thread-row]')
+    );
+    const productionProjectList = closestFromEither(
+      surface,
+      source,
+      '[data-app-action-sidebar-project-list-id]'
+    );
+    if (productionThread && productionProjectList) return 'project-thread';
+    const productionTaskSection = closestFromEither(
+      surface,
+      source,
+      '[data-app-action-sidebar-section-heading="Tasks"]'
+    );
+    if (productionThread && productionTaskSection) return 'root-thread';
+
+    if (explicitRootThreadRow(surface) || explicitRootThreadRow(source)) return 'root-thread';
+
+    const treeItem = source.closest?.('[role="treeitem"]') ||
+      surface.matches?.('[role="treeitem"]') && surface;
+    const projectTree = source.closest?.(
+      '[role="tree"], [data-sidebar-project-group], [data-project-group]'
+    ) || surface.closest?.(
+      '[role="tree"], [data-sidebar-project-group], [data-project-group]'
+    );
+    if (
+      (explicitThreadRow(surface) || explicitThreadRow(source) || treeItem) &&
+      projectTree
+    ) return 'project-thread';
+    if (explicitThreadRow(surface) || explicitThreadRow(source)) return 'root-thread';
+    return 'action';
+  };
+  const markSidebarSurfaces = () => {
+    const sidebar = [...document.querySelectorAll('aside.app-shell-left-panel')]
+      .find(layoutPresent);
+    if (!sidebar) return [];
+    mark(sidebar, 'forge-sidebar');
+    mark(sidebar, 'forge-sidebar-shell');
+
+    const scroll = sidebar.querySelector(
+      '[data-app-action-sidebar-scroll], .vertical-scroll-fade-mask, [data-sidebar-scroll]'
+    ) || sidebar;
+    const sidebarRect = sidebar.getBoundingClientRect();
+    const excludedHeader = [
+      '[class~="group/projects-section-header"]',
+      '[class~="group/chats-section-header"]',
+      '[data-sidebar-section-header]'
+    ].join(',');
+    const candidates = [
+      ...scroll.querySelectorAll([
+        '[data-app-action-sidebar-project-row]',
+        '[data-app-action-sidebar-thread-row]',
+        '[data-project-row]',
+        '[data-sidebar-project-row]',
+        '[data-sidebar-thread-row]',
+        '[data-root-thread-row]',
+        '[data-thread-id]',
+        '[data-conversation-id]',
+        '[role="treeitem"]',
+        'a[href]',
+        'button',
+        'button[aria-current]',
+        'button[aria-selected]',
+        'button[aria-expanded]'
+      ].join(','))
+    ];
+    const bySurface = new Map();
+    for (const candidate of candidates) {
+      if (!layoutPresent(candidate) || candidate.closest(excludedHeader)) continue;
+      const productionRow = candidate.matches(
+        '[data-app-action-sidebar-project-row], [data-app-action-sidebar-thread-row]'
+      );
+      const surface = productionRow
+        ? candidate
+        : compactPaintSurface(candidate, scroll, sidebarRect.width * .48);
+      if (!surface || surface.closest(excludedHeader) || !textOf(surface)) continue;
+      const rect = surface.getBoundingClientRect();
+      if (
+        rect.left < sidebarRect.left - 1 ||
+        rect.right > sidebarRect.right + 1 ||
+        rect.height < 20 ||
+        rect.height > 56
+      ) continue;
+      const prior = bySurface.get(surface);
+      const descriptor = {
+        surface,
+        source: candidate,
+        left: firstTextLeft(candidate),
+        selected: sidebarSelected(surface) || sidebarSelected(candidate),
+        kind: sidebarRowKind(surface, candidate)
+      };
+      if (!prior) {
+        bySurface.set(surface, descriptor);
+      } else {
+        const priority = {
+          action: 0,
+          'root-thread': 1,
+          'project-thread': 2,
+          project: 3
+        };
+        bySurface.set(surface, {
+          ...prior,
+          source: priority[descriptor.kind] > priority[prior.kind] ? descriptor.source : prior.source,
+          left: Math.min(prior.left, descriptor.left),
+          selected: prior.selected || descriptor.selected,
+          kind: priority[descriptor.kind] > priority[prior.kind] ? descriptor.kind : prior.kind
+        });
+      }
+    }
+    const rows = [...bySurface.values()].sort((left, right) => (
+      left.surface.compareDocumentPosition(right.surface) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+    ));
+    if (!rows.length) return [sidebar];
+    for (const row of rows) {
+      const kind = row.kind;
+      if (kind === 'action') {
+        mark(row.surface, 'forge-sidebar-action');
+        if (row.selected) mark(row.surface, 'forge-sidebar-action-active');
+      } else mark(
+        row.surface,
+        kind === 'project-thread' ? 'forge-sidebar-level2' : 'forge-sidebar-level1'
+      );
+      if (
+        row.selected &&
+        (kind === 'root-thread' || kind === 'project-thread')
+      ) mark(row.surface, 'forge-sidebar-selected');
+    }
+    return [sidebar, scroll];
   };
   const refresh = () => {
     state.lastRefreshAt = performance.now();
@@ -494,6 +805,9 @@ function applyRuntime(payload) {
     ensureBackground();
     const workspace = findWorkspace();
     mark(workspace, 'forge-workspace');
+    const topbarTargets = markTopbarMenus();
+    const composerTargets = markComposerSurfaces();
+    const sidebarTargets = markSidebarSurfaces();
     const { surface, threadEvidence, landingTitle } = classifySurface(workspace);
     const mode = surface === 'landing' ? 'battle' : 'scenery';
     root.dataset.forgeSurface = surface;
@@ -526,7 +840,7 @@ function applyRuntime(payload) {
       requestScene(state.currentScene, mode, true);
     }
 
-    setResizeTargets([workspace]);
+    setResizeTargets([workspace, ...topbarTargets, ...composerTargets, ...sidebarTargets]);
   };
 
   const state = {
@@ -618,7 +932,27 @@ function applyRuntime(payload) {
     '[data-content-search-turn-key]',
     '[data-local-conversation-final-assistant]',
     '[data-message-author-role]',
+    '[class~="group/application-menu-top-bar"]',
+    '[class~="group/application-menu-top-bar"] button[aria-haspopup="menu"][aria-expanded]',
+    '.application-menu',
     '[data-thread-find-composer]',
+    '.composer-surface-chrome',
+    '[data-composer-navigation-target]',
+    '.app-shell-left-panel',
+    '[data-app-action-sidebar-scroll]',
+    '[data-app-action-sidebar-section]',
+    '[data-app-action-sidebar-section-heading]',
+    '[data-app-action-sidebar-project-row]',
+    '[data-app-action-sidebar-project-list-id]',
+    '[data-app-action-sidebar-thread-row]',
+    '.vertical-scroll-fade-mask',
+    '[data-project-row]',
+    '[data-sidebar-project-row]',
+    '[data-sidebar-thread-row]',
+    '[data-root-thread-row]',
+    '.app-shell-left-panel button',
+    '.app-shell-left-panel a[href]',
+    '[role="treeitem"]',
     '[data-thread-find-target="conversation"]'
   ].join(',');
   const nodeTouchesThemeStructure = node => {
@@ -629,11 +963,30 @@ function applyRuntime(payload) {
   };
   const observer = new MutationObserver(records => {
     if (records.some(record => (
-      [...record.addedNodes, ...record.removedNodes].some(nodeTouchesThemeStructure)
+      record.type === 'attributes'
+        ? (
+            nodeTouchesThemeStructure(record.target) ||
+            Boolean(record.target.closest?.(
+              '.app-shell-left-panel, [data-thread-find-composer="true"]'
+            ))
+          )
+        : [...record.addedNodes, ...record.removedNodes].some(nodeTouchesThemeStructure)
     ))) scheduleRefresh();
   });
   const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(scheduleRefresh) : null;
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: [
+      'aria-current',
+      'aria-selected',
+      'aria-expanded',
+      'data-state',
+      'data-app-action-sidebar-thread-active',
+      'data-app-action-sidebar-project-collapsed'
+    ]
+  });
   window.addEventListener('popstate', scheduleRouteRefresh);
   window.addEventListener('hashchange', scheduleRouteRefresh);
   window.addEventListener(routeEventName, scheduleRouteRefresh);

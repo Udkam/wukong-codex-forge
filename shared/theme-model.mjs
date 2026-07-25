@@ -1,5 +1,14 @@
 export const PALETTE_KEYS = ['ink', 'lacquer', 'jade', 'gold', 'paper'];
 export const MOTIF_KEYS = ['xiangfeiGourd'];
+export const UI_ASSET_KEYS = [
+  'composerMain',
+  'composerStrip',
+  'composerPill',
+  'paperTile',
+  'sidebarLevel1',
+  'sidebarSelected',
+  'sidebarLevel2Hover'
+];
 
 export const SCENE_TONES = {
   'celestial-ink': {
@@ -61,6 +70,16 @@ export const SCENE_TONES = {
 
 const MOTIF_CSS_NAMES = {
   xiangfeiGourd: 'xiangfei-gourd'
+};
+
+const UI_ASSET_CSS_NAMES = {
+  composerMain: 'composer-main',
+  composerStrip: 'composer-strip',
+  composerPill: 'composer-pill',
+  paperTile: 'paper-tile',
+  sidebarLevel1: 'sidebar-level1',
+  sidebarSelected: 'sidebar-selected',
+  sidebarLevel2Hover: 'sidebar-level2-hover'
 };
 
 export const DEFAULT_THEME = {
@@ -165,6 +184,18 @@ export function validateTheme(value) {
       if (typeof value.motifs[key] !== 'string' || !value.motifs[key]) throw Error('Invalid motifs.' + key);
     }
   }
+  if (value.uiAssets !== undefined) {
+    if (!value.uiAssets || typeof value.uiAssets !== 'object' || Array.isArray(value.uiAssets)) {
+      throw Error('Invalid uiAssets');
+    }
+    const unknownKeys = Object.keys(value.uiAssets).filter(key => !UI_ASSET_KEYS.includes(key));
+    if (unknownKeys.length) throw Error('Invalid uiAssets.' + unknownKeys[0]);
+    for (const key of UI_ASSET_KEYS) {
+      if (typeof value.uiAssets[key] !== 'string' || !value.uiAssets[key]) {
+        throw Error('Invalid uiAssets.' + key);
+      }
+    }
+  }
   const a = value.accessibility;
   if (!['workbench', 'high-read'].includes(a.preset) || typeof a.reducedMotion !== 'boolean') {
     throw Error('Invalid accessibility');
@@ -201,7 +232,7 @@ const rgba = (hex, alpha) => {
 
 const clamp = value => Math.max(0, Math.min(1, value));
 
-export function cssFor(theme, assetInput = '', motifInput = {}) {
+export function cssFor(theme, assetInput = '', motifInput = {}, uiAssetInput = {}) {
   validateTheme(theme);
   const { background: b, companion: c, accessibility: a, palette: p } = theme;
   const requestedAssets = Array.isArray(assetInput)
@@ -223,6 +254,9 @@ export function cssFor(theme, assetInput = '', motifInput = {}) {
   )).join('');
   const motifVariables = MOTIF_KEYS.map(key => (
     `--forge-motif-${MOTIF_CSS_NAMES[key]}:${motifInput[key] ? cssEscapeUrl(motifInput[key]) : 'none'};`
+  )).join('');
+  const uiAssetVariables = UI_ASSET_KEYS.map(key => (
+    `--forge-ui-${UI_ASSET_CSS_NAMES[key]}:${uiAssetInput[key] ? cssEscapeUrl(uiAssetInput[key]) : 'none'};`
   )).join('');
   const sceneList = mode => assets
     .map((entry, index) => entry.mode === mode ? index : null)
@@ -257,6 +291,7 @@ export function cssFor(theme, assetInput = '', motifInput = {}) {
     `--forge-gold:${p.gold};--forge-paper:${p.paper};` +
     assetVariables +
     motifVariables +
+    uiAssetVariables +
     `--forge-scene-count:${assets.length};` +
     `--forge-scenery-scenes:${sceneryScenes};--forge-battle-primary-scenes:${primaryBattleScenes};` +
     `--forge-battle-secondary-scenes:${secondaryBattleScenes || 'none'};--forge-battle-scenes:${battleScenes};` +
