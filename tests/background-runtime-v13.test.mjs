@@ -181,7 +181,8 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(activeState.backgroundLoadedLayerCount, 1);
   assert.equal(activeState.backgroundTransitioning, false);
   assert.equal(activeState.preloadInFlight, 0);
-  assert.equal(await page.evaluate(() => window.__forgePreloadImages.length), 0);
+  assert.equal(activeState.backgroundReady, true);
+  assert.equal(await page.evaluate(() => window.__forgePreloadImages.length), 1);
   assert.deepEqual(await geometry(page), beforeGeometry);
   assert.deepEqual(await nativeLayoutStyle(page), beforeStyle);
   assert.equal(await page.locator('body').innerText(), beforeText);
@@ -272,7 +273,7 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(transitionState.backgroundLoadedLayerCount, 2);
   assert.equal(transitionState.backgroundTransitioning, true);
   assert.equal(transitionState.preloadInFlight, 0);
-  assert.equal(await page.evaluate(() => window.__forgePreloadImages.length), 1);
+  assert.equal(await page.evaluate(() => window.__forgePreloadImages.length), 2);
   assert.ok(
     await page.locator('[data-forge-background-layer]').evaluateAll(layers => (
       layers.every(layer => getComputedStyle(layer).willChange === 'opacity')
@@ -311,7 +312,10 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
       onerror: image.onerror,
       srcAttribute: image.getAttribute('src')
     }))),
-    [{ onload: null, onerror: null, srcAttribute: '' }]
+    [
+      { onload: null, onerror: null, srcAttribute: '' },
+      { onload: null, onerror: null, srcAttribute: '' }
+    ]
   );
   assert.equal(await page.locator('html').getAttribute('data-forge-mode'), 'scenery');
   assert.equal(await page.locator('html').getAttribute('data-forge-scene'), '6');
@@ -383,6 +387,98 @@ test('V13 covers the complete viewport on its first commit and after a window re
 
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('#wukong-forge-background').count(), 0);
+});
+
+test('V13 keeps native carriers painted until the first background is decoded', async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+  await page.route('http://wukong-first-ready.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.goto('http://wukong-first-ready.test/');
+  const nativeMainPaint = await page.locator('main.main-surface').evaluate(element => ({
+    color: getComputedStyle(element).backgroundColor,
+    image: getComputedStyle(element).backgroundImage
+  }));
+  await page.evaluate(() => {
+    window.__forgeFirstReadyImages = [];
+    window.Image = class ForgeControlledImage {
+      constructor() {
+        this.onload = null;
+        this.onerror = null;
+        this.complete = false;
+        this.naturalWidth = 0;
+        this._src = '';
+        window.__forgeFirstReadyImages.push(this);
+      }
+      set src(value) {
+        this._src = value;
+      }
+      get src() {
+        return this._src;
+      }
+      decode() {
+        return Promise.resolve();
+      }
+    };
+  });
+
+  const applyPromise = page.evaluate(expression);
+  await page.waitForFunction(() => window.__forgeFirstReadyImages?.length === 1);
+  const pending = await page.evaluate(ACTIVE_PROBE_EXPRESSION);
+  assert.equal(pending, false);
+  assert.equal(await page.locator('html').getAttribute('data-forge-background-ready'), null);
+  assert.deepEqual(
+    await page.locator('main.main-surface').evaluate(element => ({
+      color: getComputedStyle(element).backgroundColor,
+      image: getComputedStyle(element).backgroundImage
+    })),
+    nativeMainPaint
+  );
+
+  await page.evaluate(() => {
+    const image = window.__forgeFirstReadyImages[0];
+    image.complete = true;
+    image.naturalWidth = 32;
+    return image.onload?.();
+  });
+  assert.equal(await applyPromise, true);
+  assert.equal(await page.evaluate(ACTIVE_PROBE_EXPRESSION), true);
+  assert.equal(await page.locator('html').getAttribute('data-forge-background-ready'), 'true');
+  assert.equal(
+    await page.locator('main.main-surface').evaluate(element => getComputedStyle(element).backgroundColor),
+    'rgba(0, 0, 0, 0)'
+  );
+
+  await page.evaluate(RESTORE_EXPRESSION);
+});
+
+test('V13 restores native paint while rebuilding an overlay removed during crossfade', async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+  await page.route('http://wukong-overlay-generation.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.goto('http://wukong-overlay-generation.test/');
+  await page.evaluate(expression);
+  await enterThreadState(page);
+  await waitForRuntime(page, 'transition', 6);
+
+  await page.locator('#wukong-forge-background').evaluate(element => element.remove());
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+  assert.equal(await page.locator('html').getAttribute('data-forge-background-ready'), null);
+  assert.notEqual(
+    await page.locator('main.main-surface').evaluate(element => getComputedStyle(element).backgroundColor),
+    'rgba(0, 0, 0, 0)'
+  );
+
+  await page.waitForFunction(ACTIVE_PROBE_EXPRESSION, null, { timeout: 5000 });
+  const repaired = await page.evaluate(THEME_STATE_EXPRESSION);
+  assert.equal(repaired.backgroundReady, true);
+  assert.equal(repaired.backgroundLoadedLayerCount, 1);
+  assert.equal(repaired.backgroundTransitioning, false);
+  assert.equal(repaired.preloadInFlight, 0);
+  const coverage = await backgroundCoverage(page);
+  assert.deepEqual(coverage.overlay, coverage.viewport);
+  assert.deepEqual(coverage.active, coverage.viewport);
+  assert.deepEqual(coverage.image, coverage.viewport);
+  assert.deepEqual(coverage.veil, coverage.viewport);
+
+  await page.evaluate(RESTORE_EXPRESSION);
 });
 
 test('V13 skins a delayed animated home hero without waiting for a resize', async () => {
@@ -615,26 +711,34 @@ test('V13 bounds pending background decoding to one request and cancels it on re
       }
     };
   });
-  await page.evaluate(expression);
+  const initialApply = page.evaluate(expression);
+  await page.waitForFunction(() => window.__forgeFakeImages?.length === 1);
+  await page.evaluate(() => {
+    const initial = window.__forgeFakeImages[0];
+    initial.complete = true;
+    initial.naturalWidth = 32;
+    initial.onload?.();
+  });
+  await initialApply;
   assert.equal((await page.evaluate(THEME_STATE_EXPRESSION)).preloadInFlight, 0);
 
   await enterThreadState(page);
   await waitForRuntime(page, 'surface', 'thread');
   assert.equal((await page.evaluate(THEME_STATE_EXPRESSION)).preloadInFlight, 1);
-  assert.equal(await page.evaluate(() => window.__forgeFakeImages.length), 1);
+  assert.equal(await page.evaluate(() => window.__forgeFakeImages.length), 2);
 
   await page.evaluate(() => document.querySelector('[data-native-slot="new-task"]')?.click());
   await installLanding(page);
   await waitForRuntime(page, 'surface', 'landing');
   assert.equal((await page.evaluate(THEME_STATE_EXPRESSION)).preloadInFlight, 1);
-  assert.equal(await page.evaluate(() => window.__forgeFakeImages.length), 2);
-  assert.equal(await page.evaluate(() => window.__forgeFakeImages[0].canceled), true);
+  assert.equal(await page.evaluate(() => window.__forgeFakeImages.length), 3);
+  assert.equal(await page.evaluate(() => window.__forgeFakeImages[1].canceled), true);
 
   await enterThreadState(page);
   await waitForRuntime(page, 'surface', 'thread');
   assert.equal((await page.evaluate(THEME_STATE_EXPRESSION)).preloadInFlight, 1);
-  assert.equal(await page.evaluate(() => window.__forgeFakeImages.length), 3);
-  assert.equal(await page.evaluate(() => window.__forgeFakeImages[1].canceled), true);
+  assert.equal(await page.evaluate(() => window.__forgeFakeImages.length), 4);
+  assert.equal(await page.evaluate(() => window.__forgeFakeImages[2].canceled), true);
 
   await page.evaluate(() => {
     window.__retiredForgeRuntime = window.__wukongCodexForgeRuntimeV13;
@@ -652,6 +756,7 @@ test('V13 bounds pending background decoding to one request and cancels it on re
     {
       pending: 0,
       images: [
+        { canceled: true, onload: null, onerror: null },
         { canceled: true, onload: null, onerror: null },
         { canceled: true, onload: null, onerror: null },
         { canceled: true, onload: null, onerror: null }

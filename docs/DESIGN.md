@@ -81,10 +81,10 @@ V13.1 的活动范围只有全窗背景与用户明确授权的新建页题字/�
 V13 重写了切换状态机：
 
 1. 读取 session 游标时把负数、字符串和越界状态归一到 `-1`，随后在各自池内安全推进。
-2. landing 优先于旧 thread 证据；祖先链上的 `hidden`、`aria-hidden`、`inert`、`display:none`、`visibility:hidden` 或 `opacity≤.01` 都会使旧 turn 失效。
+2. 可见且包含 turn 的 thread 优先于只保留布局的旧 landing hero；反向情况下，祖先链上的 `hidden`、`aria-hidden`、`inert`、`display:none`、`visibility:hidden` 或 `opacity≤.01` 会使旧 turn 失效。
 3. 普通侧栏按钮不再触发换图；只有真实新任务、路由/历史变化、任务树导航或 composer 提交安排有限次复核。
-4. 非首帧先通过 `Image` 加载并尝试 `decode()`；成功后才翻转双层 opacity。切换进行中只保留最后一个待提交场景，避免快速导航造成黑帧。
-5. 覆盖层缺失或层数不为 2 时原位重建；watcher 探针同时检查 style、runtime、两层、活动层和非空活动图。
+4. 首帧和后续场景都先通过唯一一个 `Image` 加载并尝试 `decode()`；首帧 ready 前保留原生 main/fade paint，成功后才一次性公开背景。后续切换才翻转双层 opacity，进行中只保留最后一个待提交场景。
+5. 覆盖层缺失或层数不为 2 时先撤销 `background-ready`、恢复原生 paint，再取消旧 generation 的 timer/请求并原位重建；watcher 探针同时检查 style、runtime、ready、两层、活动层和非空活动图。
 6. ResizeObserver 只在 workspace 身份变化时重绑，不在每次 refresh 中断开再观察；稳定页面必须达到 refresh quiescence。
 7. 杨戬白场使用更高 specificity 的 veil，避免被后置主题变量覆盖；forced-colors 下背景隐藏并恢复系统 `Canvas`。
 
@@ -94,8 +94,8 @@ V13 重写了切换状态机：
 
 V13.2–V13.3 改为：
 
-1. 首屏直接使用当前 CSS 背景，不额外构造预载 `Image`。
-2. 只有真实场景切换才解码目标一张；任意时刻最多一个请求，新请求先取消旧请求。
+1. 首屏只解码目标一张；解码完成前不清除原生 main/fade paint，避免 CSS URL 尚未解码时出现空暗底。
+2. 后续只有真实场景切换才解码目标一张；任意时刻最多一个请求，新请求先取消旧请求。
 3. 成功、失败、超时、请求替换和 runtime dispose 共用同一清理路径：清 timeout、事件处理器、`src` 和 in-flight 记录。
 4. 图层行内只保存短 `var(--forge-bg-N)`，不再复制完整 base64 URL。
 5. 过渡结束立即把退场层的图片、veil、位置、亮度与场景数据清空；稳态只有一张图片。

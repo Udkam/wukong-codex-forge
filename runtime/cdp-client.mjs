@@ -514,7 +514,11 @@ const browserTunnelCommandTarget = async (target, method, params = {}) => {
 export const commandTarget = rawCommandTarget;
 
 export async function evaluateTarget(target, expression) {
-  const response = await commandTarget(target, 'Runtime.evaluate', { expression, returnByValue: true });
+  const response = await commandTarget(target, 'Runtime.evaluate', {
+    expression,
+    returnByValue: true,
+    awaitPromise: true
+  });
   if (response?.exceptionDetails) throw Error(response.exceptionDetails.text || 'Renderer expression failed');
   return response?.result?.value;
 }

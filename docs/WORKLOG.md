@@ -18,3 +18,12 @@
 - 新增首次提交与 resize 后 overlay/layer/image/veil 等于 viewport 的 DOMRect 合同，以及 `<300 ms` 延迟挂载、内部挂载和双页面重叠用例。
 - 定向结果：`background-runtime-v13` 8/8，`native-surfaces-runtime-v14` delayed shell 1/1。
 - 本里程碑不启动第二个 Codex 窗口；首图 ready/overlay generation 竞态留给下一独立提交。
+
+### V13 首图 ready 与 overlay generation
+
+- 首张背景改为单请求解码后提交；`data-forge-background-ready` 之前保留 Codex 原生 main/fade paint。
+- CDP `Runtime.evaluate` 显式等待 apply Promise，安装器与 watcher 不会在首图尚未解码时提前宣称成功。
+- 覆盖层在交叉淡化中被删除或损坏时立即撤销 ready、取消旧 generation 的 timer/预载并恢复原生 paint；新层完成解码后以单活动层重新公开。
+- `ACTIVE_PROBE` 与主题状态合同同时要求 root ready、overlay ready、两层结构和真实活动图。
+- 定向结果：背景状态机 10/10、V15 原生表面 7/7、生命周期关键合同 2/2、最小包/保留式安装 4/4。
+- 未启动第二个 Codex 窗口；真实 Codex 视觉验收仍待后续单窗口里程碑。

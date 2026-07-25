@@ -78,6 +78,7 @@ function applyRuntime(payload) {
   document.getElementById('wukong-forge-pet-overlay')?.remove();
   document.getElementById('wukong-forge-motif-overlay')?.remove();
   document.getElementById('wukong-forge-background')?.remove();
+  delete root.dataset.forgeBackgroundReady;
 
   let style = document.getElementById('wukong-forge-style');
   if (!style) {
@@ -163,6 +164,17 @@ function applyRuntime(payload) {
       overlay = null;
     }
     if (overlay) return overlay;
+    delete root.dataset.forgeBackgroundReady;
+    if (state.transitionTimer) clearTimeout(state.transitionTimer);
+    state.transitionTimer = 0;
+    state.transitionInFlight = false;
+    state.pendingSceneStyle = null;
+    state.sceneRequestToken += 1;
+    state.requestedSceneKey = null;
+    state.requestedScene = null;
+    state.preloadRequests.forEach(request => request.cancel());
+    state.preloadRequests.clear();
+    state.activeLayer = 0;
     overlay = document.createElement('div');
     overlay.id = 'wukong-forge-background';
     overlay.dataset.forgeOwned = 'background';
@@ -312,7 +324,7 @@ function applyRuntime(payload) {
   };
   const commitScene = sceneStyle => {
     const overlay = ensureBackground();
-    const initial = state.currentScene === null;
+    const initial = state.currentScene === null || !overlayReady();
     if (!initial && state.transitionInFlight) {
       state.pendingSceneStyle = sceneStyle;
       return;
@@ -342,13 +354,19 @@ function applyRuntime(payload) {
       nextLayer.style.opacity = '1';
     }
     overlay.dataset.forgeActiveLayer = String(nextIndex);
+    overlay.dataset.forgeReady = 'true';
     state.activeLayer = nextIndex;
     state.currentScene = sceneStyle.scene;
     state.currentMode = sceneStyle.mode;
     state.renderCount += 1;
+    root.dataset.forgeBackgroundReady = 'true';
+    state.resolveInitialReady?.(true);
+    state.resolveInitialReady = null;
 
     if (!initial) {
+      const generation = state.overlayGeneration;
       const finishTransition = () => {
+        if (generation !== state.overlayGeneration || !overlay.isConnected) return;
         state.transitionTimer = 0;
         state.transitionInFlight = false;
         delete overlay.dataset.forgeTransitioning;
@@ -372,18 +390,24 @@ function applyRuntime(payload) {
     )) return;
     const sceneStyle = readSceneStyle(scene, mode);
     state.requestedSceneKey = requestKey;
+    state.requestedScene = {
+      scene,
+      mode,
+      generation: state.overlayGeneration
+    };
     const token = ++state.sceneRequestToken;
-
-    if (state.currentScene === null) {
-      commitScene(sceneStyle);
-      state.requestedSceneKey = null;
-      return;
-    }
 
     void preloadBackground(sceneStyle.preloadImage).then(ready => {
       if (token !== state.sceneRequestToken) return;
       state.requestedSceneKey = null;
-      if (!ready) return;
+      state.requestedScene = null;
+      if (!ready) {
+        if (state.currentScene === null) {
+          state.resolveInitialReady?.(false);
+          state.resolveInitialReady = null;
+        }
+        return;
+      }
       commitScene(sceneStyle);
     });
   };
@@ -392,7 +416,14 @@ function applyRuntime(payload) {
     if (!overlay || overlay.querySelectorAll(':scope > [data-forge-background-layer]').length !== 2) return false;
     const active = overlay.querySelector('[data-forge-background-layer][data-forge-active="true"]');
     const image = active?.querySelector('[data-forge-background-image]');
-    return Boolean(active && image && image.style.backgroundImage && image.style.backgroundImage !== 'none');
+    return Boolean(
+      root.dataset.forgeBackgroundReady === 'true' &&
+      overlay.dataset.forgeReady === 'true' &&
+      active &&
+      image &&
+      image.style.backgroundImage &&
+      image.style.backgroundImage !== 'none'
+    );
   };
 
   const landingTitlePattern = /我们该构建什么|今天想处理什么|准备好就开始|从哪里开始|what should we build|what(?:'s| is) on your mind|ready when you are|where should we begin|what (?:do you want|would you like) to (?:work on|do)|how can i help|新建任务/i;
@@ -853,13 +884,19 @@ function applyRuntime(payload) {
       : `thread|${taskIdentity(threadEvidence)}`;
     const sceneKey = `${mode}|${identity}`;
 
-    if (state.sceneKey !== sceneKey || !safeChoices.includes(state.currentScene)) {
+    const requestedSceneIsCurrent = state.requestedScene?.mode === mode &&
+      state.requestedScene.generation === state.overlayGeneration &&
+      safeChoices.includes(state.requestedScene.scene);
+    if (
+      state.sceneKey !== sceneKey ||
+      (!safeChoices.includes(state.currentScene) && !requestedSceneIsCurrent)
+    ) {
       const stored = normalizeStoredCursor(state.sceneCursors[mode]);
       state.sceneCursors[mode] = (stored + 1) % safeChoices.length;
       state.sceneKey = sceneKey;
       writeCursorState(state.sceneCursors);
       requestScene(safeChoices[state.sceneCursors[mode]], mode, !overlayWasReady);
-    } else if (!overlayWasReady) {
+    } else if (!overlayWasReady && !requestedSceneIsCurrent) {
       requestScene(state.currentScene, mode, true);
     }
 
@@ -877,6 +914,10 @@ function applyRuntime(payload) {
     ]);
   };
 
+  let resolveInitialReady;
+  const initialReady = new Promise(resolve => {
+    resolveInitialReady = resolve;
+  });
   const state = {
     observer: null,
     resizeObserver: null,
@@ -895,11 +936,13 @@ function applyRuntime(payload) {
     transitionTimer: 0,
     pendingSceneStyle: null,
     requestedSceneKey: null,
+    requestedScene: null,
     sceneRequestToken: 0,
     preloadRequests: new Map(),
     overlayGeneration: 0,
     refreshCount: 0,
     renderCount: 0,
+    resolveInitialReady,
     refresh,
     dispose: null
   };
@@ -1012,6 +1055,10 @@ function applyRuntime(payload) {
   };
   const observer = new MutationObserver(records => {
     if (records.some(record => (
+      record.target?.id === 'wukong-forge-background' ||
+      [...record.removedNodes].some(node => node.nodeType === Node.ELEMENT_NODE && node.id === 'wukong-forge-background')
+    ))) delete root.dataset.forgeBackgroundReady;
+    if (records.some(record => (
       record.type === 'attributes'
         ? (
             nodeTouchesThemeStructure(record.target) ||
@@ -1067,7 +1114,10 @@ function applyRuntime(payload) {
     if (state.transitionTimer) clearTimeout(state.transitionTimer);
     state.sceneRequestToken += 1;
     state.requestedSceneKey = null;
+    state.requestedScene = null;
     state.pendingSceneStyle = null;
+    state.resolveInitialReady?.(false);
+    state.resolveInitialReady = null;
     state.preloadRequests.forEach(request => request.cancel());
     state.preloadRequests.clear();
     state.routeTimers.forEach(timer => clearTimeout(timer));
@@ -1087,6 +1137,7 @@ function applyRuntime(payload) {
    * runtime pass. They stop after 420 ms and do not become a polling loop.
    */
   queueRefreshes([120, 420]);
+  return initialReady;
 }
 
 export function makeApplyExpression({ styleSheet, variables }) {
@@ -1120,6 +1171,8 @@ export const THEME_STATE_EXPRESSION = `(() => {
         .filter(image => image.style.backgroundImage && image.style.backgroundImage !== 'none').length
       : 0,
     backgroundTransitioning: overlay?.dataset.forgeTransitioning === 'true',
+    backgroundReady: document.documentElement.dataset.forgeBackgroundReady === 'true' &&
+      overlay?.dataset.forgeReady === 'true',
     preloadInFlight: window.__wukongCodexForgeRuntimeV13?.preloadRequests?.size || 0,
     motifLayerPresent: Boolean(document.getElementById('wukong-forge-motif-overlay')),
     surface: document.documentElement.dataset.forgeSurface || null,
@@ -1149,6 +1202,8 @@ export const ACTIVE_PROBE_EXPRESSION = `(() => {
     document.getElementById('wukong-forge-style') &&
     document.documentElement.classList.contains('forge-ink-mountain') &&
     window.__wukongCodexForgeRuntimeV13 &&
+    document.documentElement.dataset.forgeBackgroundReady === 'true' &&
+    overlay?.dataset.forgeReady === 'true' &&
     layers.length === 2 &&
     active &&
     image?.style.backgroundImage &&
@@ -1161,6 +1216,7 @@ export const isActiveThemeState = state => Boolean(state) &&
   state.rootClass === true &&
   state.backgroundLayerPresent === true &&
   state.backgroundLayerCount === 2 &&
+  state.backgroundReady === true &&
   ['0', '1'].includes(state.backgroundActiveLayer) &&
   ['landing', 'thread'].includes(state.surface) &&
   state.mode === (state.surface === 'landing' ? 'battle' : 'scenery') &&
@@ -1178,6 +1234,7 @@ export const isNativeThemeState = state => Boolean(state) &&
   state.markedElements === 0 &&
   state.ownedNodeCount === 0 &&
   state.backgroundLayerPresent === false &&
+  state.backgroundReady === false &&
   state.motifLayerPresent === false &&
   state.runtimeV4 === false &&
   state.runtimeV5 === false &&
@@ -1218,6 +1275,7 @@ export const RESTORE_EXPRESSION = `(() => {
   delete document.documentElement.dataset.forgeSurface;
   delete document.documentElement.dataset.forgeScene;
   delete document.documentElement.dataset.forgeMode;
+  delete document.documentElement.dataset.forgeBackgroundReady;
   delete document.documentElement.dataset.forgeWukongSafe;
   delete document.documentElement.dataset.forgeBajieSafe;
   delete document.documentElement.dataset.forgeGourdSafe;

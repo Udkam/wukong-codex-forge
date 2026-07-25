@@ -40,9 +40,9 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     linear-gradient(180deg, rgba(18, 21, 19, .44), rgba(18, 21, 19, .32) 22%, rgba(18, 21, 19, .35) 80%, rgba(18, 21, 19, .49));
 }
 
-:root.forge-ink-mountain,
-:root.forge-ink-mountain body,
-:root.forge-ink-mountain #root {
+:root.forge-ink-mountain[data-forge-background-ready="true"],
+:root.forge-ink-mountain[data-forge-background-ready="true"] body,
+:root.forge-ink-mountain[data-forge-background-ready="true"] #root {
   background-color: transparent !important;
 }
 
@@ -104,7 +104,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   z-index: 1;
 }
 
-:root.forge-ink-mountain #root > :first-child {
+:root.forge-ink-mountain[data-forge-background-ready="true"] #root > :first-child {
   background-color: transparent !important;
   background-image: none !important;
 }
@@ -114,22 +114,22 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
  * The source-backed selector below clears only that paint and the decorative
  * top fade. The native radius, shadow, clipping, size and hit boxes stay intact.
  */
-:root.forge-ink-mountain main.main-surface {
+:root.forge-ink-mountain[data-forge-background-ready="true"] main.main-surface {
   background-color: transparent !important;
   background-image: none !important;
 }
 
-:root.forge-ink-mountain main.main-surface [data-app-shell-main-content-top-fade] {
+:root.forge-ink-mountain[data-forge-background-ready="true"] main.main-surface [data-app-shell-main-content-top-fade] {
   background-color: transparent !important;
   background-image: none !important;
 }
 
-:root.forge-ink-mountain .forge-workspace,
-:root.forge-ink-mountain .forge-workspace.main-surface,
-:root.forge-ink-mountain .forge-workspace [data-app-shell-main-content-layout],
-:root.forge-ink-mountain .forge-workspace .app-shell-main-content-frame,
-:root.forge-ink-mountain .forge-workspace [data-vscode-context*="supportsNewChatMenu"],
-:root.forge-ink-mountain .forge-workspace [data-thread-find-target="conversation"] {
+:root.forge-ink-mountain[data-forge-background-ready="true"] .forge-workspace,
+:root.forge-ink-mountain[data-forge-background-ready="true"] .forge-workspace.main-surface,
+:root.forge-ink-mountain[data-forge-background-ready="true"] .forge-workspace [data-app-shell-main-content-layout],
+:root.forge-ink-mountain[data-forge-background-ready="true"] .forge-workspace .app-shell-main-content-frame,
+:root.forge-ink-mountain[data-forge-background-ready="true"] .forge-workspace [data-vscode-context*="supportsNewChatMenu"],
+:root.forge-ink-mountain[data-forge-background-ready="true"] .forge-workspace [data-thread-find-target="conversation"] {
   background-color: transparent !important;
   background-image: none !important;
 }

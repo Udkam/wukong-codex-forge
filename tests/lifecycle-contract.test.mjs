@@ -264,19 +264,30 @@ test('large runtime expressions receive a bounded 45 second transport window', (
   assert.equal(commandTimeoutMs('Runtime.evaluate', { expression: 'x'.repeat(1_000_001) }), 45000);
   assert.equal(commandTimeoutMs('Runtime.evaluate', { expression: 'x' }), 12000);
   assert.equal(commandTimeoutMs('Page.captureScreenshot'), 20000);
+  assert.match(read('runtime/cdp-client.mjs'), /awaitPromise:\s*true/);
 });
 
 test('renderer refreshes are structural, throttled, and layout-loop free', () => {
   const runtime = read('runtime/injection-plan-v13.mjs');
-  assert.match(runtime, /const delay = Math\.max\(140, 520 - elapsed\)/);
+  assert.match(runtime, /const naturalDelay = Math\.max\(140, 520 - elapsed\)/);
+  assert.match(runtime, /timerDueAt/);
+  assert.match(runtime, /scheduleRefresh\(0\)/);
   assert.match(runtime, /new MutationObserver\(/);
-  assert.match(runtime, /observer\.observe\(document\.body, \{ childList: true, subtree: true \}\)/);
+  const observerConfig = runtime.match(/observer\.observe\(document\.body,\s*(\{[\s\S]*?\})\s*\);/)?.[1] || '';
+  assert.match(observerConfig, /childList:\s*true/);
+  assert.match(observerConfig, /subtree:\s*true/);
+  assert.match(observerConfig, /attributes:\s*true/);
+  assert.match(observerConfig, /attributeFilter:\s*\[/);
+  assert.match(observerConfig, /'hidden'/);
+  assert.match(observerConfig, /'inert'/);
+  assert.doesNotMatch(observerConfig, /'class'|'style'|'data-forge-/);
   assert.match(runtime, /nodeTouchesThemeStructure/);
+  assert.match(runtime, /nodeIsWithinThemeStructure/);
   assert.match(runtime, /data-local-conversation-final-assistant/);
   assert.match(runtime, /new ResizeObserver\(/);
   assert.match(runtime, /setResizeTargets/);
   assert.match(runtime, /observedResizeTargets/);
-  assert.doesNotMatch(runtime, /attributes:\s*true|characterData:\s*true/);
+  assert.doesNotMatch(runtime, /characterData:\s*true/);
   assert.doesNotMatch(runtime, /window\.addEventListener\('scroll', scheduleRefresh/);
   assert.match(runtime, /visualViewport\?\.addEventListener\('resize', scheduleRefresh/);
   assert.doesNotMatch(runtime, /visualViewport\?\.addEventListener\('scroll', scheduleRefresh/);
