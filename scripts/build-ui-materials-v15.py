@@ -13,6 +13,9 @@ OUTPUT_ROOT = ROOT / "themes" / "ui" / "v15"
 
 COMPOSER_SOURCE = SOURCE_ROOT / "composer-paper-sheet-alpha-contract.png"
 SIDEBAR_ROW_SOURCE = SOURCE_ROOT / "sidebar-row-sheet-alpha-contract.png"
+PAPER_CHANNEL_OFFSET = (-82, -69, -49)
+PAPER_MATTE = (127, 113, 97)
+PAPER_TARGET_MEDIAN = (126, 112, 96)
 
 
 def crop(image: Image.Image, box: tuple[int, int, int, int]) -> Image.Image:
@@ -85,24 +88,24 @@ def main() -> None:
     composer_sheet = Image.open(COMPOSER_SOURCE).convert("RGBA")
     sidebar_row_sheet = Image.open(SIDEBAR_ROW_SOURCE).convert("RGBA")
 
-    # The reference mock averages around RGB(185, 160, 125) in its open paper
-    # field. Preserve that measured palette while retaining the larger source
-    # for responsive nine-slice rendering.
+    # The accepted dark reference averages around RGB(126, 112, 96) in its
+    # open paper field. Rebuild every paper surface from the same transparent
+    # contract source so main, strip, pill and tile remain one material family.
     composer_main = channel_offset(
         crop(composer_sheet, (36, 105, 1737, 524)),
-        (-18, -14, -14),
+        PAPER_CHANNEL_OFFSET,
     )
     composer_strip = channel_offset(
         crop(composer_sheet, (224, 572, 1551, 690)),
-        (-18, -14, -14),
+        PAPER_CHANNEL_OFFSET,
     )
     composer_pill = channel_offset(
         crop(composer_sheet, (557, 736, 1216, 831)),
-        (-18, -14, -14),
+        PAPER_CHANNEL_OFFSET,
     )
     paper_tile = channel_offset(
         crop(composer_sheet, (616, 215, 1128, 471)),
-        (-18, -14, -14),
+        PAPER_CHANNEL_OFFSET,
     )
 
     sidebar_level1 = crop(sidebar_row_sheet, (97, 100, 1676, 323))
@@ -114,25 +117,25 @@ def main() -> None:
             composer_main,
             "composer-main.webp",
             (1536, 378),
-            (191, 168, 132),
+            PAPER_MATTE,
         ),
         "composer_strip": save_webp(
             composer_strip,
             "composer-strip.webp",
             (1536, 136),
-            (191, 168, 132),
+            PAPER_MATTE,
         ),
         "composer_pill": save_webp(
             composer_pill,
             "composer-pill.webp",
             (768, 110),
-            (191, 168, 132),
+            PAPER_MATTE,
         ),
         "paper_tile": save_webp(
             paper_tile,
             "paper-tile.webp",
             (768, 384),
-            (191, 168, 132),
+            PAPER_MATTE,
         ),
         "sidebar_level1": save_webp(
             sidebar_level1,
@@ -155,7 +158,12 @@ def main() -> None:
     }
 
     metrics = {
-        "contract": "v15-reference-palette-border-image",
+        "contract": "v15-dark-paper-palette-border-image",
+        "paper_palette": {
+            "target_median_rgb": list(PAPER_TARGET_MEDIAN),
+            "channel_offset": list(PAPER_CHANNEL_OFFSET),
+            "matte_rgb": list(PAPER_MATTE),
+        },
         "source_files": {
             "composer": str(COMPOSER_SOURCE.relative_to(ROOT)).replace("\\", "/"),
             "sidebar_rows": str(SIDEBAR_ROW_SOURCE.relative_to(ROOT)).replace("\\", "/"),
@@ -164,6 +172,7 @@ def main() -> None:
             key: {
                 "path": str(path.relative_to(ROOT)).replace("\\", "/"),
                 "bytes": path.stat().st_size,
+                "size": list(Image.open(path).size),
                 "metrics": opaque_metrics(Image.open(path)),
             }
             for key, path in outputs.items()

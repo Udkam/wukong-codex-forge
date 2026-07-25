@@ -14,6 +14,7 @@
 | V15-08 | UI 材质使用静态 WebP/nine-slice；无网络请求、无逐帧动画、无 filter/will-change 常驻、无布局 JS；forced-colors 回退系统原生面 | 网络/计时器/动画计数、computed style 与强制高对比测试 |
 | V15-09 | 本轮属于多轮验收，不以 fixture 通过代替实机视觉通过；每个独立里程碑针对性测试后精确 commit/push，保留可回退 SHA | cached path 审计、测试记录、远端 SHA 与用户验收记录 |
 | V15-10 | 不删除、移动或覆盖本地文件；不修改 `ChatGPT.exe`、`app.asar`、WindowsApps 或官方配置；临时调试窗口截图后立即关闭并核验资源释放 | 文件/进程/父子树/端口前后审计 |
+| V15-11 | 所有输入相关纸面统一调暗到最新参考综合色阶，目标内区中位色 `RGB(126,112,96)`；主框、strip、pill 和 tile 必须同源重建，不能靠运行时 filter 变暗 | 产物尺寸/median/std/暗纹理对比度测试，CSS fallback/filter 审计与四状态无头截图 |
 
 > **0.12.3 / V13.3 历史验收合同。** 以下内容继续保留；冲突处以 V15 为准。
 

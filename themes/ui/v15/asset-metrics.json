@@ -1,5 +1,22 @@
 {
-  "contract": "v15-reference-palette-border-image",
+  "contract": "v15-dark-paper-palette-border-image",
+  "paper_palette": {
+    "target_median_rgb": [
+      126,
+      112,
+      96
+    ],
+    "channel_offset": [
+      -82,
+      -69,
+      -49
+    ],
+    "matte_rgb": [
+      127,
+      113,
+      97
+    ]
+  },
   "source_files": {
     "composer": "themes/ui/v14/sources/composer-paper-sheet-alpha-contract.png",
     "sidebar_rows": "themes/ui/v14/sources/sidebar-row-sheet-alpha-contract.png"
@@ -7,79 +24,99 @@
   "outputs": {
     "composer_main": {
       "path": "themes/ui/v15/composer-main.webp",
-      "bytes": 131520,
+      "bytes": 130798,
+      "size": [
+        1536,
+        378
+      ],
       "metrics": {
         "opaque_pixels": 571764,
         "median_rgb": [
-          189.0,
-          166.0,
-          128.0
+          125.0,
+          111.0,
+          94.0
         ],
         "std_rgb": [
-          10.39,
-          10.97,
-          10.75
+          10.4,
+          11.0,
+          10.73
         ],
-        "median_luminance": 168.36
+        "median_luminance": 112.46
       }
     },
     "composer_strip": {
       "path": "themes/ui/v15/composer-strip.webp",
-      "bytes": 47482,
+      "bytes": 47512,
+      "size": [
+        1536,
+        136
+      ],
       "metrics": {
         "opaque_pixels": 195206,
         "median_rgb": [
-          188.0,
-          164.0,
-          126.0
+          125.0,
+          109.0,
+          92.0
         ],
         "std_rgb": [
-          13.35,
-          13.99,
-          13.45
+          13.51,
+          14.07,
+          13.63
         ],
-        "median_luminance": 166.15
+        "median_luminance": 110.82
       }
     },
     "composer_pill": {
       "path": "themes/ui/v15/composer-pill.webp",
-      "bytes": 20358,
+      "bytes": 20288,
+      "size": [
+        768,
+        110
+      ],
       "metrics": {
         "opaque_pixels": 78067,
         "median_rgb": [
-          190.0,
-          165.0,
-          127.0
+          126.0,
+          110.0,
+          92.0
         ],
         "std_rgb": [
-          10.85,
-          11.74,
-          11.47
+          10.94,
+          11.8,
+          11.57
         ],
-        "median_luminance": 167.29
+        "median_luminance": 112.17
       }
     },
     "paper_tile": {
       "path": "themes/ui/v15/paper-tile.webp",
-      "bytes": 38888,
+      "bytes": 37506,
+      "size": [
+        768,
+        384
+      ],
       "metrics": {
         "opaque_pixels": 294912,
         "median_rgb": [
-          191.0,
-          168.0,
-          132.0
+          126.0,
+          113.0,
+          97.0
         ],
         "std_rgb": [
-          4.99,
-          5.12,
-          5.47
+          4.96,
+          5.17,
+          5.29
         ],
-        "median_luminance": 170.43
+        "median_luminance": 114.61
       }
     },
     "sidebar_level1": {
       "path": "themes/ui/v15/sidebar-level1.webp",
       "bytes": 7760,
+      "size": [
+        768,
+        96
+      ],
       "metrics": {
         "opaque_pixels": 69336,
         "median_rgb": [
@@ -98,6 +135,10 @@
     "sidebar_selected": {
       "path": "themes/ui/v15/sidebar-selected.webp",
       "bytes": 24350,
+      "size": [
+        768,
+        96
+      ],
       "metrics": {
         "opaque_pixels": 65555,
         "median_rgb": [
@@ -116,6 +157,10 @@
     "sidebar_level2_hover": {
       "path": "themes/ui/v15/sidebar-level2-hover.webp",
       "bytes": 5722,
+      "size": [
+        768,
+        52
+      ],
       "metrics": {
         "opaque_pixels": 35749,
         "median_rgb": [

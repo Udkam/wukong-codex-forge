@@ -1,5 +1,13 @@
 # Local work log
 
+## 2026-07-25 — V15 输入纸面统一暗化
+
+- 用户要求输入框相关替换内容整体调暗，以适配战斗/风景背景和深墨侧栏。只读像素审计测得目标截图主纸面内区中位色约 `RGB(126,112,96)`，不再沿用上一轮约 `RGB(189,166,128)` 的亮黄纸。
+- `build-ui-materials-v15.py` 从原透明合同源统一应用 `(-82,-69,-49)` 通道偏移与 `RGB(127,113,97)` matte，重新生成 main/strip/pill/tile；实际中位色落在 `RGB(125,109,92)` 至 `RGB(126,113,97)`，纹理方差与所有原尺寸保持。
+- CSS fallback 统一为 `#7f7161`，主文字/图标收紧为深墨 `#100c08`；高亮内沿降强度并移除 composer 常驻 `filter`，避免额外合成成本。暗纹理第 10 百分位仍通过 3:1 定向对比度门槛，forced-colors 保持系统回退。
+- 像素/纹理合同 3/3、原生几何/状态合同 6/6、最小包/原生主题合同 6/6 通过。无头证据位于 `artifacts/test-runs/v15-native-surfaces-2026-07-25T02-31-50-355Z/`；截图完成后显式关闭 browser，复核为 0 个项目 Node/Chromium 和 0 个项目监听端口。
+- 本轮只完成用户要求的暗化检查点；金箍棒印记、侧栏后续状态和真实 Codex 用户验收没有混入或标记完成。
+
 ## 2026-07-25 — V15 生产 sidebar 锚点与原生几何检查点
 
 - 把项目条、无项目对话和项目下对话的分类从测试假属性收口到当前 `ChatGPT.exe 26.715.2305.0` ASAR 的 `data-app-action-sidebar-project-row`、`data-app-action-sidebar-thread-row`、`data-app-action-sidebar-project-list-id` 与 `data-app-action-sidebar-section-heading="Tasks"`。
