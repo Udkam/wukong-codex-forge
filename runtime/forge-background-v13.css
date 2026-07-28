@@ -510,7 +510,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   background-image:
     linear-gradient(rgba(255, 245, 228, .035), rgba(255, 245, 228, .035)),
     var(--forge-ui-sidebar-level1) !important;
-  box-shadow: 0 0 0 1px rgba(218, 208, 194, .08) inset !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-action:is(
@@ -519,11 +519,9 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 ) {
   color: #f2ece2 !important;
   background-image:
-    linear-gradient(rgba(255, 245, 228, .045), rgba(255, 245, 228, .045)),
+    linear-gradient(rgba(255, 245, 228, .065), rgba(255, 245, 228, .065)),
     var(--forge-ui-sidebar-level1) !important;
-  box-shadow:
-    2px 0 0 rgba(157, 63, 38, .72) inset,
-    0 0 0 1px rgba(218, 208, 194, .12) inset !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-action:is(
@@ -534,9 +532,9 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 ) {
   color: #f0e9df !important;
   background-image:
-    linear-gradient(90deg, rgba(157, 63, 38, .2), transparent 24%),
+    linear-gradient(rgba(255, 245, 228, .045), rgba(255, 245, 228, .045)),
     var(--forge-ui-sidebar-level1) !important;
-  box-shadow: 2px 0 0 rgba(157, 63, 38, .76) inset !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-action-active,
@@ -558,6 +556,16 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   --color-token-icon-foreground: #3f352d;
   color: #2f2822 !important;
   background-image: var(--forge-ui-sidebar-selected) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain
+  :is(.forge-sidebar-action-active, .forge-sidebar-selected)
+  :where(*):not([data-native-status], [data-native-status] *) {
+  color: #2f2822 !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-level1 {
@@ -579,7 +587,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   background-image:
     linear-gradient(rgba(255, 245, 228, .035), rgba(255, 245, 228, .035)),
     var(--forge-ui-sidebar-level1) !important;
-  box-shadow: 0 0 0 1px rgba(218, 208, 194, .08) inset !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-level1:is(
@@ -588,31 +596,25 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 ) {
   color: #f2ece2 !important;
   background-image:
-    linear-gradient(rgba(255, 245, 228, .045), rgba(255, 245, 228, .045)),
+    linear-gradient(rgba(255, 245, 228, .065), rgba(255, 245, 228, .065)),
     var(--forge-ui-sidebar-level1) !important;
-  box-shadow:
-    2px 0 0 rgba(157, 63, 38, .72) inset,
-    0 0 0 1px rgba(218, 208, 194, .12) inset !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain
   .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="true"] {
   color: #e3ddd4 !important;
-  background-image:
-    linear-gradient(90deg, rgba(157, 63, 38, .18), transparent 22%),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: 2px 0 0 rgba(157, 63, 38, .62) inset !important;
+  background-image: var(--forge-ui-sidebar-level1) !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain
   .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="true"]:hover {
   color: #f0e9df !important;
   background-image:
-    linear-gradient(90deg, rgba(157, 63, 38, .24), rgba(255, 245, 228, .03) 26%, transparent 55%),
+    linear-gradient(rgba(255, 245, 228, .04), rgba(255, 245, 228, .04)),
     var(--forge-ui-sidebar-level1) !important;
-  box-shadow:
-    2px 0 0 rgba(157, 63, 38, .76) inset,
-    0 0 0 1px rgba(218, 208, 194, .09) inset !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain
@@ -634,7 +636,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     linear-gradient(rgba(255, 245, 228, .025), rgba(255, 245, 228, .025)),
     linear-gradient(rgba(0, 0, 0, .09), rgba(0, 0, 0, .09)),
     var(--forge-ui-sidebar-level1) !important;
-  box-shadow: 0 0 0 1px rgba(218, 208, 194, .07) inset !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain
@@ -653,9 +655,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     :has(:focus-visible)
   ) {
   color: #f2ece2 !important;
-  box-shadow:
-    2px 0 0 rgba(157, 63, 38, .74) inset,
-    0 0 0 1px rgba(218, 208, 194, .12) inset !important;
+  background-image:
+    linear-gradient(rgba(255, 245, 228, .065), rgba(255, 245, 228, .065)),
+    var(--forge-ui-sidebar-level1) !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain
@@ -720,7 +723,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :focus-visible,
   :has(:focus-visible)
 ) {
-  box-shadow: 2px 0 0 rgba(157, 63, 38, .7) inset !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-selected,
@@ -742,7 +745,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   background-position: center !important;
   background-repeat: no-repeat !important;
   background-size: 100% 100% !important;
-  box-shadow: 0 0 0 1px rgba(71, 57, 44, .1) inset !important;
+  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-selected:hover {
@@ -755,9 +758,38 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :focus-visible,
   :has(:focus-visible)
 ) {
-  box-shadow:
-    2px 0 0 rgba(133, 56, 35, .72) inset,
-    0 0 0 1px rgba(71, 57, 44, .14) inset !important;
+  background-image:
+    linear-gradient(rgba(255, 250, 239, .045), rgba(255, 250, 239, .045)),
+    var(--forge-ui-sidebar-selected) !important;
+  box-shadow: none !important;
+}
+
+/*
+ * A current project is both a level-one directory row and the pale current
+ * selection. This selector deliberately outranks expanded/collapsed project
+ * paint without treating mere expansion as selection.
+ */
+:root.forge-ink-mountain
+  .forge-sidebar-level1.forge-sidebar-selected[data-app-action-sidebar-project-row],
+:root.forge-ink-mountain
+  .forge-sidebar-level1.forge-sidebar-selected[data-app-action-sidebar-project-row]:hover,
+:root.forge-ink-mountain
+  .forge-sidebar-level1.forge-sidebar-selected[data-app-action-sidebar-project-row]:is(
+    :focus-visible,
+    :has(:focus-visible)
+  ) {
+  --color-token-foreground: #2f2822;
+  --color-token-text-primary: #2f2822;
+  --color-token-text-secondary: #4d4339;
+  --color-token-description-foreground: #655a50;
+  --color-token-icon-foreground: #3f352d;
+  color: #2f2822 !important;
+  background-color: transparent !important;
+  background-image: var(--forge-ui-sidebar-selected) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+  box-shadow: none !important;
 }
 
 /*

@@ -284,7 +284,7 @@ test('V15 maps reference materials without changing native geometry, semantics, 
   assert.equal(
     await page.locator('[data-app-action-sidebar-project-row].forge-sidebar-selected').count(),
     0,
-    'project containers must never receive the pale selected material'
+    'non-current project containers must retain the dark level-one material'
   );
   assert.equal(
     await page.locator('[data-app-action-sidebar-project-row].forge-sidebar-level1').count(),
@@ -596,8 +596,13 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
   await newTask.focus();
   assert.equal(await newTask.evaluate(element => element.matches(':focus-visible')), true);
   assert.notEqual(
+    await newTaskRow.evaluate(element => getComputedStyle(element).backgroundImage),
+    actionDefault.image
+  );
+  assert.equal(
     await newTaskRow.evaluate(element => getComputedStyle(element).boxShadow),
-    actionDefault.shadow
+    'none',
+    'action focus must use ink-material contrast instead of a modern control outline'
   );
 
   await newTaskMenu.evaluate(element => element.dataset.state = 'open');
@@ -636,6 +641,25 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
       element => getComputedStyle(element).backgroundImage
     ),
     actionDefault.image
+  );
+  const activeActionPaint = await page.locator(selectors.pullRequests).evaluate(element => ({
+    backgroundImage: getComputedStyle(element).backgroundImage,
+    shadow: getComputedStyle(element).boxShadow,
+    color: getComputedStyle(element).color,
+    descendantColors: [...element.querySelectorAll('span, svg')]
+      .map(child => getComputedStyle(child).color)
+  }));
+  assert.equal(activeActionPaint.color, 'rgb(47, 40, 34)');
+  assert.ok(
+    activeActionPaint.descendantColors.every(color => color === 'rgb(47, 40, 34)'),
+    `active action descendants did not switch to dark ink: ${
+      activeActionPaint.descendantColors.join(', ')
+    }`
+  );
+  assert.doesNotMatch(
+    `${activeActionPaint.backgroundImage} ${activeActionPaint.shadow}`,
+    /(?:157,\s*63,\s*38|133,\s*56,\s*35)/,
+    'active action retained the rejected lacquer-red left edge'
   );
   await page.locator(selectors.pullRequests).evaluate(element => {
     element.removeAttribute('aria-current');
@@ -692,9 +716,6 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
     collapsedProjectImage,
     'expanded and collapsed project rows need distinguishable native directory states'
   );
-  const collapsedProjectShadow = await projectRows.nth(2).evaluate(
-    element => getComputedStyle(element).boxShadow
-  );
   await projectRows.nth(2).hover();
   assert.notEqual(
     await projectRows.nth(2).evaluate(element => getComputedStyle(element).backgroundImage),
@@ -708,9 +729,14 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
     true
   );
   assert.notEqual(
+    await projectRows.nth(2).evaluate(element => getComputedStyle(element).backgroundImage),
+    collapsedProjectImage,
+    'collapsed project focus must remain visible through the ink material'
+  );
+  assert.equal(
     await projectRows.nth(2).evaluate(element => getComputedStyle(element).boxShadow),
-    collapsedProjectShadow,
-    'collapsed project rows must retain a keyboard focus state'
+    'none',
+    'project focus must not add a modern rounded control outline'
   );
   assert.equal(
     await projectRows.nth(2).evaluate(element => getComputedStyle(element).outlineStyle),
@@ -732,8 +758,40 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
   await level2.focus();
   assert.equal(await level2.evaluate(element => element.matches(':focus-visible')), true);
   assert.notEqual(
+    await level2.evaluate(element => getComputedStyle(element).backgroundImage),
+    level2Default.image
+  );
+  assert.equal(
     await level2.evaluate(element => getComputedStyle(element).boxShadow),
-    level2Default.shadow
+    'none',
+    'level-two focus must use the ink strip rather than a rounded control outline'
+  );
+
+  const sidebarPaintStates = await page.evaluate(() => (
+    [...document.querySelectorAll(
+      '.forge-sidebar-action, .forge-sidebar-level1, ' +
+      '.forge-sidebar-level2, .forge-sidebar-selected'
+    )].map(element => {
+      const style = getComputedStyle(element);
+      return {
+        slot: element.dataset.nativeSlot || element.textContent.trim().slice(0, 32),
+        paint: `${style.backgroundImage} ${style.boxShadow}`
+      };
+    })
+  ));
+  for (const state of sidebarPaintStates) {
+    assert.doesNotMatch(
+      state.paint,
+      /(?:157,\s*63,\s*38|133,\s*56,\s*35)/,
+      `${state.slot} retained the rejected lacquer-red left edge`
+    );
+  }
+  assert.equal(
+    await page.locator('[data-native-slot="project-active"] [data-thread-title]').evaluate(
+      element => getComputedStyle(element).color
+    ),
+    'rgb(47, 40, 34)',
+    'the pale current-thread material must use dark ink text'
   );
 
   const nativeIndicators = await page.evaluate(() => {
@@ -857,11 +915,47 @@ test('V14 updates dynamic composer states and moves current-conversation materia
     !document.querySelector(
       '[data-app-action-sidebar-section-heading="Tasks"] ' +
       '[data-app-action-sidebar-thread-row]'
-    )?.classList.contains('forge-sidebar-selected')
+    )?.classList.contains('forge-sidebar-selected') &&
+    document.querySelector('[data-app-action-sidebar-project-row]')
+      ?.classList.contains('forge-sidebar-selected')
   ));
   assert.equal(
     await page.locator('[data-app-action-sidebar-project-row].forge-sidebar-selected').count(),
-    0
+    1
+  );
+  const selectedProjectPaint = await page.locator(
+    '[data-app-action-sidebar-project-row].forge-sidebar-selected'
+  ).evaluate(element => {
+    const style = getComputedStyle(element);
+    const descendantColors = [...element.querySelectorAll('span, svg, button')]
+      .filter(child => {
+        const rect = child.getBoundingClientRect();
+        return (
+          rect.width > 0 &&
+          rect.height > 0 &&
+          !child.closest('[data-native-status]')
+        );
+      })
+      .map(child => getComputedStyle(child).color);
+    return {
+      backgroundImage: style.backgroundImage,
+      color: style.color,
+      shadow: style.boxShadow,
+      descendantColors
+    };
+  });
+  assert.match(selectedProjectPaint.backgroundImage, /data:image\//);
+  assert.equal(selectedProjectPaint.color, 'rgb(47, 40, 34)');
+  assert.ok(
+    selectedProjectPaint.descendantColors.every(color => color === 'rgb(47, 40, 34)'),
+    `selected project descendants did not switch to dark ink: ${
+      selectedProjectPaint.descendantColors.join(', ')
+    }`
+  );
+  assert.doesNotMatch(
+    `${selectedProjectPaint.backgroundImage} ${selectedProjectPaint.shadow}`,
+    /(?:157,\s*63,\s*38|133,\s*56,\s*35)/,
+    'selected project retained the rejected lacquer-red left edge'
   );
 
   await page.evaluate(() => {

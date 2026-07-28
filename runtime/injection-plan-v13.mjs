@@ -854,10 +854,9 @@ function applyRuntime(payload) {
         row.surface,
         kind === 'project-thread' ? 'forge-sidebar-level2' : 'forge-sidebar-level1'
       );
-      if (
-        row.selected &&
-        (kind === 'root-thread' || kind === 'project-thread')
-      ) mark(row.surface, 'forge-sidebar-selected');
+      if (row.selected && kind !== 'action') {
+        mark(row.surface, 'forge-sidebar-selected');
+      }
     }
     return [sidebar, scroll];
   };
