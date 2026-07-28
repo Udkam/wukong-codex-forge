@@ -271,19 +271,19 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
  * official composer owns every dimension, inset, line wrap, button and hit box.
  */
 :root.forge-ink-mountain .forge-composer-frame {
-  --color-token-foreground: #100c08;
-  --color-token-text-primary: #100c08;
+  --color-token-foreground: #080604;
+  --color-token-text-primary: #080604;
   --color-token-text-secondary: #2c2015;
   --color-token-text-tertiary: #38291b;
   --color-token-description-foreground: #302317;
-  --color-token-input-placeholder-foreground: #21180f;
-  --color-token-icon-foreground: #100c08;
+  --color-token-input-placeholder-foreground: #181008;
+  --color-token-icon-foreground: #080604;
   --color-token-icon-secondary: #2b2015;
   --color-token-icon-tertiary: #35271a;
-  color: #100c08 !important;
+  color: #080604 !important;
   position: relative;
   isolation: isolate;
-  background-color: #7f7161 !important;
+  background-color: #7d6d5a !important;
   background-image: var(--forge-ui-paper-tile) !important;
   background-position: center !important;
   background-repeat: repeat !important;
@@ -312,9 +312,15 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 :root.forge-ink-mountain .forge-composer-frame::before {
+  /*
+   * Keep the ornamental edge inside the native clip. A narrower painted edge
+   * preserves the accepted paper frame while leaving more of the official
+   * 84px composer available to its editor and controls.
+   */
+  inset: 0;
   border-image-source: var(--forge-ui-composer-main);
   border-image-slice: 52 58 fill;
-  border-image-width: 18px 22px;
+  border-image-width: 14px 18px;
   border-image-repeat: stretch;
 }
 
@@ -334,26 +340,28 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 :root.forge-ink-mountain .forge-composer-frame .ProseMirror {
+  box-sizing: border-box;
+  padding-block-start: 6px !important;
   color: inherit !important;
   text-shadow: 0 1px 0 rgba(224, 204, 172, .12);
 }
 
 :root.forge-ink-mountain .forge-composer-frame .ProseMirror p.is-editor-empty:first-child::before,
 :root.forge-ink-mountain .forge-composer-frame [data-placeholder]::before {
-  color: #21180f !important;
+  color: #181008 !important;
 }
 
 :root.forge-ink-mountain .forge-composer-context,
 :root.forge-ink-mountain .forge-composer-panel {
-  --color-token-foreground: #100c08;
-  --color-token-text-primary: #100c08;
+  --color-token-foreground: #080604;
+  --color-token-text-primary: #080604;
   --color-token-text-secondary: #2a1f14;
   --color-token-description-foreground: #332619;
-  --color-token-icon-foreground: #100c08;
-  color: #100c08 !important;
+  --color-token-icon-foreground: #080604;
+  color: #080604 !important;
   position: relative;
   isolation: isolate;
-  background-color: #7f7161 !important;
+  background-color: #7d6d5a !important;
   background-image: var(--forge-ui-paper-tile) !important;
   background-position: center !important;
   background-repeat: repeat !important;
@@ -395,13 +403,13 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 
 :root.forge-ink-mountain .forge-plan-pill,
 :root.forge-ink-mountain .forge-diff-summary {
-  --color-token-foreground: #100c08;
-  --color-token-text-primary: #100c08;
+  --color-token-foreground: #080604;
+  --color-token-text-primary: #080604;
   --color-token-text-secondary: #2a1f14;
-  color: #100c08 !important;
+  color: #080604 !important;
   position: relative;
   isolation: isolate;
-  background-color: #7f7161 !important;
+  background-color: #7d6d5a !important;
   background-image: var(--forge-ui-paper-tile) !important;
   background-position: center !important;
   background-repeat: repeat !important;
@@ -460,15 +468,20 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
  * Project parents never receive the pale selected material.
  */
 :root.forge-ink-mountain .forge-sidebar-shell {
-  --color-token-side-bar-background: rgba(14, 12, 9, .9);
+  --color-token-side-bar-background: rgba(9, 8, 6, .66);
   --color-token-foreground: #d2cdc5;
   --color-token-text-primary: #d2cdc5;
   --color-token-text-secondary: #b8b2aa;
   --color-token-description-foreground: #8f8a83;
   --color-token-icon-foreground: #c8c2b9;
   color: #d2cdc5;
-  background-color: rgba(14, 12, 9, .9) !important;
-  background-image: none !important;
+  background-color: transparent !important;
+  background-image:
+    linear-gradient(90deg, rgba(8, 7, 5, .76), rgba(8, 7, 5, .62)) !important;
+  background-position: 0 0 !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+  backdrop-filter: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-level1,

@@ -364,6 +364,28 @@ test('V15 maps reference materials without changing native geometry, semantics, 
 
   const paint = await page.evaluate(() => ({
     composer: getComputedStyle(document.querySelector('.forge-composer-frame')).backgroundImage,
+    composerPaintInset: (() => {
+      const style = getComputedStyle(
+        document.querySelector('.forge-composer-frame'),
+        '::before'
+      );
+      return [style.top, style.right, style.bottom, style.left];
+    })(),
+    composerPaintBorderWidth: getComputedStyle(
+      document.querySelector('.forge-composer-frame'),
+      '::before'
+    ).borderImageWidth,
+    composerEditorPaddingBlockStart: getComputedStyle(
+      document.querySelector('.forge-composer-frame .ProseMirror[role="textbox"]')
+    ).paddingBlockStart,
+    sidebarShell: (() => {
+      const style = getComputedStyle(document.querySelector('.forge-sidebar-shell'));
+      return {
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        backdropFilter: style.backdropFilter
+      };
+    })(),
     menu: getComputedStyle(document.querySelector('.forge-topbar-menu-item')).backgroundImage,
     action: getComputedStyle(document.querySelector('.forge-sidebar-action')).backgroundImage,
     level1: getComputedStyle(document.querySelector('.forge-sidebar-level1')).backgroundImage,
@@ -373,6 +395,28 @@ test('V15 maps reference materials without changing native geometry, semantics, 
     ).backgroundImage
   }));
   assert.match(paint.composer, /data:image\/svg\+xml/);
+  assert.deepEqual(
+    paint.composerPaintInset,
+    ['0px', '0px', '0px', '0px'],
+    'composer ornament must remain visible inside the native clipping surface'
+  );
+  assert.equal(
+    paint.composerPaintBorderWidth,
+    '14px 18px',
+    'the frame must reserve more of the native 84px surface for official controls'
+  );
+  assert.equal(
+    paint.composerEditorPaddingBlockStart,
+    '6px',
+    'the native placeholder needs a safe inset without changing the composer DOMRect'
+  );
+  assert.equal(paint.sidebarShell.backgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.match(paint.sidebarShell.backgroundImage, /linear-gradient/);
+  assert.equal(
+    paint.sidebarShell.backdropFilter,
+    'none',
+    'the full-window background must show through the sidebar without a GPU blur'
+  );
   assert.match(paint.menu, /data:image\/svg\+xml/);
   assert.match(paint.action, /data:image\/svg\+xml/);
   assert.match(paint.level1, /data:image\/svg\+xml/);

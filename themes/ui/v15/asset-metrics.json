@@ -2,19 +2,19 @@
   "contract": "v15-dark-paper-palette-border-image",
   "paper_palette": {
     "target_median_rgb": [
-      126,
-      112,
-      96
+      124,
+      108,
+      88
     ],
     "channel_offset": [
-      -82,
-      -69,
-      -49
+      -84,
+      -72,
+      -56
     ],
     "matte_rgb": [
-      127,
-      113,
-      97
+      125,
+      109,
+      90
     ]
   },
   "source_files": {
@@ -25,7 +25,7 @@
   "outputs": {
     "composer_main": {
       "path": "themes/ui/v15/composer-main.webp",
-      "bytes": 130798,
+      "bytes": 130516,
       "size": [
         1536,
         378
@@ -33,21 +33,21 @@
       "metrics": {
         "opaque_pixels": 571764,
         "median_rgb": [
-          125.0,
-          111.0,
-          94.0
+          123.0,
+          107.0,
+          87.0
         ],
         "std_rgb": [
-          10.4,
-          11.0,
-          10.73
+          10.42,
+          10.98,
+          10.83
         ],
-        "median_luminance": 112.46
+        "median_luminance": 109.1
       }
     },
     "composer_strip": {
       "path": "themes/ui/v15/composer-strip.webp",
-      "bytes": 47512,
+      "bytes": 47434,
       "size": [
         1536,
         136
@@ -55,21 +55,21 @@
       "metrics": {
         "opaque_pixels": 195206,
         "median_rgb": [
-          125.0,
-          109.0,
-          92.0
+          123.0,
+          106.0,
+          85.0
         ],
         "std_rgb": [
-          13.51,
-          14.07,
-          13.63
+          13.52,
+          14.06,
+          13.69
         ],
-        "median_luminance": 110.82
+        "median_luminance": 107.74
       }
     },
     "composer_pill": {
       "path": "themes/ui/v15/composer-pill.webp",
-      "bytes": 20288,
+      "bytes": 20308,
       "size": [
         768,
         110
@@ -77,21 +77,21 @@
       "metrics": {
         "opaque_pixels": 78067,
         "median_rgb": [
-          126.0,
-          110.0,
-          92.0
+          124.0,
+          107.0,
+          85.0
         ],
         "std_rgb": [
-          10.94,
+          10.95,
           11.8,
-          11.57
+          11.7
         ],
-        "median_luminance": 112.17
+        "median_luminance": 108.88
       }
     },
     "paper_tile": {
       "path": "themes/ui/v15/paper-tile.webp",
-      "bytes": 37506,
+      "bytes": 37256,
       "size": [
         768,
         384
@@ -99,16 +99,16 @@
       "metrics": {
         "opaque_pixels": 294912,
         "median_rgb": [
-          126.0,
-          113.0,
-          97.0
+          125.0,
+          110.0,
+          90.0
         ],
         "std_rgb": [
-          4.96,
-          5.17,
-          5.29
+          4.95,
+          5.16,
+          5.33
         ],
-        "median_luminance": 114.61
+        "median_luminance": 111.75
       }
     },
     "sidebar_level1": {
@@ -179,24 +179,24 @@
     },
     "landing_mark": {
       "path": "themes/ui/v15/landing-jingubang.webp",
-      "bytes": 3218,
+      "bytes": 4334,
       "size": [
         112,
         112
       ],
       "metrics": {
-        "opaque_pixels": 1039,
+        "opaque_pixels": 1419,
         "median_rgb": [
-          81.0,
-          67.0,
-          41.0
+          124.0,
+          93.0,
+          46.0
         ],
         "std_rgb": [
-          27.31,
-          26.33,
-          17.83
+          47.02,
+          42.84,
+          29.16
         ],
-        "median_luminance": 68.02
+        "median_luminance": 96.39
       }
     }
   }

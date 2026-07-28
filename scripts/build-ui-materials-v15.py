@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,13 +14,13 @@ OUTPUT_ROOT = ROOT / "themes" / "ui" / "v15"
 COMPOSER_SOURCE = SOURCE_ROOT / "composer-paper-sheet-alpha-contract.png"
 SIDEBAR_ROW_SOURCE = SOURCE_ROOT / "sidebar-row-sheet-alpha-contract.png"
 LANDING_MARK_SOURCE = OUTPUT_ROOT / "sources" / "jingubang-model.png"
-PAPER_CHANNEL_OFFSET = (-82, -69, -49)
-PAPER_MATTE = (127, 113, 97)
-PAPER_TARGET_MEDIAN = (126, 112, 96)
+PAPER_CHANNEL_OFFSET = (-84, -72, -56)
+PAPER_MATTE = (125, 109, 90)
+PAPER_TARGET_MEDIAN = (124, 108, 88)
 LANDING_MARK_RENDER_SCALE = 4
 LANDING_MARK_NATIVE_SIZE = 56
 LANDING_MARK_NATIVE_LENGTH = 60
-LANDING_MARK_NATIVE_THICKNESS = 9
+LANDING_MARK_NATIVE_THICKNESS = 12
 LANDING_MARK_ROTATION = 39
 
 
@@ -52,6 +52,43 @@ def matte_transparent_rgb(
     return Image.merge("RGBA", (*composited.split(), alpha))
 
 
+def tone_landing_mark(image: Image.Image) -> Image.Image:
+    """Keep the photographed staff geometry and strengthen its real metal range."""
+    pixels = np.asarray(image.convert("RGBA"), dtype=np.float32).copy()
+    rgb = pixels[..., :3]
+    alpha = pixels[..., 3:4]
+    luminance = (
+        rgb[..., 0:1] * 0.2126
+        + rgb[..., 1:2] * 0.7152
+        + rgb[..., 2:3] * 0.0722
+    )
+    highlight = np.clip((luminance - 48) / 92, 0, 1)
+    rgb = (
+        rgb * np.array([1.35, 1.23, 1.04], dtype=np.float32)
+        + np.array([6, 4, 0], dtype=np.float32)
+        + highlight * np.array([60, 48, 28], dtype=np.float32)
+    )
+    pixels[..., :3] = np.clip(rgb, 0, 255)
+    pixels[..., 3:4] = alpha
+    return Image.fromarray(pixels.astype(np.uint8), "RGBA")
+
+
+def add_landing_mark_outline(image: Image.Image) -> Image.Image:
+    """Add a sub-pixel umber edge so the native icon survives pale scenes."""
+    alpha = image.getchannel("A")
+    expanded = alpha.filter(ImageFilter.MaxFilter(9))
+    expanded_pixels = np.asarray(expanded, dtype=np.int16)
+    alpha_pixels = np.asarray(alpha, dtype=np.int16)
+    outline_alpha = np.clip(
+        (expanded_pixels - alpha_pixels) * 0.72,
+        0,
+        180,
+    ).astype(np.uint8)
+    outline = Image.new("RGBA", image.size, (46, 33, 22, 0))
+    outline.putalpha(Image.fromarray(outline_alpha, "L"))
+    return Image.alpha_composite(outline, image)
+
+
 def save_webp(
     image: Image.Image,
     name: str,
@@ -69,7 +106,7 @@ def save_webp(
 
 
 def build_landing_mark(image: Image.Image) -> Image.Image:
-    source = image.convert("RGBA")
+    source = tone_landing_mark(image)
     alpha_box = source.getchannel("A").getbbox()
     if not alpha_box:
         raise ValueError("Landing mark source has no visible pixels")
@@ -82,8 +119,8 @@ def build_landing_mark(image: Image.Image) -> Image.Image:
         ),
         Image.Resampling.LANCZOS,
     )
-    staff = ImageEnhance.Contrast(staff).enhance(1.12)
-    staff = ImageEnhance.Sharpness(staff).enhance(1.18)
+    staff = ImageEnhance.Contrast(staff).enhance(1.08)
+    staff = ImageEnhance.Sharpness(staff).enhance(1.28)
     staff = staff.rotate(
         LANDING_MARK_ROTATION,
         expand=True,
@@ -104,7 +141,10 @@ def build_landing_mark(image: Image.Image) -> Image.Image:
             (canvas.height - staff.height) // 2,
         ),
     )
-    return canvas.resize((112, 112), Image.Resampling.LANCZOS)
+    return add_landing_mark_outline(canvas).resize(
+        (112, 112),
+        Image.Resampling.LANCZOS,
+    )
 
 
 def save_alpha_webp(image: Image.Image, name: str) -> Path:
@@ -140,9 +180,10 @@ def main() -> None:
     sidebar_row_sheet = Image.open(SIDEBAR_ROW_SOURCE).convert("RGBA")
     landing_mark_source = Image.open(LANDING_MARK_SOURCE).convert("RGBA")
 
-    # The accepted dark reference averages around RGB(126, 112, 96) in its
-    # open paper field. Rebuild every paper surface from the same transparent
-    # contract source so main, strip, pill and tile remain one material family.
+    # The reviewed multi-background palette keeps the prior darkness while
+    # shifting the open paper field toward warmer grey-yellow ochre. Rebuild
+    # every paper surface from one transparent contract source so main, strip,
+    # pill and tile remain one material family.
     composer_main = channel_offset(
         crop(composer_sheet, (36, 105, 1737, 524)),
         PAPER_CHANNEL_OFFSET,

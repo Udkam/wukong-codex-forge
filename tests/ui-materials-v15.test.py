@@ -17,25 +17,25 @@ PAPER_ASSETS = {
     "composer_main": {
         "filename": "composer-main.webp",
         "size": (1536, 378),
-        "median": (125, 110, 94),
+        "median": (123, 108, 87),
         "std": ((7, 18), (7, 18), (7, 18)),
     },
     "composer_strip": {
         "filename": "composer-strip.webp",
         "size": (1536, 136),
-        "median": (124, 108, 91),
+        "median": (122, 105, 85),
         "std": ((10, 18), (10, 18), (10, 18)),
     },
     "composer_pill": {
         "filename": "composer-pill.webp",
         "size": (768, 110),
-        "median": (126, 109, 92),
+        "median": (124, 107, 85),
         "std": ((8, 16), (8, 16), (8, 16)),
     },
     "paper_tile": {
         "filename": "paper-tile.webp",
         "size": (768, 384),
-        "median": (127, 113, 97),
+        "median": (125, 110, 90),
         "std": ((3, 9), (3, 9), (3, 9)),
     },
 }
@@ -98,7 +98,11 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
         self.assertLess(int(np.count_nonzero(visible)), 4_500)
         visible_ratio = float(np.mean(visible))
         self.assertGreaterEqual(visible_ratio, 0.09)
-        self.assertLessEqual(visible_ratio, 0.13)
+        self.assertLessEqual(
+            visible_ratio,
+            0.22,
+            "the sub-pixel umber edge must not turn the real staff into a heavy icon",
+        )
         centered = np.column_stack(
             (
                 visible_x - np.mean(visible_x),
@@ -114,6 +118,39 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
         self.assertGreaterEqual(principal_angle, 138)
         self.assertLessEqual(principal_angle, 144)
         self.assertLess(path.stat().st_size, 8_192)
+
+        visible_rgb = rgba[..., :3][rgba[..., 3] > 32]
+        visible_luminance = relative_luminance(visible_rgb)
+        dark_material = float(np.percentile(visible_luminance, 20))
+        bright_material = float(np.percentile(visible_luminance, 85))
+        self.assertLessEqual(
+            dark_material,
+            0.06,
+            "the real dark-red shaft must remain legible on bright scenes",
+        )
+        self.assertGreaterEqual(
+            bright_material,
+            0.20,
+            "aged-gold rings must remain legible on dark scenes",
+        )
+        self.assertGreaterEqual(
+            float(
+                contrast_ratio(
+                    np.array([relative_luminance(np.array([[190, 190, 190]]))[0]]),
+                    np.array([dark_material]),
+                )[0]
+            ),
+            3.0,
+        )
+        self.assertGreaterEqual(
+            float(
+                contrast_ratio(
+                    np.array([bright_material]),
+                    np.array([relative_luminance(np.array([[28, 30, 29]]))[0]]),
+                )[0]
+            ),
+            3.0,
+        )
 
         metrics = json.loads(
             (UI_ROOT / "asset-metrics.json").read_text(encoding="utf-8")
@@ -135,9 +172,9 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
             metrics["contract"],
             "v15-dark-paper-palette-border-image",
         )
-        self.assertEqual(metrics["paper_palette"]["target_median_rgb"], [126, 112, 96])
-        self.assertEqual(metrics["paper_palette"]["channel_offset"], [-82, -69, -49])
-        self.assertEqual(metrics["paper_palette"]["matte_rgb"], [127, 113, 97])
+        self.assertEqual(metrics["paper_palette"]["target_median_rgb"], [124, 108, 88])
+        self.assertEqual(metrics["paper_palette"]["channel_offset"], [-84, -72, -56])
+        self.assertEqual(metrics["paper_palette"]["matte_rgb"], [125, 109, 90])
 
         for key, contract in PAPER_ASSETS.items():
             path = UI_ROOT / contract["filename"]
@@ -162,7 +199,7 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
 
     def test_css_uses_dark_fallback_without_gpu_filter(self) -> None:
         css = CSS_PATH.read_text(encoding="utf-8")
-        self.assertGreaterEqual(css.count("#7f7161"), 3)
+        self.assertGreaterEqual(css.count("#7d6d5a"), 3)
         self.assertNotIn("#d1b78f", css)
         self.assertNotIn("#cfb48a", css)
         self.assertNotIn("filter: contrast(1.16) saturate(.94)", css)
