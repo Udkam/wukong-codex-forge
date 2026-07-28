@@ -14,8 +14,10 @@ export const MARK_CLASSES = [
   'forge-workspace',
   'forge-taskbar',
   'forge-landing-hero',
+  'forge-landing-kicker',
   'forge-landing-icon',
   'forge-landing-title',
+  'forge-landing-subtitle',
   'forge-composer',
   'forge-composer-frame',
   'forge-composer-context',
@@ -427,6 +429,8 @@ function applyRuntime(payload) {
   };
 
   const landingTitlePattern = /我们该构建什么|今天想处理什么|准备好就开始|从哪里开始|what should we build|what(?:'s| is) on your mind|ready when you are|where should we begin|what (?:do you want|would you like) to (?:work on|do)|how can i help|新建任务/i;
+  const landingKickerPattern = /^(?:新建任务|新任务|new task)$/i;
+  const landingSubtitlePattern = /^(?:描述目标，?\s*Codex\s*会在当前项目中开始工作。?|describe (?:a )?goal[,，]?\s*and Codex will (?:start|begin) working in (?:the )?current project\.?)$/i;
   const newTaskLabels = [
     '新建任务', '新聊天', '新建对话', '新任务',
     'New task', 'New chat', 'Start a new chat'
@@ -502,7 +506,24 @@ function applyRuntime(payload) {
     if (icon) mark(icon, 'forge-landing-icon');
 
     const hero = commonAncestor(landingTitle, icon) || landingTitle.parentElement;
-    if (hero && hero !== workspace) mark(hero, 'forge-landing-hero');
+    if (hero && hero !== workspace) {
+      mark(hero, 'forge-landing-hero');
+      const leafMatch = pattern => [...hero.querySelectorAll('*')]
+        .filter(element => (
+          element !== landingTitle &&
+          element !== icon &&
+          layoutPresent(element) &&
+          pattern.test(textOf(element)) &&
+          ![...element.children].some(child => pattern.test(textOf(child)))
+        ))
+        .sort((left, right) => {
+          const leftRect = left.getBoundingClientRect();
+          const rightRect = right.getBoundingClientRect();
+          return leftRect.width * leftRect.height - rightRect.width * rightRect.height;
+        })[0];
+      mark(leafMatch(landingKickerPattern), 'forge-landing-kicker');
+      mark(leafMatch(landingSubtitlePattern), 'forge-landing-subtitle');
+    }
   };
   const taskIdentity = threadEvidence => {
     const threadCarrier = threadEvidence?.closest('[data-thread-id], [data-conversation-id], [data-task-id]');

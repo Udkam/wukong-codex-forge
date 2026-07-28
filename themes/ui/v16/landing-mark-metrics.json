@@ -1,0 +1,83 @@
+{
+  "contract": "v16-official-wukong-wordmark-threefold-paint",
+  "source": {
+    "path": "themes/ui/v16/sources/steam-black-myth-wukong-logo-2x.png",
+    "url": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2358720/logo_2x.png",
+    "sha256": "9b627bee5be0db718a837a5ddfe1d367e02577aa5df6168a5774382af2bc0fa0",
+    "crop": [
+      20,
+      290,
+      525,
+      660
+    ]
+  },
+  "native_slot": [
+    56,
+    56
+  ],
+  "render_size": [
+    336,
+    336
+  ],
+  "content_size": [
+    282,
+    204
+  ],
+  "content_offset": [
+    0,
+    -42
+  ],
+  "outputs": {
+    "light": {
+      "path": "themes/ui/v16/landing-wukong-wordmark-light.webp",
+      "sha256": "dbe8bcd59739c23ae2e7dfd0317a7ab78d6b2afb3876a3c4e7cec689431ab9cc",
+      "bytes": 34206,
+      "size": [
+        336,
+        336
+      ],
+      "visible_bbox": [
+        27,
+        30,
+        309,
+        221
+      ]
+    },
+    "dark": {
+      "path": "themes/ui/v16/landing-wukong-wordmark-dark.webp",
+      "sha256": "edd1953f33d5ff214e130a3b2b734328154e95b2d5bd74813aa086808fc05b6f",
+      "bytes": 25958,
+      "size": [
+        336,
+        336
+      ],
+      "visible_bbox": [
+        27,
+        30,
+        309,
+        221
+      ]
+    }
+  },
+  "scene_policy": {
+    "dark_wordmark": [
+      0,
+      4,
+      8
+    ],
+    "light_wordmark": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      7
+    ]
+  },
+  "restrictions": [
+    "No generated weapon, mascot, emoji, glow, or cartoon silhouette.",
+    "Official 悟空 brush lettering and red seal remain the only motif.",
+    "The 336x336 source paints a 168x168 overlay for two-device-pixel fidelity.",
+    "The native 56x56 layout and hit target remain unchanged."
+  ]
+}

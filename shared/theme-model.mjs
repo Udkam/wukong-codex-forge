@@ -8,8 +8,10 @@ export const UI_ASSET_KEYS = [
   'sidebarLevel1',
   'sidebarSelected',
   'sidebarLevel2Hover',
-  'landingMark'
+  'landingMark',
+  'landingMarkDark'
 ];
+const OPTIONAL_UI_ASSET_KEYS = new Set(['landingMarkDark']);
 
 export const SCENE_TONES = {
   'celestial-ink': {
@@ -81,7 +83,8 @@ const UI_ASSET_CSS_NAMES = {
   sidebarLevel1: 'sidebar-level1',
   sidebarSelected: 'sidebar-selected',
   sidebarLevel2Hover: 'sidebar-level2-hover',
-  landingMark: 'landing-mark'
+  landingMark: 'landing-mark',
+  landingMarkDark: 'landing-mark-dark'
 };
 
 export const DEFAULT_THEME = {
@@ -191,6 +194,7 @@ export function validateTheme(value) {
     const unknownKeys = Object.keys(value.uiAssets).filter(key => !UI_ASSET_KEYS.includes(key));
     if (unknownKeys.length) throw Error('Invalid uiAssets.' + unknownKeys[0]);
     for (const key of UI_ASSET_KEYS) {
+      if (OPTIONAL_UI_ASSET_KEYS.has(key) && value.uiAssets[key] === undefined) continue;
       if (typeof value.uiAssets[key] !== 'string' || !value.uiAssets[key]) {
         throw Error('Invalid uiAssets.' + key);
       }

@@ -39,6 +39,7 @@ const variables = [
   `--forge-ui-sidebar-selected:${tinyScene(5)};`,
   `--forge-ui-sidebar-level2-hover:${tinyScene(6)};`,
   `--forge-ui-landing-mark:${tinyScene(7)};`,
+  `--forge-ui-landing-mark-dark:${tinyScene(8)};`,
   ...Array.from({ length: 11 }, (_, index) => (
     `--forge-bg-${index}:${tinyScene(index)};--forge-position-${index}:${index === 0 ? '68% center' : 'center center'};`
   )),
@@ -137,7 +138,7 @@ const backgroundCoverage = page => page.evaluate(() => {
 
 test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay, and reaches refresh quiescence', async () => {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
-  await page.route('http://wukong.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong.test/');
   await page.evaluate(() => sessionStorage.setItem(
     'wukong-forge-scene-cursors-v13',
@@ -164,8 +165,10 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
       return { x, y, width, height };
     };
     return {
+      kicker: read('.landing-hero small'),
       icon: read('[data-testid="home-icon"]'),
       title: read('[data-feature="game-source"]'),
+      subtitle: read('.landing-hero p'),
       titleText: document.querySelector('[data-feature="game-source"]').textContent.trim()
     };
   });
@@ -174,6 +177,12 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   const activeState = await page.evaluate(THEME_STATE_EXPRESSION);
   assert.equal(isActiveThemeState(activeState), true);
   assert.equal(await page.evaluate(ACTIVE_PROBE_EXPRESSION), true);
+  await page.waitForFunction(() => (
+    document.querySelector('.forge-landing-kicker') &&
+    document.querySelector('.forge-landing-icon') &&
+    document.querySelector('.forge-landing-title') &&
+    document.querySelector('.forge-landing-subtitle')
+  ));
   assert.equal(activeState.surface, 'landing');
   assert.equal(activeState.mode, 'battle');
   assert.equal(activeState.scene, '0');
@@ -188,8 +197,10 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(await page.locator('body').innerText(), beforeText);
   assert.equal(await page.locator('body > *').count(), beforeBodyChildren + 1);
   assert.equal(await page.locator('.forge-workspace').count(), 1);
+  assert.equal(await page.locator('.forge-landing-kicker').count(), 1);
   assert.equal(await page.locator('.forge-landing-title').count(), 1);
   assert.equal(await page.locator('.forge-landing-icon').count(), 1);
+  assert.equal(await page.locator('.forge-landing-subtitle').count(), 1);
   assert.equal(await page.locator('.forge-composer').count(), 1);
   assert.equal(await page.locator('.forge-sidebar').count(), 1);
   assert.equal(await page.locator('.forge-input,.forge-right-card,.forge-button').count(), 0);
@@ -231,6 +242,8 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   const landingSkin = await page.evaluate(() => {
     const title = document.querySelector('.forge-landing-title');
     const icon = document.querySelector('.forge-landing-icon');
+    const kicker = document.querySelector('.forge-landing-kicker');
+    const subtitle = document.querySelector('.forge-landing-subtitle');
     const readRect = element => {
       const { x, y, width, height } = element.getBoundingClientRect();
       return { x, y, width, height };
@@ -240,8 +253,15 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
       titleAria: title.getAttribute('aria-label'),
       titlePseudo: getComputedStyle(title, '::after').content,
       iconPseudo: getComputedStyle(icon, '::before').backgroundImage,
+      iconPaintWidth: getComputedStyle(icon, '::before').width,
+      iconPaintHeight: getComputedStyle(icon, '::before').height,
+      iconPaintTransform: getComputedStyle(icon, '::before').transform,
+      kickerOpacity: getComputedStyle(kicker).opacity,
+      subtitleOpacity: getComputedStyle(subtitle).opacity,
+      kickerRect: readRect(kicker),
       iconRect: readRect(icon),
       titleRect: readRect(title),
+      subtitleRect: readRect(subtitle),
       nativeText: title.textContent.trim()
     };
   });
@@ -249,9 +269,43 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(landingSkin.titleAria, '此去，欲破何局？');
   assert.match(landingSkin.titlePseudo, /此去，欲破何局/);
   assert.match(landingSkin.iconPseudo, /data:image\/svg\+xml/);
+  assert.equal(landingSkin.iconPaintWidth, '168px');
+  assert.equal(landingSkin.iconPaintHeight, '168px');
+  assert.equal(landingSkin.iconPaintTransform, 'matrix(1, 0, 0, 1, -84, -84)');
+  assert.equal(landingSkin.kickerOpacity, '0');
+  assert.equal(landingSkin.subtitleOpacity, '0');
+  assert.deepEqual(landingSkin.kickerRect, beforeLandingGeometry.kicker);
   assert.deepEqual(landingSkin.iconRect, beforeLandingGeometry.icon);
   assert.deepEqual(landingSkin.titleRect, beforeLandingGeometry.title);
+  assert.deepEqual(landingSkin.subtitleRect, beforeLandingGeometry.subtitle);
   assert.equal(landingSkin.nativeText, beforeLandingGeometry.titleText);
+
+  const landingMarkMatrix = await page.evaluate(() => {
+    const root = document.documentElement;
+    const icon = document.querySelector('[data-testid="home-icon"]');
+    const originalScene = root.dataset.forgeScene;
+    const readRect = () => {
+      const { x, y, width, height } = icon.getBoundingClientRect();
+      return { x, y, width, height };
+    };
+    const matrix = {};
+    for (const scene of ['0', '1', '4', '8']) {
+      root.dataset.forgeScene = scene;
+      matrix[scene] = {
+        image: getComputedStyle(icon, '::before').backgroundImage,
+        rect: readRect()
+      };
+    }
+    root.dataset.forgeScene = originalScene;
+    return matrix;
+  });
+  for (const scene of ['0', '4', '8']) {
+    assert.match(landingMarkMatrix[scene].image, /(?:%3E|>)8(?:%3C|<)/);
+  }
+  assert.match(landingMarkMatrix['1'].image, /(?:%3E|>)7(?:%3C|<)/);
+  for (const scene of Object.values(landingMarkMatrix)) {
+    assert.deepEqual(scene.rect, beforeLandingGeometry.icon);
+  }
 
   await page.waitForTimeout(900);
   const settledRefreshCount = await page.evaluate(() => window.__wukongCodexForgeRuntimeV13.refreshCount);
@@ -323,7 +377,9 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.deepEqual(await nativeLayoutStyle(page), beforeStyle);
   assert.deepEqual(await conversationGeometry(page), authored.geometry);
   assert.equal(await conversationText(page), authored.text);
-  assert.equal(await page.locator('.forge-landing-title,.forge-landing-icon,.forge-landing-hero').count(), 0);
+  assert.equal(await page.locator(
+    '.forge-landing-kicker,.forge-landing-title,.forge-landing-icon,.forge-landing-subtitle,.forge-landing-hero'
+  ).count(), 0);
 
   await page.locator('#wukong-forge-background').evaluate(element => element.remove());
   await page.waitForFunction(() => {
@@ -361,7 +417,7 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
 
 test('V13 covers the complete viewport on its first commit and after a window resize', async () => {
   const page = await browser.newPage({ viewport: { width: 1536, height: 864 } });
-  await page.route('http://wukong-viewport-cover.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong-viewport-cover.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong-viewport-cover.test/');
 
   await page.evaluate(expression);
@@ -391,7 +447,7 @@ test('V13 covers the complete viewport on its first commit and after a window re
 
 test('V13 keeps native carriers painted until the first background is decoded', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
-  await page.route('http://wukong-first-ready.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong-first-ready.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong-first-ready.test/');
   const nativeMainPaint = await page.locator('main.main-surface').evaluate(element => ({
     color: getComputedStyle(element).backgroundColor,
@@ -452,7 +508,7 @@ test('V13 keeps native carriers painted until the first background is decoded', 
 
 test('V13 restores native paint while rebuilding an overlay removed during crossfade', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
-  await page.route('http://wukong-overlay-generation.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong-overlay-generation.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong-overlay-generation.test/');
   await page.evaluate(expression);
   await enterThreadState(page);
@@ -483,7 +539,7 @@ test('V13 restores native paint while rebuilding an overlay removed during cross
 
 test('V13 skins a delayed animated home hero without waiting for a resize', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
-  await page.route('http://wukong-delayed-hero.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong-delayed-hero.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong-delayed-hero.test/');
   await page.evaluate(() => document.querySelector('.landing-native')?.remove());
   await page.evaluate(expression);
@@ -587,7 +643,7 @@ test('V13 skins a delayed animated home hero without waiting for a resize', asyn
 
 test('V13 detects content mounted inside an existing home-title shell after startup probes finish', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
-  await page.route('http://wukong-late-title-content.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong-late-title-content.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong-late-title-content.test/');
   await page.evaluate(() => {
     document.querySelector('.landing-native')?.remove();
@@ -625,7 +681,7 @@ test('V13 detects content mounted inside an existing home-title shell after star
 
 test('V13 prefers a visible conversation over an opacity-zero retained home hero', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
-  await page.route('http://wukong-overlap-route.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong-overlap-route.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong-overlap-route.test/');
   await page.evaluate(expression);
   await enterThreadState(page);
@@ -650,7 +706,7 @@ test('V13 prefers a visible conversation over an opacity-zero retained home hero
 
 test('V13 bounds rapid navigation follow-up timers to the latest three probes', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
-  await page.route('http://wukong-route-timers.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong-route-timers.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong-route-timers.test/');
   await page.evaluate(expression);
 
@@ -683,7 +739,7 @@ test('V13 bounds rapid navigation follow-up timers to the latest three probes', 
 
 test('V13 rotates six battle and five scenery scenes in independent pools without motion', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 }, reducedMotion: 'reduce' });
-  await page.route('http://wukong-rotation.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong-rotation.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong-rotation.test/');
   await page.evaluate(expression);
 
@@ -718,7 +774,7 @@ test('V13 rotates six battle and five scenery scenes in independent pools withou
 
 test('V13 bounds pending background decoding to one request and cancels it on replacement and restore', async () => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
-  await page.route('http://wukong-loader.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html' }));
+  await page.route('http://wukong-loader.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
   await page.goto('http://wukong-loader.test/');
   await page.evaluate(() => {
     window.__forgeFakeImages = [];

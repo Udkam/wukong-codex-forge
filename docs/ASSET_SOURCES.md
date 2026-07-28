@@ -11,8 +11,9 @@
 
 - V13 runtime 继续只发布 `themes/assets/` 中 6 张战斗图与 5 张风景图；11 个源文件 SHA-256 均不同。runtime 不读取本机素材目录，不进行网络请求或视频解码。
 - V8 composer 三案及上下文证据位于 `docs/design/composer-options/v8-black-myth-silhouette-study-20260723/`。这些是纯 UI 形状预览，不包含夜叉套、神锋或金箍棒的生成替身，不进入 0.12.3 最小运行包。
-- 新建页旧候选为 56×56 内联 SVG 短棍与三道墨尾，已因卡通贴纸感被用户否决。V15 当前候选来自项目内既有透明金箍棒模型参考 `docs/design/composer-options/v4-yaksha-fanged-lock/references/jingubang-model.png`，复制保留为 `themes/ui/v15/sources/jingubang-model.png`（74,794 bytes，SHA-256 `D9A5979E319C2E5DD7EF22C12A04623C5D11D3EA36CA20AD615772F561464372`），源参考不修改。
-- `scripts/build-ui-materials-v15.py` 只做透明边裁切、尺寸重采样、轻微对比度/锐度调整和 39° 旋转，输出 `themes/ui/v15/landing-jingubang.webp`（112×112，3,218 bytes，SHA-256 `258BD10111C8A1F50CAA9DF71C7BA9EF0E8FC07760E44979BE96ACD16EB7FE0C`）。该缩略图在官方 56×56 槽位使用，有效边界约 50×42 px，端头与透明安全边距均保留；游戏器物和美术权利仍归原权利人，用户实机验收前只视为候选。
+- 新建页旧 56×56 内联 SVG 短棍、墨尾与 V15 微缩金箍棒均已因卡通贴纸感或器物失真被用户否决；文件继续原位保留但 active theme 和最小包不再引用。
+- V16 字标源为 Steam 官方 CDN 的 `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2358720/logo_2x.png`，项目内只读副本是 `themes/ui/v16/sources/steam-black-myth-wukong-logo-2x.png`，310,824 bytes，SHA-256 `9B627BEE5BE0DB718A837A5DDFE1D367E02577AA5DF6168A5774382AF2BC0FA0`。
+- `scripts/build-landing-mark-v16.py` 只做确定性裁切、色阶映射、透明画布缩放与位置调整，输出 `landing-wukong-wordmark-light.webp` 和 `landing-wukong-wordmark-dark.webp`（均 336×336、约 25–34 KiB、可见边界 `282×191`）。运行时把双倍源绘制为 168×168 视觉层，可见约 141×96 px；原生 56×56 锚点与热区不变。游戏商标、书法与美术权利仍归原权利人；资源仅用于本地主题审稿与用户拥有环境中的非商业实现。
 - `E:\GameRecord\Black Myth Wukong\图片\封面.png` 与 `金箍.jpg` 本轮只读用于观察黑底金绘、赤金箍纹和长棍比例；未新增复制或重编码文件。历史上被用户否决的 `themes/motifs/fanged-cyan-staff.png` 继续保留但不引用。
 - 用户新录制源文件为 `E:\GameRecord\Black Myth Wukong\新汇总\Replay 2026-07-24 00-30-17.mkv`，142,279,116 bytes，SHA-256 `FCC257977C4A34C2AB2813D018770DDE17CD5E5CBCE1941AC7E207965C92A7E5`。源文件保持原位只读；所有 contact sheet、时间码和分析只能新增到项目 `artifacts/wukong-user-recording-audit-20260724T003017+0800/`。
 - 该录像可用于跑动步频、支撑脚、躯干起伏、持棍惯性，以及背面棍花的剪影、脚步、重心和棍路连续性。棍花没有正面视角，不能证明正面握法、面部、厌火套正面或身体遮挡后的神锋结构，不能据此修补基础立绘。

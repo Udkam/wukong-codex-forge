@@ -54,9 +54,9 @@ Windows forced-colors 使用 `#root` 高优先级回退压过 hover/focus/open/e
 
 ### 新建页印记
 
-官方 `[data-testid="home-icon"]` 提供 56×56 原生槽位。旧 SVG 短棍因比例、饱和金红、圆润端头和附加墨尾呈现卡通贴纸感，已否决。V15 改用真实金箍棒模型的透明正投影：裁去透明边、在 4× 工作分辨率压到 60×9、旋转 39° 后降采样为 112×112 WebP。最终只通过 `--forge-ui-landing-mark` 在原槽位绘制，保留原始 SVG 节点、DOMRect、aria 和 restore；棍身为低饱和深红，端箍保留兽纹起伏与旧金层次，不另加徽章、阴影或动画。
+官方 `[data-testid="home-icon"]` 提供 56×56 原生槽位。旧 SVG 短棍与后续微缩金箍棒均因卡通贴纸感、器物失真或多背景辨识不足而否决。V16 从 Steam 官方透明 logo 中确定性裁出“悟空”书法与朱印，生成深墨/骨色两张 336×336 WebP；只通过 `--forge-ui-landing-mark` 与 `--forge-ui-landing-mark-dark` 在原槽位锚定 168×168 绘制层，保留原始 SVG 节点、56×56 DOMRect、aria 和 restore，不另加徽章、光晕、动画或滤镜。
 
-`alpha>16` 的产物边界为 100×84 px，映射到原生槽位约 50×42 px，左右约 3 px、上下约 7 px。四条最外边必须全透明，水平与垂直安全边距差均不得超过 2 px，主轴角度锁定在 138°–144°，可见面积为全图 9%–13%。这使器物在不改变 56×56 槽位的前提下显著大于旧版约 40×34 px 的有效图案，同时保证两端完整、不贴边。
+产物可见边界为 `282×191`，在 168×168 绘制层内约为 `141×96`；相对 56×56 锚点的可见范围约为 `x=-42.5–98.5 / y=-41–54.5`，因此视觉主体主要向上展开，不侵占标题。绘制层绝对定位且不参与布局，56×56 容器、项目布局与热区保持不变；场景 0/4/8 使用深墨版，其余场景使用骨色版。题字在原 30 px headline 内光学收至 27 px、字距 `.035em` 并上移 2 px。原生 kicker 与描述说明保留布局矩形和文本，只在主题激活时视觉透明。
 
 ### 活动图库边界
 
@@ -66,7 +66,7 @@ V15 当前只组装 9 张背景：`erlang-ink-duel` 与 `great-sage-staff` 为�
 
 ### 成本与回退
 
-八张活动 UI WebP 合计约 271 KiB，其中 landing 金箍棒只有 3.2 KiB；解码像素合计约 136 万，单张最大 580,608 px。材质静态绘制，无 timer、动画、网络请求、常驻 filter 或持续合成提示。强制高对比模式隐藏全部材质并恢复系统面。葫芦已从当前目标删除，不进入活动主题或包。V15 当前只完成 fixture、像素与本机源码合同，不等于真实 Codex 用户验收。
+九张活动 UI WebP 中的两张 landing 字标合计约 59 KiB 压缩数据；单张 336×336 解码约 441 KiB，两张理论合计约 882 KiB，仍低于单 UI/装饰图硬门。材质静态绘制，无 timer、动画、网络请求、常驻 filter 或持续合成提示。强制高对比模式隐藏全部材质并恢复系统面。葫芦已从当前目标删除，不进入活动主题或包。当前只完成 fixture、像素与本机源码合同，不等于真实 Codex 用户验收。
 
 > **0.12.3 / V13.3 历史设计。** 以下章节继续保留；冲突处以 V15 为准。
 
@@ -78,7 +78,7 @@ V13.1 的活动范围只有全窗背景与用户明确授权的新建页题字/�
 
 只读检查 `OpenAI.Codex_26.715.2305.0` 的 `app.asar` 后，V13.1 不再通过猜测祖先来清透明度。官方 `app-shell-CHGA5kyS.js` 创建 `<main class="main-surface">`，官方 CSS 为它绘制 `--color-token-main-surface-primary`；这正是用户截图中只剩侧栏可见背景的黑块。活动 CSS 直接命中 `main.main-surface` 与 `[data-app-shell-main-content-top-fade]`，只把 `background-color/background-image` 清空，圆角、阴影、overflow、尺寸与事件全部继续由 Codex 管理。
 
-新建页使用官方 `app-main-B98AP2a1.js` 的两个稳定节点：`[data-testid="home-icon"]` 是 56×56 原图标位，`[data-feature="game-source"]` 是原 headline 位。图案原位绘制两端带赤金箍纹的金箍棒与三道墨尾，题字原位显示“此去，欲破何局？”。实现只用伪元素：原始文字节点、原始 SVG、原生 hover 容器和 DOMRect 均保留，停用时还原 aria 与所有标记。官方 headline 内的项目选择按钮自带点状下划线；主题激活时只把这条原生装饰透明化，避免它穿过替换题字，停用后由移除样式完整恢复。完整只读证据见 `artifacts/asar-ui-audit-20260724T0225/AUDIT.md`。
+新建页使用官方 `app-main-B98AP2a1.js` 的稳定节点：`[data-testid="home-icon"]` 是 56×56 原图标位，`[data-feature="game-source"]` 是原 headline 位。图案原位绘制官方“悟空”书法与朱印，题字原位显示“此去，欲破何局？”。原生 kicker 与描述说明由内容模式识别后只做透明绘制；原始文字节点、原始 SVG、DOMRect 和布局占位均保留，停用时移除标记并恢复 aria。官方 headline 内的项目选择按钮自带点状下划线；主题激活时只把这条原生装饰透明化，避免它穿过替换题字，停用后由移除样式完整恢复。完整只读证据见 `artifacts/asar-ui-audit-20260724T0225/AUDIT.md`。
 
 官方 hero 通过 280 ms opacity 动画进入。V13.3 以“有布局但尚未绘制”作为稳定节点判据，并把 `game-source`、`home-icon` 与新建任务容器加入结构监听；另有 120/420 ms 两次 renderer 内启动探测作为有界兜底，之后页面不轮询。刷新调度器记录下一次到期时间，较早探针会替换较晚的合并 timer，因此两次探针不再被错误折叠成约 520 ms 的单次刷新。MutationObserver 同时检查 `childList` 的目标外壳，ResizeObserver 观察零尺寸原始标题/图标，所以 React 只向既有外壳补入内容时也能自动映射。题字与图案的 CSS 锚点改为主题自有 `data-forge-title-copy` / `data-forge-mark`，不再依赖 React 后续 commit 可能覆写的 `className`。当透明旧 hero 与可见对话短暂共存时，可见且含 turn 的对话是更强路由证据，避免背景误回战斗池。
 

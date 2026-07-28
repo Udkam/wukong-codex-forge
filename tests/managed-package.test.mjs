@@ -103,7 +103,8 @@ test('minimal managed package imports independently and omits development surfac
     'sidebarLevel1',
     'sidebarSelected',
     'sidebarLevel2Hover',
-    'landingMark'
+    'landingMark',
+    'landingMarkDark'
   ]);
   assert.match(payload.theme.name, /\S/);
   assert.match(payload.variables, /--forge-paper:#[0-9a-f]{6}/i);
@@ -120,6 +121,7 @@ test('minimal managed package imports independently and omits development surfac
   assert.match(payload.variables, /--forge-ui-composer-main:url\("data:image\/webp;base64,/);
   assert.match(payload.variables, /--forge-ui-sidebar-level2-hover:url\("data:image\/webp;base64,/);
   assert.match(payload.variables, /--forge-ui-landing-mark:url\("data:image\/webp;base64,/);
+  assert.match(payload.variables, /--forge-ui-landing-mark-dark:url\("data:image\/webp;base64,/);
   assert.doesNotMatch(payload.variables, /--forge-motif-little-(?:wukong|bajie):/);
   assert.equal('motifs' in payload.theme, false);
   assert.deepEqual(payload.assets.map(asset => asset.tone), payload.theme.background.gallery.map(scene => scene.tone));
