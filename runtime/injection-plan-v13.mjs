@@ -582,26 +582,39 @@ function applyRuntime(payload) {
     return match;
   };
   const markComposerSurfaces = () => {
-    const editorSelector =
-      '.composer-surface-chrome .ProseMirror[contenteditable="true"][role="textbox"],' +
-      '.composer-surface-chrome.ProseMirror[contenteditable="true"][role="textbox"]';
+    /*
+     * The native adapter owns editability and can temporarily render the
+     * ProseMirror textbox with contenteditable="false". Editability is an
+     * interaction state, not composer identity. Anchor the paint mapping to
+     * the official root, chrome and textbox role so read-only/locked frames
+     * keep their material without altering native semantics.
+     */
+    const editorSelector = '.ProseMirror[role="textbox"]';
     let composerRoot = null;
     let editor = null;
+    let surface = null;
     for (const candidateRoot of document.querySelectorAll(
       '[data-thread-find-composer="true"]'
     )) {
       if (!visible(candidateRoot)) continue;
-      const candidateEditor = [...candidateRoot.querySelectorAll(editorSelector)]
-        .find(visible);
-      if (!candidateEditor) continue;
-      composerRoot = candidateRoot;
-      editor = candidateEditor;
-      break;
+      for (const candidateSurface of candidateRoot.querySelectorAll(
+        '.composer-surface-chrome'
+      )) {
+        if (!visible(candidateSurface)) continue;
+        const candidateEditor = candidateSurface.matches(editorSelector)
+          ? candidateSurface
+          : [...candidateSurface.querySelectorAll(editorSelector)].find(visible);
+        if (!candidateEditor) continue;
+        composerRoot = candidateRoot;
+        editor = candidateEditor;
+        surface = candidateSurface;
+        break;
+      }
+      if (composerRoot) break;
     }
     if (!composerRoot) return [];
 
     mark(composerRoot, 'forge-composer');
-    const surface = editor?.closest('.composer-surface-chrome');
     if (surface && visible(surface)) mark(surface, 'forge-composer-frame');
 
     const navigationTargets = [...composerRoot.querySelectorAll('[data-composer-navigation-target]')]
@@ -1161,6 +1174,31 @@ export const THEME_STATE_EXPRESSION = `(() => {
   const overlay = document.getElementById('wukong-forge-background');
   const activeLayer = overlay?.querySelector('[data-forge-background-layer][data-forge-active="true"]') || null;
   const activeImage = activeLayer?.querySelector('[data-forge-background-image]') || null;
+  const visible = element => {
+    if (!(element instanceof Element)) return false;
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 1 || rect.height <= 1) return false;
+    for (let cursor = element; cursor && cursor !== document.documentElement; cursor = cursor.parentElement) {
+      const computed = getComputedStyle(cursor);
+      if (
+        cursor.hidden ||
+        cursor.getAttribute('aria-hidden') === 'true' ||
+        cursor.hasAttribute('inert') ||
+        computed.display === 'none' ||
+        computed.visibility === 'hidden' ||
+        Number.parseFloat(computed.opacity || '1') <= .01
+      ) return false;
+    }
+    return true;
+  };
+  const nativeComposerFrames = [
+    ...document.querySelectorAll(
+      '[data-thread-find-composer="true"] .composer-surface-chrome'
+    )
+  ].filter(frame => (
+    visible(frame) &&
+    Boolean(frame.querySelector('.ProseMirror[role="textbox"]'))
+  ));
   return {
     stylePresent: Boolean(document.getElementById('wukong-forge-style')),
     rootClass: document.documentElement.classList.contains('forge-ink-mountain'),
@@ -1181,6 +1219,10 @@ export const THEME_STATE_EXPRESSION = `(() => {
       overlay?.dataset.forgeReady === 'true',
     preloadInFlight: window.__wukongCodexForgeRuntimeV13?.preloadRequests?.size || 0,
     motifLayerPresent: Boolean(document.getElementById('wukong-forge-motif-overlay')),
+    visibleNativeComposerCount: nativeComposerFrames.length,
+    visibleThemedComposerCount: nativeComposerFrames.filter(
+      frame => frame.classList.contains('forge-composer-frame')
+    ).length,
     surface: document.documentElement.dataset.forgeSurface || null,
     mode: document.documentElement.dataset.forgeMode || null,
     scene: document.documentElement.dataset.forgeScene || null,
@@ -1204,6 +1246,31 @@ export const ACTIVE_PROBE_EXPRESSION = `(() => {
   const layers = overlay?.querySelectorAll(':scope > [data-forge-background-layer]') || [];
   const active = overlay?.querySelector('[data-forge-background-layer][data-forge-active="true"]');
   const image = active?.querySelector('[data-forge-background-image]');
+  const visible = element => {
+    if (!(element instanceof Element)) return false;
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 1 || rect.height <= 1) return false;
+    for (let cursor = element; cursor && cursor !== document.documentElement; cursor = cursor.parentElement) {
+      const computed = getComputedStyle(cursor);
+      if (
+        cursor.hidden ||
+        cursor.getAttribute('aria-hidden') === 'true' ||
+        cursor.hasAttribute('inert') ||
+        computed.display === 'none' ||
+        computed.visibility === 'hidden' ||
+        Number.parseFloat(computed.opacity || '1') <= .01
+      ) return false;
+    }
+    return true;
+  };
+  const nativeComposerFrames = [
+    ...document.querySelectorAll(
+      '[data-thread-find-composer="true"] .composer-surface-chrome'
+    )
+  ].filter(frame => (
+    visible(frame) &&
+    Boolean(frame.querySelector('.ProseMirror[role="textbox"]'))
+  ));
   return Boolean(
     document.getElementById('wukong-forge-style') &&
     document.documentElement.classList.contains('forge-ink-mountain') &&
@@ -1213,7 +1280,10 @@ export const ACTIVE_PROBE_EXPRESSION = `(() => {
     layers.length === 2 &&
     active &&
     image?.style.backgroundImage &&
-    image.style.backgroundImage !== 'none'
+    image.style.backgroundImage !== 'none' &&
+    nativeComposerFrames.every(
+      frame => frame.classList.contains('forge-composer-frame')
+    )
   );
 })()`;
 
@@ -1231,6 +1301,9 @@ export const isActiveThemeState = state => Boolean(state) &&
   state.backgroundActiveMode === state.mode &&
   Boolean(state.backgroundActiveImage && state.backgroundActiveImage !== 'none') &&
   state.motifLayerPresent === false &&
+  Number.isInteger(state.visibleNativeComposerCount) &&
+  Number.isInteger(state.visibleThemedComposerCount) &&
+  state.visibleThemedComposerCount === state.visibleNativeComposerCount &&
   state.runtimeV12 === false &&
   state.runtimeV13 === true;
 

@@ -88,6 +88,21 @@ test('local ChatGPT.exe ASAR remains the authoritative native geometry contract'
     /^\\webview\\assets\\codex-composer-adapter-.*\.js$/i,
     '2.75rem'
   );
+  const conversationThread = readMatchingAsset(
+    entries,
+    /^\\webview\\assets\\local-conversation-thread-.*\.js$/i,
+    'data-thread-find-composer'
+  );
+  const composerChrome = readMatchingAsset(
+    entries,
+    /^\\webview\\assets\\composer-layout-.*\.js$/i,
+    'composer-surface-chrome'
+  );
+  const markdownEditor = readMatchingAsset(
+    entries,
+    /^\\webview\\assets\\markdown-.*\.js$/i,
+    'ProseMirror'
+  );
   const appShell = readMatchingAsset(
     entries,
     /^\\webview\\assets\\app-shell-.*\.js$/i,
@@ -117,6 +132,9 @@ test('local ChatGPT.exe ASAR remains the authoritative native geometry contract'
   assert.ok(baseCss, 'official base CSS with Codex geometry tokens must exist');
   assert.ok(composerLayout, 'official composer layout asset must exist');
   assert.ok(composerAdapter, 'official composer adapter asset must exist');
+  assert.ok(conversationThread, 'official composer root asset must exist');
+  assert.ok(composerChrome, 'official composer chrome asset must exist');
+  assert.ok(markdownEditor, 'official ProseMirror textbox asset must exist');
   assert.ok(appShell, 'official application-shell asset must exist');
   assert.ok(navList, 'official navigation-list state asset must exist');
   assert.ok(worktreeInitRow, 'official worktree task-row asset must exist');
@@ -159,6 +177,14 @@ test('local ChatGPT.exe ASAR remains the authoritative native geometry contract'
   assert.ok(composerAdapter.includes('1.25rem'));
   assert.ok(composerAdapter.includes('2.75rem'));
   assert.ok(composerAdapter.includes('size:`composer`'));
+  assert.ok(conversationThread.includes('data-thread-find-composer'));
+  assert.ok(composerChrome.includes('composer-surface-chrome'));
+  assert.ok(markdownEditor.includes('ProseMirror'));
+  assert.ok(markdownEditor.includes('role:`textbox`'));
+  assert.ok(
+    composerAdapter.includes('inert:'),
+    'native composer interaction lock must remain an adapter-owned dynamic state'
+  );
   assert.ok(appShell.includes('flex items-center gap-0.5 pr-2 pl-1'));
   assert.ok(appShell.includes('px-2.5 py-1 text-base font-normal leading-none'));
   assert.ok(appShell.includes('"aria-haspopup":`menu`'));

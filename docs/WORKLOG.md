@@ -1,5 +1,15 @@
 # 工作日志
 
+## 2026-07-28
+
+### V15 composer 只读态真实锚点修复
+
+- 只读核对本机 `ChatGPT.exe 26.715.2305.0` ASAR：composer 身份由 `data-thread-find-composer`、`composer-surface-chrome` 与 `ProseMirror[role=textbox]` 共同确定；`contenteditable` 仅是原生交互状态。
+- 生产映射不再要求 `contenteditable="true"`，因此编辑器暂时只读、发送按钮禁用或 React 动态切换编辑状态时，纸面材质仍挂在唯一可见原生 composer 上。
+- apply/state/probe 增加可见原生 composer 与已主题化 composer 的覆盖率门禁，不再允许“背景成功但输入区静默漏替换”被报告为成功。
+- 新增只读态与 `false → true → false → true` 动态切换合同；原生 DOMRect、`contenteditable`、`aria-readonly`、`disabled` 与 `aria-disabled` 保持不变。
+- 定向结果：当前 ASAR 1/1、composer/侧栏/forced-colors 9/9、背景状态机 10/10；未启动 Codex 调试窗口。该段将独立提交并推送，便于回退。
+
 ## 2026-07-25
 
 ### V15 否决背景撤下

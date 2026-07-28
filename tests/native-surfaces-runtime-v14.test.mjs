@@ -1018,6 +1018,88 @@ test('V14 selects the visible composer surface and ignores one-button context an
   await page.close();
 });
 
+test('V15 keeps the native composer material while the editor is read-only', async () => {
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 820 },
+    deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
+  });
+  await page.route('http://wukong-v15-readonly-composer.test/**', route => route.fulfill({
+    body: runtimeFixtureHtml,
+    contentType: 'text/html; charset=utf-8'
+  }));
+  await page.goto('http://wukong-v15-readonly-composer.test/');
+
+  const before = await page.evaluate(() => {
+    const editor = document.querySelector('.composer-surface-chrome .ProseMirror[role="textbox"]');
+    const submit = document.querySelector('.composer-surface-chrome button[type="submit"]');
+    editor.setAttribute('contenteditable', 'false');
+    editor.setAttribute('aria-readonly', 'true');
+    submit.disabled = true;
+    submit.setAttribute('aria-disabled', 'true');
+    const rect = document.querySelector('.composer-surface-chrome').getBoundingClientRect();
+    return {
+      rect: [rect.x, rect.y, rect.width, rect.height],
+      contenteditable: editor.getAttribute('contenteditable'),
+      ariaReadonly: editor.getAttribute('aria-readonly'),
+      disabled: submit.disabled,
+      ariaDisabled: submit.getAttribute('aria-disabled')
+    };
+  });
+
+  await page.evaluate(expression);
+  await page.waitForFunction(() => (
+    document.querySelector('.composer-surface-chrome')
+      ?.classList.contains('forge-composer-frame')
+  ));
+
+  const themed = await page.evaluate(() => {
+    const frame = document.querySelector('.composer-surface-chrome');
+    const editor = frame.querySelector('.ProseMirror[role="textbox"]');
+    const submit = frame.querySelector('button[type="submit"]');
+    const rect = frame.getBoundingClientRect();
+    return {
+      rect: [rect.x, rect.y, rect.width, rect.height],
+      backgroundImage: getComputedStyle(frame).backgroundImage,
+      contenteditable: editor.getAttribute('contenteditable'),
+      ariaReadonly: editor.getAttribute('aria-readonly'),
+      disabled: submit.disabled,
+      ariaDisabled: submit.getAttribute('aria-disabled')
+    };
+  });
+  assert.deepEqual(themed.rect, before.rect);
+  assert.match(themed.backgroundImage, /data:image\//);
+  assert.deepEqual(
+    {
+      contenteditable: themed.contenteditable,
+      ariaReadonly: themed.ariaReadonly,
+      disabled: themed.disabled,
+      ariaDisabled: themed.ariaDisabled
+    },
+    {
+      contenteditable: before.contenteditable,
+      ariaReadonly: before.ariaReadonly,
+      disabled: before.disabled,
+      ariaDisabled: before.ariaDisabled
+    }
+  );
+
+  for (const editable of ['true', 'false', 'true']) {
+    await page.evaluate(value => {
+      document.querySelector('.composer-surface-chrome .ProseMirror[role="textbox"]')
+        .setAttribute('contenteditable', value);
+    }, editable);
+    await page.waitForFunction(() => (
+      document.querySelector('.composer-surface-chrome')
+        ?.classList.contains('forge-composer-frame') &&
+      document.querySelectorAll('.forge-composer-frame').length === 1
+    ));
+  }
+
+  await page.evaluate(RESTORE_EXPRESSION);
+  assert.equal(await page.locator('[data-forge-mark]').count(), 0);
+  await page.close();
+});
+
 test('V15 preserves native surface geometry across compact and wide window sizes', async () => {
   const page = await browser.newPage({
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
