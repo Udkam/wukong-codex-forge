@@ -117,6 +117,7 @@
 - V17 修复当前 Codex 编辑器签名漂移造成“背景已替换、输入框仍原生灰色”的漏映射：官方 `.composer-surface-chrome` 现在是主身份，内部 editor 签名只作可选辅助；不改变 contenteditable、ARIA、按钮或 DOM 拓扑。
 - V17 生产拓扑门禁已继续收紧：composer component 必须是 `data-codex-composer-root` 的直属子节点、包含官方 `.composer-surface-chrome` 且排除直属 above-composer portal；fixture 不再声明测试专用组件身份。官方 compact row 的 `first:rounded-t-2xl`、`border-x`、`border-t` 以及“不含任何下角 token”均进入 9 项定向回归测试。
 - V17 临时调试清理已增加精确 PID 树兜底：只有 launcher、disable request 与 CDP browser PID 三重归属成立，且 `Browser.close` 超时后仍残留时才触发；最新真实复验中该兜底被实际触发，随后 root、owner、便携 profile 进程与专属端口全部归零。它只用于开发验收，不是最终随 Codex 启停方案。
+- V18 保持 V17 已确认的三类几何不变，并把视觉裁角从原生宿主迁到不命中鼠标的静态纸面层：主输入器仍为四角短卷页；排队/目标 joined stack 仍只含两个上角与直底边；独立 progress pill 仍全圆。原生宿主现在保持 `clip-path:none` 和完整矩形命中区；fixture 证据位于 `artifacts/test-runs/v18-paint-only-corners-20260730-qa2/`，当前仍待用户多轮视觉验收。
 - V15 侧栏/顶部入口状态矩阵已按当前 ASAR 补齐：五个顶部入口、一级项目/无项目对话、二级项目对话、四个应用菜单触发器均覆盖默认、hover、focus、selected/open、expanded/collapsed、disabled，以及原生 unread/running indicator；尾部菜单单独禁用不会误禁整行，Windows forced-colors 会压过所有组合状态。无头视觉证据为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`，仍待用户实机视觉验收。
 - 当前 Electron 的“文件/编辑/视图/帮助”下拉内容由主进程原生菜单绘制，不在 renderer DOM 中；本阶段只对四个原生触发页签做材质替换，不能把测试夹具伪装成已改造原生下拉菜单。
 - 金箍棒图案已从旧版约 40×34 px 的有效占位放大到原生槽位内约 50×42 px，112×112 资源为 3.2 KiB；1× fixture 可辨认完整端箍且无边缘裁切，原生几何不变。无头证据位于 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-49-40-653Z/`，用户实机验收仍未完成。

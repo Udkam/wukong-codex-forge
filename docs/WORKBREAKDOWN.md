@@ -15,7 +15,9 @@
 | `asar_state_contract` | 为当前 ASAR 的 nav/task/status/spinner 增加漂移合同 | 已完成并定向通过；不绑定压缩变量名，不修改或覆盖应用包 |
 | 主对话 · sidebar/topbar states | 实现完整 paint 状态、动态刷新、几何/热区/ARIA 门禁和状态截图 | headless 7/7、相关背景/原生主题/最小包 11/11 通过；独立状态截图已生成，用户实机视觉仍待验收 |
 | 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已把四类输入纸面统一暗化到目标中位色；活动 composer 已切回完整山水/云纹源，不再使用中央透明的错误 mask，真实 Codex 视觉仍待多轮验收 |
-| 主对话 · V17 composer topology | 保持原生 DOM、状态和按钮尺寸，把新建对话主输入器实现为短卷页，并按真实 topology 区分 joined stack 与独立 pill | `184:25`、`120–168px` 已接入；最新真实窗口 root 为 `736×163px`、纸面为 `736×120px`。fixture 已撤下测试专用 component 身份并改用生产直属子节点关系；排队/目标 row 的官方上角 token 与无下角 token 已进入 9 项定向门禁，独立 progress pill 继续全圆，等待用户视觉审计 |
+| `asar_composer_contract` | 只读核对正式注入链、当前 ASAR composer/stack/pill 拓扑、原生尺寸和命中区风险 | 确认正式链为 `forge-background-v13.css`；queue/goal 只有上角、progress 独立全圆；指出活体宿主 `clip-path` 会削减角部热区，主对话已迁到绘制层 |
+| `composer_visual_mapping_audit` | 只读对照用户原生结构参考与 V18 三张状态截图 | P0 为 0；确认 joined stack 两上角直底、progress 独立全圆、new-task 为 `736×120` 短卷。提出 stacking-context 风险，主对话已增加绘制层不覆盖原生控件的命中合同 |
+| 主对话 · V18 composer paint/hit area | 保持原生 DOM、状态和按钮尺寸，把新建对话主输入器实现为短卷页，并按真实 topology 区分 joined stack 与独立 pill；视觉裁角不得削减宿主热区 | `184:25`、`120–168px` 保持不变；主卷页四角、joined stack 两个上角迁入 `pointer-events:none` 的绘制层，原生宿主 `clip-path:none`；独立 progress pill 继续全圆。定向回归 9/9、状态夹具通过，等待用户视觉审计 |
 | 主对话 · transient review cleanup | 临时真实窗口截图后按归属关闭并证明无残留 | 普通 capture 不关窗；显式清理需 launcher + disable request + CDP browser PID 三重一致。Windows Electron 根进程超时仅允许精确 `/PID` 树兜底；真实复验后 root/owner/profile process/port 均为 0，生命周期定向测试 12/12 |
 | `landing_composition_audit` | 只读审计官方“悟空”书法三倍版的垂直位置、标题比例与人物遮挡风险 | 有效约 141×96 px、题字 27 px / `.035em`；杨戬场景确认未遮挡头部、武器或动作，且两行原生说明不可见 |
 | `landing_threefold_multiscene_audit` | 只读复核四张活动战斗背景上的三倍字标 | 检查 0/1/2/3 场景人物焦点、字标/题字间距、深浅版可读性与 56×56 host / 168×168 paint 合同 |

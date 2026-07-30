@@ -25,6 +25,7 @@
 | V15-19 | 当前 Codex 内部 editor class/role 漂移不得导致输入框漏替换；官方 `.composer-surface-chrome` 是主 surface 身份，内部 editor 仅作可选语义辅助；主题不得伪造 editor、contenteditable 或 ARIA | 删除 ProseMirror/role 的漂移回归测试、真实 Codex DOM audit、主题化覆盖率与 restore |
 | V15-20 | composer component、above-composer portal、joined stack 与独立 progress pill 的对应关系必须从当前安装包的生产结构推导；fixture 不得用测试属性伪造 component 身份。compact queue/goal row 只允许官方上角 token，不得出现任何下角 token | 当前 ASAR 只读源码核对、root 直属子节点关系、生产 class 签名、portal/component 互斥与上下角 token 定向断言 |
 | V15-21 | 临时真实 Codex 验收不得留下调试窗口、便携 profile 子进程或监听端口；普通截图仍不得关闭任意窗口。只有 launcher、disable request 与 CDP browser PID 三者一致时，捕获器才可在 `Browser.close` 超时后结束该精确 PID 树，且不能按名称或映像批量结束 | 临时实例真实截图、CDP PID 匹配、精确 `/PID` 树兜底、root/owner/profile process/port 四项归零与生命周期合同 |
+| V15-22 | 主输入器四角与 joined queue/goal stack 两个上角只能裁切主题纸面，不得裁掉原生宿主的矩形命中区；joined stack 仍保持直底边，独立 progress pill 仍保持全圆。纸面绘制层必须 `pointer-events:none`，高对比模式必须完全撤下 | 宿主 computed `clip-path:none`、绘制伪元素精确 polygon、`pointer-events:none`、forced-colors、原生坐标/尺寸/语义深比较 |
 
 当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 合同、7 项原生表面测试和 Windows forced-colors 组合态测试；最新证据目录为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。Electron 原生下拉菜单本体不在 renderer DOM 中，当前验收范围只包含四个原生触发页签；不得把夹具中的页面元素当作下拉本体交付。
 

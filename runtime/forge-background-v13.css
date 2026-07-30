@@ -311,18 +311,34 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   --color-token-icon-secondary: #2b2015;
   --color-token-icon-tertiary: #35271a;
   color: #080604 !important;
-  background-color: #87755d !important;
-  background-image:
-    var(--forge-ui-composer-main),
-    var(--forge-ui-paper-tile) !important;
-  background-position: center, center !important;
-  background-repeat: no-repeat, repeat !important;
-  background-size: 100% 100%, 512px 220px !important;
+  position: relative !important;
+  isolation: isolate;
+  background-color: transparent !important;
+  background-image: none !important;
   aspect-ratio: 184 / 25;
   min-height: 120px;
   max-height: 168px;
   border-radius: 0 !important;
   corner-shape: initial !important;
+  clip-path: none !important;
+  border-color: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain .forge-composer-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: #87755d;
+  background-image:
+    var(--forge-ui-composer-main),
+    var(--forge-ui-paper-tile);
+  background-position: center, center;
+  background-repeat: no-repeat, repeat;
+  background-size: 100% 100%, 512px 220px;
   clip-path: polygon(
     8px 0,
     calc(100% - 8px) 0,
@@ -333,13 +349,11 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     0 calc(100% - 8px),
     0 8px
   );
-  border-color: transparent !important;
-  backdrop-filter: none !important;
   box-shadow:
     0 1px 0 rgba(235, 216, 184, .18) inset,
     0 -1px 0 rgba(70, 48, 25, .38) inset,
     0 2px 0 rgba(20, 14, 8, .28),
-    0 7px 20px rgba(5, 4, 3, .26) !important;
+    0 7px 20px rgba(5, 4, 3, .26);
 }
 
 :root.forge-ink-mountain .forge-composer-input-shell {
@@ -353,12 +367,12 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   padding-inline: clamp(18px, 1.5vw, 30px) !important;
 }
 
-:root.forge-ink-mountain .forge-composer-frame:focus-within {
+:root.forge-ink-mountain .forge-composer-frame:focus-within::before {
   box-shadow:
     0 1px 0 rgba(235, 216, 184, .24) inset,
     0 -1px 0 rgba(70, 48, 25, .42) inset,
     0 0 0 1px rgba(111, 74, 37, .72) inset,
-    0 5px 18px rgba(5, 4, 3, .28) !important;
+    0 5px 18px rgba(5, 4, 3, .28);
 }
 
 :root.forge-ink-mountain .forge-composer-frame .ProseMirror {
@@ -379,15 +393,32 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   --color-token-description-foreground: #332619;
   --color-token-icon-foreground: #080604;
   color: #080604 !important;
+  position: relative !important;
+  isolation: isolate;
   background-color: transparent !important;
-  background-image:
-    var(--forge-ui-composer-strip),
-    var(--forge-ui-paper-tile) !important;
-  background-position: center top, center !important;
-  background-repeat: no-repeat, repeat !important;
-  background-size: 100% 200%, 512px 220px !important;
+  background-image: none !important;
   border-radius: 0 !important;
   corner-shape: initial !important;
+  clip-path: none !important;
+  border-color: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain .forge-composer-context::before,
+:root.forge-ink-mountain .forge-composer-panel-stack::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: transparent;
+  background-image:
+    var(--forge-ui-composer-strip),
+    var(--forge-ui-paper-tile);
+  background-position: center top, center;
+  background-repeat: no-repeat, repeat;
+  background-size: 100% 200%, 512px 220px;
   clip-path: polygon(
     8px 0,
     calc(100% - 8px) 0,
@@ -396,13 +427,11 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     0 100%,
     0 8px
   );
-  border-color: transparent !important;
-  backdrop-filter: none !important;
   box-shadow:
     0 1px 0 rgba(235, 216, 184, .14) inset,
     0 -1px 0 rgba(75, 51, 27, .3) inset,
     0 2px 0 rgba(20, 14, 8, .24),
-    0 4px 13px rgba(5, 4, 3, .22) !important;
+    0 4px 13px rgba(5, 4, 3, .22);
 }
 
 :root.forge-ink-mountain .forge-composer-panel {
@@ -950,6 +979,12 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     clip-path: none !important;
     forced-color-adjust: auto;
     outline: revert !important;
+  }
+
+  :root.forge-ink-mountain #root .forge-composer-frame::before,
+  :root.forge-ink-mountain #root .forge-composer-context::before,
+  :root.forge-ink-mountain #root .forge-composer-panel-stack::before {
+    content: none !important;
   }
 
   :root.forge-ink-mountain #root :is(

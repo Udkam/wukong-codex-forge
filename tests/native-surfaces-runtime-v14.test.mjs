@@ -380,17 +380,35 @@ test('V17 maps reference materials with the constrained custom-scroll geometry a
     composer: (() => {
       const element = document.querySelector('.forge-composer-frame');
       const style = getComputedStyle(element);
+      const paintStyle = getComputedStyle(element, '::before');
+      const rect = element.getBoundingClientRect();
+      const controlsRemainHittable = [...element.querySelectorAll('button,[role="button"]')]
+        .every(control => {
+          const controlRect = control.getBoundingClientRect();
+          const hit = document.elementFromPoint(
+            controlRect.left + controlRect.width / 2,
+            controlRect.top + controlRect.height / 2
+          );
+          return hit === control || control.contains(hit);
+        });
       return {
         backgroundImage: style.backgroundImage,
-        backgroundPosition: style.backgroundPosition,
-        backgroundRepeat: style.backgroundRepeat,
-        backgroundSize: style.backgroundSize,
         aspectRatio: style.aspectRatio,
         minHeight: style.minHeight,
         maxHeight: style.maxHeight,
         borderRadius: style.borderRadius,
         clipPath: style.clipPath,
-        pseudoContent: getComputedStyle(element, '::before').content
+        pseudoContent: paintStyle.content,
+        pseudoPointerEvents: paintStyle.pointerEvents,
+        pseudoBackgroundImage: paintStyle.backgroundImage,
+        pseudoBackgroundPosition: paintStyle.backgroundPosition,
+        pseudoBackgroundRepeat: paintStyle.backgroundRepeat,
+        pseudoBackgroundSize: paintStyle.backgroundSize,
+        pseudoClipPath: paintStyle.clipPath,
+        cornerHitKeepsHost: document
+          .elementsFromPoint(rect.left + 1, rect.top + 1)
+          .includes(element),
+        controlsRemainHittable
       };
     })(),
     composerEditorPaddingBlockStart: getComputedStyle(
@@ -421,22 +439,35 @@ test('V17 maps reference materials with the constrained custom-scroll geometry a
       document.querySelector('.forge-sidebar-level2:not(.forge-sidebar-selected)')
     ).backgroundImage
   }));
-  assert.match(paint.composer.backgroundImage, /data:image\/svg\+xml/);
+  assert.equal(paint.composer.backgroundImage, 'none');
+  assert.match(paint.composer.pseudoBackgroundImage, /data:image\/svg\+xml/);
   assert.ok(
-    (paint.composer.backgroundImage.match(/data:image\//g) || []).length >= 2,
-    'composer material must use the direct frame and repeatable paper layers'
+    (paint.composer.pseudoBackgroundImage.match(/data:image\//g) || []).length >= 2,
+    'composer paint layer must use the frame and repeatable paper layers'
   );
-  assert.equal(paint.composer.backgroundRepeat, 'no-repeat, repeat');
-  assert.equal(paint.composer.backgroundSize, '100% 100%, 512px 220px');
+  assert.equal(paint.composer.pseudoBackgroundRepeat, 'no-repeat, repeat');
+  assert.equal(paint.composer.pseudoBackgroundSize, '100% 100%, 512px 220px');
   assert.equal(paint.composer.aspectRatio, '184 / 25');
   assert.equal(paint.composer.minHeight, '120px');
   assert.equal(paint.composer.maxHeight, '168px');
   assert.equal(paint.composer.borderRadius, '0px');
-  assert.match(paint.composer.clipPath, /^polygon\(/);
+  assert.equal(paint.composer.clipPath, 'none');
+  assert.match(paint.composer.pseudoClipPath, /^polygon\(/);
   assert.equal(
     paint.composer.pseudoContent,
-    'none',
-    'composer paint must not create a positioned pseudo-element'
+    '""',
+    'composer paper must be isolated to a paint-only pseudo-element'
+  );
+  assert.equal(paint.composer.pseudoPointerEvents, 'none');
+  assert.equal(
+    paint.composer.cornerHitKeepsHost,
+    true,
+    'the visually cut composer corner must retain the native rectangular host hit area'
+  );
+  assert.equal(
+    paint.composer.controlsRemainHittable,
+    true,
+    'the composer paint stacking context must not cover native controls'
   );
   assert.equal(
     paint.composerEditorPaddingBlockStart,
@@ -1092,28 +1123,65 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.equal(await page.locator('.forge-plan-pill').count(), 1);
   assert.equal(await page.locator('.forge-diff-summary').count(), 1);
   const guidedPaint = await page.evaluate(() => {
-    const stackStyle = getComputedStyle(
-      document.querySelector('.forge-composer-panel-stack')
+    const stack = document.querySelector('.forge-composer-panel-stack');
+    const stackStyle = getComputedStyle(stack);
+    const stackPaintStyle = getComputedStyle(stack, '::before');
+    const stackControls = [...stack.querySelectorAll('button,[role="button"]')];
+    const previousStackPointerEvents = stack.style.pointerEvents;
+    const previousControlPointerEvents = stackControls.map(
+      control => control.style.pointerEvents
     );
+    stack.style.pointerEvents = 'auto';
+    stackControls.forEach(control => {
+      control.style.pointerEvents = 'auto';
+    });
+    const stackControlsRemainHittable = stackControls.every(control => {
+        const controlRect = control.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          controlRect.left + controlRect.width / 2,
+          controlRect.top + controlRect.height / 2
+        );
+        return hit === control || control.contains(hit);
+      });
+    stack.style.pointerEvents = previousStackPointerEvents;
+    stackControls.forEach((control, index) => {
+      control.style.pointerEvents = previousControlPointerEvents[index];
+    });
     const pillStyle = getComputedStyle(
       document.querySelector('.forge-composer-progress-pill')
     );
     return {
       stackClipPath: stackStyle.clipPath,
-      stackBackgroundSize: stackStyle.backgroundSize,
+      stackBackgroundImage: stackStyle.backgroundImage,
+      stackPaintClipPath: stackPaintStyle.clipPath,
+      stackPaintBackgroundSize: stackPaintStyle.backgroundSize,
+      stackPaintPointerEvents: stackPaintStyle.pointerEvents,
+      stackControlsRemainHittable,
       stackBorderRadius: stackStyle.borderRadius,
       pillBorderRadius: pillStyle.borderRadius
     };
   });
   assert.equal(
     guidedPaint.stackClipPath,
+    'none',
+    'the live joined queue/goal host must retain its rectangular native hit area'
+  );
+  assert.equal(guidedPaint.stackBackgroundImage, 'none');
+  assert.equal(
+    guidedPaint.stackPaintClipPath,
     'polygon(8px 0px, calc(100% - 8px) 0px, 100% 8px, 100% 100%, 0px 100%, 0px 8px)',
-    'the joined queue/goal strip must have only the two upper cut corners'
+    'the paint-only joined queue/goal strip must have only the two upper cut corners'
   );
   assert.equal(
-    guidedPaint.stackBackgroundSize,
+    guidedPaint.stackPaintBackgroundSize,
     '100% 200%, 512px 220px',
     'the joined strip must paint only the upper half of the four-corner source'
+  );
+  assert.equal(guidedPaint.stackPaintPointerEvents, 'none');
+  assert.equal(
+    guidedPaint.stackControlsRemainHittable,
+    true,
+    'the joined-stack paint stacking context must not cover native controls'
   );
   assert.equal(guidedPaint.stackBorderRadius, '0px');
   assert.equal(
@@ -1719,7 +1787,7 @@ test('V15 keeps the native composer material while the editor is read-only', asy
     const rect = frame.getBoundingClientRect();
     return {
       rect: [rect.x, rect.y, rect.width, rect.height],
-      backgroundImage: getComputedStyle(frame).backgroundImage,
+      backgroundImage: getComputedStyle(frame, '::before').backgroundImage,
       contenteditable: editor.getAttribute('contenteditable'),
       ariaReadonly: editor.getAttribute('aria-readonly'),
       disabled: submit.disabled,
@@ -1806,7 +1874,7 @@ test('V17 keeps the official composer surface themed when the native editor sign
     const rect = frame.getBoundingClientRect();
     return {
       rect: [rect.x, rect.y, rect.width, rect.height],
-      backgroundImage: getComputedStyle(frame).backgroundImage,
+      backgroundImage: getComputedStyle(frame, '::before').backgroundImage,
       contenteditable: editor.getAttribute('contenteditable'),
       role: editor.getAttribute('role')
     };

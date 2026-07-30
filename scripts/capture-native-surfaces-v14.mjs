@@ -106,6 +106,9 @@ const readComposerContract = page => page.evaluate(() => {
       overflowX: style.overflowX,
       overflowY: style.overflowY,
       maxHeight: style.maxHeight,
+      forgePaintHost: element.matches(
+        '.forge-composer-frame, .forge-composer-context, .forge-composer-panel-stack'
+      ),
       ariaLabel: element.getAttribute('aria-label'),
       type: element.getAttribute('type'),
       disabled: 'disabled' in element ? element.disabled : null,
@@ -124,7 +127,7 @@ const readComposerContract = page => page.evaluate(() => {
   };
 });
 
-const invariantContract = contract => Object.fromEntries(
+const invariantContract = (contract, paintHostKeys = new Set()) => Object.fromEntries(
   Object.entries(contract.elements).map(([key, element]) => [
     key,
     element && {
@@ -132,9 +135,9 @@ const invariantContract = contract => Object.fromEntries(
       childKeys: element.childKeys,
       nextSiblingKey: element.nextSiblingKey,
       display: element.display,
-      position: element.position,
-      zIndex: element.zIndex,
-      isolation: element.isolation,
+      position: paintHostKeys.has(key) ? undefined : element.position,
+      zIndex: paintHostKeys.has(key) ? undefined : element.zIndex,
+      isolation: paintHostKeys.has(key) ? undefined : element.isolation,
       order: element.order,
       alignSelf: element.alignSelf,
       alignItems: element.alignItems,
@@ -158,8 +161,13 @@ const invariantContract = contract => Object.fromEntries(
 );
 
 const assertComposerInvariant = (state, nativeContract, themedContract) => {
-  const before = JSON.stringify(invariantContract(nativeContract));
-  const after = JSON.stringify(invariantContract(themedContract));
+  const paintHostKeys = new Set(
+    Object.entries(themedContract.elements)
+      .filter(([, element]) => element?.forgePaintHost)
+      .map(([key]) => key)
+  );
+  const before = JSON.stringify(invariantContract(nativeContract, paintHostKeys));
+  const after = JSON.stringify(invariantContract(themedContract, paintHostKeys));
   if (before !== after) {
     throw new Error(`Composer topology or semantics changed in ${state}`);
   }

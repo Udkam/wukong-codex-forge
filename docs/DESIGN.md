@@ -42,9 +42,10 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 - 轮廓使用 8 px 低成本切角 `clip-path: polygon(...)`，并强制取消原生圆角；不使用 SVG filter、持续合成层或逐帧动画。
 - `composer-main.webp` 继续只负责纸面与边饰，不能作为 alpha mask。其透明源中央并非实心，用作 mask 会产生大面积黑洞，已在本轮自审中否决。
 - editor 本身仍保持原生零附加 padding；安全留白加在 editor wrapper。footer 仍使用原生 grid 与原生按钮，只在卷页内增加左右/底部留白。
-- Windows forced-colors 取消切角和位图，回退系统原生矩形与系统色。
+- 四角卷页只绘制在主输入器的 `::before` 静态纸面层；该层不命中鼠标，原生宿主自身保持 `clip-path:none` 与完整矩形热区。焦点阴影也只作用于纸面层，不削减或移动编辑器与五类按钮。
+- Windows forced-colors 取消纸面伪元素、切角和位图，回退系统原生矩形与系统色。
 
-该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。排队与目标两个原生行先收敛到同一个 above-composer stack，再在 stack 外层绘制一次：官方 compact row 只有 `first:rounded-t-2xl`，主题 `clip-path` 也只有左上、右上两个切角，底边两点保持直线；`composer-strip.webp` 以 `100% 200%` 绘制并定位在上方，只取四角源图的上半部，物理上避免下方角饰。独立进度 pill 位于直属 portal 内，继续使用 `999px` 圆角，不能与 joined stack 混用。
+该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。排队与目标两个原生行先收敛到同一个 above-composer stack，再在 stack 的 `::before` 静态绘制层画一次纸面：官方 compact row 只有 `first:rounded-t-2xl`，主题绘制层也只有左上、右上两个切角，底边两点保持直线；宿主本身不裁切并继续保留矩形热区。`composer-strip.webp` 以 `100% 200%` 绘制并定位在上方，只取四角源图的上半部，物理上避免下方角饰。独立进度 pill 位于直属 portal 内，继续使用 `999px` 圆角，不能与 joined stack 混用。
 
 用户最新要求把整套输入纸面收进能衔接战斗/风景背景与深墨侧栏的暖灰黄赭范围。生成器不再对各裁片机械追加不同通道偏移，而是以同一 `RGB(135,117,93)` 目标和 `0.74` 纹理对比系数重建；实际 main/strip/pill/tile 中位色落在 `RGB(131–135,111–117,86–93)`。CSS 回退色统一为 `#87755d`，主墨色为 `#080604`；纸纹无运行时 filter，暗纹理对比度和 forced-colors 回退继续由定向合同锁定。
 
