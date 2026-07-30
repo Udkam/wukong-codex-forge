@@ -55,11 +55,25 @@ test('live capture closes only an explicitly owned transient debug session', () 
   assert.match(capture, /SystemInfo\.getProcessInfo/);
   assert.match(capture, /Transient cleanup PID mismatch/);
   assert.match(capture, /Browser\.close/);
+  assert.match(
+    capture,
+    /execFileAsync\('taskkill\.exe', \['\/PID', String\(pid\), '\/T', '\/F'\]/
+  );
+  assert.ok(
+    capture.indexOf('SystemInfo.getProcessInfo') <
+      capture.indexOf('terminateVerifiedDebugTree(debugRootPid)'),
+    'the exact-tree fallback must remain behind the CDP browser PID proof'
+  );
+  assert.match(capture, /verifiedTreeFallback/);
   assert.match(capture, /rootReleased/);
   assert.match(capture, /ownerReleased/);
   assert.match(capture, /portReleased/);
   assert.match(capture, /flag:\s*'wx'/);
-  assert.doesNotMatch(capture, /taskkill|Stop-Process|process\.kill\([^,]+,\s*['"]SIGKILL/i);
+  assert.doesNotMatch(
+    capture,
+    /Stop-Process|process\.kill\([^,]+,\s*['"]SIGKILL/i
+  );
+  assert.doesNotMatch(capture, /['"]\/IM['"]/i);
 });
 
 test('public entries route only to the preserving and verified-disable lifecycle', () => {

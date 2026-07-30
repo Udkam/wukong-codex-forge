@@ -1,7 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { chromium } from '@playwright/test';
+
+const execFileAsync = promisify(execFile);
 
 const parseArgs = argv => {
   const values = {};
@@ -81,6 +85,26 @@ const waitUntil = async (predicate, timeoutMs) => {
     await new Promise(resolve => setTimeout(resolve, 250));
   } while (Date.now() < deadline);
   return false;
+};
+const terminateVerifiedDebugTree = async pid => {
+  if (!processAlive(pid)) return false;
+  if (process.platform === 'win32') {
+    try {
+      await execFileAsync('taskkill.exe', ['/PID', String(pid), '/T', '/F'], {
+        windowsHide: true,
+        timeout: 10000
+      });
+    } catch (error) {
+      if (processAlive(pid)) {
+        throw Error(
+          `Verified transient debug tree did not terminate: ${String(error?.message || error)}`
+        );
+      }
+    }
+  } else {
+    process.kill(pid, 'SIGTERM');
+  }
+  return true;
 };
 
 const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
@@ -338,7 +362,19 @@ try {
     } catch (error) {
       if (!/closed|disconnected|target/i.test(String(error?.message || error))) throw error;
     }
-    const rootReleased = await waitUntil(() => !processAlive(debugRootPid), 20000);
+    let rootReleased = await waitUntil(() => !processAlive(debugRootPid), 20000);
+    let verifiedTreeFallback = false;
+    if (!rootReleased) {
+      /*
+       * Some Windows Electron builds close every renderer after Browser.close
+       * but retain the verified portable browser root and its loopback
+       * listener. The PID above was already matched against CDP and the
+       * launcher-owned disable request, so a bounded exact-tree fallback is
+       * safe and cannot target the user's normal Codex control window.
+       */
+      verifiedTreeFallback = await terminateVerifiedDebugTree(debugRootPid);
+      rootReleased = await waitUntil(() => !processAlive(debugRootPid), 10000);
+    }
     const ownerReleased = await waitUntil(() => !processAlive(debugOwnerPid), 20000);
     const portReleased = await waitUntil(async () => !(await endpointAccepting(port)), 10000);
     report.transientCleanup = {
@@ -346,6 +382,7 @@ try {
       rootPid: debugRootPid,
       ownerPid: debugOwnerPid,
       port,
+      verifiedTreeFallback,
       rootReleased,
       ownerReleased,
       portReleased
