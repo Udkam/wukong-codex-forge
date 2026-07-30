@@ -136,6 +136,32 @@ const backgroundCoverage = page => page.evaluate(() => {
   };
 });
 
+const composerGeometryKeys = new Set([
+  'composer',
+  'composer-add',
+  'composer-access',
+  'composer-model',
+  'composer-voice',
+  'composer-submit'
+]);
+
+const withoutComposerGeometry = value => Object.fromEntries(
+  Object.entries(value).filter(([key]) => !composerGeometryKeys.has(key))
+);
+
+const assertComposerGeometryContract = (before, after) => {
+  assert.equal(after.composer[0], before.composer[0], 'composer x anchor changed');
+  assert.equal(after.composer[2], before.composer[2], 'composer width changed');
+  assert.equal(
+    after.composer[1] + after.composer[3],
+    before.composer[1] + before.composer[3],
+    'composer bottom anchor changed'
+  );
+  for (const key of [...composerGeometryKeys].filter(item => item !== 'composer')) {
+    assert.deepEqual(after[key].slice(2), before[key].slice(2), `${key} hit-box size changed`);
+  }
+};
+
 test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay, and reaches refresh quiescence', async () => {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
   await page.route('http://wukong.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
@@ -192,8 +218,15 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(activeState.preloadInFlight, 0);
   assert.equal(activeState.backgroundReady, true);
   assert.equal(await page.evaluate(() => window.__forgePreloadImages.length), 1);
-  assert.deepEqual(await geometry(page), beforeGeometry);
-  assert.deepEqual(await nativeLayoutStyle(page), beforeStyle);
+  const afterGeometry = await geometry(page);
+  const afterStyle = await nativeLayoutStyle(page);
+  assert.deepEqual(withoutComposerGeometry(afterGeometry), withoutComposerGeometry(beforeGeometry));
+  assertComposerGeometryContract(beforeGeometry, afterGeometry);
+  const { composer: beforeComposerStyle, ...beforeNonComposerStyle } = beforeStyle;
+  const { composer: afterComposerStyle, ...afterNonComposerStyle } = afterStyle;
+  assert.deepEqual(afterNonComposerStyle, beforeNonComposerStyle);
+  assert.equal(afterComposerStyle.clipPath, 'none');
+  assert.equal(afterComposerStyle.width, beforeComposerStyle.width);
   assert.equal(await page.locator('body').innerText(), beforeText);
   assert.equal(await page.locator('body > *').count(), beforeBodyChildren + 1);
   assert.equal(await page.locator('.forge-workspace').count(), 1);
@@ -373,8 +406,14 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   );
   assert.equal(await page.locator('html').getAttribute('data-forge-mode'), 'scenery');
   assert.equal(await page.locator('html').getAttribute('data-forge-scene'), '6');
-  assert.deepEqual(await geometry(page), beforeGeometry);
-  assert.deepEqual(await nativeLayoutStyle(page), beforeStyle);
+  const threadGeometry = await geometry(page);
+  const threadStyle = await nativeLayoutStyle(page);
+  assert.deepEqual(withoutComposerGeometry(threadGeometry), withoutComposerGeometry(beforeGeometry));
+  assertComposerGeometryContract(beforeGeometry, threadGeometry);
+  const { composer: threadComposerStyle, ...threadNonComposerStyle } = threadStyle;
+  assert.deepEqual(threadNonComposerStyle, beforeNonComposerStyle);
+  assert.equal(threadComposerStyle.clipPath, 'none');
+  assert.equal(threadComposerStyle.width, beforeComposerStyle.width);
   assert.deepEqual(await conversationGeometry(page), authored.geometry);
   assert.equal(await conversationText(page), authored.text);
   assert.equal(await page.locator(
@@ -502,6 +541,58 @@ test('V13 keeps native carriers painted until the first background is decoded', 
     await page.locator('main.main-surface').evaluate(element => getComputedStyle(element).backgroundColor),
     'rgba(0, 0, 0, 0)'
   );
+
+  await page.evaluate(RESTORE_EXPRESSION);
+});
+
+test('V13 still waits for decode when a cached background is already complete', async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+  await page.route('http://wukong-cached-ready.test/**', route => route.fulfill({ body: runtimeFixtureHtml, contentType: 'text/html; charset=utf-8' }));
+  await page.goto('http://wukong-cached-ready.test/');
+  const nativeMainPaint = await page.locator('main.main-surface').evaluate(element => ({
+    color: getComputedStyle(element).backgroundColor,
+    image: getComputedStyle(element).backgroundImage
+  }));
+  await page.evaluate(() => {
+    window.__forgeCachedDecodeResolvers = [];
+    window.Image = class ForgeCachedImage {
+      constructor() {
+        this.onload = null;
+        this.onerror = null;
+        this.complete = true;
+        this.naturalWidth = 32;
+        this._src = '';
+      }
+      set src(value) {
+        this._src = value;
+      }
+      get src() {
+        return this._src;
+      }
+      decode() {
+        return new Promise(resolve => {
+          window.__forgeCachedDecodeResolvers.push(resolve);
+        });
+      }
+    };
+  });
+
+  const applyPromise = page.evaluate(expression);
+  await page.waitForFunction(() => window.__forgeCachedDecodeResolvers?.length === 1);
+  assert.equal(await page.evaluate(ACTIVE_PROBE_EXPRESSION), false);
+  assert.equal(await page.locator('html').getAttribute('data-forge-background-ready'), null);
+  assert.deepEqual(
+    await page.locator('main.main-surface').evaluate(element => ({
+      color: getComputedStyle(element).backgroundColor,
+      image: getComputedStyle(element).backgroundImage
+    })),
+    nativeMainPaint
+  );
+
+  await page.evaluate(() => window.__forgeCachedDecodeResolvers.shift()?.());
+  assert.equal(await applyPromise, true);
+  assert.equal(await page.evaluate(ACTIVE_PROBE_EXPRESSION), true);
+  assert.equal(await page.locator('html').getAttribute('data-forge-background-ready'), 'true');
 
   await page.evaluate(RESTORE_EXPRESSION);
 });

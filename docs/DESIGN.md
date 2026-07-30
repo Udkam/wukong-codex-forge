@@ -78,6 +78,8 @@ V15 当前只组装 9 张背景：`erlang-ink-duel` 与 `great-sage-staff` 为�
 
 收敛后的图库解码总量为 19,258,880 px，交叉淡变最坏两图仍为 4,743,680 px。运行时仍只按需解码当前一图，过渡时最多保留两图；减少场景不会改变原生页面结构、路由判定或全窗 `cover` 合同。
 
+背景 ready 门不把 `Image.complete` 当作已可绘制的替代证据：缓存/data URL 同步 complete 与普通异步 onload 共用唯一 `decode()` 收口，解码完成前继续保留 Codex 原生 carrier paint。结构刷新也改为先生成本轮目标标记集合，再只删除失效 class；稳定 composer 不会在每次 refresh 中从 120 px 卷页退回 84 px 原生框再重新扩张。新建页题字的 ARIA 只在值实际改变时写入，避免相同属性写入反复唤醒 MutationObserver。
+
 ### 成本与回退
 
 九张活动 UI WebP 中的两张 landing 字标合计约 59 KiB 压缩数据；单张 336×336 解码约 441 KiB，两张理论合计约 882 KiB，仍低于单 UI/装饰图硬门。材质静态绘制，无 timer、动画、网络请求、常驻 filter 或持续合成提示。强制高对比模式隐藏全部材质并恢复系统面。葫芦已从当前目标删除，不进入活动主题或包。当前只完成 fixture、像素与本机源码合同，不等于真实 Codex 用户验收。

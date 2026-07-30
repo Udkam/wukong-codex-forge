@@ -106,15 +106,34 @@ function applyRuntime(payload) {
     }
     delete element.dataset.forgeTitleCopy;
   };
-  const clearMarks = () => {
-    document.querySelectorAll('[data-forge-mark]').forEach(element => {
-      restoreLandingCopy(element);
-      element.classList.remove(...markClasses);
-      delete element.dataset.forgeMark;
-    });
+  let pendingMarkPlan = null;
+  const reconcileMarks = planned => {
+    const existing = new Set(document.querySelectorAll('[data-forge-mark]'));
+    for (const element of existing) {
+      const desired = planned.get(element);
+      if (!desired) {
+        restoreLandingCopy(element);
+        element.classList.remove(...markClasses);
+        delete element.dataset.forgeMark;
+        continue;
+      }
+      for (const name of markClasses) {
+        if (!desired.has(name)) element.classList.remove(name);
+      }
+    }
+    for (const [element, desired] of planned) {
+      element.classList.add(...desired);
+      element.dataset.forgeMark = '1';
+    }
   };
   const mark = (element, name) => {
     if (!(element instanceof Element)) return null;
+    if (pendingMarkPlan) {
+      const desired = pendingMarkPlan.get(element) || new Set();
+      desired.add(name);
+      pendingMarkPlan.set(element, desired);
+      return element;
+    }
     element.classList.add(name);
     element.dataset.forgeMark = '1';
     return element;
@@ -242,6 +261,7 @@ function applyRuntime(payload) {
 
     let resolvePromise;
     let settled = false;
+    let decodeStarted = false;
     let timeout = 0;
     const image = new Image();
     const promise = new Promise(resolve => {
@@ -263,13 +283,18 @@ function applyRuntime(payload) {
     };
     state.preloadRequests.set(source, request);
     timeout = window.setTimeout(() => finish(false), 5000);
-    image.onload = async () => {
+    const finishLoadedImage = async () => {
+      if (settled || decodeStarted) return;
+      decodeStarted = true;
       try { await image.decode?.(); } catch { }
       finish(image.naturalWidth > 0);
     };
+    image.onload = () => {
+      void finishLoadedImage();
+    };
     image.onerror = () => finish(false);
     image.src = source;
-    if (image.complete && image.naturalWidth > 0) finish(true);
+    if (image.complete && image.naturalWidth > 0) void finishLoadedImage();
     return promise;
   };
   const readSceneStyle = (scene, mode) => {
@@ -502,7 +527,9 @@ function applyRuntime(payload) {
           : '__forge_absent__';
     }
     landingTitle.dataset.forgeTitleCopy = titleCopy;
-    landingTitle.setAttribute('aria-label', titleCopy);
+    if (landingTitle.getAttribute('aria-label') !== titleCopy) {
+      landingTitle.setAttribute('aria-label', titleCopy);
+    }
     mark(landingTitle, 'forge-landing-title');
 
     const icon = [...(workspace || document).querySelectorAll('[data-testid="home-icon"]')]
@@ -1099,22 +1126,31 @@ function applyRuntime(payload) {
   const refresh = () => {
     state.lastRefreshAt = performance.now();
     state.refreshCount += 1;
-    clearMarks();
     document.getElementById('wukong-forge-pet-overlay')?.remove();
     document.getElementById('wukong-forge-motif-overlay')?.remove();
 
     const overlayWasReady = overlayReady();
     ensureBackground();
     const workspace = findWorkspace();
-    mark(workspace, 'forge-workspace');
-    const topbarTargets = markTopbarMenus();
-    const composerTargets = markComposerSurfaces();
-    const sidebarTargets = markSidebarSurfaces();
     const { surface, threadEvidence, landingTitle } = classifySurface(workspace);
     const mode = surface === 'landing' ? 'battle' : 'scenery';
     root.dataset.forgeSurface = surface;
     root.dataset.forgeMode = mode;
-    if (surface === 'landing') markLandingHero(workspace, landingTitle);
+    const plannedMarks = new Map();
+    pendingMarkPlan = plannedMarks;
+    let topbarTargets;
+    let composerTargets;
+    let sidebarTargets;
+    try {
+      mark(workspace, 'forge-workspace');
+      topbarTargets = markTopbarMenus();
+      composerTargets = markComposerSurfaces();
+      sidebarTargets = markSidebarSurfaces();
+      if (surface === 'landing') markLandingHero(workspace, landingTitle);
+    } finally {
+      pendingMarkPlan = null;
+      reconcileMarks(plannedMarks);
+    }
 
     const computed = getComputedStyle(root);
     const sceneCount = Math.max(1, Number.parseInt(computed.getPropertyValue('--forge-scene-count'), 10) || 1);
