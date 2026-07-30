@@ -727,7 +727,7 @@ export const runtimeFixtureHtml = String.raw`
                       <div data-above-composer-portal
                         data-above-composer-conversation-id="fixture"
                         class="relative px-[var(--home-composer-inline-inset)] empty:hidden electron:grid"></div>
-                      <div data-native-composer-component>
+                      <div class="relative flex w-full flex-col gap-2">
                         <div data-native-above-stack-slot></div>
                         <div data-native-composer-utility-slot
                           data-fixture-surface="composer-context"
@@ -845,7 +845,9 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
       selectedState === 'expanded-guided'
     ) {
       const expandedStack = selectedState === 'expanded-guided';
-      const compactRowClasses = expandedStack ? '' : 'border-x border-t';
+      const compactRowClasses = expandedStack
+        ? ''
+        : 'border-x border-t first:rounded-t-2xl';
       model.childNodes[0].nodeValue = '5.6 Sol 极高';
       submit.setAttribute('aria-label', '停止');
       submit.innerHTML = `

@@ -971,6 +971,16 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       stackSharedParent: queued.parentElement === goal.parentElement,
       portalIsDirectChild: portal.parentElement === root,
       componentIsDirectChild: component.parentElement === root,
+      componentUsesProductionSignature: [
+        'relative',
+        'flex',
+        'w-full',
+        'flex-col',
+        'gap-2'
+      ].every(token => component.classList.contains(token)),
+      fixtureDoesNotDeclareComponentIdentity: !root.querySelector(
+        '[data-native-composer-component]'
+      ),
       stackInsideComponent: component.contains(stack),
       progressInsidePortal: portal.contains(progress),
       progressInsideStack: stack.contains(progress),
@@ -1026,6 +1036,8 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.equal(nativeStateContract.stackSharedParent, true);
   assert.equal(nativeStateContract.portalIsDirectChild, true);
   assert.equal(nativeStateContract.componentIsDirectChild, true);
+  assert.equal(nativeStateContract.componentUsesProductionSignature, true);
+  assert.equal(nativeStateContract.fixtureDoesNotDeclareComponentIdentity, true);
   assert.equal(nativeStateContract.stackInsideComponent, true);
   assert.equal(nativeStateContract.progressInsidePortal, true);
   assert.equal(nativeStateContract.progressInsideStack, false);
@@ -1219,6 +1231,14 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     const rect = utility.getBoundingClientRect();
     return {
       insideComponent: component.contains(utility),
+      outsidePortal: !portal.contains(utility),
+      componentSignature: [
+        'relative',
+        'flex',
+        'w-full',
+        'flex-col',
+        'gap-2'
+      ].every(token => component.classList.contains(token)),
       scrollAreaDirect: scrollArea.parentElement === utility,
       signature: [
         'flex',
@@ -1231,6 +1251,8 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     };
   });
   assert.equal(homeContextContract.insideComponent, true);
+  assert.equal(homeContextContract.outsidePortal, true);
+  assert.equal(homeContextContract.componentSignature, true);
   assert.equal(homeContextContract.scrollAreaDirect, true);
   assert.equal(homeContextContract.signature, true);
   assert.deepEqual(homeContextContract.rect, homeContextGeometry.context);
@@ -1332,6 +1354,16 @@ test('V16 maps the native guided stack once and remaps context without a resize 
               row.classList.contains('border-t')
             ))
           : null,
+        rowsUseNativeTopCornerToken: rows.length
+          ? rows.every(row => row.classList.contains('first:rounded-t-2xl'))
+          : null,
+        rowsUseLowerCornerToken: rows.length
+          ? rows.some(row => [...row.classList].some(token => (
+              token.includes('rounded-b') ||
+              token.includes('rounded-bl') ||
+              token.includes('rounded-br')
+            )))
+          : null,
         directStackOrder: stack
           ? [...stack.children].map(element => element.dataset.fixtureSurface)
           : []
@@ -1350,6 +1382,14 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     assert.equal(
       topology.rowsUseCompactBorders,
       expected.stacks ? expected.collapsed ?? true : null
+    );
+    assert.equal(
+      topology.rowsUseNativeTopCornerToken,
+      expected.stacks ? expected.collapsed ?? true : null
+    );
+    assert.equal(
+      topology.rowsUseLowerCornerToken,
+      expected.stacks ? false : null
     );
     assert.equal(
       topology.queueGoalSameParent,
