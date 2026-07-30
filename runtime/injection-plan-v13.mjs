@@ -20,8 +20,12 @@ export const MARK_CLASSES = [
   'forge-landing-subtitle',
   'forge-composer',
   'forge-composer-frame',
+  'forge-composer-input-shell',
+  'forge-composer-footer',
   'forge-composer-context',
+  'forge-composer-panel-stack',
   'forge-composer-panel',
+  'forge-composer-progress-pill',
   'forge-plan-pill',
   'forge-diff-summary',
   'forge-composer-submit',
@@ -556,13 +560,9 @@ function applyRuntime(payload) {
     state.observedResizeTargets = next;
     next.forEach(target => state.resizeObserver?.observe(target));
   };
-  const commonAncestorOf = elements => {
-    if (!elements.length) return null;
-    return elements.slice(1).reduce(
-      (ancestor, element) => commonAncestor(ancestor, element),
-      elements[0]
-    );
-  };
+  const hasClassTokens = (element, tokens) => (
+    Boolean(element) && tokens.every(token => element.classList.contains(token))
+  );
   const markTopbarMenus = () => {
     const topbar = [...document.querySelectorAll(
       '[class~="group/application-menu-top-bar"], .application-menu'
@@ -615,12 +615,10 @@ function applyRuntime(payload) {
     let editor = null;
     let surface = null;
     for (const candidateRoot of document.querySelectorAll(
-      '[data-thread-find-composer="true"]'
+      '[data-codex-composer-root]'
     )) {
       if (!visible(candidateRoot)) continue;
-      for (const candidateSurface of candidateRoot.querySelectorAll(
-        '.composer-surface-chrome'
-      )) {
+      for (const candidateSurface of candidateRoot.querySelectorAll('.composer-surface-chrome')) {
         if (!visible(candidateSurface)) continue;
         const candidateEditor = candidateSurface.matches(editorSelector)
           ? candidateSurface
@@ -635,14 +633,78 @@ function applyRuntime(payload) {
     }
     if (!composerRoot) return [];
 
+    const aboveComposerPortal = [...composerRoot.children].find(child => (
+      child.matches?.(
+        '[data-above-composer-portal][data-above-composer-conversation-id]'
+      )
+    )) || null;
+    const composerComponent = [...composerRoot.children].find(child => (
+      child !== aboveComposerPortal &&
+      child.contains(surface)
+    )) || null;
+
     mark(composerRoot, 'forge-composer');
     if (surface && visible(surface)) mark(surface, 'forge-composer-frame');
+    const editorShell = editor?.parentElement?.closest('div') || null;
+    if (
+      editorShell &&
+      editorShell !== surface &&
+      surface.contains(editorShell)
+    ) mark(editorShell, 'forge-composer-input-shell');
 
-    const navigationTargets = [...composerRoot.querySelectorAll('[data-composer-navigation-target]')]
-      .filter(visible);
-    const context = navigationTargets.length >= 2
-      ? commonAncestorOf(navigationTargets)
+    /*
+     * The native composer uses the same navigation-target attribute for both
+     * the utility/context row and footer controls. Only the project,
+     * environment and branch/run-location controls belong to the upper row.
+     * Grouping every navigation target promotes the whole composer root and
+     * destroys the native context geometry.
+     */
+    const navigationSelector = [
+      '[data-composer-navigation-target="workspace-project"]',
+      '[data-composer-navigation-target="environment"]',
+      '[data-composer-navigation-target="run-location"]',
+      '[data-composer-navigation-target="branch"]',
+      '[data-composer-navigation-target="starting-state"]'
+    ].join(', ');
+    const threadUtilityTokens = [
+      'flex',
+      'flex-wrap',
+      'items-center',
+      'gap-2',
+      'overflow-visible',
+      'pr-2',
+      'pl-2'
+    ];
+    const homeUtilityTokens = [
+      'flex',
+      'flex-nowrap',
+      'items-center',
+      'gap-2',
+      'overflow-hidden'
+    ];
+    const homeScrollArea = [
+      ...(composerComponent?.querySelectorAll(
+        '[data-composer-utility-bar-scroll-area]'
+      ) || [])
+    ].find(visible) || null;
+    const homeContext = homeScrollArea
+      ? [homeScrollArea.parentElement, homeScrollArea]
+        .find(element => (
+          element &&
+          element !== composerRoot &&
+          hasClassTokens(element, homeUtilityTokens)
+        )) || null
       : null;
+    const threadContext = [
+      ...(composerComponent?.querySelectorAll('div') || [])
+    ].find(element => (
+      element !== composerRoot &&
+      element !== surface &&
+      visible(element) &&
+      hasClassTokens(element, threadUtilityTokens) &&
+      element.querySelector(navigationSelector)
+    )) || null;
+    const context = homeContext || threadContext;
     if (
       context &&
       context !== composerRoot &&
@@ -650,33 +712,164 @@ function applyRuntime(payload) {
       context.getBoundingClientRect().height <= 64
     ) mark(context, 'forge-composer-context');
 
-    const panelCandidates = [
-      ...composerRoot.querySelectorAll(
-        '.order-2.flex.min-w-0.flex-col > .relative.min-w-0.overflow-clip'
-      )
-    ].filter(visible);
+    /*
+     * Queued guidance and the active goal are rows of one official
+     * above-composer stack. Paint the stack once and retain row marks only for
+     * the native one-pixel separator; never give each row its own paper card.
+     */
+    const aboveComposerPortals = aboveComposerPortal
+      ? [aboveComposerPortal]
+      : [];
+    const nativePanelRow = panel => (
+      visible(panel) &&
+      hasClassTokens(panel, [
+        'relative',
+        'min-w-0',
+        'overflow-clip',
+        'text-token-foreground'
+      ])
+    );
+    const panelStacks = [
+      ...(composerComponent?.querySelectorAll(
+        '.order-2.flex.min-w-0.flex-col'
+      ) || [])
+    ].filter(stack => (
+      visible(stack) &&
+      !aboveComposerPortal?.contains(stack) &&
+      [...stack.children].some(nativePanelRow)
+    ));
+    panelStacks.forEach(stack => mark(stack, 'forge-composer-panel-stack'));
+    const panelCandidates = panelStacks.flatMap(stack => (
+      [...stack.children].filter(nativePanelRow)
+    ));
     panelCandidates.forEach(panel => mark(panel, 'forge-composer-panel'));
 
-    const compactCandidates = [
-      ...composerRoot.querySelectorAll('button, [role="button"], [data-state]')
-    ].filter(element => {
-      if (!visible(element)) return false;
-      const rect = element.getBoundingClientRect();
-      return rect.height >= 24 && rect.height <= 64 && rect.width >= 96 && rect.width <= 720;
-    });
     const planPattern = /(?:第\s*\d+\s*\/\s*\d+\s*步|step\s*\d+\s*\/\s*\d+)/i;
     const diffPattern = /(?:\d+\s*个文件(?:已)?(?:更改|修改)|\d+\s*files?\s+changed)/i;
-    compactCandidates.forEach(element => {
-      const text = textOf(element);
-      if (planPattern.test(text)) mark(element, 'forge-plan-pill');
-      else if (diffPattern.test(text)) mark(element, 'forge-diff-summary');
+    const progressHosts = aboveComposerPortals.flatMap(portal => (
+      [...portal.children].filter(child => (
+        visible(child) &&
+        child.classList.contains('relative') &&
+        child.classList.contains('col-start-1') &&
+        child.classList.contains('row-start-1') &&
+        child.classList.contains('h-8') &&
+        child.classList.contains('self-end')
+      ))
+    ));
+    const progressPills = progressHosts.map(host => {
+      const descendants = [host, ...host.querySelectorAll('*')].filter(element => {
+        if (!visible(element)) return false;
+        const rect = element.getBoundingClientRect();
+        const text = textOf(element);
+        return (
+          rect.height >= 24 &&
+          rect.height <= 56 &&
+          rect.width > 1 &&
+          rect.width <= surface.getBoundingClientRect().width &&
+          (planPattern.test(text) || diffPattern.test(text))
+        );
+      });
+      return descendants.find(element => hasClassTokens(element, [
+        'flex',
+        'w-max',
+        'max-w-full',
+        'min-w-0',
+        'items-center',
+        'gap-2',
+        'rounded-3xl',
+        'border',
+        'px-3',
+        'py-1.5'
+      ])) || null;
+    }).filter((pill, index, pills) => pill && pills.indexOf(pill) === index);
+    progressPills.forEach(pill => {
+      const text = textOf(pill);
+      mark(pill, 'forge-composer-progress-pill');
+      if (planPattern.test(text)) mark(pill, 'forge-plan-pill');
+      if (diffPattern.test(text)) mark(pill, 'forge-diff-summary');
     });
 
-    const submit = surface
-      ? [...surface.querySelectorAll('button[type="submit"]')].find(visible)
+    /*
+     * Codex owns the send/stop state on a type="button" control. Restrict the
+     * search to the official select-none footer and its final control group:
+     * prefer a semantic send/stop label, then accept one unlabeled native
+     * signature only when it is the final visible button in both the footer
+     * and its immediate control group. Never infer this control from the
+     * composer-wide bottom-right geometry.
+     */
+    const nativeSubmitTokens = [
+      'cursor-interaction',
+      'size-token-button-composer',
+      'flex',
+      'items-center',
+      'justify-center',
+      'rounded-full',
+      'transition-opacity',
+      'focus-visible:outline-2'
+    ];
+    const footerCandidates = surface
+      ? [...surface.querySelectorAll('div.select-none')].filter(element => (
+          visible(element) &&
+          [...element.classList].some(token => /^_footer_.+_\d+$/.test(token)) &&
+          element.querySelector('button')
+        ))
+      : [];
+    const footer = footerCandidates.find(element => (
+      [...element.querySelectorAll('button')].some(button => (
+        visible(button) && hasClassTokens(button, nativeSubmitTokens)
+      ))
+    )) || null;
+    if (footer) mark(footer, 'forge-composer-footer');
+    const footerButtons = footer
+      ? [...footer.querySelectorAll('button')].filter(visible)
+      : [];
+    const nativeSubmitButtons = footerButtons.filter(button => (
+      hasClassTokens(button, nativeSubmitTokens)
+    ));
+    const submitPattern = /(?:send|stop|发送|停止|取消生成|cancel generation)/i;
+    const semanticSubmit = nativeSubmitButtons.find(button => (
+      submitPattern.test(
+        [
+          button.getAttribute('aria-label'),
+          button.getAttribute('title'),
+          textOf(button)
+        ].filter(Boolean).join(' ')
+      )
+    ));
+    const unlabeledSubmitButtons = nativeSubmitButtons.filter(button => (
+      ![
+        button.getAttribute('aria-label'),
+        button.getAttribute('title'),
+        textOf(button)
+      ].filter(Boolean).join(' ').trim()
+    ));
+    const unlabeledFooterSubmit = unlabeledSubmitButtons.length === 1
+      ? unlabeledSubmitButtons[0]
       : null;
+    const unlabeledControlGroupButtons = unlabeledFooterSubmit?.parentElement
+      ? [
+          ...unlabeledFooterSubmit.parentElement.querySelectorAll('button')
+        ].filter(visible)
+      : [];
+    const submit = semanticSubmit || (
+      unlabeledFooterSubmit &&
+      footerButtons.at(-1) === unlabeledFooterSubmit &&
+      unlabeledControlGroupButtons.at(-1) === unlabeledFooterSubmit
+        ? unlabeledFooterSubmit
+        : null
+    );
     if (submit) mark(submit, 'forge-composer-submit');
-    return [composerRoot, surface, context, ...panelCandidates];
+    return [
+      composerRoot,
+      surface,
+      editorShell,
+      footer,
+      context,
+      ...panelStacks,
+      ...panelCandidates,
+      ...progressPills,
+      submit
+    ];
   };
   const firstTextLeft = element => {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
@@ -1062,6 +1255,8 @@ function applyRuntime(payload) {
     '[class~="group/application-menu-top-bar"] button[aria-haspopup="menu"][aria-expanded]',
     '.application-menu',
     '[data-thread-find-composer]',
+    '[data-codex-composer-root]',
+    '[data-above-composer-portal]',
     '.composer-surface-chrome',
     '[data-composer-navigation-target]',
     '.app-shell-left-panel',
@@ -1092,24 +1287,63 @@ function applyRuntime(payload) {
     if (node.matches('[data-forge-owned], [data-forge-owned] *')) return false;
     return node.matches(refreshStructureSelector) || Boolean(node.closest(refreshStructureSelector));
   };
+  const composerBoundarySelector = [
+    '[data-codex-composer-root]',
+    '[data-thread-find-composer="true"]',
+    '.composer-surface-chrome',
+    '[data-above-composer-portal]'
+  ].join(',');
+  const composerSignalSelector = [
+    '[data-codex-composer-root]',
+    '.composer-surface-chrome',
+    '[data-above-composer-portal]',
+    '[data-composer-utility-bar-scroll-area]',
+    '[data-composer-navigation-target]',
+    '.order-2.flex.min-w-0.flex-col',
+    'button.size-token-button-composer'
+  ].join(',');
+  const nodeTouchesComposerSignal = node => (
+    node.nodeType === Node.ELEMENT_NODE &&
+    (
+      node.matches(composerSignalSelector) ||
+      Boolean(node.querySelector(composerSignalSelector))
+    )
+  );
+  const recordTouchesComposerSignal = record => {
+    const target = record.target instanceof Element
+      ? record.target
+      : record.target?.parentElement;
+    if (!target?.closest(composerBoundarySelector)) return false;
+    if (record.type === 'attributes') return target.matches(composerSignalSelector);
+    return (
+      target.matches(composerSignalSelector) ||
+      [...record.addedNodes, ...record.removedNodes].some(nodeTouchesComposerSignal)
+    );
+  };
   const observer = new MutationObserver(records => {
     if (records.some(record => (
       record.target?.id === 'wukong-forge-background' ||
       [...record.removedNodes].some(node => node.nodeType === Node.ELEMENT_NODE && node.id === 'wukong-forge-background')
     ))) delete root.dataset.forgeBackgroundReady;
-    if (records.some(record => (
-      record.type === 'attributes'
+    const composerSignalChanged = records.some(recordTouchesComposerSignal);
+    const otherThemeStructureChanged = records.some(record => {
+      const target = record.target instanceof Element
+        ? record.target
+        : record.target?.parentElement;
+      if (target?.closest(composerBoundarySelector)) return false;
+      return record.type === 'attributes'
         ? (
             nodeTouchesThemeStructure(record.target) ||
-            Boolean(record.target.closest?.(
-              '.app-shell-left-panel, [data-thread-find-composer="true"]'
-            ))
+            Boolean(record.target.closest?.('.app-shell-left-panel'))
           )
         : (
             nodeIsWithinThemeStructure(record.target) ||
             [...record.addedNodes, ...record.removedNodes].some(nodeTouchesThemeStructure)
-          )
-    ))) scheduleRefresh();
+          );
+    });
+    if (composerSignalChanged || otherThemeStructureChanged) {
+      scheduleRefresh(composerSignalChanged ? 0 : undefined);
+    }
   });
   const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(scheduleRefresh) : null;
   observer.observe(document.body, {
@@ -1120,10 +1354,12 @@ function applyRuntime(payload) {
       'aria-current',
       'aria-selected',
       'aria-expanded',
+      'aria-label',
       'aria-disabled',
       'disabled',
       'hidden',
       'inert',
+      'title',
       'data-state',
       'data-disabled',
       'data-app-action-sidebar-thread-active',

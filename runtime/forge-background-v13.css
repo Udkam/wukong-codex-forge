@@ -295,8 +295,9 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 /*
- * Ancient-volume composer material. These rules replace paint only: the
- * official composer owns every dimension, inset, line wrap, button and hit box.
+ * Ancient-volume composer material. The native component tree, text flow,
+ * controls and hit boxes remain intact; only the main paper surface adopts the
+ * approved 1536:378 expanded-scroll proportion and its content insets.
  */
 :root.forge-ink-mountain .forge-composer-frame {
   --color-token-foreground: #080604;
@@ -309,54 +310,46 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   --color-token-icon-secondary: #2b2015;
   --color-token-icon-tertiary: #35271a;
   color: #080604 !important;
-  position: relative;
-  isolation: isolate;
-  background-color: #7d6d5a !important;
-  background-image: var(--forge-ui-paper-tile) !important;
-  background-position: center !important;
-  background-repeat: repeat !important;
-  background-size: 384px 192px !important;
+  background-color: #87755d !important;
+  background-image:
+    var(--forge-ui-composer-main),
+    var(--forge-ui-paper-tile) !important;
+  background-position: center, center !important;
+  background-repeat: no-repeat, repeat !important;
+  background-size: 100% 100%, 512px 220px !important;
+  aspect-ratio: 256 / 63;
+  min-height: 168px;
+  max-height: 256px;
+  border-radius: 0 !important;
+  corner-shape: initial !important;
+  clip-path: polygon(
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px),
+    0 8px
+  );
   border-color: transparent !important;
-  border-radius: 2px !important;
+  backdrop-filter: none !important;
   box-shadow:
-    0 1px 0 rgba(235, 216, 184, .22) inset,
-    0 -1px 0 rgba(70, 48, 25, .46) inset,
-    0 2px 0 rgba(20, 14, 8, .34),
-    0 7px 20px rgba(5, 4, 3, .3) !important;
+    0 1px 0 rgba(235, 216, 184, .18) inset,
+    0 -1px 0 rgba(70, 48, 25, .38) inset,
+    0 2px 0 rgba(20, 14, 8, .28),
+    0 7px 20px rgba(5, 4, 3, .26) !important;
 }
 
-:root.forge-ink-mountain .forge-composer-frame::before,
-:root.forge-ink-mountain .forge-composer-context::before,
-:root.forge-ink-mountain .forge-composer-panel::before,
-:root.forge-ink-mountain .forge-plan-pill::before,
-:root.forge-ink-mountain .forge-diff-summary::before {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  box-sizing: border-box;
-  border: 1px solid transparent;
-  pointer-events: none;
-  content: "";
+:root.forge-ink-mountain .forge-composer-input-shell {
+  margin-bottom: 0 !important;
+  padding-block-start: clamp(20px, 1.5vw, 30px) !important;
+  padding-inline: clamp(20px, 1.75vw, 34px) !important;
 }
 
-:root.forge-ink-mountain .forge-composer-frame::before {
-  /*
-   * Keep the ornamental edge inside the native clip. A narrower painted edge
-   * preserves the accepted paper frame while leaving more of the official
-   * 84px composer available to its editor and controls.
-   */
-  inset: 0;
-  border-image-source: var(--forge-ui-composer-main);
-  border-image-slice: 52 58 fill;
-  border-image-width: 14px 18px;
-  border-image-repeat: stretch;
-}
-
-:root.forge-ink-mountain .forge-composer-frame > *,
-:root.forge-ink-mountain .forge-composer-context > *,
-:root.forge-ink-mountain .forge-composer-panel > * {
-  position: relative;
-  z-index: 1;
+:root.forge-ink-mountain .forge-composer-footer {
+  margin-bottom: clamp(14px, 1.2vw, 22px) !important;
+  padding-inline: clamp(18px, 1.5vw, 30px) !important;
 }
 
 :root.forge-ink-mountain .forge-composer-frame:focus-within {
@@ -368,8 +361,6 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 :root.forge-ink-mountain .forge-composer-frame .ProseMirror {
-  box-sizing: border-box;
-  padding-block-start: 6px !important;
   color: inherit !important;
   text-shadow: 0 1px 0 rgba(224, 204, 172, .12);
 }
@@ -380,35 +371,38 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 :root.forge-ink-mountain .forge-composer-context,
-:root.forge-ink-mountain .forge-composer-panel {
+:root.forge-ink-mountain .forge-composer-panel-stack {
   --color-token-foreground: #080604;
   --color-token-text-primary: #080604;
   --color-token-text-secondary: #2a1f14;
   --color-token-description-foreground: #332619;
   --color-token-icon-foreground: #080604;
   color: #080604 !important;
-  position: relative;
-  isolation: isolate;
-  background-color: #7d6d5a !important;
-  background-image: var(--forge-ui-paper-tile) !important;
-  background-position: center !important;
-  background-repeat: repeat !important;
-  background-size: 384px 192px !important;
+  background-color: #87755d !important;
+  background-image:
+    var(--forge-ui-composer-strip),
+    var(--forge-ui-paper-tile) !important;
+  background-position: center, center !important;
+  background-repeat: no-repeat, repeat !important;
+  background-size: 100% 100%, 512px 220px !important;
   border-color: transparent !important;
-  border-radius: 2px !important;
+  backdrop-filter: none !important;
   box-shadow:
-    0 1px 0 rgba(235, 216, 184, .18) inset,
-    0 -1px 0 rgba(75, 51, 27, .34) inset,
-    0 2px 0 rgba(20, 14, 8, .28),
-    0 4px 13px rgba(5, 4, 3, .24) !important;
+    0 1px 0 rgba(235, 216, 184, .14) inset,
+    0 -1px 0 rgba(75, 51, 27, .3) inset,
+    0 2px 0 rgba(20, 14, 8, .24),
+    0 4px 13px rgba(5, 4, 3, .22) !important;
 }
 
-:root.forge-ink-mountain .forge-composer-context::before,
-:root.forge-ink-mountain .forge-composer-panel::before {
-  border-image-source: var(--forge-ui-composer-strip);
-  border-image-slice: 44 52 fill;
-  border-image-width: 14px 18px;
-  border-image-repeat: stretch;
+:root.forge-ink-mountain .forge-composer-panel {
+  color: inherit !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain .forge-composer-panel + .forge-composer-panel {
+  box-shadow: inset 0 1px rgba(59, 42, 26, .34) !important;
 }
 
 :root.forge-ink-mountain .forge-composer-context button,
@@ -416,47 +410,33 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 :root.forge-ink-mountain .forge-composer-panel button,
 :root.forge-ink-mountain .forge-composer-panel [role="button"] {
   color: inherit !important;
-  background-color: rgba(212, 183, 144, .08) !important;
-  border-color: rgba(52, 36, 21, .28) !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
   box-shadow: none !important;
 }
 
-:root.forge-ink-mountain .forge-composer-context button,
-:root.forge-ink-mountain .forge-composer-context [role="button"] {
-  background-image: var(--forge-ui-composer-pill) !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: 100% 100% !important;
-}
-
+:root.forge-ink-mountain .forge-composer-progress-pill,
 :root.forge-ink-mountain .forge-plan-pill,
 :root.forge-ink-mountain .forge-diff-summary {
   --color-token-foreground: #080604;
   --color-token-text-primary: #080604;
   --color-token-text-secondary: #2a1f14;
   color: #080604 !important;
-  position: relative;
-  isolation: isolate;
-  background-color: #7d6d5a !important;
-  background-image: var(--forge-ui-paper-tile) !important;
-  background-position: center !important;
-  background-repeat: repeat !important;
-  background-size: 384px 192px !important;
+  background-color: #87755d !important;
+  background-image:
+    var(--forge-ui-composer-pill),
+    var(--forge-ui-paper-tile) !important;
+  background-position: center, center !important;
+  background-repeat: no-repeat, repeat !important;
+  background-size: 100% 100%, 512px 220px !important;
   border-color: transparent !important;
-  border-radius: 2px !important;
+  backdrop-filter: none !important;
   box-shadow:
     0 1px 0 rgba(235, 216, 184, .18) inset,
     0 -1px 0 rgba(75, 51, 27, .38) inset,
     0 2px 0 rgba(20, 14, 8, .24),
     0 4px 11px rgba(5, 4, 3, .24) !important;
-}
-
-:root.forge-ink-mountain .forge-plan-pill::before,
-:root.forge-ink-mountain .forge-diff-summary::before {
-  border-image-source: var(--forge-ui-composer-pill);
-  border-image-slice: 36 44 fill;
-  border-image-width: 12px 16px;
-  border-image-repeat: stretch;
 }
 
 :root.forge-ink-mountain .forge-composer-submit {
@@ -928,7 +908,9 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 
   :root.forge-ink-mountain #root .forge-composer-frame,
   :root.forge-ink-mountain #root .forge-composer-context,
+  :root.forge-ink-mountain #root .forge-composer-panel-stack,
   :root.forge-ink-mountain #root .forge-composer-panel,
+  :root.forge-ink-mountain #root .forge-composer-progress-pill,
   :root.forge-ink-mountain #root .forge-plan-pill,
   :root.forge-ink-mountain #root .forge-diff-summary,
   :root.forge-ink-mountain #root .forge-composer-submit,
@@ -952,6 +934,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     text-shadow: none !important;
     opacity: 1 !important;
     filter: none !important;
+    clip-path: none !important;
     forced-color-adjust: auto;
     outline: revert !important;
   }

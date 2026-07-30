@@ -1,21 +1,60 @@
 {
-  "contract": "v15-dark-paper-palette-border-image",
+  "contract": "v16-native-geometry-paper-family",
   "paper_palette": {
     "target_median_rgb": [
-      124,
-      108,
-      88
-    ],
-    "channel_offset": [
-      -84,
-      -72,
-      -56
+      135,
+      117,
+      93
     ],
     "matte_rgb": [
-      125,
-      109,
-      90
-    ]
+      135,
+      117,
+      93
+    ],
+    "texture_contrast": 0.74,
+    "tile_crop": [
+      540,
+      185,
+      1052,
+      405
+    ],
+    "source_bases": {
+      "composer_main": [
+        210,
+        183,
+        147
+      ],
+      "composer_strip": [
+        208,
+        179,
+        142
+      ],
+      "composer_pill": [
+        209,
+        180,
+        143
+      ]
+    },
+    "center_alpha_boxes": {
+      "composer_main": [
+        58,
+        52,
+        1478,
+        326
+      ],
+      "composer_strip": [
+        52,
+        44,
+        1484,
+        92
+      ],
+      "composer_pill": [
+        44,
+        36,
+        724,
+        74
+      ]
+    }
   },
   "source_files": {
     "composer": "themes/ui/v14/sources/composer-paper-sheet-alpha-contract.png",
@@ -25,90 +64,114 @@
   "outputs": {
     "composer_main": {
       "path": "themes/ui/v15/composer-main.webp",
-      "bytes": 130516,
+      "bytes": 45054,
       "size": [
         1536,
         378
       ],
       "metrics": {
-        "opaque_pixels": 571764,
+        "opaque_pixels": 182684,
         "median_rgb": [
-          123.0,
-          107.0,
-          87.0
+          131.0,
+          111.0,
+          86.0
         ],
         "std_rgb": [
-          10.42,
-          10.98,
-          10.83
+          10.93,
+          11.42,
+          10.99
         ],
-        "median_luminance": 109.1
+        "median_luminance": 113.66
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparent_pixels": 393313,
+        "transparent_ratio": 0.677416
       }
     },
     "composer_strip": {
       "path": "themes/ui/v15/composer-strip.webp",
-      "bytes": 47434,
+      "bytes": 29382,
       "size": [
         1536,
         136
       ],
       "metrics": {
-        "opaque_pixels": 195206,
+        "opaque_pixels": 126470,
         "median_rgb": [
-          123.0,
-          106.0,
-          85.0
+          132.0,
+          115.0,
+          91.0
         ],
         "std_rgb": [
-          13.52,
-          14.06,
-          13.69
+          11.77,
+          12.1,
+          11.74
         ],
-        "median_luminance": 107.74
+        "median_luminance": 116.88
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparent_pixels": 72725,
+        "transparent_ratio": 0.34814
       }
     },
     "composer_pill": {
       "path": "themes/ui/v15/composer-pill.webp",
-      "bytes": 20308,
+      "bytes": 13766,
       "size": [
         768,
         110
       ],
       "metrics": {
-        "opaque_pixels": 78067,
+        "opaque_pixels": 52227,
         "median_rgb": [
-          124.0,
-          107.0,
-          85.0
+          133.0,
+          115.0,
+          90.0
         ],
         "std_rgb": [
-          10.95,
-          11.8,
-          11.7
+          9.38,
+          9.97,
+          9.79
         ],
-        "median_luminance": 108.88
+        "median_luminance": 117.16
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparent_pixels": 28475,
+        "transparent_ratio": 0.337062
       }
     },
     "paper_tile": {
       "path": "themes/ui/v15/paper-tile.webp",
-      "bytes": 37256,
+      "bytes": 40500,
       "size": [
         768,
-        384
+        330
       ],
       "metrics": {
-        "opaque_pixels": 294912,
+        "opaque_pixels": 253440,
         "median_rgb": [
-          125.0,
-          110.0,
-          90.0
+          135.0,
+          116.0,
+          93.0
         ],
         "std_rgb": [
-          4.95,
-          5.16,
-          5.33
+          2.94,
+          3.09,
+          3.34
         ],
-        "median_luminance": 111.75
+        "median_luminance": 118.38
+      },
+      "alpha": {
+        "min": 255,
+        "max": 255,
+        "transparent_pixels": 0,
+        "transparent_ratio": 0.0
       }
     },
     "sidebar_level1": {
@@ -131,6 +194,12 @@
           3.9
         ],
         "median_luminance": 31.43
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparent_pixels": 1595,
+        "transparent_ratio": 0.021634
       }
     },
     "sidebar_selected": {
@@ -153,6 +222,12 @@
           18.93
         ],
         "median_luminance": 191.97
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparent_pixels": 3556,
+        "transparent_ratio": 0.048231
       }
     },
     "sidebar_level2_hover": {
@@ -175,6 +250,12 @@
           1.28
         ],
         "median_luminance": 19.5
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparent_pixels": 854,
+        "transparent_ratio": 0.021384
       }
     },
     "landing_mark": {
@@ -197,6 +278,12 @@
           29.16
         ],
         "median_luminance": 96.39
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparent_pixels": 9589,
+        "transparent_ratio": 0.764429
       }
     }
   }

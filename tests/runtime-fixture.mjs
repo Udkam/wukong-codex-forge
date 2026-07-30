@@ -378,7 +378,149 @@ export const runtimeFixtureHtml = String.raw`
       padding-inline: var(--padding-toolbar);
       transform: translateX(50%);
     }
-    [data-codex-composer-root] { width: 100%; }
+    [data-codex-composer-root] {
+      min-width: 0;
+    }
+    [data-native-composer-utility-slot]:empty,
+    [data-native-above-stack-slot]:empty,
+    [data-above-composer-portal]:empty { display: none; }
+    [data-above-composer-portal] {
+      position: relative;
+      display: grid;
+      padding-inline: var(--home-composer-inline-inset);
+    }
+    .native-composer-utility {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      overflow: visible;
+      padding-inline: 8px;
+    }
+    .native-home-composer-utility {
+      position: relative;
+      top: 4px;
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      margin-inline: var(--home-composer-inline-inset);
+      margin-bottom: -18px;
+      padding: 6px 6px 27px;
+      border-radius: 16px 16px 0 0;
+      background: var(--color-token-side-bar-background);
+    }
+    .native-home-composer-scroll-area {
+      min-width: 0;
+      flex: 1 1 0%;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .native-home-composer-scroll-inner {
+      display: flex;
+      width: max-content;
+      min-width: 100%;
+      align-items: center;
+      gap: 4px;
+    }
+    .native-composer-utility-left {
+      display: flex;
+      min-width: 0;
+      flex: 1 1 0%;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 0;
+    }
+    .native-above-stack-inset {
+      position: relative;
+      padding-inline: var(--home-composer-inline-inset);
+    }
+    .native-above-stack-inset.native-collapsed {
+      margin-bottom: -1px;
+    }
+    .native-composer-utility button {
+      display: inline-flex;
+      height: var(--spacing-token-button-composer);
+      align-items: center;
+      gap: 5px;
+      padding-inline: 8px;
+    }
+    .native-above-composer-stack {
+      display: flex;
+      width: 100%;
+      flex-direction: column;
+    }
+    .native-above-composer-row {
+      display: flex;
+      width: 100%;
+      min-width: 0;
+      align-items: center;
+      gap: 8px;
+      padding: var(--padding-row-y) 12px;
+      border-right: 1px solid var(--color-token-border);
+      border-left: 1px solid var(--color-token-border);
+      border-top: 1px solid var(--color-token-border);
+      background: color-mix(in srgb, var(--color-token-input-background) 70%, transparent);
+    }
+    .native-above-composer-row:first-child {
+      border-radius: 16px 16px 0 0;
+    }
+    .native-progress-host {
+      position: relative;
+      grid-column-start: 1;
+      grid-row-start: 1;
+      height: 32px;
+      align-self: end;
+    }
+    .native-progress-layer {
+      position: absolute;
+      inset-inline: 0;
+      bottom: 4px;
+      display: flex;
+      min-height: 28px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding-bottom: 4px;
+    }
+    .native-progress-gradient {
+      pointer-events: none;
+      position: absolute;
+      inset-inline: 0;
+      bottom: -4px;
+      height: 28px;
+      background: linear-gradient(to top, var(--color-token-main-surface-primary), transparent);
+    }
+    .native-progress-rail {
+      display: flex;
+      width: 100%;
+      max-width: var(--thread-content-max-width);
+      min-width: 0;
+      justify-content: center;
+    }
+    .native-progress-clip {
+      position: relative;
+      z-index: 10;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      border-radius: 24px;
+    }
+    .native-progress-pill {
+      display: flex;
+      width: max-content;
+      max-width: 100%;
+      min-width: 0;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid var(--color-token-border);
+      border-radius: 24px;
+      background: color-mix(in srgb, var(--color-token-input-background) 70%, transparent);
+      white-space: nowrap;
+    }
     .composer-surface-chrome {
       pointer-events: auto;
       position: relative;
@@ -581,20 +723,35 @@ export const runtimeFixtureHtml = String.raw`
                   </div>
 
                   <div class="composer-area" data-thread-find-composer="true">
-                    <div data-codex-composer-root>
-                      <div class="composer-surface-chrome composer-native" data-codex-composer data-native-slot="composer">
-                        <div class="composer-input-wrap"><div class="ProseMirror" contenteditable="true" role="textbox" aria-label="Message composer" data-placeholder="随心输入"></div></div>
-                        <div class="composer-footer" role="toolbar">
-                          <div class="composer-footer-action">
-                            <button class="icon-only" data-native-slot="composer-add" aria-label="添加"><svg class="icon" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button>
-                          </div>
-                          <div class="composer-footer-actions">
-                            <button class="access" data-native-slot="composer-access">完全访问</button>
-                          </div>
-                          <div class="composer-footer-controls">
-                            <button class="model" data-native-slot="composer-model">5.6 Sol 极高<svg class="icon" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></button>
-                            <button class="icon-only" data-native-slot="composer-voice" aria-label="语音输入"><svg class="icon" viewBox="0 0 16 16"><rect x="5.5" y="2.5" width="5" height="7" rx="2.5"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2"/></svg></button>
-                            <button class="send" type="submit" aria-label="发送"><svg class="icon" viewBox="0 0 16 16"><path d="M8 13V3M4.5 6.5 8 3l3.5 3.5"/></svg></button>
+                    <div class="min-w-0" data-codex-composer-root>
+                      <div data-above-composer-portal
+                        data-above-composer-conversation-id="fixture"
+                        class="relative px-[var(--home-composer-inline-inset)] empty:hidden electron:grid"></div>
+                      <div data-native-composer-component>
+                        <div data-native-above-stack-slot></div>
+                        <div data-native-composer-utility-slot
+                          data-fixture-surface="composer-context"
+                          class="native-composer-utility flex flex-wrap items-center gap-2 overflow-visible pr-2 pl-2"></div>
+                        <div class="composer-surface-chrome composer-native" data-codex-composer data-native-slot="composer">
+                          <div class="composer-input-wrap"><div class="ProseMirror" contenteditable="true" role="textbox" aria-label="Message composer" data-placeholder="随心输入"></div></div>
+                          <div class="composer-footer select-none _footer_uoylu_2" role="toolbar">
+                            <div class="composer-footer-action">
+                              <button class="icon-only" data-native-slot="composer-add"
+                                data-composer-navigation-target="add-context"
+                                aria-label="添加"><svg class="icon" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button>
+                            </div>
+                            <div class="composer-footer-actions">
+                              <button class="access" data-native-slot="composer-access"
+                                data-composer-navigation-target="permissions">完全访问</button>
+                            </div>
+                            <div class="composer-footer-controls">
+                              <button class="model" data-native-slot="composer-model"
+                                data-composer-navigation-target="reasoning">5.6 Terra 极高<svg class="icon" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></button>
+                              <button class="icon-only" data-native-slot="composer-voice" aria-label="语音输入"><svg class="icon" viewBox="0 0 16 16"><rect x="5.5" y="2.5" width="5" height="7" rx="2.5"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2"/></svg></button>
+                              <button
+                                class="send cursor-interaction size-token-button-composer flex items-center justify-center rounded-full transition-opacity focus-visible:outline-2"
+                                type="button" data-native-slot="composer-submit"><svg class="icon" viewBox="0 0 16 16"><path d="M8 13V3M4.5 6.5 8 3l3.5 3.5"/></svg></button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -609,6 +766,216 @@ export const runtimeFixtureHtml = String.raw`
     </div>
   </div>
 `;
+
+export const installComposerState = (page, state = 'default') => page.evaluate(
+  selectedState => {
+    const root = document.querySelector('[data-codex-composer-root]');
+    const abovePortal = root.querySelector('[data-above-composer-portal]');
+    const stackSlot = root.querySelector('[data-native-above-stack-slot]');
+    const utilitySlot = root.querySelector('[data-native-composer-utility-slot]');
+    const footerActions = root.querySelector('.composer-footer-actions');
+    const model = root.querySelector('[data-native-slot="composer-model"]');
+    const submit = root.querySelector('[data-native-slot="composer-submit"]');
+
+    abovePortal.replaceChildren();
+    stackSlot.replaceChildren();
+    utilitySlot.replaceChildren();
+    utilitySlot.className = '';
+    footerActions.querySelector('[data-fixture-control="goal"]')?.remove();
+    model.childNodes[0].nodeValue = '5.6 Terra 极高';
+    submit.removeAttribute('aria-label');
+    submit.innerHTML = `
+      <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M8 13V3M4.5 6.5 8 3l3.5 3.5"/>
+      </svg>`;
+
+    const contextButtons = `
+          <button data-composer-navigation-target="workspace-project">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/>
+            </svg>
+            <span>wukong-codex-forge</span>
+          </button>
+          <button data-composer-navigation-target="environment">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+              <rect x="2.5" y="3" width="11" height="8" rx="1.5"/>
+              <path d="M5 13h6"/>
+            </svg>
+            <span>本地</span>
+          </button>
+          <button data-composer-navigation-target="run-location">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="4" cy="3.5" r="1.5"/>
+              <circle cx="4" cy="12.5" r="1.5"/>
+              <circle cx="12" cy="6" r="1.5"/>
+              <path d="M4 5v6M5.5 4.2C9 4.5 8 6 10.5 6"/>
+            </svg>
+            <b>main</b>
+          </button>`;
+    const contextMarkup = `
+      <div class="native-composer-utility-left flex min-w-0 flex-1 flex-nowrap items-center gap-0">
+        ${contextButtons}
+      </div>`;
+    const homeContextMarkup = `
+      <div data-composer-utility-bar-scroll-area
+        class="horizontal-scroll-fade-mask hide-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden native-home-composer-scroll-area"
+        role="group" aria-label="Composer utility bar">
+        <div class="flex w-max min-w-full items-center gap-1 native-home-composer-scroll-inner">
+          ${contextButtons}
+        </div>
+      </div>`;
+
+    if (selectedState === 'context') {
+      utilitySlot.className =
+        'native-composer-utility flex flex-wrap items-center gap-2 overflow-visible pr-2 pl-2';
+      utilitySlot.innerHTML = contextMarkup;
+    }
+    if (selectedState === 'home-context') {
+      utilitySlot.className =
+        '-mx-px flex flex-nowrap items-center gap-2 overflow-hidden bg-token-side-bar-background px-2 ' +
+        '-mb-4.5 rounded-t-2xl pt-2 pb-[27px] electron:relative ' +
+        'electron:mx-[var(--home-composer-inline-inset)] electron:px-1.5 ' +
+        'native-home-composer-utility';
+      utilitySlot.innerHTML = homeContextMarkup;
+    }
+
+    if (
+      selectedState === 'running' ||
+      selectedState === 'guided' ||
+      selectedState === 'expanded-guided'
+    ) {
+      const expandedStack = selectedState === 'expanded-guided';
+      const compactRowClasses = expandedStack ? '' : 'border-x border-t';
+      model.childNodes[0].nodeValue = '5.6 Sol 极高';
+      submit.setAttribute('aria-label', '停止');
+      submit.innerHTML = `
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="5" y="5" width="6" height="6" rx="1"
+            fill="currentColor" stroke="none"/>
+        </svg>`;
+
+      const goalButton = document.createElement('button');
+      goalButton.dataset.fixtureControl = 'goal';
+      goalButton.innerHTML = `
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="8" cy="8" r="5"/>
+          <circle cx="8" cy="8" r="2"/>
+          <path d="M8 1.5v2M14.5 8h-2"/>
+        </svg>
+        <span>目标</span>`;
+      footerActions.append(goalButton);
+
+      const queueRow = (
+        selectedState === 'guided' ||
+        selectedState === 'expanded-guided'
+      )
+        ? `
+          <div class="relative min-w-0 overflow-clip text-token-foreground ${compactRowClasses} vertical-scroll-fade-mask hide-scrollbar max-h-[30dvh] native-above-composer-row"
+            data-fixture-surface="queued-panel">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4 3v6.5A2.5 2.5 0 0 0 6.5 12H12"/>
+              <path d="m9.5 9.5 2.5 2.5-2.5 2.5"/>
+            </svg>
+            <b>1</b>
+            <span style="margin-left:auto">引导</span>
+            <button aria-label="删除排队消息">
+              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M3.5 5h9M6 5V3.5h4V5M5 5l.6 8h4.8l.6-8"/>
+              </svg>
+            </button>
+            <button aria-label="更多">
+              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+                <circle cx="4" cy="8" r=".7" fill="currentColor" stroke="none"/>
+                <circle cx="8" cy="8" r=".7" fill="currentColor" stroke="none"/>
+                <circle cx="12" cy="8" r=".7" fill="currentColor" stroke="none"/>
+              </svg>
+            </button>
+          </div>`
+        : '';
+
+      abovePortal.innerHTML = `
+        <div class="relative col-start-1 row-start-1 h-8 self-end native-progress-host">
+          <div class="pointer-events-none absolute inset-x-0 -bottom-1 h-7 bg-gradient-to-t from-token-main-surface-primary to-transparent native-progress-gradient"></div>
+          <div class="absolute inset-x-0 bottom-1 flex min-h-7 items-center justify-center gap-2 pb-1 native-progress-layer">
+            <div class="flex w-full max-w-(--thread-content-max-width) min-w-0 justify-center native-progress-rail">
+              <div class="relative z-10 max-w-full min-w-0 overflow-hidden rounded-3xl native-progress-clip">
+                <div class="flex w-max max-w-full min-w-0 items-center gap-2 rounded-3xl border px-3 py-1.5 native-progress-pill"
+                  data-state="active" data-fixture-control="plan">
+                  <svg class="icon animate-spin" viewBox="0 0 16 16" aria-hidden="true">
+                    <circle cx="8" cy="8" r="5.25" opacity=".28"/>
+                    <path d="M8 2.75A5.25 5.25 0 0 1 13.25 8"/>
+                  </svg>
+                  <span>第 5 / 6 步 · 19 个文件已更改…</span>
+                  <span style="color:#198b35">+1073</span>
+                  <span style="color:#b52e27">-83</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      stackSlot.innerHTML = `
+        <div class="relative px-[var(--home-composer-inline-inset)] native-above-stack-inset ${expandedStack ? '' : 'native-collapsed'}"
+          data-fixture-stack-mode="${expandedStack ? 'expanded' : 'collapsed'}">
+          <div class="order-2 flex min-w-0 flex-col native-above-composer-stack"
+            data-fixture-surface="composer-stack">
+            ${queueRow}
+            <div class="relative min-w-0 overflow-clip text-token-foreground ${compactRowClasses} native-above-composer-row"
+              data-fixture-surface="goal-panel">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="8" cy="8" r="5"/>
+              <circle cx="8" cy="8" r="2"/>
+              <path d="M8 1.5v2M14.5 8h-2"/>
+            </svg>
+            <strong>进行中的目标</strong>
+            <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              需解决的问题：①解谜关卡选择页面中如果加上“当前…”
+            </span>
+            <span style="margin-left:auto;white-space:nowrap">4h 53m 13s</span>
+            <button aria-label="编辑目标">
+              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M3 12.5h3l7-7-3-3-7 7v3Z"/>
+              </svg>
+            </button>
+            <button aria-label="暂停目标">
+              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+                <circle cx="8" cy="8" r="5"/>
+                <path d="M6.5 6v4M9.5 6v4"/>
+              </svg>
+            </button>
+            <button aria-label="删除目标">
+              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M3.5 5h9M6 5V3.5h4V5M5 5l.6 8h4.8l.6-8"/>
+              </svg>
+            </button>
+            <button aria-label="展开目标">
+              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="m6 3 5 5-5 5"/>
+              </svg>
+            </button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    return Object.fromEntries(
+      [
+        ['composer', '.composer-surface-chrome'],
+        ['context', '[data-fixture-surface="composer-context"]'],
+        ['progress', '[data-fixture-control="plan"]'],
+        ['stack', '[data-fixture-surface="composer-stack"]'],
+        ['queued', '[data-fixture-surface="queued-panel"]'],
+        ['goal', '[data-fixture-surface="goal-panel"]'],
+        ['submit', '[data-native-slot="composer-submit"]']
+      ].map(([name, selector]) => {
+        const element = document.querySelector(selector);
+        if (!element) return [name, null];
+        const rect = element.getBoundingClientRect();
+        return [name, [rect.x, rect.y, rect.width, rect.height]];
+      })
+    );
+  },
+  state
+);
 
 export const geometry = page => page.evaluate(() => Object.fromEntries(
   [...document.querySelectorAll('[data-native-slot]')].map(element => {

@@ -17,27 +17,33 @@ PAPER_ASSETS = {
     "composer_main": {
         "filename": "composer-main.webp",
         "size": (1536, 378),
-        "median": (123, 108, 87),
-        "std": ((7, 18), (7, 18), (7, 18)),
+        "median": (131, 111, 86),
+        "std": ((9, 14), (9, 14), (9, 14)),
     },
     "composer_strip": {
         "filename": "composer-strip.webp",
         "size": (1536, 136),
-        "median": (122, 105, 85),
-        "std": ((10, 18), (10, 18), (10, 18)),
+        "median": (132, 115, 91),
+        "std": ((9, 15), (9, 15), (9, 15)),
     },
     "composer_pill": {
         "filename": "composer-pill.webp",
         "size": (768, 110),
-        "median": (124, 107, 85),
-        "std": ((8, 16), (8, 16), (8, 16)),
+        "median": (133, 115, 90),
+        "std": ((7, 13), (7, 13), (7, 13)),
     },
     "paper_tile": {
         "filename": "paper-tile.webp",
-        "size": (768, 384),
-        "median": (125, 110, 90),
-        "std": ((3, 9), (3, 9), (3, 9)),
+        "size": (768, 330),
+        "median": (134, 117, 93),
+        "std": ((2, 5), (2, 5), (2, 5)),
     },
+}
+
+PAPER_ALPHA_BOXES = {
+    "composer_main": (58, 52, 1478, 326),
+    "composer_strip": (52, 44, 1484, 92),
+    "composer_pill": (44, 36, 724, 74),
 }
 
 
@@ -164,17 +170,19 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
             [112, 112],
         )
 
-    def test_generated_paper_assets_match_dark_reference_palette(self) -> None:
+    def test_generated_paper_assets_share_the_reviewed_native_paper_family(self) -> None:
         metrics = json.loads(
             (UI_ROOT / "asset-metrics.json").read_text(encoding="utf-8")
         )
         self.assertEqual(
             metrics["contract"],
-            "v15-dark-paper-palette-border-image",
+            "v16-native-geometry-paper-family",
         )
-        self.assertEqual(metrics["paper_palette"]["target_median_rgb"], [124, 108, 88])
-        self.assertEqual(metrics["paper_palette"]["channel_offset"], [-84, -72, -56])
-        self.assertEqual(metrics["paper_palette"]["matte_rgb"], [125, 109, 90])
+        self.assertEqual(metrics["paper_palette"]["target_median_rgb"], [135, 117, 93])
+        self.assertEqual(metrics["paper_palette"]["matte_rgb"], [135, 117, 93])
+        self.assertEqual(metrics["paper_palette"]["texture_contrast"], 0.74)
+        self.assertEqual(metrics["paper_palette"]["tile_crop"], [540, 185, 1052, 405])
+        self.assertNotIn("channel_offset", metrics["paper_palette"])
 
         for key, contract in PAPER_ASSETS.items():
             path = UI_ROOT / contract["filename"]
@@ -197,12 +205,88 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
                 list(contract["size"]),
             )
 
-    def test_css_uses_dark_fallback_without_gpu_filter(self) -> None:
+    def test_border_contracts_have_clear_centres_and_the_tile_is_periodic(self) -> None:
+        metrics = json.loads(
+            (UI_ROOT / "asset-metrics.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            metrics["paper_palette"]["center_alpha_boxes"],
+            {key: list(box) for key, box in PAPER_ALPHA_BOXES.items()},
+        )
+        for key, box in PAPER_ALPHA_BOXES.items():
+            rgba = np.asarray(
+                Image.open(UI_ROOT / PAPER_ASSETS[key]["filename"]).convert("RGBA")
+            )
+            left, top, right, bottom = box
+            self.assertEqual(
+                int(np.max(rgba[top:bottom, left:right, 3])),
+                0,
+                key,
+            )
+            self.assertGreater(
+                float(np.mean(rgba[..., 3] >= 240)),
+                0.25,
+                key,
+            )
+            alpha_contract = metrics["outputs"][key]["alpha"]
+            self.assertEqual(alpha_contract["min"], 0, key)
+            self.assertEqual(alpha_contract["max"], 255, key)
+            self.assertEqual(
+                alpha_contract["transparent_pixels"],
+                int(np.count_nonzero(rgba[..., 3] == 0)),
+                key,
+            )
+
+        tile = np.asarray(
+            Image.open(UI_ROOT / PAPER_ASSETS["paper_tile"]["filename"]).convert("RGBA")
+        )
+        self.assertEqual(int(np.min(tile[..., 3])), 255)
+        self.assertEqual(metrics["outputs"]["paper_tile"]["alpha"]["min"], 255)
+        self.assertEqual(metrics["outputs"]["paper_tile"]["alpha"]["max"], 255)
+        self.assertEqual(
+            metrics["outputs"]["paper_tile"]["alpha"]["transparent_pixels"],
+            0,
+        )
+        left_right = np.abs(
+            tile[:, 0, :3].astype(np.int16) - tile[:, -1, :3].astype(np.int16)
+        )
+        top_bottom = np.abs(
+            tile[0, :, :3].astype(np.int16) - tile[-1, :, :3].astype(np.int16)
+        )
+        self.assertLessEqual(float(np.mean(left_right)), 1.1)
+        self.assertLessEqual(float(np.mean(top_bottom)), 1.1)
+        self.assertLessEqual(int(np.max(left_right)), 8)
+        self.assertLessEqual(int(np.max(top_bottom)), 8)
+
+        total_bytes = sum(
+            (UI_ROOT / PAPER_ASSETS[key]["filename"]).stat().st_size
+            for key in PAPER_ASSETS
+        )
+        self.assertLessEqual(
+            total_bytes,
+            130_000,
+            "all four composer paper assets must stay under the low-cost budget",
+        )
+
+    def test_css_uses_reviewed_fallback_without_gpu_filter_or_filled_border_image(self) -> None:
         css = CSS_PATH.read_text(encoding="utf-8")
-        self.assertGreaterEqual(css.count("#7d6d5a"), 3)
+        self.assertGreaterEqual(css.count("#87755d"), 3)
         self.assertNotIn("#d1b78f", css)
         self.assertNotIn("#cfb48a", css)
         self.assertNotIn("filter: contrast(1.16) saturate(.94)", css)
+        self.assertNotRegex(
+            css,
+            r"border-image-slice\s*:[^;]*\bfill\b",
+        )
+        layered_paper_sizes = re.findall(
+            r"background-size:\s*100%\s+100%,\s*512px\s+220px\s*!important",
+            css,
+        )
+        self.assertGreaterEqual(
+            len(layered_paper_sizes),
+            3,
+            "composer paper surfaces must retain the reviewed 512x220 tile layer",
+        )
 
     def test_primary_ink_keeps_three_to_one_contrast_on_dark_paper(self) -> None:
         css = CSS_PATH.read_text(encoding="utf-8")
@@ -232,6 +316,15 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
                 )[0]
             )
             self.assertGreaterEqual(ratio, 3.0, key)
+
+        tile_rgb = opaque_rgb(UI_ROOT / PAPER_ASSETS["paper_tile"]["filename"])
+        tile_luminance = relative_luminance(tile_rgb)
+        tile_ratio = contrast_ratio(
+            tile_luminance,
+            np.full(tile_luminance.shape, ink_luminance),
+        )
+        self.assertGreaterEqual(float(np.percentile(tile_ratio, 10)), 4.0)
+        self.assertGreaterEqual(float(np.median(tile_ratio)), 4.5)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ import { chromium } from '@playwright/test';
 import { payloadFromThemeFile } from '../runtime/forge-runtime.mjs';
 import { makeApplyExpression, RESTORE_EXPRESSION } from '../runtime/injection-plan-v13.mjs';
 import {
+  installComposerState,
   nativeUiBaseline,
   runtimeFixtureHtml
 } from '../tests/runtime-fixture.mjs';
@@ -29,69 +30,174 @@ const expression = makeApplyExpression({
   variables: payload.variables
 });
 
-const installComposerState = (page, state) => page.evaluate(selectedState => {
-  const composerRoot = document.querySelector('[data-codex-composer-root]');
-  if (selectedState === 'context') {
-    const context = document.createElement('div');
-    context.dataset.fixtureSurface = 'composer-context';
-    context.style.cssText =
-      'pointer-events:auto;display:flex;width:100%;height:var(--spacing-token-button-composer);' +
-      'align-items:center;gap:var(--spacing-token-button-composer-gap);margin-bottom:8px';
-    context.innerHTML = `
-      <button data-composer-navigation-target="workspace-project">wukong-codex-forge</button>
-      <button data-composer-navigation-target="environment">本地</button>
-      <button data-composer-navigation-target="branch">main</button>`;
-    composerRoot.prepend(context);
-    return;
+const readComposerContract = page => page.evaluate(() => {
+  const root = document.querySelector('[data-codex-composer-root]');
+  const portal = root?.querySelector(':scope > [data-above-composer-portal]');
+  const composer = root?.querySelector('.composer-surface-chrome');
+  const component = root && composer
+    ? [...root.children].find(child => (
+        child !== portal && child.contains(composer)
+      )) || null
+    : null;
+  const stack = root?.querySelector('[data-fixture-surface="composer-stack"]');
+  const submit = root?.querySelector('[data-native-slot="composer-submit"]');
+  const nodes = {
+    root,
+    portal,
+    component,
+    utility: root?.querySelector('[data-native-composer-utility-slot]'),
+    progressHost: root?.querySelector('.native-progress-host'),
+    progress: root?.querySelector('[data-fixture-control="plan"]'),
+    stackInset: stack?.parentElement || null,
+    stack,
+    queued: root?.querySelector('[data-fixture-surface="queued-panel"]'),
+    goal: root?.querySelector('[data-fixture-surface="goal-panel"]'),
+    composer,
+    editor: root?.querySelector('.ProseMirror[role="textbox"]'),
+    inputShell: root?.querySelector('.ProseMirror[role="textbox"]')?.parentElement || null,
+    footer: submit?.closest('div.select-none') || null,
+    add: root?.querySelector('[data-native-slot="composer-add"]'),
+    access: root?.querySelector('[data-native-slot="composer-access"]'),
+    model: root?.querySelector('[data-native-slot="composer-model"]'),
+    voice: root?.querySelector('[data-native-slot="composer-voice"]'),
+    submit
+  };
+  const keys = new Map(
+    Object.entries(nodes)
+      .filter(([, element]) => element)
+      .map(([key, element]) => [element, key])
+  );
+  const rectOf = element => {
+    const rect = element.getBoundingClientRect();
+    const css = [rect.x, rect.y, rect.width, rect.height];
+    return {
+      css,
+      physical: css.map(value => value * devicePixelRatio)
+    };
+  };
+  const describe = element => {
+    if (!element) return null;
+    const style = getComputedStyle(element);
+    return {
+      rect: rectOf(element),
+      parentKey: keys.get(element.parentElement) || null,
+      childKeys: [...element.children].map(child => keys.get(child) || null),
+      nextSiblingKey: keys.get(element.nextElementSibling) || null,
+      display: style.display,
+      position: style.position,
+      zIndex: style.zIndex,
+      isolation: style.isolation,
+      order: style.order,
+      alignSelf: style.alignSelf,
+      alignItems: style.alignItems,
+      justifyContent: style.justifyContent,
+      flexDirection: style.flexDirection,
+      gridTemplateColumns: style.gridTemplateColumns,
+      marginBottom: style.marginBottom,
+      padding: [
+        style.paddingTop,
+        style.paddingRight,
+        style.paddingBottom,
+        style.paddingLeft
+      ],
+      gap: style.gap,
+      rowGap: style.rowGap,
+      columnGap: style.columnGap,
+      overflowX: style.overflowX,
+      overflowY: style.overflowY,
+      maxHeight: style.maxHeight,
+      ariaLabel: element.getAttribute('aria-label'),
+      type: element.getAttribute('type'),
+      disabled: 'disabled' in element ? element.disabled : null,
+      ariaDisabled: element.getAttribute('aria-disabled'),
+      contentEditable: element.getAttribute('contenteditable'),
+      text: (element.textContent || '').replace(/\s+/g, ' ').trim(),
+      svgCount: element.querySelectorAll('svg').length
+    };
+  };
+  return {
+    viewport: [innerWidth, innerHeight],
+    deviceScaleFactor: devicePixelRatio,
+    elements: Object.fromEntries(
+      Object.entries(nodes).map(([key, element]) => [key, describe(element)])
+    )
+  };
+});
+
+const invariantContract = contract => Object.fromEntries(
+  Object.entries(contract.elements).map(([key, element]) => [
+    key,
+    element && {
+      parentKey: element.parentKey,
+      childKeys: element.childKeys,
+      nextSiblingKey: element.nextSiblingKey,
+      display: element.display,
+      position: element.position,
+      zIndex: element.zIndex,
+      isolation: element.isolation,
+      order: element.order,
+      alignSelf: element.alignSelf,
+      alignItems: element.alignItems,
+      justifyContent: element.justifyContent,
+      flexDirection: element.flexDirection,
+      gridTemplateColumns: key === 'footer' ? undefined : element.gridTemplateColumns,
+      gap: element.gap,
+      rowGap: element.rowGap,
+      columnGap: element.columnGap,
+      overflowX: element.overflowX,
+      overflowY: element.overflowY,
+      ariaLabel: element.ariaLabel,
+      type: element.type,
+      disabled: element.disabled,
+      ariaDisabled: element.ariaDisabled,
+      contentEditable: element.contentEditable,
+      text: element.text,
+      svgCount: element.svgCount
+    }
+  ])
+);
+
+const assertComposerInvariant = (state, nativeContract, themedContract) => {
+  const before = JSON.stringify(invariantContract(nativeContract));
+  const after = JSON.stringify(invariantContract(themedContract));
+  if (before !== after) {
+    throw new Error(`Composer topology or semantics changed in ${state}`);
   }
-
-  const planWrap = document.createElement('div');
-  planWrap.dataset.fixtureSurface = 'plan-wrap';
-  planWrap.style.cssText =
-    'pointer-events:auto;display:flex;width:100%;height:var(--height-token-row);' +
-    'align-items:center;justify-content:center;margin-bottom:8px';
-  planWrap.innerHTML = `
-    <button data-fixture-control="plan"
-      style="display:flex;height:var(--spacing-token-button-composer);align-items:center;justify-content:center;gap:var(--spacing-token-button-composer-gap);white-space:nowrap">
-      <span style="color:#78827b">◯</span>
-      <span>第 1 / 5 步 · 10 个文件已更改</span>
-      <span style="color:#398246">+691</span>
-      <span style="color:#a23831">-226</span>
-    </button>`;
-
-  const stack = document.createElement('div');
-  stack.className = 'order-2 flex min-w-0 flex-col';
-  stack.dataset.fixtureSurface = 'composer-stack';
-  stack.style.cssText =
-    'pointer-events:auto;display:flex;width:100%;flex-direction:column;gap:8px;margin-bottom:8px';
-  const guidance = selectedState === 'guided'
-    ? `
-      <div class="relative min-w-0 overflow-clip" data-fixture-surface="guide-panel"
-        style="display:flex;width:100%;height:var(--height-token-row);align-items:center;padding:0 var(--padding-row-x)">
-        <span style="font-size:20px;margin-right:12px">↪</span>
-        <span>1</span>
-        <span style="margin-left:auto">引导　⌫　…</span>
-      </div>`
-    : '';
-  stack.innerHTML = `
-    ${guidance}
-    <div class="relative min-w-0 overflow-clip" data-fixture-surface="composer-panel"
-      style="display:flex;width:100%;height:var(--height-token-row);align-items:center;padding:0 var(--padding-row-x)">
-      <span style="margin-right:14px">◎</span>
-      <strong>进行中的目标</strong>
-      <span style="margin-left:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-        需解决的问题：①解谜关卡选择页面中如果加上“当前…”
-      </span>
-      <span style="margin-left:auto;white-space:nowrap">30m 25s　⌕　Ⅱ　⌫　›</span>
-    </div>`;
-  const footer = composerRoot.querySelector('.composer-footer');
-  const goal = document.createElement('button');
-  goal.dataset.fixtureControl = 'goal';
-  goal.innerHTML = '<span>◎</span><span>目标</span>';
-  footer.querySelector('[data-native-slot="composer-model"]').before(goal);
-  composerRoot.prepend(stack);
-  composerRoot.prepend(planWrap);
-}, state);
+  const native = nativeContract.elements;
+  const themed = themedContract.elements;
+  const close = (actual, expected, label, tolerance = .5) => {
+    if (Math.abs(actual - expected) > tolerance) {
+      throw new Error(`${label} changed from ${expected} to ${actual} in ${state}`);
+    }
+  };
+  const composerWidth = themed.composer.rect.css[2];
+  const expectedHeight = Math.min(256, Math.max(168, composerWidth * 63 / 256));
+  close(themed.composer.rect.css[0], native.composer.rect.css[0], 'composer x');
+  close(composerWidth, native.composer.rect.css[2], 'composer width');
+  close(
+    themed.composer.rect.css[1] + themed.composer.rect.css[3],
+    native.composer.rect.css[1] + native.composer.rect.css[3],
+    'composer bottom'
+  );
+  close(themed.composer.rect.css[3], expectedHeight, 'approved composer height');
+  for (const key of [
+    'progressHost',
+    'progress',
+    'stackInset',
+    'stack',
+    'queued',
+    'goal',
+    'add',
+    'access',
+    'model',
+    'voice',
+    'submit'
+  ]) {
+    if (!native[key] || !themed[key]) continue;
+    close(themed[key].rect.css[2], native[key].rect.css[2], `${key} width`);
+    close(themed[key].rect.css[3], native[key].rect.css[3], `${key} height`);
+  }
+};
 
 const browser = await chromium.launch({ headless: true });
 try {
@@ -105,28 +211,50 @@ try {
       contentType: 'text/html; charset=utf-8'
     }));
     await page.goto(`http://wukong-v14-capture.test/?state=${state}`);
-    if (state !== 'default') await installComposerState(page, state);
+    await installComposerState(page, state);
+    const nativeContract = await readComposerContract(page);
     await page.evaluate(expression);
     await page.waitForFunction(() => (
       document.querySelector('.composer-surface-chrome')
         ?.classList.contains('forge-composer-frame') &&
       document.querySelectorAll('.forge-topbar-menu-item').length === 4
     ));
-    return page;
+    if (state === 'context' || state === 'home-context') {
+      await page.waitForFunction(() => document.querySelector('.forge-composer-context'));
+    } else if (
+      state === 'running' ||
+      state === 'guided' ||
+      state === 'expanded-guided'
+    ) {
+      await page.waitForFunction(expectedPanels => (
+        document.querySelector('.forge-composer-progress-pill') &&
+        document.querySelector('.forge-composer-panel-stack') &&
+        document.querySelectorAll('.forge-composer-panel').length === expectedPanels
+      ), state === 'running' ? 1 : 2);
+    }
+    const themedContract = await readComposerContract(page);
+    assertComposerInvariant(state, nativeContract, themedContract);
+    return { page, nativeContract, themedContract };
   };
 
-  const page = await newPage('default');
+  const {
+    page,
+    nativeContract: defaultNativeContract,
+    themedContract: defaultThemedContract
+  } = await newPage('default');
   const files = {
     fullDefault: path.join(outputDirectory, '01-full-default.png'),
     sidebar: path.join(outputDirectory, '02-sidebar-levels.png'),
     composerDefault: path.join(outputDirectory, '03-composer-default.png'),
     topbarOpen: path.join(outputDirectory, '04-topbar-open.png'),
     composerContext: path.join(outputDirectory, '05-composer-context.png'),
-    composerProgress: path.join(outputDirectory, '06-composer-progress.png'),
-    composerGuided: path.join(outputDirectory, '07-composer-guided.png'),
-    landingMark: path.join(outputDirectory, '08-landing-mark-56.png'),
-    sidebarStateMatrix: path.join(outputDirectory, '09-sidebar-state-matrix.png'),
-    topbarStateMatrix: path.join(outputDirectory, '10-topbar-state-matrix.png')
+    composerHomeContext: path.join(outputDirectory, '06-composer-home-context.png'),
+    composerProgress: path.join(outputDirectory, '07-composer-progress.png'),
+    composerGuided: path.join(outputDirectory, '08-composer-guided.png'),
+    composerExpanded: path.join(outputDirectory, '09-composer-expanded.png'),
+    landingMark: path.join(outputDirectory, '10-landing-mark-56.png'),
+    sidebarStateMatrix: path.join(outputDirectory, '11-sidebar-state-matrix.png'),
+    topbarStateMatrix: path.join(outputDirectory, '12-topbar-state-matrix.png')
   };
   await page.screenshot({ path: files.fullDefault, fullPage: true });
   await page.locator('aside.app-shell-left-panel').screenshot({ path: files.sidebar });
@@ -203,38 +331,86 @@ try {
   const restoredMarks = await page.locator('[data-forge-mark]').count();
   await page.close();
 
-  const contextPage = await newPage('context');
-  await contextPage.waitForFunction(() => document.querySelector('.forge-composer-context'));
+  const {
+    page: contextPage,
+    nativeContract: contextNativeContract,
+    themedContract: contextThemedContract
+  } = await newPage('context');
   await contextPage.locator('.composer-area').screenshot({ path: files.composerContext });
   const contextMarks = await contextPage.locator('.forge-composer-context').count();
   await contextPage.evaluate(RESTORE_EXPRESSION);
   await contextPage.close();
 
-  const progressPage = await newPage('progress');
+  const {
+    page: homeContextPage,
+    nativeContract: homeContextNativeContract,
+    themedContract: homeContextThemedContract
+  } = await newPage('home-context');
+  await homeContextPage.locator('.composer-area')
+    .screenshot({ path: files.composerHomeContext });
+  const homeContextMarks = await homeContextPage.locator(
+    '.forge-composer-context'
+  ).count();
+  await homeContextPage.evaluate(RESTORE_EXPRESSION);
+  await homeContextPage.close();
+
+  const {
+    page: progressPage,
+    nativeContract: runningNativeContract,
+    themedContract: runningThemedContract
+  } = await newPage('running');
   await progressPage.waitForFunction(() => (
     document.querySelector('.forge-plan-pill') &&
+    document.querySelector('.forge-composer-panel-stack') &&
     document.querySelector('.forge-composer-panel')
   ));
   await progressPage.locator('.composer-area').screenshot({ path: files.composerProgress });
   const progressMarks = {
     plan: await progressPage.locator('.forge-plan-pill').count(),
+    stacks: await progressPage.locator('.forge-composer-panel-stack').count(),
     panels: await progressPage.locator('.forge-composer-panel').count()
   };
   await progressPage.evaluate(RESTORE_EXPRESSION);
   await progressPage.close();
 
-  const guidedPage = await newPage('guided');
+  const {
+    page: guidedPage,
+    nativeContract: guidedNativeContract,
+    themedContract: guidedThemedContract
+  } = await newPage('guided');
   await guidedPage.waitForFunction(() => (
     document.querySelector('.forge-plan-pill') &&
+    document.querySelectorAll('.forge-composer-panel-stack').length === 1 &&
     document.querySelectorAll('.forge-composer-panel').length === 2
   ));
   await guidedPage.locator('.composer-area').screenshot({ path: files.composerGuided });
   const guidedMarks = {
     plan: await guidedPage.locator('.forge-plan-pill').count(),
+    stacks: await guidedPage.locator('.forge-composer-panel-stack').count(),
     panels: await guidedPage.locator('.forge-composer-panel').count()
   };
   await guidedPage.evaluate(RESTORE_EXPRESSION);
   await guidedPage.close();
+
+  const {
+    page: expandedPage,
+    nativeContract: expandedNativeContract,
+    themedContract: expandedThemedContract
+  } = await newPage('expanded-guided');
+  await expandedPage.waitForFunction(() => (
+    document.querySelector('.forge-plan-pill') &&
+    document.querySelectorAll('.forge-composer-panel-stack').length === 1 &&
+    document.querySelectorAll('.forge-composer-panel').length === 2
+  ));
+  await expandedPage.locator('.composer-area')
+    .screenshot({ path: files.composerExpanded });
+  const expandedMarks = {
+    plan: await expandedPage.locator('.forge-plan-pill').count(),
+    stacks: await expandedPage.locator('.forge-composer-panel-stack').count(),
+    panels: await expandedPage.locator('.forge-composer-panel').count()
+  };
+  await expandedPage.evaluate(RESTORE_EXPRESSION);
+  await expandedPage.close();
 
   fs.writeFileSync(
     path.join(outputDirectory, 'capture.json'),
@@ -245,8 +421,36 @@ try {
       metrics,
       states: {
         contextMarks,
+        homeContextMarks,
         progressMarks,
-        guidedMarks
+        guidedMarks,
+        expandedMarks,
+        contracts: {
+          default: {
+            native: defaultNativeContract,
+            themed: defaultThemedContract
+          },
+          context: {
+            native: contextNativeContract,
+            themed: contextThemedContract
+          },
+          homeContext: {
+            native: homeContextNativeContract,
+            themed: homeContextThemedContract
+          },
+          running: {
+            native: runningNativeContract,
+            themed: runningThemedContract
+          },
+          guided: {
+            native: guidedNativeContract,
+            themed: guidedThemedContract
+          },
+          expanded: {
+            native: expandedNativeContract,
+            themed: expandedThemedContract
+          }
+        }
       },
       restoredMarks
     }, null, 2)}\n`,

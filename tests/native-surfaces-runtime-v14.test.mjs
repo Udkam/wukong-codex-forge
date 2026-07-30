@@ -7,6 +7,7 @@ import {
   RESTORE_EXPRESSION
 } from '../runtime/injection-plan-v13.mjs';
 import {
+  installComposerState,
   nativeUiBaseline,
   runtimeFixtureHtml
 } from './runtime-fixture.mjs';
@@ -93,6 +94,16 @@ const hitSelectors = [
   selectors.childThread
 ];
 
+const composerGeometryNames = new Set([
+  'composer',
+  'editor',
+  'add',
+  'access',
+  'model',
+  'voice',
+  'send'
+]);
+
 const snapshot = page => page.evaluate(targets => {
   const read = selector => {
     const element = document.querySelector(selector);
@@ -119,15 +130,22 @@ const snapshot = page => page.evaluate(targets => {
   );
 }, selectors);
 
-const assertRectsEqual = (actual, expected, tolerance = 0.25) => {
+const assertRectsEqual = (
+  actual,
+  expected,
+  tolerance = 0.25,
+  ignoredGeometry = new Set()
+) => {
   for (const [name, before] of Object.entries(expected)) {
     assert.ok(actual[name], `missing geometry for ${name}`);
-    actual[name].rect.forEach((value, index) => {
-      assert.ok(
-        Math.abs(value - before.rect[index]) <= tolerance,
-        `${name} rect[${index}] changed from ${before.rect[index]} to ${value}`
-      );
-    });
+    if (!ignoredGeometry.has(name)) {
+      actual[name].rect.forEach((value, index) => {
+        assert.ok(
+          Math.abs(value - before.rect[index]) <= tolerance,
+          `${name} rect[${index}] changed from ${before.rect[index]} to ${value}`
+        );
+      });
+    }
     assert.deepEqual(
       { ...actual[name], rect: undefined },
       { ...before, rect: undefined },
@@ -157,34 +175,6 @@ const nativeHitPattern = (page, selector) => page.evaluate(target => {
   });
 }, selector);
 
-const installAdjacentComposerStates = page => page.evaluate(() => {
-  const root = document.querySelector('[data-codex-composer-root]');
-  const context = document.createElement('div');
-  context.dataset.fixtureSurface = 'composer-context';
-  context.style.cssText =
-    'pointer-events:auto;display:flex;width:100%;height:var(--spacing-token-button-composer);' +
-    'align-items:center;gap:var(--spacing-token-button-composer-gap);margin-bottom:8px';
-  context.innerHTML = `
-    <button data-composer-navigation-target="workspace-project">wukong-codex-forge</button>
-    <button data-composer-navigation-target="environment">本地</button>
-    <button data-composer-navigation-target="branch">main</button>`;
-
-  const stack = document.createElement('div');
-  stack.className = 'order-2 flex min-w-0 flex-col';
-  stack.dataset.fixtureSurface = 'composer-stack';
-  stack.style.cssText = 'pointer-events:auto;display:flex;width:100%;margin-bottom:8px';
-  stack.innerHTML = `
-    <div class="relative min-w-0 overflow-clip" data-fixture-surface="composer-panel"
-      style="display:flex;width:100%;height:var(--height-token-row);align-items:center;gap:8px">
-      <button data-fixture-control="plan"
-        style="display:block;height:var(--spacing-token-button-composer)">第 1 / 5 步 · 10 个文件已更改</button>
-      <button data-fixture-control="diff"
-        style="display:block;height:var(--spacing-token-button-composer)">10 个文件已更改</button>
-    </div>`;
-  root.prepend(stack);
-  root.prepend(context);
-});
-
 let browser;
 
 test.before(async () => {
@@ -195,7 +185,7 @@ test.after(async () => {
   await browser?.close();
 });
 
-test('V15 maps reference materials without changing native geometry, semantics, or hit boxes', async () => {
+test('V15 maps reference materials with the approved expanded composer geometry and native semantics', async () => {
   const page = await browser.newPage({
     viewport: { width: 1600, height: 900 },
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
@@ -265,8 +255,32 @@ test('V15 maps reference materials without changing native geometry, semantics, 
   ));
 
   const after = await snapshot(page);
-  assertRectsEqual(after, before);
+  assertRectsEqual(after, before, 0.25, composerGeometryNames);
   assert.equal(await page.locator('.forge-composer-frame').count(), 1);
+  assert.equal(await page.locator('.forge-composer-input-shell').count(), 1);
+  assert.equal(await page.locator('.forge-composer-footer').count(), 1);
+  const expectedComposerHeight = Math.min(
+    256,
+    Math.max(168, after.composer.rect[2] * 63 / 256)
+  );
+  assert.ok(
+    Math.abs(after.composer.rect[3] - expectedComposerHeight) <= 0.5,
+    `expanded composer height ${after.composer.rect[3]} must follow the 1536:378 paper ratio`
+  );
+  for (const name of ['add', 'access', 'model', 'voice', 'send']) {
+    assert.deepEqual(
+      after[name].rect.slice(2),
+      before[name].rect.slice(2),
+      `${name} native hit-box dimensions changed`
+    );
+  }
+  assert.equal(
+    await page.locator(
+      '[data-native-slot="composer-submit"][type="button"].forge-composer-submit'
+    ).count(),
+    1,
+    'the real type=button send host must receive paint without replacing its semantics'
+  );
   assert.equal(await page.locator('.forge-topbar-menu-item').count(), 4);
   assert.equal(
     await page.locator(
@@ -363,21 +377,34 @@ test('V15 maps reference materials without changing native geometry, semantics, 
   );
 
   const paint = await page.evaluate(() => ({
-    composer: getComputedStyle(document.querySelector('.forge-composer-frame')).backgroundImage,
-    composerPaintInset: (() => {
-      const style = getComputedStyle(
-        document.querySelector('.forge-composer-frame'),
-        '::before'
-      );
-      return [style.top, style.right, style.bottom, style.left];
+    composer: (() => {
+      const element = document.querySelector('.forge-composer-frame');
+      const style = getComputedStyle(element);
+      return {
+        backgroundImage: style.backgroundImage,
+        backgroundPosition: style.backgroundPosition,
+        backgroundRepeat: style.backgroundRepeat,
+        backgroundSize: style.backgroundSize,
+        aspectRatio: style.aspectRatio,
+        minHeight: style.minHeight,
+        maxHeight: style.maxHeight,
+        borderRadius: style.borderRadius,
+        clipPath: style.clipPath,
+        pseudoContent: getComputedStyle(element, '::before').content
+      };
     })(),
-    composerPaintBorderWidth: getComputedStyle(
-      document.querySelector('.forge-composer-frame'),
-      '::before'
-    ).borderImageWidth,
     composerEditorPaddingBlockStart: getComputedStyle(
       document.querySelector('.forge-composer-frame .ProseMirror[role="textbox"]')
     ).paddingBlockStart,
+    composerInputShellPaddingBlockStart: getComputedStyle(
+      document.querySelector('.forge-composer-input-shell')
+    ).paddingBlockStart,
+    composerInputShellPaddingInlineStart: getComputedStyle(
+      document.querySelector('.forge-composer-input-shell')
+    ).paddingInlineStart,
+    composerFooterPaddingInlineStart: getComputedStyle(
+      document.querySelector('.forge-composer-footer')
+    ).paddingInlineStart,
     sidebarShell: (() => {
       const style = getComputedStyle(document.querySelector('.forge-sidebar-shell'));
       return {
@@ -394,22 +421,31 @@ test('V15 maps reference materials without changing native geometry, semantics, 
       document.querySelector('.forge-sidebar-level2:not(.forge-sidebar-selected)')
     ).backgroundImage
   }));
-  assert.match(paint.composer, /data:image\/svg\+xml/);
-  assert.deepEqual(
-    paint.composerPaintInset,
-    ['0px', '0px', '0px', '0px'],
-    'composer ornament must remain visible inside the native clipping surface'
+  assert.match(paint.composer.backgroundImage, /data:image\/svg\+xml/);
+  assert.ok(
+    (paint.composer.backgroundImage.match(/data:image\//g) || []).length >= 2,
+    'composer material must use the direct frame and repeatable paper layers'
   );
+  assert.equal(paint.composer.backgroundRepeat, 'no-repeat, repeat');
+  assert.equal(paint.composer.backgroundSize, '100% 100%, 512px 220px');
+  assert.equal(paint.composer.aspectRatio, '256 / 63');
+  assert.equal(paint.composer.minHeight, '168px');
+  assert.equal(paint.composer.maxHeight, '256px');
+  assert.equal(paint.composer.borderRadius, '0px');
+  assert.match(paint.composer.clipPath, /^polygon\(/);
   assert.equal(
-    paint.composerPaintBorderWidth,
-    '14px 18px',
-    'the frame must reserve more of the native 84px surface for official controls'
+    paint.composer.pseudoContent,
+    'none',
+    'composer paint must not create a positioned pseudo-element'
   );
   assert.equal(
     paint.composerEditorPaddingBlockStart,
-    '6px',
-    'the native placeholder needs a safe inset without changing the composer DOMRect'
+    '0px',
+    'the editable ProseMirror node itself must keep its native padding'
   );
+  assert.ok(Number.parseFloat(paint.composerInputShellPaddingBlockStart) >= 20);
+  assert.ok(Number.parseFloat(paint.composerInputShellPaddingInlineStart) >= 20);
+  assert.ok(Number.parseFloat(paint.composerFooterPaddingInlineStart) >= 18);
   assert.equal(paint.sidebarShell.backgroundColor, 'rgba(0, 0, 0, 0)');
   assert.match(paint.sidebarShell.backgroundImage, /linear-gradient/);
   assert.equal(
@@ -873,7 +909,7 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
   await page.close();
 });
 
-test('V14 updates dynamic composer states and moves current-conversation material without a resize trigger', async () => {
+test('V16 maps the native guided stack once and remaps context without a resize trigger', async () => {
   const page = await browser.newPage({
     viewport: { width: 1280, height: 820 },
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
@@ -883,7 +919,136 @@ test('V14 updates dynamic composer states and moves current-conversation materia
     contentType: 'text/html; charset=utf-8'
   }));
   await page.goto('http://wukong-v14-state.test/');
-  await installAdjacentComposerStates(page);
+  await installComposerState(page, 'guided');
+
+  const nativeStateContract = await page.evaluate(() => {
+    const rectOf = element => {
+      const rect = element.getBoundingClientRect();
+      return {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+        right: rect.right,
+        bottom: rect.bottom
+      };
+    };
+    const root = document.querySelector('[data-codex-composer-root]');
+    const portal = root.querySelector(
+      ':scope > [data-above-composer-portal][data-above-composer-conversation-id]'
+    );
+    const composer = root.querySelector('.composer-surface-chrome');
+    const component = [...root.children].find(child => (
+      child !== portal && child.contains(composer)
+    ));
+    const editor = composer.querySelector('.ProseMirror[role="textbox"]');
+    const submit = composer.querySelector('[data-native-slot="composer-submit"]');
+    const footer = submit.closest('div.select-none');
+    const footerButtons = [...footer.querySelectorAll('button')].filter(button => {
+      const rect = button.getBoundingClientRect();
+      return rect.width > 1 && rect.height > 1;
+    });
+    const controlGroupButtons = [
+      ...submit.parentElement.querySelectorAll('button')
+    ].filter(button => {
+      const rect = button.getBoundingClientRect();
+      return rect.width > 1 && rect.height > 1;
+    });
+    const progressHost = portal.querySelector('.native-progress-host');
+    const progress = portal.querySelector('[data-fixture-control="plan"]');
+    const stack = root.querySelector('[data-fixture-surface="composer-stack"]');
+    const queued = root.querySelector('[data-fixture-surface="queued-panel"]');
+    const goal = root.querySelector('[data-fixture-surface="goal-panel"]');
+    return {
+      composer: rectOf(composer),
+      editor: rectOf(editor),
+      submit: rectOf(submit),
+      progressHost: rectOf(progressHost),
+      progress: rectOf(progress),
+      stack: rectOf(stack),
+      queued: rectOf(queued),
+      goal: rectOf(goal),
+      stackSharedParent: queued.parentElement === goal.parentElement,
+      portalIsDirectChild: portal.parentElement === root,
+      componentIsDirectChild: component.parentElement === root,
+      stackInsideComponent: component.contains(stack),
+      progressInsidePortal: portal.contains(progress),
+      progressInsideStack: stack.contains(progress),
+      stackInsidePortal: portal.contains(stack),
+      progressSignature: [
+        'flex',
+        'w-max',
+        'max-w-full',
+        'min-w-0',
+        'items-center',
+        'gap-2',
+        'rounded-3xl',
+        'border',
+        'px-3',
+        'py-1.5'
+      ].every(token => progress.classList.contains(token)),
+      submitSignature: [
+        'cursor-interaction',
+        'size-token-button-composer',
+        'flex',
+        'items-center',
+        'justify-center',
+        'rounded-full',
+        'transition-opacity',
+        'focus-visible:outline-2'
+      ].every(token => submit.classList.contains(token)),
+      footerSignature: [
+        'select-none',
+        '_footer_uoylu_2'
+      ].every(token => footer.classList.contains(token)),
+      submitIsLastFooterButton: footerButtons.at(-1) === submit,
+      submitIsLastControlGroupButton: controlGroupButtons.at(-1) === submit,
+      submitLabel: submit.getAttribute('aria-label'),
+      submitType: submit.getAttribute('type'),
+      stopSquare: submit.querySelector('rect')?.getAttribute('width')
+    };
+  });
+  assert.equal(nativeStateContract.composer.height, 84);
+  assert.equal(nativeStateContract.editor.height, nativeUiBaseline.composerEditorMinHeight);
+  assert.deepEqual(
+    [nativeStateContract.submit.width, nativeStateContract.submit.height],
+    [nativeUiBaseline.composerButtonSize, nativeUiBaseline.composerButtonSize]
+  );
+  assert.equal(nativeStateContract.progressHost.height, 32);
+  assert.ok(nativeStateContract.progress.width < nativeStateContract.composer.width * .8);
+  assert.ok(
+    Math.abs(
+      nativeStateContract.progress.x + nativeStateContract.progress.width / 2 -
+      (nativeStateContract.composer.x + nativeStateContract.composer.width / 2)
+    ) <= .25,
+    'native progress pill must remain content-width and centered over the composer'
+  );
+  assert.equal(nativeStateContract.stackSharedParent, true);
+  assert.equal(nativeStateContract.portalIsDirectChild, true);
+  assert.equal(nativeStateContract.componentIsDirectChild, true);
+  assert.equal(nativeStateContract.stackInsideComponent, true);
+  assert.equal(nativeStateContract.progressInsidePortal, true);
+  assert.equal(nativeStateContract.progressInsideStack, false);
+  assert.equal(nativeStateContract.stackInsidePortal, false);
+  assert.equal(nativeStateContract.progressSignature, true);
+  assert.equal(nativeStateContract.submitSignature, true);
+  assert.equal(nativeStateContract.footerSignature, true);
+  assert.equal(nativeStateContract.submitIsLastFooterButton, true);
+  assert.equal(nativeStateContract.submitIsLastControlGroupButton, true);
+  assert.ok(
+    Math.abs(nativeStateContract.queued.bottom - nativeStateContract.goal.y) <= .25,
+    'queued and active-goal rows must be contiguous without a card gap'
+  );
+  assert.ok(
+    Math.abs(
+      nativeStateContract.stack.width -
+      (nativeStateContract.composer.width - (2 * 13))
+    ) <= .25,
+    'the native above-composer stack must keep the official 13px side inset'
+  );
+  assert.equal(nativeStateContract.submitLabel, '停止');
+  assert.equal(nativeStateContract.submitType, 'button');
+  assert.equal(nativeStateContract.stopSquare, '6');
 
   const adjacentBefore = await page.evaluate(() => Object.fromEntries(
     [...document.querySelectorAll('[data-fixture-surface], [data-fixture-control]')].map(element => {
@@ -897,18 +1062,38 @@ test('V14 updates dynamic composer states and moves current-conversation materia
 
   await page.evaluate(expression);
   await page.waitForFunction(() => (
-    document.querySelector('[data-fixture-surface="composer-context"]')
-      ?.classList.contains('forge-composer-context') &&
+    document.querySelector('[data-fixture-control="plan"]')
+      ?.classList.contains('forge-composer-progress-pill') &&
     document.querySelector('[data-fixture-control="plan"]')
       ?.classList.contains('forge-plan-pill') &&
-    document.querySelector('[data-fixture-control="diff"]')
-      ?.classList.contains('forge-diff-summary')
+    document.querySelector('[data-fixture-surface="composer-stack"]')
+      ?.classList.contains('forge-composer-panel-stack') &&
+    document.querySelectorAll('.forge-composer-panel').length === 2 &&
+    document.querySelector('[data-native-slot="composer-submit"]')
+      ?.classList.contains('forge-composer-submit')
   ));
 
-  assert.equal(await page.locator('.forge-composer-context').count(), 1);
-  assert.equal(await page.locator('.forge-composer-panel').count(), 1);
+  assert.equal(await page.locator('.forge-composer-context').count(), 0);
+  assert.equal(await page.locator('.forge-composer-panel-stack').count(), 1);
+  assert.equal(await page.locator('.forge-composer-panel').count(), 2);
+  assert.equal(await page.locator('.forge-composer-progress-pill').count(), 1);
   assert.equal(await page.locator('.forge-plan-pill').count(), 1);
   assert.equal(await page.locator('.forge-diff-summary').count(), 1);
+  assert.equal(
+    await page.locator('[data-native-slot="composer-submit"]').getAttribute('aria-label'),
+    '停止'
+  );
+  const themedComposerRect = await page.locator('.forge-composer-frame').evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return [rect.x, rect.y, rect.width, rect.height];
+  });
+  assert.ok(
+    Math.abs(
+      themedComposerRect[3] -
+      Math.min(256, Math.max(168, themedComposerRect[2] * 63 / 256))
+    ) <= 0.5,
+    'the themed composer must follow the approved expanded-scroll ratio'
+  );
 
   const adjacentAfter = await page.evaluate(() => Object.fromEntries(
     [...document.querySelectorAll('[data-fixture-surface], [data-fixture-control]')].map(element => {
@@ -919,7 +1104,236 @@ test('V14 updates dynamic composer states and moves current-conversation materia
       ];
     })
   ));
-  assert.deepEqual(adjacentAfter, adjacentBefore);
+  for (const [key, beforeRect] of Object.entries(adjacentBefore)) {
+    const afterRect = adjacentAfter[key];
+    assert.ok(afterRect, `missing adjacent surface ${key}`);
+    if (key !== 'goal') {
+      assert.ok(Math.abs(afterRect[0] - beforeRect[0]) <= 0.25, `${key} x changed`);
+    }
+    assert.ok(Math.abs(afterRect[2] - beforeRect[2]) <= 0.25, `${key} width changed`);
+    assert.ok(Math.abs(afterRect[3] - beforeRect[3]) <= 0.25, `${key} height changed`);
+  }
+
+  const contextGeometry = await installComposerState(page, 'context');
+  await page.waitForFunction(() => (
+    document.querySelector('[data-fixture-surface="composer-context"]')
+      ?.classList.contains('forge-composer-context') &&
+    !document.querySelector('.forge-composer-panel-stack') &&
+    !document.querySelector('.forge-composer-panel')
+  ));
+  assert.equal(await page.locator('.forge-composer-context').count(), 1);
+  assert.equal(await page.locator('.forge-plan-pill').count(), 0);
+  assert.equal(
+    await page.locator('[data-native-slot="composer-submit"]').getAttribute('aria-label'),
+    null
+  );
+  const contextAfter = await page.locator(
+    '[data-fixture-surface="composer-context"]'
+  ).evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return [rect.x, rect.y, rect.width, rect.height];
+  });
+  assert.deepEqual(contextAfter, contextGeometry.context);
+  const contextContract = await page.evaluate(() => {
+    const root = document.querySelector('[data-codex-composer-root]');
+    const utility = root.querySelector('[data-native-composer-utility-slot]');
+    const portal = root.querySelector('[data-above-composer-portal]');
+    const composer = root.querySelector('.composer-surface-chrome');
+    const component = [...root.children].find(child => (
+      child !== portal && child.contains(composer)
+    ));
+    const utilityRect = utility.getBoundingClientRect();
+    const composerRect = composer.getBoundingClientRect();
+    return {
+      utilityIsInsideComponent: component.contains(utility) && !portal.contains(utility),
+      utilitySignature: [
+        'flex',
+        'flex-wrap',
+        'items-center',
+        'gap-2',
+        'overflow-visible',
+        'pr-2',
+        'pl-2'
+      ].every(token => utility.classList.contains(token)),
+      utilityWidth: utilityRect.width,
+      composerWidth: composerRect.width,
+      runLocationCount: utility.querySelectorAll(
+        '[data-composer-navigation-target="run-location"]'
+      ).length,
+      footerReasoningInsideUtility: Boolean(
+        utility.querySelector('[data-composer-navigation-target="reasoning"]')
+      )
+    };
+  });
+  assert.equal(contextContract.utilityIsInsideComponent, true);
+  assert.equal(contextContract.utilitySignature, true);
+  assert.equal(contextContract.utilityWidth, contextContract.composerWidth);
+  assert.equal(contextContract.runLocationCount, 1);
+  assert.equal(contextContract.footerReasoningInsideUtility, false);
+
+  const homeContextGeometry = await installComposerState(page, 'home-context');
+  await page.waitForFunction(() => (
+    document.querySelector('[data-fixture-surface="composer-context"]')
+      ?.classList.contains('forge-composer-context') &&
+    document.querySelector('[data-composer-utility-bar-scroll-area]')
+  ));
+  const homeContextContract = await page.evaluate(() => {
+    const root = document.querySelector('[data-codex-composer-root]');
+    const utility = root.querySelector('[data-native-composer-utility-slot]');
+    const portal = root.querySelector('[data-above-composer-portal]');
+    const composer = root.querySelector('.composer-surface-chrome');
+    const component = [...root.children].find(child => (
+      child !== portal && child.contains(composer)
+    ));
+    const scrollArea = utility.querySelector('[data-composer-utility-bar-scroll-area]');
+    const rect = utility.getBoundingClientRect();
+    return {
+      insideComponent: component.contains(utility),
+      scrollAreaDirect: scrollArea.parentElement === utility,
+      signature: [
+        'flex',
+        'flex-nowrap',
+        'items-center',
+        'gap-2',
+        'overflow-hidden'
+      ].every(token => utility.classList.contains(token)),
+      rect: [rect.x, rect.y, rect.width, rect.height]
+    };
+  });
+  assert.equal(homeContextContract.insideComponent, true);
+  assert.equal(homeContextContract.scrollAreaDirect, true);
+  assert.equal(homeContextContract.signature, true);
+  assert.deepEqual(homeContextContract.rect, homeContextGeometry.context);
+
+  const transitionStates = [
+    {
+      name: 'running',
+      context: 0,
+      progress: 1,
+      stacks: 1,
+      panels: 1,
+      submitLabel: '停止'
+    },
+    {
+      name: 'guided',
+      context: 0,
+      progress: 1,
+      stacks: 1,
+      panels: 2,
+      submitLabel: '停止',
+      collapsed: true
+    },
+    {
+      name: 'expanded-guided',
+      context: 0,
+      progress: 1,
+      stacks: 1,
+      panels: 2,
+      submitLabel: '停止',
+      collapsed: false
+    },
+    {
+      name: 'default',
+      context: 0,
+      progress: 0,
+      stacks: 0,
+      panels: 0,
+      submitLabel: null
+    }
+  ];
+  for (const expected of transitionStates) {
+    const nativeGeometry = await installComposerState(page, expected.name);
+    await page.waitForFunction(state => {
+      const submit = document.querySelector('[data-native-slot="composer-submit"]');
+      return (
+        document.querySelectorAll('.forge-composer-context').length === state.context &&
+        document.querySelectorAll('.forge-composer-progress-pill').length === state.progress &&
+        document.querySelectorAll('.forge-composer-panel-stack').length === state.stacks &&
+        document.querySelectorAll('.forge-composer-panel').length === state.panels &&
+        submit?.getAttribute('aria-label') === state.submitLabel &&
+        submit.classList.contains('forge-composer-submit')
+      );
+    }, expected);
+    const mappedGeometry = await page.evaluate(() => Object.fromEntries(
+      [
+        ['composer', '.composer-surface-chrome'],
+        ['context', '[data-fixture-surface="composer-context"]'],
+        ['progress', '[data-fixture-control="plan"]'],
+        ['stack', '[data-fixture-surface="composer-stack"]'],
+        ['queued', '[data-fixture-surface="queued-panel"]'],
+        ['goal', '[data-fixture-surface="goal-panel"]'],
+        ['submit', '[data-native-slot="composer-submit"]']
+      ].map(([name, selector]) => {
+        const element = document.querySelector(selector);
+        if (!element) return [name, null];
+        const rect = element.getBoundingClientRect();
+        return [name, [rect.x, rect.y, rect.width, rect.height]];
+      })
+    ));
+    assert.deepEqual(mappedGeometry, nativeGeometry, `${expected.name} geometry changed`);
+    const topology = await page.evaluate(() => {
+      const root = document.querySelector('[data-codex-composer-root]');
+      const portal = root.querySelector(':scope > [data-above-composer-portal]');
+      const composer = root.querySelector('.composer-surface-chrome');
+      const component = [...root.children].find(child => (
+        child !== portal && child.contains(composer)
+      ));
+      const utility = root.querySelector('[data-native-composer-utility-slot]');
+      const stack = root.querySelector('[data-fixture-surface="composer-stack"]');
+      const progress = root.querySelector('[data-fixture-control="plan"]');
+      const queue = root.querySelector('[data-fixture-surface="queued-panel"]');
+      const goal = root.querySelector('[data-fixture-surface="goal-panel"]');
+      const inset = stack?.parentElement;
+      const rows = [queue, goal].filter(Boolean);
+      return {
+        portalDirect: portal?.parentElement === root,
+        componentDirect: component?.parentElement === root,
+        utilityInComponent: Boolean(utility && component?.contains(utility)),
+        progressInPortal: Boolean(progress && portal.contains(progress)),
+        stackInPortal: Boolean(stack && portal.contains(stack)),
+        progressInStack: Boolean(progress && stack?.contains(progress)),
+        queueGoalSameParent: Boolean(queue && goal && queue.parentElement === goal.parentElement),
+        insetCollapsed: inset
+          ? inset.classList.contains('native-collapsed')
+          : null,
+        rowsUseCompactBorders: rows.length
+          ? rows.every(row => (
+              row.classList.contains('border-x') &&
+              row.classList.contains('border-t')
+            ))
+          : null,
+        directStackOrder: stack
+          ? [...stack.children].map(element => element.dataset.fixtureSurface)
+          : []
+      };
+    });
+    assert.equal(topology.portalDirect, true);
+    assert.equal(topology.componentDirect, true);
+    assert.equal(topology.utilityInComponent, true);
+    assert.equal(topology.progressInPortal, expected.progress === 1);
+    assert.equal(topology.stackInPortal, false);
+    assert.equal(topology.progressInStack, false);
+    assert.equal(
+      topology.insetCollapsed,
+      expected.stacks ? expected.collapsed ?? true : null
+    );
+    assert.equal(
+      topology.rowsUseCompactBorders,
+      expected.stacks ? expected.collapsed ?? true : null
+    );
+    assert.equal(
+      topology.queueGoalSameParent,
+      expected.name === 'guided' || expected.name === 'expanded-guided'
+    );
+    assert.deepEqual(
+      topology.directStackOrder,
+      expected.name === 'guided' || expected.name === 'expanded-guided'
+        ? ['queued-panel', 'goal-panel']
+        : expected.name === 'running'
+          ? ['goal-panel']
+          : []
+    );
+  }
 
   await page.evaluate(() => {
     const active = document.querySelector('[data-native-slot="project-active"]');
@@ -1078,8 +1492,23 @@ test('V14 selects the visible composer surface and ignores one-button context an
       '<button data-composer-navigation-target="only-one">只有一个导航项</button>';
     root.prepend(oneButtonContext);
 
+    const misplacedSubmit = liveSurface.querySelector(
+      '[data-native-slot="composer-submit"]'
+    ).cloneNode(true);
+    misplacedSubmit.removeAttribute('data-native-slot');
+    misplacedSubmit.dataset.fixtureControl = 'misplaced-native-submit';
+    misplacedSubmit.setAttribute('aria-label', '发送');
+    Object.assign(misplacedSubmit.style, {
+      position: 'absolute',
+      right: '8px',
+      bottom: '8px',
+      width: '28px',
+      height: '28px'
+    });
+    liveSurface.querySelector('.composer-input-wrap').append(misplacedSubmit);
+
     const externalSubmit = document.createElement('button');
-    externalSubmit.type = 'submit';
+    externalSubmit.type = 'button';
     externalSubmit.dataset.fixtureControl = 'external-submit';
     externalSubmit.textContent = '外部提交';
     root.prepend(externalSubmit);
@@ -1112,6 +1541,20 @@ test('V14 selects the visible composer surface and ignores one-button context an
     0,
     'submit-like controls outside the native composer surface must not be themed as send'
   );
+  assert.equal(
+    await page.locator(
+      '[data-fixture-control="misplaced-native-submit"].forge-composer-submit'
+    ).count(),
+    0,
+    'a native-signature button outside the official footer must not be themed as send'
+  );
+  assert.equal(
+    await page.locator(
+      '[data-native-slot="composer-submit"].forge-composer-submit'
+    ).count(),
+    1,
+    'the final native footer control remains the only themed send button'
+  );
   assert.deepEqual(
     await page.locator(selectors.access).evaluate(element => ({
       color: getComputedStyle(element).color,
@@ -1142,12 +1585,19 @@ test('V14 selects the visible composer surface and ignores one-button context an
   ));
   assert.equal(
     await page.locator(
-      '[data-native-slot="composer-fresh-visible"] button[type="submit"].forge-composer-submit'
+      '[data-native-slot="composer-fresh-visible"] ' +
+      '[data-native-slot="composer-submit"].forge-composer-submit'
     ).count(),
     1
   );
   assert.equal(
     await page.locator('[data-fixture-control="external-submit"].forge-composer-submit').count(),
+    0
+  );
+  assert.equal(
+    await page.locator(
+      '[data-fixture-control="misplaced-native-submit"].forge-composer-submit'
+    ).count(),
     0
   );
 
@@ -1169,7 +1619,9 @@ test('V15 keeps the native composer material while the editor is read-only', asy
 
   const before = await page.evaluate(() => {
     const editor = document.querySelector('.composer-surface-chrome .ProseMirror[role="textbox"]');
-    const submit = document.querySelector('.composer-surface-chrome button[type="submit"]');
+    const submit = document.querySelector(
+      '.composer-surface-chrome [data-native-slot="composer-submit"]'
+    );
     editor.setAttribute('contenteditable', 'false');
     editor.setAttribute('aria-readonly', 'true');
     submit.disabled = true;
@@ -1193,7 +1645,7 @@ test('V15 keeps the native composer material while the editor is read-only', asy
   const themed = await page.evaluate(() => {
     const frame = document.querySelector('.composer-surface-chrome');
     const editor = frame.querySelector('.ProseMirror[role="textbox"]');
-    const submit = frame.querySelector('button[type="submit"]');
+    const submit = frame.querySelector('[data-native-slot="composer-submit"]');
     const rect = frame.getBoundingClientRect();
     return {
       rect: [rect.x, rect.y, rect.width, rect.height],
@@ -1204,7 +1656,16 @@ test('V15 keeps the native composer material while the editor is read-only', asy
       ariaDisabled: submit.getAttribute('aria-disabled')
     };
   });
-  assert.deepEqual(themed.rect, before.rect);
+  assert.deepEqual(
+    [themed.rect[0], themed.rect[2]],
+    [before.rect[0], before.rect[2]]
+  );
+  assert.ok(
+    Math.abs(
+      themed.rect[3] -
+      Math.min(256, Math.max(168, themed.rect[2] * 63 / 256))
+    ) <= 0.5
+  );
   assert.match(themed.backgroundImage, /data:image\//);
   assert.deepEqual(
     {
@@ -1238,7 +1699,7 @@ test('V15 keeps the native composer material while the editor is read-only', asy
   await page.close();
 });
 
-test('V15 preserves native surface geometry across compact and wide window sizes', async () => {
+test('V15 keeps the approved composer ratio responsive while preserving surrounding native geometry', async () => {
   const page = await browser.newPage({
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
   });
@@ -1263,7 +1724,23 @@ test('V15 preserves native surface geometry across compact and wide window sizes
       4,
       `top menu mapping missing at ${width}px`
     );
-    assertRectsEqual(await snapshot(page), before);
+    const after = await snapshot(page);
+    assertRectsEqual(after, before, 0.25, composerGeometryNames);
+    const expectedHeight = Math.min(
+      256,
+      Math.max(168, after.composer.rect[2] * 63 / 256)
+    );
+    assert.ok(
+      Math.abs(after.composer.rect[3] - expectedHeight) <= 0.5,
+      `composer ratio mismatch at ${width}px`
+    );
+    for (const name of ['add', 'access', 'model', 'voice', 'send']) {
+      assert.deepEqual(
+        after[name].rect.slice(2),
+        before[name].rect.slice(2),
+        `${name} native hit-box dimensions changed at ${width}px`
+      );
+    }
     await page.evaluate(RESTORE_EXPRESSION);
     assert.equal(await page.locator('[data-forge-mark]').count(), 0);
   }
@@ -1353,7 +1830,9 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
     const selector = [
       '.forge-composer-frame',
       '.forge-composer-context',
+      '.forge-composer-panel-stack',
       '.forge-composer-panel',
+      '.forge-composer-progress-pill',
       '.forge-plan-pill',
       '.forge-diff-summary',
       '.forge-composer-submit',
@@ -1372,6 +1851,7 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
         boxShadow: style.boxShadow,
         color: style.color,
         opacity: style.opacity,
+        clipPath: style.clipPath,
         forcedColorAdjust: style.forcedColorAdjust
       };
     });
@@ -1381,6 +1861,7 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
     assert.equal(paint.boxShadow, 'none', `${paint.selector} retained a decorative shadow`);
     assert.notEqual(paint.color, 'rgba(0, 0, 0, 0)', `${paint.selector} lost readable text`);
     assert.equal(paint.opacity, '1', `${paint.selector} retained theme opacity`);
+    assert.equal(paint.clipPath, 'none', `${paint.selector} retained a theme clip path`);
     assert.equal(paint.forcedColorAdjust, 'auto', `${paint.selector} blocks system colors`);
   }
   assert.notEqual(
@@ -1390,7 +1871,12 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
     'none',
     'forced-colors focus must return to the system outline'
   );
-  assertRectsEqual(await snapshot(page), before);
+  assertRectsEqual(
+    await snapshot(page),
+    before,
+    0.25,
+    composerGeometryNames
+  );
 
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('[data-forge-mark]').count(), 0);
