@@ -15,6 +15,9 @@
 - fixture 已删除测试专用的 `data-native-composer-component` 身份，改用生产 class 签名与直属拓扑推导；新增 component/portal 互斥、home utility 归属、上角 token 及无下角 token 断言。`tests/native-surfaces-runtime-v14.test.mjs` 定向执行 9/9 通过，结束后本项目进程与监听端口均为 0。
 - 两个既有只读审计 agent 在资源与时间上限内未返回结论，本轮已中断，不把它们记作独立 PASS；主对话只记录可复现的源码、测试与进程证据。
 - 生产拓扑门禁已精确提交并推送：`0483459 test: anchor composer topology to native source`；未暂存历史素材、截图或其他未跟踪目录。
+- 再次以一个便携真实 Codex 实例采集新建对话：`2050×1106 @ 125%` 下 composer root 为 `736×163px`、官方 paper surface 为 `736×120px`，证据保留在 `artifacts/test-runs/v17-live-native-sizing-20260730-1708/`。便携 profile 中没有可见的排队/目标运行态，因此没有把 fixture 冒充真实运行截图；joined stack 继续由当前 ASAR 源码和无头状态夹具共同证明。
+- 本轮暴露 `Browser.close` 偶发只关 renderer、不关 portable browser root 的资源泄漏。捕获器新增三重归属后的精确 `/PID` 树兜底；真实复验实际触发后 root、launcher、便携 profile 进程与专属端口均为 0。`tests/lifecycle-contract.test.mjs` 12/12、`tests/native-surfaces-runtime-v14.test.mjs` 9/9 定向通过。
+- 精确调试树兜底已单独提交并推送：`9e57eeb test: close verified transient Codex tree`；该提交不含文档、历史素材或未跟踪证据。
 
 ### V16 受限高度卷页输入器
 

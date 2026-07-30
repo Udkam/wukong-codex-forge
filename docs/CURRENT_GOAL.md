@@ -112,10 +112,11 @@
 - 已把 sidebar 生产映射收口到当前 ASAR 的 `data-app-action-sidebar-*` 结构：项目条、无项目对话和项目内对话不再依赖测试假属性或 `nth-child`；active、expanded、collapsed 的属性变化可在不缩放窗口的情况下刷新材质。
 - V15 已把用户最终参考的纸面与目录材质接入原生 composer、上下文条、一级/二级侧栏条目及应用菜单，当前仅通过 headless 几何/状态门禁，尚未通过用户实机视觉验收。
 - V15 输入相关四类纸面已统一暗化到目标综合色阶，移除 composer 常驻 CSS filter，并通过像素、纹理、原生几何、forced-colors 和最小包定向门禁；该结果仍需用户实机视觉验收。
-- V17 已撤回 V16 过高的概念稿几何：主输入器按 `184:25` 在 `120–168px` 内响应，本机真实 `736px` 新建对话 composer 实测约 `120px`；项目/环境条继续由原生结构承载。真实新建对话证据位于 `artifacts/test-runs/v17-live-composer-fixed-20260730-150832/live-new-task.png`。
+- V17 已撤回 V16 过高的概念稿几何：主输入器按 `184:25` 在 `120–168px` 内响应，本机最新真实新建对话 root 为 `736×163px`、纸面 surface 为 `736×120px`；项目/环境条继续由原生结构承载。最新真实证据位于 `artifacts/test-runs/v17-live-native-sizing-20260730-1708/live-new-task-clean.png`。
 - V17 已把排队消息与进行中目标识别为一个官方 above-composer stack，只在该 stack 外层绘制一次纸面；裁切路径严格为两个上角、直底边，四角源图只显示上半区；独立进度 pill 仍全圆。八状态证据位于 `artifacts/test-runs/v17-composer-top-corners-20260730-1513/`，当前仍是待用户多轮视觉验收的实现检查点。
 - V17 修复当前 Codex 编辑器签名漂移造成“背景已替换、输入框仍原生灰色”的漏映射：官方 `.composer-surface-chrome` 现在是主身份，内部 editor 签名只作可选辅助；不改变 contenteditable、ARIA、按钮或 DOM 拓扑。
 - V17 生产拓扑门禁已继续收紧：composer component 必须是 `data-codex-composer-root` 的直属子节点、包含官方 `.composer-surface-chrome` 且排除直属 above-composer portal；fixture 不再声明测试专用组件身份。官方 compact row 的 `first:rounded-t-2xl`、`border-x`、`border-t` 以及“不含任何下角 token”均进入 9 项定向回归测试。
+- V17 临时调试清理已增加精确 PID 树兜底：只有 launcher、disable request 与 CDP browser PID 三重归属成立，且 `Browser.close` 超时后仍残留时才触发；最新真实复验中该兜底被实际触发，随后 root、owner、便携 profile 进程与专属端口全部归零。它只用于开发验收，不是最终随 Codex 启停方案。
 - V15 侧栏/顶部入口状态矩阵已按当前 ASAR 补齐：五个顶部入口、一级项目/无项目对话、二级项目对话、四个应用菜单触发器均覆盖默认、hover、focus、selected/open、expanded/collapsed、disabled，以及原生 unread/running indicator；尾部菜单单独禁用不会误禁整行，Windows forced-colors 会压过所有组合状态。无头视觉证据为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`，仍待用户实机视觉验收。
 - 当前 Electron 的“文件/编辑/视图/帮助”下拉内容由主进程原生菜单绘制，不在 renderer DOM 中；本阶段只对四个原生触发页签做材质替换，不能把测试夹具伪装成已改造原生下拉菜单。
 - 金箍棒图案已从旧版约 40×34 px 的有效占位放大到原生槽位内约 50×42 px，112×112 资源为 3.2 KiB；1× fixture 可辨认完整端箍且无边缘裁切，原生几何不变。无头证据位于 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-49-40-653Z/`，用户实机验收仍未完成。

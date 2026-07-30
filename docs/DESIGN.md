@@ -142,7 +142,7 @@ V9 的审稿尺寸是当前实机常见的 `736×98` 与 `560×98`，同时验�
 
 ### 开发期启动适配器（非最终交付）
 
-现有稳定安装仍把最小包写入新的 `releases/<版本-时间>/app` 并保留 hash bridge，供临时调试实例回归。调试窗口不能在截图或指标采集后继续保留；关闭后必须核验 launcher、watcher、子进程和专用端口均已释放。`capture-live-playwright.mjs` 的普通模式只连接、截图而不擅自关闭任意窗口；只有显式提供临时 root PID、launcher PID、disable request 且 CDP browser PID 匹配时，`--close-debug-after-capture true` 才会先等待原生恢复，再关闭该一次性 browser，并验证 root、owner 与端口释放。该入口是开发期工具，不再宣称为“下载即用”的最终启动集成。按用户要求，最终随 Codex 启动而启动、随 Codex 关闭而关闭的宿主级方案必须等全部背景、新建页、composer 和 Hatch Pet 视觉工作完成后再单独设计与验证，且不能只依赖 PowerShell。
+现有稳定安装仍把最小包写入新的 `releases/<版本-时间>/app` 并保留 hash bridge，供临时调试实例回归。调试窗口不能在截图或指标采集后继续保留；关闭后必须核验 launcher、watcher、子进程和专用端口均已释放。`capture-live-playwright.mjs` 的普通模式只连接、截图而不擅自关闭任意窗口；只有显式提供临时 root PID、launcher PID、disable request 且 CDP browser PID 匹配时，`--close-debug-after-capture true` 才会先等待原生恢复，再关闭该一次性 browser，并验证 root、owner 与端口释放。当前 Windows Electron 偶发在 `Browser.close` 后关闭所有 renderer 却保留 portable browser root；捕获器只有在上述三重归属证明已经成立、且 20 秒释放期失败时，才会以精确 `/PID` 结束该调试树，禁止 `/IM`、进程名匹配或触及普通控制窗口。该入口是开发期工具，不再宣称为“下载即用”的最终启动集成。按用户要求，最终随 Codex 启动而启动、随 Codex 关闭而关闭的宿主级方案必须等全部背景、新建页、composer 和 Hatch Pet 视觉工作完成后再单独设计与验证，且不能只依赖 PowerShell。
 
 开发期 watcher 当前仍每 1700 ms 检查一次 loopback renderer，并在目标新建或主题状态缺失时重应用；真实采样中它的工作集约 51.8 MiB，launcher 约 115.1 MiB。这是临时审计链的已知成本，不与“renderer 页面没有常驻布局/动画轮询”混为一谈，也不满足最终最小资源启动合同。最终宿主方案必须消除 PowerShell launcher 与低频 CDP 轮询，而不是仅调整间隔后宣称完成。
 
