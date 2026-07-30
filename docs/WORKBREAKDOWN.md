@@ -16,8 +16,8 @@
 | 主对话 · sidebar/topbar states | 实现完整 paint 状态、动态刷新、几何/热区/ARIA 门禁和状态截图 | headless 7/7、相关背景/原生主题/最小包 11/11 通过；独立状态截图已生成，用户实机视觉仍待验收 |
 | 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已把四类输入纸面统一暗化到目标中位色；活动 composer 已切回完整山水/云纹源，不再使用中央透明的错误 mask，真实 Codex 视觉仍待多轮验收 |
 | `asar_composer_contract` | 只读核对正式注入链、当前 ASAR composer/stack/pill 拓扑、原生尺寸和命中区风险 | 确认正式链为 `forge-background-v13.css`；queue/goal 只有上角、progress 独立全圆；指出活体宿主 `clip-path` 会削减角部热区，主对话已迁到绘制层 |
-| `composer_visual_mapping_audit` | 只读对照用户原生结构参考与 V18 三张状态截图 | P0 为 0；确认 joined stack 两上角直底、progress 独立全圆、new-task 为 `736×120` 短卷。提出 stacking-context 风险，主对话已增加绘制层不覆盖原生控件的命中合同 |
-| 主对话 · V18 composer paint/hit area | 保持原生 DOM、状态和按钮尺寸，把新建对话主输入器实现为短卷页，并按真实 topology 区分 joined stack 与独立 pill；视觉裁角不得削减宿主热区 | `184:25`、`120–168px` 保持不变；主卷页四角、joined stack 两个上角迁入 `pointer-events:none` 的绘制层，原生宿主 `clip-path:none`；独立 progress pill 继续全圆。定向回归 9/9、状态夹具通过，等待用户视觉审计 |
+| `composer_visual_mapping_audit` | 只读像素对照用户最新原生 home/guided 截图与 V18/V20 状态截图 | 证明 V18 宽度误差仅 0.22%，但 120px 主框高度偏高约 21%；当前目标为 `736×99–100px`。确认 joined stack 只允许整体两个上角、内部接缝与底边直线，progress 独立全圆 |
+| 主对话 · V20 composer native proportion | 保持原生 DOM、底锚、控件坐标与命中区，把新建对话/运行态主卷页收敛到用户最新截图比例，并锁死 joined stack 角语义 | `184:25` 钳制为 `96–120px`，`736px` 宽时为 `100px`；editor wrapper 恢复原生横向内距，footer 恢复原生坐标。joined stack 只绘制两个上角且不生成下角；定向回归 9/9、相邻背景/包测试 18/18、V20 状态截图通过，等待用户实机视觉审计 |
 | 主对话 · V19 first-frame/quiescence | 修复缓存背景 ready 竞态与稳定页面标记重贴造成的观察器自循环；不改变图库、遮罩、构图或输入器验收形状 | 同步 complete 仍等待 decode；标记按目标集合差量对账，相同题字 ARIA 不重复写入。背景/资源/包定向 24/24，稳定 2.2 秒无新增 refresh，未启动真实调试窗口 |
 | 主对话 · transient review cleanup | 临时真实窗口截图后按归属关闭并证明无残留 | 普通 capture 不关窗；显式清理需 launcher + disable request + CDP browser PID 三重一致。Windows Electron 根进程超时仅允许精确 `/PID` 树兜底；真实复验后 root/owner/profile process/port 均为 0，生命周期定向测试 12/12 |
 | `landing_composition_audit` | 只读审计官方“悟空”书法三倍版的垂直位置、标题比例与人物遮挡风险 | 有效约 141×96 px、题字 27 px / `.035em`；杨戬场景确认未遮挡头部、武器或动作，且两行原生说明不可见 |

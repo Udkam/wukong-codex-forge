@@ -22,7 +22,7 @@ V15 把“高保真复刻”分成两个互不混淆的真值源：
 | composer / send button | `28×28px` |
 | composer 单行 radius token | `22px` |
 
-fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sidebar、topbar 和 composer 内部控件继续由官方几何负责；活动 CSS 只对主输入器 surface 声明经用户授权的响应式高度、切角轮廓，以及 editor wrapper/footer 的卷页安全内边距。`tests/native-asar-ui-contract.test.mjs` 直接读取安装包，官方组件拓扑或按钮 token 漂移时 fail closed，而不是继续用旧截图伪装通过。
+fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sidebar、topbar 和 composer 内部控件继续由官方几何负责；活动 CSS 只对主输入器 surface 声明经用户授权的响应式高度和绘制层切角轮廓。editor wrapper 仅增加 8px 纸面顶部安全区并保留原生 12px 横向内距，footer 完全恢复原生 8px 横向内距和底距。`tests/native-asar-ui-contract.test.mjs` 直接读取安装包，官方组件拓扑或按钮 token 漂移时 fail closed，而不是继续用旧截图伪装通过。
 
 ### 输入器与纸面层级
 
@@ -38,10 +38,10 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 用户最新授权主输入器不再完全沿用原生高度和圆角框，但要求保持新建对话运行界面的短输入器比例。运行时因此把可见官方 `.composer-surface-chrome` 标记为 `forge-composer-frame`，把可识别 editor 的直属原生外壳标记为 `forge-composer-input-shell`，并用原生结构识别 footer 后标记为 `forge-composer-footer`；不增加替代输入框、按钮或文字节点。当前 Codex 内部 editor 已不稳定保留 `.ProseMirror[role=textbox]`，所以 editor 只作可选辅助，不能再成为整块纸面是否生效的前置条件。composer component 由 `data-codex-composer-root` 的直属子节点关系推导：它必须包含官方 surface，并且不能是直属 above-composer portal；生产和 fixture 都不依赖测试专用组件属性。
 
 - 外框宽度、水平位置与底部锚点继续由原生布局决定。
-- 外框高度为 `clamp(120px, width × 25 / 184, 168px)`，对应新建对话实机短卷页比例；`736px` 宽时由下限收敛为约 `120px`，不会退回高大的概念审稿图。
+- 外框高度为 `clamp(96px, width × 25 / 184, 120px)`；用户最新原生截图的最大宽输入区约为 `922×124` 物理像素，对应 `736×约100` CSS px，因此 `736px` 宽时公式精确给出 `100px`。旧 120px 版本在同宽度下高约 21%，已经退出当前合同。
 - 轮廓使用 8 px 低成本切角 `clip-path: polygon(...)`，并强制取消原生圆角；不使用 SVG filter、持续合成层或逐帧动画。
 - `composer-main.webp` 继续只负责纸面与边饰，不能作为 alpha mask。其透明源中央并非实心，用作 mask 会产生大面积黑洞，已在本轮自审中否决。
-- editor 本身仍保持原生零附加 padding；安全留白加在 editor wrapper。footer 仍使用原生 grid 与原生按钮，只在卷页内增加左右/底部留白。
+- editor 本身仍保持原生零附加 padding；editor wrapper 使用 8px 顶部安全区和原生 12px 横向内距。footer 继续使用原生 grid、8px 横向内距、8px 底距与原生按钮坐标，不再为卷页额外内缩或上移。
 - 四角卷页只绘制在主输入器的 `::before` 静态纸面层；该层不命中鼠标，原生宿主自身保持 `clip-path:none` 与完整矩形热区。焦点阴影也只作用于纸面层，不削减或移动编辑器与五类按钮。
 - Windows forced-colors 取消纸面伪元素、切角和位图，回退系统原生矩形与系统色。
 
@@ -78,7 +78,7 @@ V15 当前只组装 9 张背景：`erlang-ink-duel` 与 `great-sage-staff` 为�
 
 收敛后的图库解码总量为 19,258,880 px，交叉淡变最坏两图仍为 4,743,680 px。运行时仍只按需解码当前一图，过渡时最多保留两图；减少场景不会改变原生页面结构、路由判定或全窗 `cover` 合同。
 
-背景 ready 门不把 `Image.complete` 当作已可绘制的替代证据：缓存/data URL 同步 complete 与普通异步 onload 共用唯一 `decode()` 收口，解码完成前继续保留 Codex 原生 carrier paint。结构刷新也改为先生成本轮目标标记集合，再只删除失效 class；稳定 composer 不会在每次 refresh 中从 120 px 卷页退回 84 px 原生框再重新扩张。新建页题字的 ARIA 只在值实际改变时写入，避免相同属性写入反复唤醒 MutationObserver。
+背景 ready 门不把 `Image.complete` 当作已可绘制的替代证据：缓存/data URL 同步 complete 与普通异步 onload 共用唯一 `decode()` 收口，解码完成前继续保留 Codex 原生 carrier paint。结构刷新也改为先生成本轮目标标记集合，再只删除失效 class；稳定 composer 不会在每次 refresh 中从当前 100 px 卷页退回 84 px 原生框再重新扩张。新建页题字的 ARIA 只在值实际改变时写入，避免相同属性写入反复唤醒 MutationObserver。
 
 ### 成本与回退
 

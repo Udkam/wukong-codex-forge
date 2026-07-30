@@ -316,8 +316,8 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   background-color: transparent !important;
   background-image: none !important;
   aspect-ratio: 184 / 25;
-  min-height: 120px;
-  max-height: 168px;
+  min-height: 96px;
+  max-height: 120px;
   border-radius: 0 !important;
   corner-shape: initial !important;
   clip-path: none !important;
@@ -357,14 +357,8 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 :root.forge-ink-mountain .forge-composer-input-shell {
-  margin-bottom: 0 !important;
-  padding-block-start: clamp(14px, 1vw, 18px) !important;
-  padding-inline: clamp(20px, 1.75vw, 34px) !important;
-}
-
-:root.forge-ink-mountain .forge-composer-footer {
-  margin-bottom: clamp(10px, .9vw, 14px) !important;
-  padding-inline: clamp(18px, 1.5vw, 30px) !important;
+  padding-block-start: 8px !important;
+  padding-inline: 12px !important;
 }
 
 :root.forge-ink-mountain .forge-composer-frame:focus-within::before {

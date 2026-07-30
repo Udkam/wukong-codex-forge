@@ -20,7 +20,7 @@
 | V15-14 | 活动背景与 UI 位图除压缩字节上限外必须有解码像素硬门：单背景 ≤12,000,000 px、图库唯一文件总计 ≤32,000,000 px、任意两张最大背景合计 ≤16,000,000 px、单 UI/装饰位图 ≤4,194,304 px；尺寸头无效或超限时必须在 payload 组装前失败 | JPEG/PNG/WebP 头解析、实际 9 图与 8 UI 资产统计、内存内 100,000×100,000 PNG 拒绝测试、最小包导入测试 |
 | V15-15 | 用户否决的 `destined-afterimage.jpg` 与 `yaksha-king-rift.jpg` 必须从 active/default/native preview/最小包全部撤下，但本地文件不得删除；活动图库固定为 2 主战斗 + 2 次级战斗 + 5 风景 | active/default 深比较、最小包排除断言、真实 Codex 截图 |
 | V15-16 | 新建页只保留“悟空”字标与“此去，欲破何局？”；原生“新建任务”和描述说明在主题激活时视觉透明，但 DOM、文本、ARIA、布局占位和停用恢复不得改变 | 首帧自动标记、computed opacity、前后 DOMRect/innerText、延迟挂载与 restore 测试 |
-| V15-17 | 主输入器高度受限但不直接套原生框：宽度与底部锚点保持原生，外框按 `184:25` 响应并钳制为 `120–168px`；本机 `736px` 新建对话 surface 约为 `120px`，不得套用高大概念稿。编辑器外壳与 footer 可获得卷页安全内边距，但五类按钮尺寸、文本、ARIA、状态拓扑和命中区不得改变 | 360/400/560/736/1600 宽度公式测试、真实 `736px` 新建对话截图、按钮宽高与语义深比较、forced-colors 回退 |
+| V15-17 | 主输入器高度受限但不直接套原生框：宽度与底部锚点保持原生，外框按 `184:25` 响应并钳制为 `96–120px`；最大原生列宽 `736px` 时 surface 约为 `100px`，不得回到 120px 偏高版或套用高大概念稿。editor wrapper 只保留 12px 原生横向内距与 8px 纸面顶部安全区，footer 恢复原生 8px 横向内距和底距；五类按钮的尺寸、坐标、文本、ARIA、状态拓扑和命中区不得改变 | 360/400/560/736/1600 宽度公式测试、用户最新 `736×约100px` 原生截图、按钮完整 DOMRect 与语义深比较、forced-colors 回退 |
 | V15-18 | 排队消息与进行中目标必须保留官方 above-composer stack，并共用一张只含左上/右上两角的纸面；stack 底边为直线并与主卷页相接，不得出现下方两角。独立计划/变更进度 pill 仍为四周圆角 | guided/context/queue fixture、computed `clip-path` 精确值、strip 只绘制源图上半区、pill radius、相邻行 DOMRect 全等 |
 | V15-19 | 当前 Codex 内部 editor class/role 漂移不得导致输入框漏替换；官方 `.composer-surface-chrome` 是主 surface 身份，内部 editor 仅作可选语义辅助；主题不得伪造 editor、contenteditable 或 ARIA | 删除 ProseMirror/role 的漂移回归测试、真实 Codex DOM audit、主题化覆盖率与 restore |
 | V15-20 | composer component、above-composer portal、joined stack 与独立 progress pill 的对应关系必须从当前安装包的生产结构推导；fixture 不得用测试属性伪造 component 身份。compact queue/goal row 只允许官方上角 token，不得出现任何下角 token | 当前 ASAR 只读源码核对、root 直属子节点关系、生产 class 签名、portal/component 互斥与上下角 token 定向断言 |
@@ -34,7 +34,7 @@ V15-05 / V15-16 当前技术候选使用官方“悟空”书法生成 336×336 
 
 V15-14 / V15-15 当前实测：9 张唯一活动背景共 19,258,880 px，最大两张合计 4,743,680 px；8 张活动 UI WebP 单张最大 580,608 px。除用户指定的 2560×1043 杨戬超宽构图外，其余活动背景均至少 1920×1080；低分辨率 `great-sage-return.jpg`、被否决候选与夜叉王裂焰图均不进入运行包。
 
-V15-17 至 V15-20 当前技术候选已通过 9 项定向运行时测试；最新 joined stack / 独立 pill / 短卷页无头证据位于 `artifacts/test-runs/v17-composer-top-corners-20260730-1513/`，最新真实新建对话证据位于 `artifacts/test-runs/v17-live-native-sizing-20260730-1708/`。真实窗口中 composer root 为 `736×163px`、主纸面为 `736×120px`；V15-21 的同轮清理报告证明精确树兜底后 root、owner、profile process 与专属端口全部归零。这些证据只证明当前公式、映射与实现检查点成立，不等于用户实机视觉验收。
+V15-17 至 V15-20 当前技术候选已通过 9 项定向运行时测试。用户最新两张原生截图复核把最大宽主纸面锁定为约 `736×100px`；V20 无头证据位于 `artifacts/test-runs/v20-composer-native-proportion-20260730-2/`，其中 home 与 guided 主纸面均为 `736×100px`，joined stack 只有两个上角、直底边，独立 pill 全圆。V17 的 `736×120px` 真实截图继续保留为被本轮取代的历史证据；这些技术证据仍不等于用户实机视觉验收。
 
 > **0.12.3 / V13.3 历史验收合同。** 以下内容继续保留；冲突处以 V15 为准。
 

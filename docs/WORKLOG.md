@@ -1,5 +1,17 @@
 # 工作日志
 
+## 2026-07-31
+
+### V20 原生状态比例与 joined stack 角语义修正
+
+- 用户用两张当前 Codex 原生截图再次纠正状态对应关系：排队消息与进行中目标不是各自四角卡片，而是同一个 joined stack，只允许外层左上、右上两个角；内部接缝与最下边必须为直线。新建对话主输入区也明显短于 V18 的 120px 主题版本。
+- 只读像素审计测得两张原生主输入区均约 `922×124px` 物理像素；在 125% renderer 下对应约 `736×99–100px` CSS。V18 宽度误差仅约 0.22%，但 120px 高度偏高约 21%，因此保持 `184:25` 比例并把钳制范围从 `120–168px` 收到 `96–120px`，最大原生列宽处精确为 `100px`。
+- editor wrapper 改为 8px 顶部安全区与原生 12px 横向内距；footer 移除主题额外内缩/上移，恢复原生 8px 横向内距和 8px 底距。五类按钮现在由完整 DOMRect 等值门禁约束，不再只比较宽高。
+- joined stack 的宿主继续保持 `clip-path:none`；唯一 `pointer-events:none` 纸面层使用 `polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%, 0 8px)`，并只绘制四角源图的上半区。回归测试同时检查 `background-position` 从源图上沿开始，防止下角回流；独立 progress pill 保持全圆。
+- 定向运行 `tests/native-surfaces-runtime-v14.test.mjs` 9/9 通过；背景状态机、最小运行包与原生主题相邻风险测试 18/18 通过。无头状态截图位于 `artifacts/test-runs/v20-composer-native-proportion-20260730-2/`；其中 home/guided 主纸面均为 `736×100px`，没有启动真实 Codex 调试窗口。
+- 首次截图因捕获器仍保存旧 120px 守卫而按预期 fail closed；失败目录 `artifacts/test-runs/v20-composer-native-proportion-20260730-1/` 原样保留，守卫更新为当前公式后第二次截图成功。本检查点仍待用户实机视觉验收，不标记输入区或整套主题完成。
+- 收尾采样为 CPU `29.71%`、可用内存 `9.97 GB`、磁盘队列 `0`，处于内存琥珀档；除当前一次性 PowerShell 检查进程外，本项目 helper 与监听端口均为 `0`。因此本轮不再启动额外 agent、浏览器或全量测试。
+
 ## 2026-07-30
 
 ### V19 首帧缓存解码与稳定刷新收口

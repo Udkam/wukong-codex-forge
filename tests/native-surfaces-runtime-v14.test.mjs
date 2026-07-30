@@ -47,6 +47,21 @@ const variables = [
 
 const expression = makeApplyExpression({ styleSheet, variables });
 
+const composerGeometry = Object.freeze({
+  aspectNumerator: 184,
+  aspectDenominator: 25,
+  minHeight: 96,
+  maxHeight: 120
+});
+
+const expectedComposerHeight = width => Math.min(
+  composerGeometry.maxHeight,
+  Math.max(
+    composerGeometry.minHeight,
+    width * composerGeometry.aspectDenominator / composerGeometry.aspectNumerator
+  )
+);
+
 const selectors = {
   composer: '.composer-surface-chrome',
   editor: '.ProseMirror[role="textbox"]',
@@ -96,12 +111,7 @@ const hitSelectors = [
 
 const composerGeometryNames = new Set([
   'composer',
-  'editor',
-  'add',
-  'access',
-  'model',
-  'voice',
-  'send'
+  'editor'
 ]);
 
 const snapshot = page => page.evaluate(targets => {
@@ -185,7 +195,7 @@ test.after(async () => {
   await browser?.close();
 });
 
-test('V17 maps reference materials with the constrained custom-scroll geometry and native semantics', async () => {
+test('V20 maps the compact scroll material at the corrected native-state proportion', async () => {
   const page = await browser.newPage({
     viewport: { width: 1600, height: 900 },
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
@@ -259,21 +269,11 @@ test('V17 maps reference materials with the constrained custom-scroll geometry a
   assert.equal(await page.locator('.forge-composer-frame').count(), 1);
   assert.equal(await page.locator('.forge-composer-input-shell').count(), 1);
   assert.equal(await page.locator('.forge-composer-footer').count(), 1);
-  const expectedComposerHeight = Math.min(
-    168,
-    Math.max(120, after.composer.rect[2] * 25 / 184)
-  );
+  const expectedHeight = expectedComposerHeight(after.composer.rect[2]);
   assert.ok(
-    Math.abs(after.composer.rect[3] - expectedComposerHeight) <= 0.5,
+    Math.abs(after.composer.rect[3] - expectedHeight) <= 0.5,
     `composer height ${after.composer.rect[3]} must follow the constrained custom-scroll ratio`
   );
-  for (const name of ['add', 'access', 'model', 'voice', 'send']) {
-    assert.deepEqual(
-      after[name].rect.slice(2),
-      before[name].rect.slice(2),
-      `${name} native hit-box dimensions changed`
-    );
-  }
   assert.equal(
     await page.locator(
       '[data-native-slot="composer-submit"][type="button"].forge-composer-submit'
@@ -423,6 +423,9 @@ test('V17 maps reference materials with the constrained custom-scroll geometry a
     composerFooterPaddingInlineStart: getComputedStyle(
       document.querySelector('.forge-composer-footer')
     ).paddingInlineStart,
+    composerFooterMarginBottom: getComputedStyle(
+      document.querySelector('.forge-composer-footer')
+    ).marginBottom,
     sidebarShell: (() => {
       const style = getComputedStyle(document.querySelector('.forge-sidebar-shell'));
       return {
@@ -448,8 +451,8 @@ test('V17 maps reference materials with the constrained custom-scroll geometry a
   assert.equal(paint.composer.pseudoBackgroundRepeat, 'no-repeat, repeat');
   assert.equal(paint.composer.pseudoBackgroundSize, '100% 100%, 512px 220px');
   assert.equal(paint.composer.aspectRatio, '184 / 25');
-  assert.equal(paint.composer.minHeight, '120px');
-  assert.equal(paint.composer.maxHeight, '168px');
+  assert.equal(paint.composer.minHeight, '96px');
+  assert.equal(paint.composer.maxHeight, '120px');
   assert.equal(paint.composer.borderRadius, '0px');
   assert.equal(paint.composer.clipPath, 'none');
   assert.match(paint.composer.pseudoClipPath, /^polygon\(/);
@@ -474,9 +477,10 @@ test('V17 maps reference materials with the constrained custom-scroll geometry a
     '0px',
     'the editable ProseMirror node itself must keep its native padding'
   );
-  assert.ok(Number.parseFloat(paint.composerInputShellPaddingBlockStart) >= 14);
-  assert.ok(Number.parseFloat(paint.composerInputShellPaddingInlineStart) >= 20);
-  assert.ok(Number.parseFloat(paint.composerFooterPaddingInlineStart) >= 18);
+  assert.equal(paint.composerInputShellPaddingBlockStart, '8px');
+  assert.equal(paint.composerInputShellPaddingInlineStart, '12px');
+  assert.equal(paint.composerFooterPaddingInlineStart, '8px');
+  assert.equal(paint.composerFooterMarginBottom, '8px');
   assert.equal(paint.sidebarShell.backgroundColor, 'rgba(0, 0, 0, 0)');
   assert.match(paint.sidebarShell.backgroundImage, /linear-gradient/);
   assert.equal(
@@ -1155,6 +1159,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       stackBackgroundImage: stackStyle.backgroundImage,
       stackPaintClipPath: stackPaintStyle.clipPath,
       stackPaintBackgroundSize: stackPaintStyle.backgroundSize,
+      stackPaintBackgroundPosition: stackPaintStyle.backgroundPosition,
       stackPaintPointerEvents: stackPaintStyle.pointerEvents,
       stackControlsRemainHittable,
       stackBorderRadius: stackStyle.borderRadius,
@@ -1176,6 +1181,11 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     guidedPaint.stackPaintBackgroundSize,
     '100% 200%, 512px 220px',
     'the joined strip must paint only the upper half of the four-corner source'
+  );
+  assert.match(
+    guidedPaint.stackPaintBackgroundPosition,
+    /^50% 0%/,
+    'the joined strip must use the source upper edge and never reveal lower corners'
   );
   assert.equal(guidedPaint.stackPaintPointerEvents, 'none');
   assert.equal(
@@ -1200,7 +1210,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.ok(
     Math.abs(
       themedComposerRect[3] -
-      Math.min(168, Math.max(120, themedComposerRect[2] * 25 / 184))
+      expectedComposerHeight(themedComposerRect[2])
     ) <= 0.5,
     'the themed composer must follow the constrained custom-scroll ratio'
   );
@@ -1801,7 +1811,7 @@ test('V15 keeps the native composer material while the editor is read-only', asy
   assert.ok(
     Math.abs(
       themed.rect[3] -
-      Math.min(168, Math.max(120, themed.rect[2] * 25 / 184))
+      expectedComposerHeight(themed.rect[2])
     ) <= 0.5
   );
   assert.match(themed.backgroundImage, /data:image\//);
@@ -1883,7 +1893,7 @@ test('V17 keeps the official composer surface themed when the native editor sign
   assert.ok(
     Math.abs(
       themed.rect[3] -
-      Math.min(168, Math.max(120, themed.rect[2] * 25 / 184))
+      expectedComposerHeight(themed.rect[2])
     ) <= 0.5
   );
   assert.match(themed.backgroundImage, /data:image\//);
@@ -1903,7 +1913,7 @@ test('V17 keeps the official composer surface themed when the native editor sign
   await page.close();
 });
 
-test('V15 keeps the approved composer ratio responsive while preserving surrounding native geometry', async () => {
+test('V20 keeps the corrected composer ratio responsive while preserving surrounding native geometry', async () => {
   const page = await browser.newPage({
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
   });
@@ -1930,10 +1940,7 @@ test('V15 keeps the approved composer ratio responsive while preserving surround
     );
     const after = await snapshot(page);
     assertRectsEqual(after, before, 0.25, composerGeometryNames);
-    const expectedHeight = Math.min(
-      168,
-      Math.max(120, after.composer.rect[2] * 25 / 184)
-    );
+    const expectedHeight = expectedComposerHeight(after.composer.rect[2]);
     assert.ok(
       Math.abs(after.composer.rect[3] - expectedHeight) <= 0.5,
       `composer ratio mismatch at ${width}px`
