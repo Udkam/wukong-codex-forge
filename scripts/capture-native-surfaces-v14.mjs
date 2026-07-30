@@ -107,7 +107,8 @@ const readComposerContract = page => page.evaluate(() => {
       overflowY: style.overflowY,
       maxHeight: style.maxHeight,
       forgePaintHost: element.matches(
-        '.forge-composer-frame, .forge-composer-context, .forge-composer-panel-stack'
+        '.forge-composer-frame, .forge-composer-context, ' +
+        '.forge-composer-panel-stack, .forge-composer-panel'
       ),
       ariaLabel: element.getAttribute('aria-label'),
       type: element.getAttribute('type'),
@@ -232,13 +233,14 @@ try {
     } else if (
       state === 'running' ||
       state === 'guided' ||
-      state === 'expanded-guided'
+      state === 'expanded-guided' ||
+      state === 'multi-guided'
     ) {
       await page.waitForFunction(expectedPanels => (
         document.querySelector('.forge-composer-progress-pill') &&
         document.querySelector('.forge-composer-panel-stack') &&
         document.querySelectorAll('.forge-composer-panel').length === expectedPanels
-      ), state === 'running' ? 1 : 2);
+      ), state === 'running' ? 1 : state === 'multi-guided' ? 3 : 2);
     }
     const themedContract = await readComposerContract(page);
     assertComposerInvariant(state, nativeContract, themedContract);
@@ -262,7 +264,8 @@ try {
     composerExpanded: path.join(outputDirectory, '09-composer-expanded.png'),
     landingMark: path.join(outputDirectory, '10-landing-mark-56.png'),
     sidebarStateMatrix: path.join(outputDirectory, '11-sidebar-state-matrix.png'),
-    topbarStateMatrix: path.join(outputDirectory, '12-topbar-state-matrix.png')
+    topbarStateMatrix: path.join(outputDirectory, '12-topbar-state-matrix.png'),
+    composerMultiGuided: path.join(outputDirectory, '13-composer-multi-guided.png')
   };
   await page.screenshot({ path: files.fullDefault, fullPage: true });
   await page.locator('aside.app-shell-left-panel').screenshot({ path: files.sidebar });
@@ -420,6 +423,26 @@ try {
   await expandedPage.evaluate(RESTORE_EXPRESSION);
   await expandedPage.close();
 
+  const {
+    page: multiGuidedPage,
+    nativeContract: multiGuidedNativeContract,
+    themedContract: multiGuidedThemedContract
+  } = await newPage('multi-guided');
+  await multiGuidedPage.waitForFunction(() => (
+    document.querySelector('.forge-plan-pill') &&
+    document.querySelectorAll('.forge-composer-panel-stack').length === 1 &&
+    document.querySelectorAll('.forge-composer-panel').length === 3
+  ));
+  await multiGuidedPage.locator('.composer-area')
+    .screenshot({ path: files.composerMultiGuided });
+  const multiGuidedMarks = {
+    plan: await multiGuidedPage.locator('.forge-plan-pill').count(),
+    stacks: await multiGuidedPage.locator('.forge-composer-panel-stack').count(),
+    panels: await multiGuidedPage.locator('.forge-composer-panel').count()
+  };
+  await multiGuidedPage.evaluate(RESTORE_EXPRESSION);
+  await multiGuidedPage.close();
+
   fs.writeFileSync(
     path.join(outputDirectory, 'capture.json'),
     `${JSON.stringify({
@@ -433,6 +456,7 @@ try {
         progressMarks,
         guidedMarks,
         expandedMarks,
+        multiGuidedMarks,
         contracts: {
           default: {
             native: defaultNativeContract,
@@ -457,6 +481,10 @@ try {
           expanded: {
             native: expandedNativeContract,
             themed: expandedThemedContract
+          },
+          multiGuided: {
+            native: multiGuidedNativeContract,
+            themed: multiGuidedThemedContract
           }
         }
       },

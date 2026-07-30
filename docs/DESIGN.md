@@ -31,23 +31,23 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 - `composer-pill.webp`：计划/变更摘要等小条。
 - `paper-tile.webp`：所有纸面统一底纹，避免三张参考之间出现不同“地面图案”。
 
-所有材质由用户最终参考的透明合同源裁切，并以 nine-slice 保持角纹和边线不随宽高拉伸。原生 editor、footer、按钮、文字、placeholder、ARIA 和 hit box 均保留。助手回答不套纸框。
+所有材质由用户最终参考的透明合同源确定性重建。V17 活动纸面使用完整实心中央与周期化底纹：主卷和各原生行只在 `pointer-events:none` 静态绘制层缩放一次对应源图，不能把一个绘制层跨多行纵向拉伸。原生 editor、footer、按钮、文字、placeholder、ARIA 和 hit box 均保留。助手回答不套纸框。
 
-### V17 短卷页输入器与上角 joined stack
+### V21 短卷页输入器与逐行叠层
 
 用户最新授权主输入器不再完全沿用原生高度和圆角框，但要求保持新建对话运行界面的短输入器比例。运行时因此把可见官方 `.composer-surface-chrome` 标记为 `forge-composer-frame`，把可识别 editor 的直属原生外壳标记为 `forge-composer-input-shell`，并用原生结构识别 footer 后标记为 `forge-composer-footer`；不增加替代输入框、按钮或文字节点。当前 Codex 内部 editor 已不稳定保留 `.ProseMirror[role=textbox]`，所以 editor 只作可选辅助，不能再成为整块纸面是否生效的前置条件。composer component 由 `data-codex-composer-root` 的直属子节点关系推导：它必须包含官方 surface，并且不能是直属 above-composer portal；生产和 fixture 都不依赖测试专用组件属性。
 
 - 外框宽度、水平位置与底部锚点继续由原生布局决定。
 - 外框高度为 `clamp(96px, width × 25 / 184, 120px)`；用户最新原生截图的最大宽输入区约为 `922×124` 物理像素，对应 `736×约100` CSS px，因此 `736px` 宽时公式精确给出 `100px`。旧 120px 版本在同宽度下高约 21%，已经退出当前合同。
 - 轮廓使用 8 px 低成本切角 `clip-path: polygon(...)`，并强制取消原生圆角；不使用 SVG filter、持续合成层或逐帧动画。
-- `composer-main.webp` 继续只负责纸面与边饰，不能作为 alpha mask。其透明源中央并非实心，用作 mask 会产生大面积黑洞，已在本轮自审中否决。
+- `composer-main.webp` 只负责纸面与边饰，不能作为 alpha mask。V17 重建产物已经把中央修成完整不透明纸面；旧中央透明洞版本仅作历史证据，不得回流活动清单。
 - editor 本身仍保持原生零附加 padding；editor wrapper 使用 8px 顶部安全区和原生 12px 横向内距。footer 继续使用原生 grid、8px 横向内距、8px 底距与原生按钮坐标，不再为卷页额外内缩或上移。
 - 四角卷页只绘制在主输入器的 `::before` 静态纸面层；该层不命中鼠标，原生宿主自身保持 `clip-path:none` 与完整矩形热区。焦点阴影也只作用于纸面层，不削减或移动编辑器与五类按钮。
 - Windows forced-colors 取消纸面伪元素、切角和位图，回退系统原生矩形与系统色。
 
-该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。排队与目标两个原生行先收敛到同一个 above-composer stack，再在 stack 的 `::before` 静态绘制层画一次纸面：官方 compact row 只有 `first:rounded-t-2xl`，主题绘制层也只有左上、右上两个切角，底边两点保持直线；宿主本身不裁切并继续保留矩形热区。`composer-strip.webp` 以 `100% 200%` 绘制并定位在上方，只取四角源图的上半部，物理上避免下方角饰。独立进度 pill 位于直属 portal 内，继续使用 `999px` 圆角，不能与 joined stack 混用。
+该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。排队与目标原生行仍收敛在同一个 above-composer stack，但 stack 的 `::before` 明确关闭；每个已识别原生行各自成为隔离绘制宿主，并在自己的 `::before` 上画一层纸面。这样两条消息是两层、三条消息是三层，不会把一张图拉伸到整组高度。每层都使用 `polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%, 0 8px)`，只有左上/右上切角，底边保持直线；宿主本身不裁切并保留矩形热区。`composer-strip.webp` 以 `100% 200%` 绘制并定位在上方，只取四角源图的上半部，物理上避免下方角饰。独立进度 pill 位于直属 portal 内，继续使用 `999px` 圆角，不能与逐行 stack 混用。
 
-用户最新要求把整套输入纸面收进能衔接战斗/风景背景与深墨侧栏的暖灰黄赭范围。生成器不再对各裁片机械追加不同通道偏移，而是以同一 `RGB(135,117,93)` 目标和 `0.74` 纹理对比系数重建；实际 main/strip/pill/tile 中位色落在 `RGB(131–135,111–117,86–93)`。CSS 回退色统一为 `#87755d`，主墨色为 `#080604`；纸纹无运行时 filter，暗纹理对比度和 forced-colors 回退继续由定向合同锁定。
+用户最新要求把整套输入纸面收进能衔接战斗/风景背景与深墨侧栏的暖灰黄赭范围。V17 生成器以同一 `RGB(135,117,93)` 目标和 `0.86` 纹理对比系数重建；实际 main/strip/pill/tile 中位色落在 `RGB(134–135,117,93–94)`。CSS 回退色统一为 `#87755d`，主墨色为 `#080604`；纸纹无运行时 filter，暗纹理对比度和 forced-colors 回退继续由定向合同锁定。
 
 ### 侧栏与顶部状态映射
 

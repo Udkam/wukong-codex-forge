@@ -73,10 +73,10 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
     def test_active_composer_uses_continuous_scroll_materials(self) -> None:
         active = json.loads(ACTIVE_THEME_PATH.read_text(encoding="utf-8"))
         expected = {
-            "composerMain": "ui/v14/composer-main.webp",
-            "composerStrip": "ui/v14/composer-strip.webp",
-            "composerPill": "ui/v14/composer-pill.webp",
-            "paperTile": "ui/v14/paper-tile.webp",
+            "composerMain": "ui/v17/composer-main.webp",
+            "composerStrip": "ui/v17/composer-strip.webp",
+            "composerPill": "ui/v17/composer-pill.webp",
+            "paperTile": "ui/v17/paper-tile.webp",
         }
         self.assertEqual(
             {key: active["uiAssets"][key] for key in expected},

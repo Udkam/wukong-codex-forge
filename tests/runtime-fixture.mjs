@@ -842,7 +842,8 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
     if (
       selectedState === 'running' ||
       selectedState === 'guided' ||
-      selectedState === 'expanded-guided'
+      selectedState === 'expanded-guided' ||
+      selectedState === 'multi-guided'
     ) {
       const expandedStack = selectedState === 'expanded-guided';
       const compactRowClasses = expandedStack
@@ -867,18 +868,22 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
         <span>目标</span>`;
       footerActions.append(goalButton);
 
-      const queueRow = (
-        selectedState === 'guided' ||
-        selectedState === 'expanded-guided'
-      )
-        ? `
+      const queueCount = selectedState === 'multi-guided'
+        ? 2
+        : (
+          selectedState === 'guided' ||
+          selectedState === 'expanded-guided'
+        )
+          ? 1
+          : 0;
+      const queueRows = Array.from({ length: queueCount }, (_, index) => `
           <div class="relative min-w-0 overflow-clip text-token-foreground ${compactRowClasses} vertical-scroll-fade-mask hide-scrollbar max-h-[30dvh] native-above-composer-row"
-            data-fixture-surface="queued-panel">
+            data-fixture-surface="${index === 0 ? 'queued-panel' : `queued-panel-${index + 1}`}">
             <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
               <path d="M4 3v6.5A2.5 2.5 0 0 0 6.5 12H12"/>
               <path d="m9.5 9.5 2.5 2.5-2.5 2.5"/>
             </svg>
-            <b>1</b>
+            <b>${index + 1}</b>
             <span style="margin-left:auto">引导</span>
             <button aria-label="删除排队消息">
               <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
@@ -892,8 +897,7 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
                 <circle cx="12" cy="8" r=".7" fill="currentColor" stroke="none"/>
               </svg>
             </button>
-          </div>`
-        : '';
+          </div>`).join('');
 
       abovePortal.innerHTML = `
         <div class="relative col-start-1 row-start-1 h-8 self-end native-progress-host">
@@ -920,7 +924,7 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
           data-fixture-stack-mode="${expandedStack ? 'expanded' : 'collapsed'}">
           <div class="order-2 flex min-w-0 flex-col native-above-composer-stack"
             data-fixture-surface="composer-stack">
-            ${queueRow}
+            ${queueRows}
             <div class="relative min-w-0 overflow-clip text-token-foreground ${compactRowClasses} native-above-composer-row"
               data-fixture-surface="goal-panel">
             <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">

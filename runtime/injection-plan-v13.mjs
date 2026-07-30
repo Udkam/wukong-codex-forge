@@ -762,9 +762,10 @@ function applyRuntime(payload) {
     ) mark(context, 'forge-composer-context');
 
     /*
-     * Queued guidance and the active goal are rows of one official
-     * above-composer stack. Paint the stack once and retain row marks only for
-     * the native one-pixel separator; never give each row its own paper card.
+     * Queued guidance and the active goal remain rows of one official
+     * above-composer stack. Mark the native stack for shared color tokens and
+     * every native row as an independent paint host: each added message gains
+     * one paper layer without stretching a single background over the stack.
      */
     const aboveComposerPortals = aboveComposerPortal
       ? [aboveComposerPortal]
