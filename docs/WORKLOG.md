@@ -11,6 +11,10 @@
 - 一次临时真实 Codex 证据位于 `artifacts/test-runs/v17-live-composer-fixed-20260730-150832/live-new-task.png`；捕获脚本在 20 秒回收检查中超时，随后只按已核验的 profile、根 PID 和专用端口停止该调试实例，并确认根进程、全部后代和端口均释放。没有按进程名批量结束任何进程；捕获脚本也已改为在回收超时时先落盘诊断报告，避免异常路径丢失 PID/端口证据。
 - joined stack / progress pill / 短卷页八状态证据位于 `artifacts/test-runs/v17-composer-top-corners-20260730-1513/`。本检查点只证明当前结构与映射已修正，仍待用户多轮视觉验收，不标记输入区或整套主题完成。
 - 实现检查点已精确提交并推送：`aaa5308 style: bind short scroll composer to native topology`；未暂存历史素材、截图或其他未跟踪目录。
+- 再次只读核对当前安装包生产源码：composer component 是 `data-codex-composer-root` 下包含 `.composer-surface-chrome`、且排除直属 above-composer portal 的直属子节点；compact queue/goal row 使用 `border-x border-t first:rounded-t-2xl`，源码没有下角 token；独立 progress pill 使用 `rounded-3xl`。
+- fixture 已删除测试专用的 `data-native-composer-component` 身份，改用生产 class 签名与直属拓扑推导；新增 component/portal 互斥、home utility 归属、上角 token 及无下角 token 断言。`tests/native-surfaces-runtime-v14.test.mjs` 定向执行 9/9 通过，结束后本项目进程与监听端口均为 0。
+- 两个既有只读审计 agent 在资源与时间上限内未返回结论，本轮已中断，不把它们记作独立 PASS；主对话只记录可复现的源码、测试与进程证据。
+- 生产拓扑门禁已精确提交并推送：`0483459 test: anchor composer topology to native source`；未暂存历史素材、截图或其他未跟踪目录。
 
 ### V16 受限高度卷页输入器
 

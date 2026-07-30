@@ -23,6 +23,7 @@
 | V15-17 | 主输入器高度受限但不直接套原生框：宽度与底部锚点保持原生，外框按 `184:25` 响应并钳制为 `120–168px`；本机 `736px` 新建对话 surface 约为 `120px`，不得套用高大概念稿。编辑器外壳与 footer 可获得卷页安全内边距，但五类按钮尺寸、文本、ARIA、状态拓扑和命中区不得改变 | 360/400/560/736/1600 宽度公式测试、真实 `736px` 新建对话截图、按钮宽高与语义深比较、forced-colors 回退 |
 | V15-18 | 排队消息与进行中目标必须保留官方 above-composer stack，并共用一张只含左上/右上两角的纸面；stack 底边为直线并与主卷页相接，不得出现下方两角。独立计划/变更进度 pill 仍为四周圆角 | guided/context/queue fixture、computed `clip-path` 精确值、strip 只绘制源图上半区、pill radius、相邻行 DOMRect 全等 |
 | V15-19 | 当前 Codex 内部 editor class/role 漂移不得导致输入框漏替换；官方 `.composer-surface-chrome` 是主 surface 身份，内部 editor 仅作可选语义辅助；主题不得伪造 editor、contenteditable 或 ARIA | 删除 ProseMirror/role 的漂移回归测试、真实 Codex DOM audit、主题化覆盖率与 restore |
+| V15-20 | composer component、above-composer portal、joined stack 与独立 progress pill 的对应关系必须从当前安装包的生产结构推导；fixture 不得用测试属性伪造 component 身份。compact queue/goal row 只允许官方上角 token，不得出现任何下角 token | 当前 ASAR 只读源码核对、root 直属子节点关系、生产 class 签名、portal/component 互斥与上下角 token 定向断言 |
 
 当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 合同、7 项原生表面测试和 Windows forced-colors 组合态测试；最新证据目录为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。Electron 原生下拉菜单本体不在 renderer DOM 中，当前验收范围只包含四个原生触发页签；不得把夹具中的页面元素当作下拉本体交付。
 
@@ -30,7 +31,7 @@ V15-05 / V15-16 当前技术候选使用官方“悟空”书法生成 336×336 
 
 V15-14 / V15-15 当前实测：9 张唯一活动背景共 19,258,880 px，最大两张合计 4,743,680 px；8 张活动 UI WebP 单张最大 580,608 px。除用户指定的 2560×1043 杨戬超宽构图外，其余活动背景均至少 1920×1080；低分辨率 `great-sage-return.jpg`、被否决候选与夜叉王裂焰图均不进入运行包。
 
-V15-17 当前技术候选已通过 8 项定向运行时测试；无头证据位于 `artifacts/test-runs/v16-expanded-composer-20260730-132359/`。该证据只证明公式、拓扑和当前 fixture 视觉成立，不等于用户实机验收。
+V15-17 至 V15-20 当前技术候选已通过 9 项定向运行时测试；最新 joined stack / 独立 pill / 短卷页无头证据位于 `artifacts/test-runs/v17-composer-top-corners-20260730-1513/`，真实新建对话证据位于 `artifacts/test-runs/v17-live-composer-fixed-20260730-150832/`。这些证据只证明当前公式、映射与实现检查点成立，不等于用户实机视觉验收。
 
 > **0.12.3 / V13.3 历史验收合同。** 以下内容继续保留；冲突处以 V15 为准。
 
