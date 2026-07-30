@@ -4,7 +4,7 @@
 
 | 工作流 | 本轮责任 | 当前结论 / 门槛 |
 | --- | --- | --- |
-| 主对话 · native geometry | 只读解析当前 `ChatGPT.exe/app.asar`，把官方 token、class 结构和响应式公式写入 fixture/漂移合同 | 已完成 composer/topbar/基础 sidebar baseline；任何尺寸改动必须先有本机源码证据 |
+| 主对话 · native geometry | 只读解析当前 `ChatGPT.exe/app.asar`，把官方 token、class 结构和响应式公式写入 fixture/漂移合同 | 已完成 composer/topbar/基础 sidebar baseline；除用户明确授权的主输入器外框外，任何尺寸改动必须先有本机源码证据 |
 | `background_first_frame_audit` | 只读复核首屏探针、延迟挂载、背景解码与 overlay 自修复竞态 | 定位 120/420 ms 探针折叠、既有外壳内部挂载、透明旧 hero 路由优先级、首图 ready 和 overlay generation 风险；主对话已逐项修复并写入 10 项背景状态机门禁 |
 | `background_contract_tests_audit` | 只读复核全窗、首帧、分类、过渡、恢复与静止期测试合同 | 确认旧 fixture 未覆盖真实 viewport DOMRect 与透明 hero/可见 thread 重叠；主对话已增加初始/resize 全视口、<300 ms 延迟挂载、内部挂载及路由重叠用例 |
 | `background_resource_audit` | 只读量化 11 图、CDP 注入、双层纹理、观察器、watcher 与调试实例成本 | 11 图压缩 2.454 MiB；当前稳态/过渡持图策略合理。主对话已把单图/图库/双图过渡/UI 的解码像素门禁写入 payload 组装前；Blob/分批注册须先过 CSP 与逐像素等价验证，未贸然集成 |
@@ -14,7 +14,8 @@
 | `css_state_review` | 只读复核状态 selector、forced-colors specificity 与禁用传播风险 | 已完成；发现并修复尾部按钮误禁整行、expanded/collapsed focus 被吞和高对比回退优先级 |
 | `asar_state_contract` | 为当前 ASAR 的 nav/task/status/spinner 增加漂移合同 | 已完成并定向通过；不绑定压缩变量名，不修改或覆盖应用包 |
 | 主对话 · sidebar/topbar states | 实现完整 paint 状态、动态刷新、几何/热区/ARIA 门禁和状态截图 | headless 7/7、相关背景/原生主题/最小包 11/11 通过；独立状态截图已生成，用户实机视觉仍待验收 |
-| 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已把四类输入纸面统一暗化到目标中位色并通过像素、几何、状态、forced-colors 和最小包门禁；真实 Codex 视觉仍待多轮验收 |
+| 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已把四类输入纸面统一暗化到目标中位色；主输入器进一步按用户授权改为受限卷页高度与切角外形，相关定向门禁通过，真实 Codex 视觉仍待多轮验收 |
+| 主对话 · V16 expanded composer | 保持原生 DOM、状态和按钮尺寸，把主输入器实现为受限高度的非原生卷页外形 | `256:63`、`168–256px`、editor wrapper/footer 安全留白与 forced-colors 回退已实现；8 项定向测试和六状态截图通过，等待用户视觉审计 |
 | `landing_composition_audit` | 只读审计官方“悟空”书法三倍版的垂直位置、标题比例与人物遮挡风险 | 有效约 141×96 px、题字 27 px / `.035em`；杨戬场景确认未遮挡头部、武器或动作，且两行原生说明不可见 |
 | `landing_threefold_multiscene_audit` | 只读复核四张活动战斗背景上的三倍字标 | 检查 0/1/2/3 场景人物焦点、字标/题字间距、深浅版可读性与 56×56 host / 168×168 paint 合同 |
 | 主对话 · landing mark | 撤下卡通/微缩器物，改用官方“悟空”书法与朱印；视觉隐藏原生 kicker/描述说明 | 深浅两张 336×336 WebP、56×56 原生锚点、168×168 三倍绘制层、四战斗场景 fixture、原文本/DOMRect/restore 与最小包门禁进入定向验收；仍待用户实机视觉通过 |
@@ -25,11 +26,11 @@
 
 ### V15 小步推送门禁
 
-1. 原生尺寸与 fixture 基线。
+1. 原生尺寸与 fixture 基线，以及主输入器外框的唯一授权例外。
 2. composer 暗色纸面与相邻条统一色阶。
 3. 新建页 56×56 印记。
 4. sidebar hierarchy 与完整状态矩阵。
-5. composer 1:1 材质与相邻条层级。
+5. composer 卷页比例、受限高度、1:1 材质与相邻条层级。
 6. 真实 Codex 单窗口截图、差异修正与资源核验。
 
 每一项只精确暂存自身路径，跑覆盖本项风险的测试后立即 commit/push；用户未验收的项继续标记为进行中，禁止合并成“整体完成”。

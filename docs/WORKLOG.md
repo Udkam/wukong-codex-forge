@@ -1,5 +1,17 @@
 # 工作日志
 
+## 2026-07-30
+
+### V16 受限高度卷页输入器
+
+- 按用户最新确认，主输入器不再完全套用原生高度和圆角外框；宽度与底部锚点仍由 Codex 原生布局负责，外框按 `256:63` 比例响应，并限制在 `168–256px`。
+- 只读复核本机 `ChatGPT.exe 26.715.2305.0` 的 composer 源码，确认多行 editor wrapper、footer grid、submit button 和上下文/目标相邻层级；运行时只给原生 surface、editor wrapper 和 footer 增加主题标记，没有创建替代输入框或控件。
+- 外框使用 8 px 静态切角轮廓并取消原生圆角；editor wrapper 与 footer 获得卷页安全留白，编辑器节点本身、按钮宽高、文字、ARIA、状态拓扑和命中区继续保持原生。
+- 第一版曾尝试把 `composer-main.webp` 的 alpha 直接用作 mask；自审截图暴露中央透明源会造成大面积黑洞，立即否决并改为低成本切角。失败证据保留在 `artifacts/test-runs/v16-expanded-composer-20260730-131834/`，未删除。
+- 定向结果：`tests/native-surfaces-runtime-v14.test.mjs` 8/8 通过，覆盖默认、项目上下文、只读切换、排队/目标、展开、360/400/560/736/1600 响应宽度和 forced-colors；最终六状态证据位于 `artifacts/test-runs/v16-expanded-composer-20260730-132359/`。
+- 调试仅使用临时无头实例，截图后核验 `PROJECT_HELPERS=0`、`PROJECT_LISTENERS=0`。期间一次采样出现 CPU 97% / 磁盘队列 4.0，未启动下一轮测试；短采样确认无本项目常驻 helper 后等待资源恢复至绿档再继续。
+- 本检查点仍待用户视觉审计，不标记输入区或整套主题完成。
+
 ## 2026-07-28
 
 ### V16 新建页中心构图收敛

@@ -6,7 +6,7 @@
 
 V15 把“高保真复刻”分成两个互不混淆的真值源：
 
-1. **几何真值**只来自本机 `ChatGPT.exe 26.715.2305.0` 的只读 `app.asar`。宽高、间距、padding、位置、响应式公式、动态增长、圆角 token 和点击热区均由官方 DOM/CSS/JS决定。
+1. **原生几何真值**来自本机 `ChatGPT.exe 26.715.2305.0` 的只读 `app.asar`。除用户明确授权的主输入器卷页外框外，宽高、间距、padding、位置、响应式公式、动态增长和点击热区均由官方 DOM/CSS/JS 决定。
 2. **视觉真值**来自用户最终确认的输入器三图和《黑神话：悟空》“游记”目录参考。纸张纤维、云纹、边角线、深墨条、浅纸选中带、旧金/烟褐/骨纸配色和交互状态由这些参考决定。
 
 ### 当前本机几何基线
@@ -22,7 +22,7 @@ V15 把“高保真复刻”分成两个互不混淆的真值源：
 | composer / send button | `28×28px` |
 | composer 单行 radius token | `22px` |
 
-fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。活动 CSS 不声明 composer/sidebar/topbar 的 width、height、min-height、grid、padding 或 absolute position；nine-slice 和纹理只覆盖 paint。`tests/native-asar-ui-contract.test.mjs` 直接读取安装包，官方 token 漂移时 fail closed，而不是继续用旧截图伪装通过。
+fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sidebar、topbar 和 composer 内部控件继续由官方几何负责；活动 CSS 只对主输入器 surface 声明经用户授权的响应式高度、切角轮廓，以及 editor wrapper/footer 的卷页安全内边距。`tests/native-asar-ui-contract.test.mjs` 直接读取安装包，官方组件拓扑或按钮 token 漂移时 fail closed，而不是继续用旧截图伪装通过。
 
 ### 输入器与纸面层级
 
@@ -33,7 +33,20 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。活动
 
 所有材质由用户最终参考的透明合同源裁切，并以 nine-slice 保持角纹和边线不随宽高拉伸。原生 editor、footer、按钮、文字、placeholder、ARIA 和 hit box 均保留。助手回答不套纸框。
 
-用户最新要求把整套输入纸面调暗以衔接战斗/风景背景与深墨侧栏。像素审计测得目标截图内区中位色为 `RGB(126,112,96)`；生成器因此从同一透明源统一应用 `(-82,-69,-49)` 通道偏移与 `RGB(127,113,97)` matte。实际四张产物中位色落在 `RGB(125,109,92)` 至 `RGB(126,113,97)`，没有给现有 WebP 追加滤镜。CSS 回退色统一为 `#7f7161`，主墨色收紧为 `#100c08`，暗纹理第 10 百分位仍保持至少 3:1；forced-colors 继续交还系统配色。
+### V16 受限卷页输入器
+
+用户最新授权主输入器不再完全沿用原生高度和圆角框，但要求高度受限。运行时因此把可见原生 composer surface 标记为 `forge-composer-frame`，把 editor 的直属原生外壳标记为 `forge-composer-input-shell`，并用原生结构识别 footer 后标记为 `forge-composer-footer`；不增加替代输入框、按钮或文字节点。
+
+- 外框宽度、水平位置与底部锚点继续由原生布局决定。
+- 外框高度为 `clamp(168px, width × 63 / 256, 256px)`，对应审稿图约 `256:63` 的卷页比例。
+- 轮廓使用 8 px 低成本切角 `clip-path: polygon(...)`，并强制取消原生圆角；不使用 SVG filter、持续合成层或逐帧动画。
+- `composer-main.webp` 继续只负责纸面与边饰，不能作为 alpha mask。其透明源中央并非实心，用作 mask 会产生大面积黑洞，已在本轮自审中否决。
+- editor 本身仍保持原生零附加 padding；安全留白加在 editor wrapper。footer 仍使用原生 grid 与原生按钮，只在卷页内增加左右/底部留白。
+- Windows forced-colors 取消切角和位图，回退系统原生矩形与系统色。
+
+该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。
+
+用户最新要求把整套输入纸面收进能衔接战斗/风景背景与深墨侧栏的暖灰黄赭范围。生成器不再对各裁片机械追加不同通道偏移，而是以同一 `RGB(135,117,93)` 目标和 `0.74` 纹理对比系数重建；实际 main/strip/pill/tile 中位色落在 `RGB(131–135,111–117,86–93)`。CSS 回退色统一为 `#87755d`，主墨色为 `#080604`；纸纹无运行时 filter，暗纹理对比度和 forced-colors 回退继续由定向合同锁定。
 
 ### 侧栏与顶部状态映射
 
