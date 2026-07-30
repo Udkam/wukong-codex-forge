@@ -33,18 +33,18 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 
 所有材质由用户最终参考的透明合同源裁切，并以 nine-slice 保持角纹和边线不随宽高拉伸。原生 editor、footer、按钮、文字、placeholder、ARIA 和 hit box 均保留。助手回答不套纸框。
 
-### V16 受限卷页输入器
+### V17 短卷页输入器与上角 joined stack
 
-用户最新授权主输入器不再完全沿用原生高度和圆角框，但要求高度受限。运行时因此把可见原生 composer surface 标记为 `forge-composer-frame`，把 editor 的直属原生外壳标记为 `forge-composer-input-shell`，并用原生结构识别 footer 后标记为 `forge-composer-footer`；不增加替代输入框、按钮或文字节点。
+用户最新授权主输入器不再完全沿用原生高度和圆角框，但要求保持新建对话运行界面的短输入器比例。运行时因此把可见官方 `.composer-surface-chrome` 标记为 `forge-composer-frame`，把可识别 editor 的直属原生外壳标记为 `forge-composer-input-shell`，并用原生结构识别 footer 后标记为 `forge-composer-footer`；不增加替代输入框、按钮或文字节点。当前 Codex 内部 editor 已不稳定保留 `.ProseMirror[role=textbox]`，所以 editor 只作可选辅助，不能再成为整块纸面是否生效的前置条件。
 
 - 外框宽度、水平位置与底部锚点继续由原生布局决定。
-- 外框高度为 `clamp(168px, width × 63 / 256, 256px)`，对应审稿图约 `256:63` 的卷页比例。
+- 外框高度为 `clamp(120px, width × 25 / 184, 168px)`，对应新建对话实机短卷页比例；`736px` 宽时由下限收敛为约 `120px`，不会退回高大的概念审稿图。
 - 轮廓使用 8 px 低成本切角 `clip-path: polygon(...)`，并强制取消原生圆角；不使用 SVG filter、持续合成层或逐帧动画。
 - `composer-main.webp` 继续只负责纸面与边饰，不能作为 alpha mask。其透明源中央并非实心，用作 mask 会产生大面积黑洞，已在本轮自审中否决。
 - editor 本身仍保持原生零附加 padding；安全留白加在 editor wrapper。footer 仍使用原生 grid 与原生按钮，只在卷页内增加左右/底部留白。
 - Windows forced-colors 取消切角和位图，回退系统原生矩形与系统色。
 
-该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。
+该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。排队与目标两个原生行先收敛到同一个 above-composer stack，再在 stack 外层绘制一次：`clip-path` 只有左上、右上两个切角，底边两点保持直线；`composer-strip.webp` 以 `100% 200%` 绘制并定位在上方，只取四角源图的上半部，物理上避免下方角饰。独立进度 pill 使用 `999px` 圆角，不能与 joined stack 混用。
 
 用户最新要求把整套输入纸面收进能衔接战斗/风景背景与深墨侧栏的暖灰黄赭范围。生成器不再对各裁片机械追加不同通道偏移，而是以同一 `RGB(135,117,93)` 目标和 `0.74` 纹理对比系数重建；实际 main/strip/pill/tile 中位色落在 `RGB(131–135,111–117,86–93)`。CSS 回退色统一为 `#87755d`，主墨色为 `#080604`；纸纹无运行时 filter，暗纹理对比度和 forced-colors 回退继续由定向合同锁定。
 

@@ -20,7 +20,9 @@
 | V15-14 | 活动背景与 UI 位图除压缩字节上限外必须有解码像素硬门：单背景 ≤12,000,000 px、图库唯一文件总计 ≤32,000,000 px、任意两张最大背景合计 ≤16,000,000 px、单 UI/装饰位图 ≤4,194,304 px；尺寸头无效或超限时必须在 payload 组装前失败 | JPEG/PNG/WebP 头解析、实际 9 图与 8 UI 资产统计、内存内 100,000×100,000 PNG 拒绝测试、最小包导入测试 |
 | V15-15 | 用户否决的 `destined-afterimage.jpg` 与 `yaksha-king-rift.jpg` 必须从 active/default/native preview/最小包全部撤下，但本地文件不得删除；活动图库固定为 2 主战斗 + 2 次级战斗 + 5 风景 | active/default 深比较、最小包排除断言、真实 Codex 截图 |
 | V15-16 | 新建页只保留“悟空”字标与“此去，欲破何局？”；原生“新建任务”和描述说明在主题激活时视觉透明，但 DOM、文本、ARIA、布局占位和停用恢复不得改变 | 首帧自动标记、computed opacity、前后 DOMRect/innerText、延迟挂载与 restore 测试 |
-| V15-17 | 主输入器高度受限但不直接套原生框：宽度与底部锚点保持原生，外框按 `256:63` 响应并钳制为 `168–256px`，使用非圆角的轻量卷页切角；编辑器外壳与 footer 可获得卷页安全内边距，但五类按钮尺寸、文本、ARIA、状态拓扑和命中区不得改变 | 360/400/560/736/1600 宽度公式测试、默认/上下文/运行/引导/展开截图、按钮宽高与语义深比较、forced-colors 回退 |
+| V15-17 | 主输入器高度受限但不直接套原生框：宽度与底部锚点保持原生，外框按 `184:25` 响应并钳制为 `120–168px`；本机 `736px` 新建对话 surface 约为 `120px`，不得套用高大概念稿。编辑器外壳与 footer 可获得卷页安全内边距，但五类按钮尺寸、文本、ARIA、状态拓扑和命中区不得改变 | 360/400/560/736/1600 宽度公式测试、真实 `736px` 新建对话截图、按钮宽高与语义深比较、forced-colors 回退 |
+| V15-18 | 排队消息与进行中目标必须保留官方 above-composer stack，并共用一张只含左上/右上两角的纸面；stack 底边为直线并与主卷页相接，不得出现下方两角。独立计划/变更进度 pill 仍为四周圆角 | guided/context/queue fixture、computed `clip-path` 精确值、strip 只绘制源图上半区、pill radius、相邻行 DOMRect 全等 |
+| V15-19 | 当前 Codex 内部 editor class/role 漂移不得导致输入框漏替换；官方 `.composer-surface-chrome` 是主 surface 身份，内部 editor 仅作可选语义辅助；主题不得伪造 editor、contenteditable 或 ARIA | 删除 ProseMirror/role 的漂移回归测试、真实 Codex DOM audit、主题化覆盖率与 restore |
 
 当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 合同、7 项原生表面测试和 Windows forced-colors 组合态测试；最新证据目录为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。Electron 原生下拉菜单本体不在 renderer DOM 中，当前验收范围只包含四个原生触发页签；不得把夹具中的页面元素当作下拉本体交付。
 

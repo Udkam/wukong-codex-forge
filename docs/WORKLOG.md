@@ -2,6 +2,16 @@
 
 ## 2026-07-30
 
+### V17 真实 composer 映射与上角结构收口
+
+- 用户明确纠正：原生截图只用于说明真实 topology；排队消息与进行中目标共用的 joined stack 只有左上、右上两个角，不能使用四角条；新建对话输入框也不能照高大概念稿实现。
+- 撤回 V16 的 `256:63 / 168–256px` 候选，主输入器改为 `184:25 / 120–168px`。真实 Codex `2050×1106 @ 125%` 窗口中，官方 `.composer-surface-chrome` 实测宽 `736px`，主题后主卷页约 `120px`，原生宽度、底部锚点、控件尺寸、文本和命中区不变。
+- 排队与目标继续保留两个原生 row，但只在它们共同的 above-composer stack 外层绘制一次纸面。stack 的精确裁切路径为 `polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%, 0 8px)`；四角源图按 `100% 200%` 只显示上半区，因此没有下方两个角。独立进度 pill 继续保持完整圆角。
+- 真实 DOM 审计定位到输入框曾漏替换的直接原因：当前 Codex 的 editor 不再稳定命中 `.ProseMirror[role=textbox]`，旧映射在标记官方 composer surface 前提前退出。运行时已改为以 `.composer-surface-chrome` 为主身份，editor class/role 只作可选辅助；新增 editor 签名漂移回归测试。
+- 一次临时真实 Codex 证据位于 `artifacts/test-runs/v17-live-composer-fixed-20260730-150832/live-new-task.png`；捕获脚本在 20 秒回收检查中超时，随后只按已核验的 profile、根 PID 和专用端口停止该调试实例，并确认根进程、全部后代和端口均释放。没有按进程名批量结束任何进程；捕获脚本也已改为在回收超时时先落盘诊断报告，避免异常路径丢失 PID/端口证据。
+- joined stack / progress pill / 短卷页八状态证据位于 `artifacts/test-runs/v17-composer-top-corners-20260730-1513/`。本检查点只证明当前结构与映射已修正，仍待用户多轮视觉验收，不标记输入区或整套主题完成。
+- 实现检查点已精确提交并推送：`aaa5308 style: bind short scroll composer to native topology`；未暂存历史素材、截图或其他未跟踪目录。
+
 ### V16 受限高度卷页输入器
 
 - 按用户最新确认，主输入器不再完全套用原生高度和圆角外框；宽度与底部锚点仍由 Codex 原生布局负责，外框按 `256:63` 比例响应，并限制在 `168–256px`。

@@ -14,8 +14,8 @@
 | `css_state_review` | 只读复核状态 selector、forced-colors specificity 与禁用传播风险 | 已完成；发现并修复尾部按钮误禁整行、expanded/collapsed focus 被吞和高对比回退优先级 |
 | `asar_state_contract` | 为当前 ASAR 的 nav/task/status/spinner 增加漂移合同 | 已完成并定向通过；不绑定压缩变量名，不修改或覆盖应用包 |
 | 主对话 · sidebar/topbar states | 实现完整 paint 状态、动态刷新、几何/热区/ARIA 门禁和状态截图 | headless 7/7、相关背景/原生主题/最小包 11/11 通过；独立状态截图已生成，用户实机视觉仍待验收 |
-| 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已把四类输入纸面统一暗化到目标中位色；主输入器进一步按用户授权改为受限卷页高度与切角外形，相关定向门禁通过，真实 Codex 视觉仍待多轮验收 |
-| 主对话 · V16 expanded composer | 保持原生 DOM、状态和按钮尺寸，把主输入器实现为受限高度的非原生卷页外形 | `256:63`、`168–256px`、editor wrapper/footer 安全留白与 forced-colors 回退已实现；8 项定向测试和六状态截图通过，等待用户视觉审计 |
+| 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已把四类输入纸面统一暗化到目标中位色；活动 composer 已切回完整山水/云纹源，不再使用中央透明的错误 mask，真实 Codex 视觉仍待多轮验收 |
+| 主对话 · V17 composer topology | 保持原生 DOM、状态和按钮尺寸，把新建对话主输入器实现为短卷页，并按真实 topology 区分 joined stack 与独立 pill | `184:25`、`120–168px` 已接入；真实 `736px` 新建对话约 `120px`。排队/目标 stack 只保留上方两角，独立进度 pill 全圆；当前 editor 签名漂移漏映射已修复，定向合同与一次真实新建对话截图通过，等待用户视觉审计 |
 | `landing_composition_audit` | 只读审计官方“悟空”书法三倍版的垂直位置、标题比例与人物遮挡风险 | 有效约 141×96 px、题字 27 px / `.035em`；杨戬场景确认未遮挡头部、武器或动作，且两行原生说明不可见 |
 | `landing_threefold_multiscene_audit` | 只读复核四张活动战斗背景上的三倍字标 | 检查 0/1/2/3 场景人物焦点、字标/题字间距、深浅版可读性与 56×56 host / 168×168 paint 合同 |
 | 主对话 · landing mark | 撤下卡通/微缩器物，改用官方“悟空”书法与朱印；视觉隐藏原生 kicker/描述说明 | 深浅两张 336×336 WebP、56×56 原生锚点、168×168 三倍绘制层、四战斗场景 fixture、原文本/DOMRect/restore 与最小包门禁进入定向验收；仍待用户实机视觉通过 |
