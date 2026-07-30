@@ -168,7 +168,40 @@ try {
         position: style.position
       };
     };
-    const composer = document.querySelector('.forge-composer, .composer-surface-chrome');
+    const composerSurface = document.querySelector('.composer-surface-chrome');
+    const composer = document.querySelector('.forge-composer') || composerSurface;
+    const composerEditorCandidates = composerSurface
+      ? [...composerSurface.querySelectorAll([
+          '.ProseMirror',
+          '[role="textbox"]',
+          '[contenteditable]',
+          'textarea',
+          '[data-placeholder]'
+        ].join(', '))]
+      : [];
+    const composerEditor = composerEditorCandidates[0] || null;
+    const composerAncestorChain = [];
+    for (
+      let element = composerSurface;
+      element && element !== document.body && composerAncestorChain.length < 10;
+      element = element.parentElement
+    ) {
+      const box = element.getBoundingClientRect();
+      composerAncestorChain.push({
+        tag: element.tagName,
+        id: element.id || null,
+        className: String(element.className || '').slice(0, 500),
+        forgeMarks: [...element.classList].filter(token => token.startsWith('forge-')),
+        attributes: {
+          codexComposerRoot: element.getAttribute('data-codex-composer-root'),
+          threadFindComposer: element.getAttribute('data-thread-find-composer'),
+          aboveComposerPortal: element.getAttribute('data-above-composer-portal'),
+          utilityScrollArea: element.getAttribute('data-composer-utility-bar-scroll-area')
+        },
+        rect: { x: box.x, y: box.y, width: box.width, height: box.height },
+        directChildCount: element.children.length
+      });
+    }
     const assistant = document.querySelector('.forge-assistant-turn, [data-local-conversation-final-assistant]');
     const workspace = document.querySelector('.forge-workspace, main');
     const rightCard = document.querySelector('.forge-right-card') || document.querySelector('[data-pip-obstacle="thread-summary-panel"]');
@@ -240,6 +273,21 @@ try {
       composerChildren: composer
         ? [...composer.children].map(child => ({ tag: child.tagName, className: String(child.className || ''), role: child.getAttribute('role') }))
         : [],
+      composerTopology: {
+        surfacePresent: Boolean(composerSurface),
+        editorPresent: Boolean(composerEditor),
+        surfaceMarked: Boolean(composerSurface?.classList.contains('forge-composer-frame')),
+        editorCandidates: composerEditorCandidates.slice(0, 12).map(element => ({
+          tag: element.tagName,
+          className: String(element.className || '').slice(0, 500),
+          role: element.getAttribute('role'),
+          contenteditable: element.getAttribute('contenteditable'),
+          ariaReadonly: element.getAttribute('aria-readonly'),
+          dataPlaceholder: element.getAttribute('data-placeholder'),
+          forgeMarks: [...element.classList].filter(token => token.startsWith('forge-'))
+        })),
+        ancestorChain: composerAncestorChain
+      },
       markedElements: document.querySelectorAll('[class*="forge-"]').length
     };
   });
@@ -303,6 +351,11 @@ try {
       portReleased
     };
     if (!rootReleased || !ownerReleased || !portReleased) {
+      fs.writeFileSync(
+        reportPath,
+        JSON.stringify(report, null, 2) + '\n',
+        { encoding: 'utf8', flag: 'wx' }
+      );
       throw Error(`Transient debug cleanup was incomplete: ${JSON.stringify(report.transientCleanup)}`);
     }
   } else {

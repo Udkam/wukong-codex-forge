@@ -185,7 +185,7 @@ test.after(async () => {
   await browser?.close();
 });
 
-test('V15 maps reference materials with the approved expanded composer geometry and native semantics', async () => {
+test('V17 maps reference materials with the constrained custom-scroll geometry and native semantics', async () => {
   const page = await browser.newPage({
     viewport: { width: 1600, height: 900 },
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
@@ -260,12 +260,12 @@ test('V15 maps reference materials with the approved expanded composer geometry 
   assert.equal(await page.locator('.forge-composer-input-shell').count(), 1);
   assert.equal(await page.locator('.forge-composer-footer').count(), 1);
   const expectedComposerHeight = Math.min(
-    256,
-    Math.max(168, after.composer.rect[2] * 63 / 256)
+    168,
+    Math.max(120, after.composer.rect[2] * 25 / 184)
   );
   assert.ok(
     Math.abs(after.composer.rect[3] - expectedComposerHeight) <= 0.5,
-    `expanded composer height ${after.composer.rect[3]} must follow the 1536:378 paper ratio`
+    `composer height ${after.composer.rect[3]} must follow the constrained custom-scroll ratio`
   );
   for (const name of ['add', 'access', 'model', 'voice', 'send']) {
     assert.deepEqual(
@@ -428,9 +428,9 @@ test('V15 maps reference materials with the approved expanded composer geometry 
   );
   assert.equal(paint.composer.backgroundRepeat, 'no-repeat, repeat');
   assert.equal(paint.composer.backgroundSize, '100% 100%, 512px 220px');
-  assert.equal(paint.composer.aspectRatio, '256 / 63');
-  assert.equal(paint.composer.minHeight, '168px');
-  assert.equal(paint.composer.maxHeight, '256px');
+  assert.equal(paint.composer.aspectRatio, '184 / 25');
+  assert.equal(paint.composer.minHeight, '120px');
+  assert.equal(paint.composer.maxHeight, '168px');
   assert.equal(paint.composer.borderRadius, '0px');
   assert.match(paint.composer.clipPath, /^polygon\(/);
   assert.equal(
@@ -443,7 +443,7 @@ test('V15 maps reference materials with the approved expanded composer geometry 
     '0px',
     'the editable ProseMirror node itself must keep its native padding'
   );
-  assert.ok(Number.parseFloat(paint.composerInputShellPaddingBlockStart) >= 20);
+  assert.ok(Number.parseFloat(paint.composerInputShellPaddingBlockStart) >= 14);
   assert.ok(Number.parseFloat(paint.composerInputShellPaddingInlineStart) >= 20);
   assert.ok(Number.parseFloat(paint.composerFooterPaddingInlineStart) >= 18);
   assert.equal(paint.sidebarShell.backgroundColor, 'rgba(0, 0, 0, 0)');
@@ -1079,6 +1079,36 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.equal(await page.locator('.forge-composer-progress-pill').count(), 1);
   assert.equal(await page.locator('.forge-plan-pill').count(), 1);
   assert.equal(await page.locator('.forge-diff-summary').count(), 1);
+  const guidedPaint = await page.evaluate(() => {
+    const stackStyle = getComputedStyle(
+      document.querySelector('.forge-composer-panel-stack')
+    );
+    const pillStyle = getComputedStyle(
+      document.querySelector('.forge-composer-progress-pill')
+    );
+    return {
+      stackClipPath: stackStyle.clipPath,
+      stackBackgroundSize: stackStyle.backgroundSize,
+      stackBorderRadius: stackStyle.borderRadius,
+      pillBorderRadius: pillStyle.borderRadius
+    };
+  });
+  assert.equal(
+    guidedPaint.stackClipPath,
+    'polygon(8px 0px, calc(100% - 8px) 0px, 100% 8px, 100% 100%, 0px 100%, 0px 8px)',
+    'the joined queue/goal strip must have only the two upper cut corners'
+  );
+  assert.equal(
+    guidedPaint.stackBackgroundSize,
+    '100% 200%, 512px 220px',
+    'the joined strip must paint only the upper half of the four-corner source'
+  );
+  assert.equal(guidedPaint.stackBorderRadius, '0px');
+  assert.equal(
+    guidedPaint.pillBorderRadius,
+    '999px',
+    'the separate progress pill remains rounded on all sides'
+  );
   assert.equal(
     await page.locator('[data-native-slot="composer-submit"]').getAttribute('aria-label'),
     '停止'
@@ -1090,9 +1120,9 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.ok(
     Math.abs(
       themedComposerRect[3] -
-      Math.min(256, Math.max(168, themedComposerRect[2] * 63 / 256))
+      Math.min(168, Math.max(120, themedComposerRect[2] * 25 / 184))
     ) <= 0.5,
-    'the themed composer must follow the approved expanded-scroll ratio'
+    'the themed composer must follow the constrained custom-scroll ratio'
   );
 
   const adjacentAfter = await page.evaluate(() => Object.fromEntries(
@@ -1663,7 +1693,7 @@ test('V15 keeps the native composer material while the editor is read-only', asy
   assert.ok(
     Math.abs(
       themed.rect[3] -
-      Math.min(256, Math.max(168, themed.rect[2] * 63 / 256))
+      Math.min(168, Math.max(120, themed.rect[2] * 25 / 184))
     ) <= 0.5
   );
   assert.match(themed.backgroundImage, /data:image\//);
@@ -1699,6 +1729,72 @@ test('V15 keeps the native composer material while the editor is read-only', asy
   await page.close();
 });
 
+test('V17 keeps the official composer surface themed when the native editor signature changes', async () => {
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 820 },
+    deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
+  });
+  await page.route('http://wukong-v17-editor-signature.test/**', route => route.fulfill({
+    body: runtimeFixtureHtml,
+    contentType: 'text/html; charset=utf-8'
+  }));
+  await page.goto('http://wukong-v17-editor-signature.test/');
+
+  const before = await page.evaluate(() => {
+    const frame = document.querySelector('.composer-surface-chrome');
+    const editor = frame.querySelector('.ProseMirror[role="textbox"]');
+    editor.classList.remove('ProseMirror');
+    editor.removeAttribute('role');
+    editor.setAttribute('contenteditable', 'true');
+    const rect = frame.getBoundingClientRect();
+    return {
+      rect: [rect.x, rect.y, rect.width, rect.height],
+      contenteditable: editor.getAttribute('contenteditable'),
+      role: editor.getAttribute('role')
+    };
+  });
+
+  await page.evaluate(expression);
+  await page.waitForFunction(() => (
+    document.querySelector('.composer-surface-chrome')
+      ?.classList.contains('forge-composer-frame')
+  ));
+
+  const themed = await page.evaluate(() => {
+    const frame = document.querySelector('.composer-surface-chrome');
+    const editor = frame.querySelector('[contenteditable="true"]');
+    const rect = frame.getBoundingClientRect();
+    return {
+      rect: [rect.x, rect.y, rect.width, rect.height],
+      backgroundImage: getComputedStyle(frame).backgroundImage,
+      contenteditable: editor.getAttribute('contenteditable'),
+      role: editor.getAttribute('role')
+    };
+  });
+  assert.deepEqual([themed.rect[0], themed.rect[2]], [before.rect[0], before.rect[2]]);
+  assert.ok(
+    Math.abs(
+      themed.rect[3] -
+      Math.min(168, Math.max(120, themed.rect[2] * 25 / 184))
+    ) <= 0.5
+  );
+  assert.match(themed.backgroundImage, /data:image\//);
+  assert.deepEqual(
+    {
+      contenteditable: themed.contenteditable,
+      role: themed.role
+    },
+    {
+      contenteditable: before.contenteditable,
+      role: before.role
+    }
+  );
+
+  await page.evaluate(RESTORE_EXPRESSION);
+  assert.equal(await page.locator('[data-forge-mark]').count(), 0);
+  await page.close();
+});
+
 test('V15 keeps the approved composer ratio responsive while preserving surrounding native geometry', async () => {
   const page = await browser.newPage({
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
@@ -1727,8 +1823,8 @@ test('V15 keeps the approved composer ratio responsive while preserving surround
     const after = await snapshot(page);
     assertRectsEqual(after, before, 0.25, composerGeometryNames);
     const expectedHeight = Math.min(
-      256,
-      Math.max(168, after.composer.rect[2] * 63 / 256)
+      168,
+      Math.max(120, after.composer.rect[2] * 25 / 184)
     );
     assert.ok(
       Math.abs(after.composer.rect[3] - expectedHeight) <= 0.5,

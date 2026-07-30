@@ -610,7 +610,14 @@ function applyRuntime(payload) {
      * the official root, chrome and textbox role so read-only/locked frames
      * keep their material without altering native semantics.
      */
-    const editorSelector = '.ProseMirror[role="textbox"]';
+    const editorSelector = [
+      '.ProseMirror[role="textbox"]',
+      '[role="textbox"]',
+      '[contenteditable="true"]',
+      '[contenteditable="false"][aria-readonly="true"]',
+      'textarea',
+      '[data-placeholder]'
+    ].join(', ');
     let composerRoot = null;
     let editor = null;
     let surface = null;
@@ -623,7 +630,6 @@ function applyRuntime(payload) {
         const candidateEditor = candidateSurface.matches(editorSelector)
           ? candidateSurface
           : [...candidateSurface.querySelectorAll(editorSelector)].find(visible);
-        if (!candidateEditor) continue;
         composerRoot = candidateRoot;
         editor = candidateEditor;
         surface = candidateSurface;
@@ -631,7 +637,23 @@ function applyRuntime(payload) {
       }
       if (composerRoot) break;
     }
-    if (!composerRoot) return [];
+    if (!surface) {
+      surface = [...document.querySelectorAll('.composer-surface-chrome')]
+        .filter(visible)
+        .sort((
+          left,
+          right
+        ) => right.getBoundingClientRect().bottom - left.getBoundingClientRect().bottom)[0] || null;
+      if (surface) {
+        composerRoot = surface.closest(
+          '[data-codex-composer-root], [data-thread-find-composer="true"]'
+        ) || surface.parentElement;
+        editor = surface.matches(editorSelector)
+          ? surface
+          : [...surface.querySelectorAll(editorSelector)].find(visible) || null;
+      }
+    }
+    if (!composerRoot || !surface) return [];
 
     const aboveComposerPortal = [...composerRoot.children].find(child => (
       child.matches?.(

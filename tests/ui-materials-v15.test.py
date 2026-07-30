@@ -12,6 +12,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 UI_ROOT = ROOT / "themes" / "ui" / "v15"
 CSS_PATH = ROOT / "runtime" / "forge-background-v13.css"
+ACTIVE_THEME_PATH = ROOT / "themes" / "active.json"
 
 PAPER_ASSETS = {
     "composer_main": {
@@ -69,6 +70,54 @@ def contrast_ratio(left: np.ndarray, right: np.ndarray) -> np.ndarray:
 
 
 class V15DarkPaperMaterialTest(unittest.TestCase):
+    def test_active_composer_uses_continuous_scroll_materials(self) -> None:
+        active = json.loads(ACTIVE_THEME_PATH.read_text(encoding="utf-8"))
+        expected = {
+            "composerMain": "ui/v14/composer-main.webp",
+            "composerStrip": "ui/v14/composer-strip.webp",
+            "composerPill": "ui/v14/composer-pill.webp",
+            "paperTile": "ui/v14/paper-tile.webp",
+        }
+        self.assertEqual(
+            {key: active["uiAssets"][key] for key in expected},
+            expected,
+        )
+
+        for key in ("composerMain", "composerStrip", "composerPill"):
+            path = ROOT / "themes" / active["uiAssets"][key]
+            rgba = np.asarray(Image.open(path).convert("RGBA"))
+            height, width = rgba.shape[:2]
+            centre = rgba[
+                height // 3:height - height // 3,
+                width // 3:width - width // 3,
+                3,
+            ]
+            self.assertGreaterEqual(int(np.min(centre)), 240, key)
+            self.assertEqual(int(rgba[0, 0, 3]), 0, key)
+            self.assertEqual(int(rgba[-1, -1, 3]), 0, key)
+
+        css = CSS_PATH.read_text(encoding="utf-8")
+        strip_contract = re.search(
+            r"\.forge-composer-context,\s*"
+            r":root\.forge-ink-mountain \.forge-composer-panel-stack\s*\{"
+            r".*?background-color:\s*transparent\s*!important;"
+            r".*?border-radius:\s*0\s*!important;"
+            r".*?clip-path:\s*polygon\(",
+            css,
+            re.S,
+        )
+        self.assertIsNotNone(strip_contract)
+        pill_contract = re.search(
+            r"\.forge-composer-progress-pill,\s*"
+            r":root\.forge-ink-mountain \.forge-plan-pill,\s*"
+            r":root\.forge-ink-mountain \.forge-diff-summary\s*\{"
+            r".*?background-color:\s*transparent\s*!important;"
+            r".*?border-radius:\s*999px\s*!important;",
+            css,
+            re.S,
+        )
+        self.assertIsNotNone(pill_contract)
+
     def test_landing_mark_is_a_small_transparent_real_model_asset(self) -> None:
         path = UI_ROOT / "landing-jingubang.webp"
         with Image.open(path) as image:
@@ -270,7 +319,16 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
 
     def test_css_uses_reviewed_fallback_without_gpu_filter_or_filled_border_image(self) -> None:
         css = CSS_PATH.read_text(encoding="utf-8")
-        self.assertGreaterEqual(css.count("#87755d"), 3)
+        self.assertGreaterEqual(
+            css.count("#87755d"),
+            1,
+            "the main scroll keeps one low-cost failure fallback",
+        )
+        self.assertGreaterEqual(
+            css.count("background-color: transparent !important;"),
+            2,
+            "strip and pill surfaces must not refill their transparent corners",
+        )
         self.assertNotIn("#d1b78f", css)
         self.assertNotIn("#cfb48a", css)
         self.assertNotIn("filter: contrast(1.16) saturate(.94)", css)
@@ -284,8 +342,13 @@ class V15DarkPaperMaterialTest(unittest.TestCase):
         )
         self.assertGreaterEqual(
             len(layered_paper_sizes),
-            3,
-            "composer paper surfaces must retain the reviewed 512x220 tile layer",
+            2,
+            "main scroll and progress pill must retain the reviewed tile layer",
+        )
+        self.assertRegex(
+            css,
+            r"background-size:\s*100%\s+200%,\s*512px\s+220px\s*!important",
+            "the joined queue/goal strip must paint only the source's upper corners",
         )
 
     def test_primary_ink_keeps_three_to_one_contrast_on_dark_paper(self) -> None:

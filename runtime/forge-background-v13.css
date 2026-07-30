@@ -297,7 +297,8 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 /*
  * Ancient-volume composer material. The native component tree, text flow,
  * controls and hit boxes remain intact; only the main paper surface adopts the
- * approved 1536:378 expanded-scroll proportion and its content insets.
+ * reviewed compact-scroll proportion and its content insets. The native shell
+ * remains the width/bottom anchor while the themed surface is capped.
  */
 :root.forge-ink-mountain .forge-composer-frame {
   --color-token-foreground: #080604;
@@ -317,9 +318,9 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   background-position: center, center !important;
   background-repeat: no-repeat, repeat !important;
   background-size: 100% 100%, 512px 220px !important;
-  aspect-ratio: 256 / 63;
-  min-height: 168px;
-  max-height: 256px;
+  aspect-ratio: 184 / 25;
+  min-height: 120px;
+  max-height: 168px;
   border-radius: 0 !important;
   corner-shape: initial !important;
   clip-path: polygon(
@@ -343,12 +344,12 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 
 :root.forge-ink-mountain .forge-composer-input-shell {
   margin-bottom: 0 !important;
-  padding-block-start: clamp(20px, 1.5vw, 30px) !important;
+  padding-block-start: clamp(14px, 1vw, 18px) !important;
   padding-inline: clamp(20px, 1.75vw, 34px) !important;
 }
 
 :root.forge-ink-mountain .forge-composer-footer {
-  margin-bottom: clamp(14px, 1.2vw, 22px) !important;
+  margin-bottom: clamp(10px, .9vw, 14px) !important;
   padding-inline: clamp(18px, 1.5vw, 30px) !important;
 }
 
@@ -378,13 +379,23 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   --color-token-description-foreground: #332619;
   --color-token-icon-foreground: #080604;
   color: #080604 !important;
-  background-color: #87755d !important;
+  background-color: transparent !important;
   background-image:
     var(--forge-ui-composer-strip),
     var(--forge-ui-paper-tile) !important;
-  background-position: center, center !important;
+  background-position: center top, center !important;
   background-repeat: no-repeat, repeat !important;
-  background-size: 100% 100%, 512px 220px !important;
+  background-size: 100% 200%, 512px 220px !important;
+  border-radius: 0 !important;
+  corner-shape: initial !important;
+  clip-path: polygon(
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% 100%,
+    0 100%,
+    0 8px
+  );
   border-color: transparent !important;
   backdrop-filter: none !important;
   box-shadow:
@@ -423,13 +434,15 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   --color-token-text-primary: #080604;
   --color-token-text-secondary: #2a1f14;
   color: #080604 !important;
-  background-color: #87755d !important;
+  background-color: transparent !important;
   background-image:
     var(--forge-ui-composer-pill),
     var(--forge-ui-paper-tile) !important;
   background-position: center, center !important;
   background-repeat: no-repeat, repeat !important;
   background-size: 100% 100%, 512px 220px !important;
+  border-radius: 999px !important;
+  corner-shape: round !important;
   border-color: transparent !important;
   backdrop-filter: none !important;
   box-shadow:

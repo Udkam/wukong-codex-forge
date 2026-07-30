@@ -171,7 +171,7 @@ const assertComposerInvariant = (state, nativeContract, themedContract) => {
     }
   };
   const composerWidth = themed.composer.rect.css[2];
-  const expectedHeight = Math.min(256, Math.max(168, composerWidth * 63 / 256));
+  const expectedHeight = Math.min(168, Math.max(120, composerWidth * 25 / 184));
   close(themed.composer.rect.css[0], native.composer.rect.css[0], 'composer x');
   close(composerWidth, native.composer.rect.css[2], 'composer width');
   close(
