@@ -2,6 +2,13 @@
 
 ## 2026-07-31
 
+### V21 最小包清单去除退役主题定义
+
+- 只读审计发现页面运行时始终读取 `themes/active.json`，但 `scripts/package-runtime.mjs` 仍把历史 `themes/ink-mountain.json` 写入发布白名单；该旧定义包含已取消的葫芦、旧静态宠物、旧 companion 和过期构图参数，而且其引用资产并不由当前活动清单复制，既违背当前目标也会形成不可用的发布清单。
+- 按“不删除任何文件”要求保留 `themes/ink-mountain.json` 原件，仅从最小包白名单移除。测试同时锁定 `themes/active.json` 与 `themes/native-wukong.json` 必须存在，并反向断言历史定义不得进入包。
+- `tests/managed-package.test.mjs` 1/1、`tests/native-theme.test.mjs` 与 `tests/asset-pixel-budget.test.mjs` 8/8 通过；最终保留式 package proof 为 `C:\Users\ALEXCH~1\AppData\Local\Temp\wukong-runtime-sKBdii\app`，其中 active/native 为 true，legacy 与三种葫芦路径均为 false。本轮前置背景状态机/场景色板测试 15/15 亦通过。
+- 未启动真实 Codex 调试窗口、浏览器服务、watcher 或常驻索引；收尾采样为 CPU `79.5%`、可用内存 `17.23 GB`、磁盘队列 `0`，本项目 helper 与监听端口均为 `0`。CPU 瞬时处于琥珀档，因此本轮不再追加重型测试或调试。本检查点只收紧正式包清单并校正文档，不标记输入区视觉、宠物或最终生命周期完成。
+
 ### V20 原生状态比例与 joined stack 角语义修正
 
 - 用户用两张当前 Codex 原生截图再次纠正状态对应关系：排队消息与进行中目标不是各自四角卡片，而是同一个 joined stack，只允许外层左上、右上两个角；内部接缝与最下边必须为直线。新建对话主输入区也明显短于 V18 的 120px 主题版本。

@@ -7,7 +7,7 @@
 | 主对话 · native geometry | 只读解析当前 `ChatGPT.exe/app.asar`，把官方 token、class 结构和响应式公式写入 fixture/漂移合同 | 已完成 composer/topbar/基础 sidebar baseline；除用户明确授权的主输入器外框外，任何尺寸改动必须先有本机源码证据 |
 | `background_first_frame_audit` | 只读复核首屏探针、延迟挂载、背景解码与 overlay 自修复竞态 | 定位 120/420 ms 探针折叠、既有外壳内部挂载、透明旧 hero 路由优先级、首图 ready 和 overlay generation 风险；主对话已逐项修复并写入 10 项背景状态机门禁 |
 | `background_contract_tests_audit` | 只读复核全窗、首帧、分类、过渡、恢复与静止期测试合同 | 确认旧 fixture 未覆盖真实 viewport DOMRect 与透明 hero/可见 thread 重叠；主对话已增加初始/resize 全视口、<300 ms 延迟挂载、内部挂载及路由重叠用例 |
-| `background_resource_audit` | 只读量化 11 图、CDP 注入、双层纹理、观察器、watcher 与调试实例成本 | 11 图压缩 2.454 MiB；当前稳态/过渡持图策略合理。主对话已把单图/图库/双图过渡/UI 的解码像素门禁写入 payload 组装前；Blob/分批注册须先过 CSP 与逐像素等价验证，未贸然集成 |
+| `background_resource_audit` | 只读量化活动图库、CDP 注入、双层纹理、观察器、watcher 与调试实例成本 | 当前 9 图共 19,258,880 解码像素，最大两图 4,743,680；稳态/过渡持图策略合理。主对话已把单图/图库/双图过渡/UI 的解码像素门禁写入 payload 组装前；Blob/分批注册须先过 CSP 与逐像素等价验证，未贸然集成 |
 | `composer_edge_audit_v11` | 只读补齐 sidebar 项目/对话 hierarchy、class 与状态锚点 | 已完成；确认生产 `data-app-action-sidebar-*` 锚点、Tasks/Projects 层级及 active/expanded/collapsed 状态，主对话已写入正式 fixture 与运行时 |
 | `sidebar_state_audit` | 只读核对一级/二级/顶部入口的原生 current、disabled、unread、running 与内部控件边界 | 已完成；确认未读/运行由原生 trailing indicator 负责，内部 section/project 控件不能被误画成整行 |
 | `topbar_menu_audit` | 只读核对四个应用菜单触发器和 Electron 下拉边界 | 已完成；触发器使用 `aria-haspopup=menu` / `aria-expanded`，下拉本体由主进程原生菜单绘制，不在 renderer DOM |
@@ -18,6 +18,7 @@
 | `asar_composer_contract` | 只读核对正式注入链、当前 ASAR composer/stack/pill 拓扑、原生尺寸和命中区风险 | 确认正式链为 `forge-background-v13.css`；queue/goal 只有上角、progress 独立全圆；指出活体宿主 `clip-path` 会削减角部热区，主对话已迁到绘制层 |
 | `composer_visual_mapping_audit` | 只读像素对照用户最新原生 home/guided 截图与 V18/V20 状态截图 | 证明 V18 宽度误差仅 0.22%，但 120px 主框高度偏高约 21%；当前目标为 `736×99–100px`。确认 joined stack 只允许整体两个上角、内部接缝与底边直线，progress 独立全圆 |
 | 主对话 · V20 composer native proportion | 保持原生 DOM、底锚、控件坐标与命中区，把新建对话/运行态主卷页收敛到用户最新截图比例，并锁死 joined stack 角语义 | `184:25` 钳制为 `96–120px`，`736px` 宽时为 `100px`；editor wrapper 恢复原生横向内距，footer 恢复原生坐标。joined stack 只绘制两个上角且不生成下角；定向回归 9/9、相邻背景/包测试 18/18、V20 状态截图通过，等待用户实机视觉审计 |
+| 主对话 · V21 minimal package contract | 核对活动主题、历史定义与最小包白名单，排除已退役葫芦/旧宠物引用而不删除本地文件 | `active.json` 为页面 payload 唯一活动清单；`native-wukong.json` 保留为原生预览；`ink-mountain.json` 只作历史留档且受反向打包断言保护。最小包/主题/像素预算定向测试 9/9 通过 |
 | 主对话 · V19 first-frame/quiescence | 修复缓存背景 ready 竞态与稳定页面标记重贴造成的观察器自循环；不改变图库、遮罩、构图或输入器验收形状 | 同步 complete 仍等待 decode；标记按目标集合差量对账，相同题字 ARIA 不重复写入。背景/资源/包定向 24/24，稳定 2.2 秒无新增 refresh，未启动真实调试窗口 |
 | 主对话 · transient review cleanup | 临时真实窗口截图后按归属关闭并证明无残留 | 普通 capture 不关窗；显式清理需 launcher + disable request + CDP browser PID 三重一致。Windows Electron 根进程超时仅允许精确 `/PID` 树兜底；真实复验后 root/owner/profile process/port 均为 0，生命周期定向测试 12/12 |
 | `landing_composition_audit` | 只读审计官方“悟空”书法三倍版的垂直位置、标题比例与人物遮挡风险 | 有效约 141×96 px、题字 27 px / `.035em`；杨戬场景确认未遮挡头部、武器或动作，且两行原生说明不可见 |

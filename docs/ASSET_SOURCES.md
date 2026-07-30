@@ -9,7 +9,7 @@
 
 ## 0.12.3 / V13.3 背景、新建页、输入框与动作证据
 
-- V13 runtime 继续只发布 `themes/assets/` 中 6 张战斗图与 5 张风景图；11 个源文件 SHA-256 均不同。runtime 不读取本机素材目录，不进行网络请求或视频解码。
+- 当前 runtime 只发布 `themes/assets/` 中 4 张战斗图与 5 张风景图；9 个活动源文件 SHA-256 均不同。runtime 不读取本机素材目录，不进行网络请求或视频解码。含退役葫芦/旧宠物引用的 `themes/ink-mountain.json` 保留为历史文件，但不进入最小运行包。
 - V8 composer 三案及上下文证据位于 `docs/design/composer-options/v8-black-myth-silhouette-study-20260723/`。这些是纯 UI 形状预览，不包含夜叉套、神锋或金箍棒的生成替身，不进入 0.12.3 最小运行包。
 - 新建页旧 56×56 内联 SVG 短棍、墨尾与 V15 微缩金箍棒均已因卡通贴纸感或器物失真被用户否决；文件继续原位保留但 active theme 和最小包不再引用。
 - V16 字标源为 Steam 官方 CDN 的 `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2358720/logo_2x.png`，项目内只读副本是 `themes/ui/v16/sources/steam-black-myth-wukong-logo-2x.png`，310,824 bytes，SHA-256 `9B627BEE5BE0DB718A837A5DDFE1D367E02577AA5DF6168A5774382AF2BC0FA0`。
@@ -65,10 +65,10 @@ V11 最终角色图是基于上述视觉锚点生成并经 Hatch Pet 动画化�
 
 | 文件 | 像素 / 字节 | 来源与用途 |
 | --- | --- | --- |
-| `themes/assets/great-sage-return.jpg` | 1256 × 707 / 78,423 | 用户本地 `E:\\GameRecord\\Black Myth Wukong\\图片\\大圣归来.jpg`；战斗境主场景之一。 |
+| `themes/assets/great-sage-return.jpg` | 1256 × 707 / 78,423 | 用户本地 `E:\\GameRecord\\Black Myth Wukong\\图片\\大圣归来.jpg`；0.8.0 历史战斗场景，文件保留，当前活动 runtime 不引用。 |
 | `themes/assets/erlang-ink-duel.jpg` | 2560 × 1043 / 309,953 | 用户提供的白场水墨杨戬对决图 `codex-clipboard-62ae5e68-bad0-4a3c-aa72-97d2d4d87aa2.png`；替换被否决的旧杨戬背景。 |
 | `themes/assets/great-sage-staff.jpg` | 1920 × 1080 / 341,165 | 用户本地 `E:\\GameRecord\\Black Myth Wukong\\图片\\金箍.jpg`；战斗境主场景之一。 |
-| `themes/assets/yaksha-king-rift.jpg` | 1920 × 1080 / 267,415 | 用户提供 `codex-clipboard-92ab9198-6da0-49fc-9afe-590acee89f9c.jpg`；夜叉王次级战斗场景。 |
+| `themes/assets/yaksha-king-rift.jpg` | 1920 × 1080 / 267,415 | 用户提供 `codex-clipboard-92ab9198-6da0-49fc-9afe-590acee89f9c.jpg`；0.8.0 历史次级战斗场景，用户已否决，文件保留，当前活动 runtime 不引用。 |
 | `themes/assets/storm-bearer.jpg` | 1920 × 1080 / 293,694 | 用户提供 `codex-clipboard-f90c91b3-0b8a-40a6-a288-578fcf8fac7e.jpg`；低频次级战斗场景。 |
 | `themes/assets/shadow-confrontation.jpg` | 1920 × 1080 / 98,466 | 用户提供 `codex-clipboard-b49f0747-316a-461e-8ae9-0e838dd764b5.jpg`；低频次级战斗场景。 |
 | `themes/assets/ridge-gate.jpg` | 1920 × 1080 / 127,753 | 用户提供 `codex-clipboard-9feb2815-c0fa-4ee5-a6d8-6a020bb3c2db.jpg`；风景境。 |

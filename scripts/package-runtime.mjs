@@ -19,7 +19,6 @@ const runtimeFiles = [
   'scripts/verify-launch-adapter.ps1',
   'scripts/disable.ps1',
   'themes/active.json',
-  'themes/ink-mountain.json',
   'themes/native-wukong.json',
   'package.json',
   'LICENSE',

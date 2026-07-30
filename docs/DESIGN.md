@@ -125,7 +125,7 @@ V13.2–V13.3 改为：
 7. 导航/提交后的有界复核只保留最新一组，新的 route event 会清除旧的 3 个 follow-up timer；快速连续操作不会按事件数累计 timer。
 8. payload 组装前直接解析 JPEG SOF、PNG IHDR 与 WebP VP8X/VP8L/VP8 尺寸头；单背景、图库总量、双图过渡和 UI 材质同时受解码像素预算约束，异常尺寸或超限文件不会进入 base64 注入表达式。
 
-资源合同的理论上限是稳态约 7.91–10.19 MiB RGBA，过渡期约 15.82–20.38 MiB；不做相邻场景或跨模式预取。静态门限为单背景 12,000,000 px、图库唯一文件总计 32,000,000 px、最大两张合计 16,000,000 px、单 UI/装饰图 4,194,304 px。当前 11 图实测总计 22,220,472 px，最大两张合计 4,743,680 px；`great-sage-return.jpg` 的 1256×707 是待更换的画质缺口，不能把“内存安全”混写成“1080p 视觉合格”。
+资源合同的理论上限是稳态约 7.91–10.19 MiB RGBA，过渡期约 15.82–20.38 MiB；不做相邻场景或跨模式预取。静态门限为单背景 12,000,000 px、图库唯一文件总计 32,000,000 px、最大两张合计 16,000,000 px、单 UI/装饰图 4,194,304 px。当前 9 图实测总计 19,258,880 px，最大两张合计 4,743,680 px；低分辨率 `great-sage-return.jpg` 与用户否决的候选图仍原位保留，但不进入活动清单或最小包，不能把“文件仍在仓库”混写成“当前发布仍使用”。
 
 V13.3 在真实 Codex renderer 稳态采样时为 `loadedLayers=1`、`preloadInFlight=0`、`transitioning=false`，V8 heap 使用约 126.3 MiB。另一个完整调试 Codex 实例会带起 48 个进程，稳定工作集约 2.93 GiB；这不是单张主题背景的占用，却会直接造成双窗口卡顿。因此开发期常态只保留控制窗口：调试实例仅在实机截图与指标采集期间临时启动，完成后立即关闭，并独立核验其 watcher、子进程与专用端口均已释放。
 
@@ -276,18 +276,16 @@ V10 的重点不是给原生界面统一蒙一层深色，而是让每张电影�
 | 索引 | 文件 | 分组 | 视觉主体 |
 | --- | --- | --- | --- |
 | 0 | `erlang-ink-duel.jpg` | battle-primary | 水墨杨戬与大圣对决，战斗境首幕 |
-| 1 | `great-sage-return.jpg` | battle-primary | 大圣归来剪影与残阳 |
-| 2 | `great-sage-staff.jpg` | battle-primary | 金箍棒与大圣甲胄特写 |
-| 3 | `yaksha-king-rift.jpg` | battle-secondary | 夜叉王红色裂焰 |
-| 4 | `storm-bearer.jpg` | battle-secondary | 雷法、棍势与青蓝强光 |
-| 5 | `shadow-confrontation.jpg` | battle-secondary | 蓝色光柱下的巨影对峙 |
-| 6 | `ridge-gate.jpg` | scenery | 日色岭谷与山门 |
-| 7 | `forest-shrine.jpg` | scenery | 雾林寺院 |
-| 8 | `mountain-path.jpg` | scenery | 山道、石灯与天光 |
-| 9 | `stone-buddhas.jpg` | scenery | 佛窟、造像与暗部烛火 |
-| 10 | `sunset-ravine.jpg` | scenery | 晚霞山峡 |
+| 1 | `great-sage-staff.jpg` | battle-primary | 金箍棒与大圣甲胄特写 |
+| 2 | `storm-bearer.jpg` | battle-secondary | 雷法、棍势与青蓝强光 |
+| 3 | `shadow-confrontation.jpg` | battle-secondary | 蓝色光柱下的巨影对峙 |
+| 4 | `ridge-gate.jpg` | scenery | 日色岭谷与山门 |
+| 5 | `forest-shrine.jpg` | scenery | 雾林寺院 |
+| 6 | `mountain-path.jpg` | scenery | 山道、石灯与天光 |
+| 7 | `stone-buddhas.jpg` | scenery | 佛窟、造像与暗部烛火 |
+| 8 | `sunset-ravine.jpg` | scenery | 晚霞山峡 |
 
-战斗境第一次进入固定为索引 0；从 thread 返回 landing 后依次使用三张主场景，每第四次使用一张次场景。风景境使用 `location.pathname + document.title` 的 FNV-1a 稳定哈希，同一任务刷新后仍保持同图。两种状态都不使用计时轮播、视频解码或运行时网络请求。
+战斗境在索引 0–3 间、风景境在索引 4–8 间分别使用独立 session 游标顺序轮换；同一可见页面身份保持当前场景，只有 landing/thread 身份真正变化或当前索引失效时才推进。两种状态都不使用计时轮播、视频解码或运行时网络请求。`themes/active.json` 是页面 payload 的唯一活动清单；带有退役葫芦、旧宠物和旧构图参数的 `themes/ink-mountain.json` 只作历史留档，保留文件但不复制进最小运行包。
 
 ## 伴随元素与组件映射
 

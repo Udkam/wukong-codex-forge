@@ -31,6 +31,7 @@ test('minimal managed package imports independently and omits development surfac
     'remove-theme.cmd',
     'PORTABLE-README.txt',
     'themes/active.json',
+    'themes/native-wukong.json',
     'pets/little-bajie-v3-inart/pet.json',
     'pets/little-bajie-v3-inart/spritesheet.webp',
     'pets/little-bajie-v3-inart/validation.json',
@@ -41,6 +42,11 @@ test('minimal managed package imports independently and omits development surfac
   ]) {
     assert.equal(fs.existsSync(path.join(target, required)), true, `managed file missing: ${required}`);
   }
+  assert.equal(
+    fs.existsSync(path.join(target, 'themes', 'ink-mountain.json')),
+    false,
+    'legacy theme manifest with retired motifs was packaged'
+  );
   for (const frozenPetFile of [
     'pets/little-wukong-yaksha-shenfeng/pet.json',
     'pets/little-wukong-yaksha-shenfeng/spritesheet.webp',
@@ -74,7 +80,9 @@ test('minimal managed package imports independently and omits development surfac
     'themes/motifs/pets/little-bajie-pet-v1.png',
     'themes/motifs/pets/little-wukong-pet-v1-chroma.png',
     'themes/motifs/pets/little-bajie-pet-v1-chroma.png',
-    'themes/motifs/xiangfei-gourd.png'
+    'themes/motifs/xiangfei-gourd.png',
+    'themes/motifs/xiangfei-gourd.webp',
+    'themes/motifs/xiangfei-gourd-icon.webp'
   ]) assert.equal(fs.existsSync(path.join(target, rejected)), false, `rejected asset packaged: ${rejected}`);
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'capture-live.mjs')), false);
 
