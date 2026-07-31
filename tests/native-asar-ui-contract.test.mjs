@@ -128,6 +128,11 @@ test('local ChatGPT.exe ASAR remains the authoritative native geometry contract'
     /^\\webview\\assets\\spinner-.*\.js$/i,
     'animate-spin'
   );
+  const threadSummaryPanel = readMatchingAsset(
+    entries,
+    /^\\webview\\assets\\thread-summary-panel-components-.*\.js$/i,
+    'data-pip-obstacle'
+  );
 
   assert.ok(baseCss, 'official base CSS with Codex geometry tokens must exist');
   assert.ok(composerLayout, 'official composer layout asset must exist');
@@ -143,6 +148,10 @@ test('local ChatGPT.exe ASAR remains the authoritative native geometry contract'
     'official task-row status-indicator asset must exist'
   );
   assert.ok(spinner, 'official native spinner asset must exist');
+  assert.ok(
+    threadSummaryPanel,
+    'official thread-summary panel component asset must exist'
+  );
 
   for (const token of [
     '--spacing:.25rem',
@@ -265,6 +274,21 @@ test('local ChatGPT.exe ASAR remains the authoritative native geometry contract'
     /width:24,height:24,viewBox:`0 0 24 24`/,
     'native loading indicator must preserve its 24 by 24 SVG geometry'
   );
+
+  for (const fragment of [
+    'data-pip-obstacle',
+    'width:300',
+    'relative flex max-h-full min-h-0 flex-col overflow-hidden rounded-3xl bg-token-dropdown-background pt-2.5',
+    'thread-summary-panel-item',
+    'thread-summary-panel-item-button',
+    'thread-summary-panel-item-trigger',
+    'thread-summary-panel-icon-button'
+  ]) {
+    assert.ok(
+      threadSummaryPanel.includes(fragment),
+      `missing native environment-panel contract: ${fragment}`
+    );
+  }
 
   assert.deepEqual(nativeUiBaseline, {
     source: 'ChatGPT.exe 26.715.2305.0 app.asar',

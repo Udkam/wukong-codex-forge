@@ -1,5 +1,12 @@
 # Local work log
 
+## 2026-07-31 — V23 environment panel scripture surface
+
+- Read the installed `OpenAI.Codex 26.715.2305.0` ASAR and made the official `thread-summary-panel` obstacle, 300px width, content class signature, and native slots the fail-closed source of truth.
+- Applied the warm smoked-paper material only through pointer-transparent paint layers; the native panel, rows, links, add button, scroll behavior, ARIA, geometry, and hit boxes remain unchanged.
+- Focused ASAR and Playwright checks passed 1/1 each. The complete 1600x900 fixture evidence with two queued messages, an active goal, composer, sidebar, top bar, background, and environment card is `artifacts/test-runs/v23-environment-panel-2026-07-31T23-14-14-461Z/01-full-multi-guided.png`.
+- The one-page headless capture closed in `finally`; no project browser, Node helper, debug window, or listener was retained. This is a rollback checkpoint, not final real-Codex acceptance.
+
 ## 2026-07-25 — V15 真实金箍棒原生槽位占比修正
 
 - 用户指出前一版虽然使用真实模型，但在 56×56 槽位内仍像过小的卡通短棍。保持官方槽位、原节点、DOMRect 和 aria 不变，只把离线生成参数从 48×7 调整为 60×9，继续使用 39° 方向。

@@ -82,6 +82,11 @@ const selectors = {
   menuEdit: '[data-native-slot="menu-edit"]',
   menuView: '[data-native-slot="menu-view"]',
   menuHelp: '[data-native-slot="menu-help"]',
+  rightPanel: '[data-pip-obstacle="thread-summary-panel"]',
+  rightCard: '[data-native-slot="right-card"]',
+  rightTitle: '.summary-heading',
+  rightRow: '[data-slot="thread-summary-panel-item"]',
+  rightAdd: '[data-native-slot="right-add"]',
   rootThread: '[data-app-action-sidebar-section-heading="Tasks"] [data-app-action-sidebar-thread-row]',
   project: '[data-app-action-sidebar-project-row]',
   childThread: '[data-native-slot="project-active"]'
@@ -104,6 +109,7 @@ const hitSelectors = [
   selectors.menuEdit,
   selectors.menuView,
   selectors.menuHelp,
+  selectors.rightAdd,
   selectors.rootThread,
   selectors.project,
   selectors.childThread
@@ -2207,6 +2213,131 @@ test('V14 re-maps a delayed React shell without resize or zoom assistance', asyn
   await page.close();
 });
 
+test('V23 maps the official 300px environment panel as paint-only scripture paper', async () => {
+  const page = await browser.newPage({
+    viewport: { width: 1600, height: 900 },
+    deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
+  });
+  await page.route('http://wukong-v23-environment.test/**', route => route.fulfill({
+    body: runtimeFixtureHtml,
+    contentType: 'text/html; charset=utf-8'
+  }));
+  await page.goto('http://wukong-v23-environment.test/');
+
+  const readContract = () => page.evaluate(() => {
+    const rectOf = element => {
+      const rect = element.getBoundingClientRect();
+      return [rect.x, rect.y, rect.width, rect.height];
+    };
+    const card = document.querySelector('[data-native-slot="right-card"]');
+    const title = card.querySelector('.summary-heading');
+    const add = card.querySelector('[data-native-slot="right-add"]');
+    const rows = [...card.querySelectorAll('[data-slot="thread-summary-panel-item"]')];
+    return {
+      panel: rectOf(document.querySelector('[data-pip-obstacle="thread-summary-panel"]')),
+      card: rectOf(card),
+      title: rectOf(title),
+      add: rectOf(add),
+      rows: rows.map(rectOf),
+      rowText: rows.map(row => row.textContent.replace(/\s+/g, ' ').trim()),
+      addSemantics: {
+        ariaLabel: add.getAttribute('aria-label'),
+        role: add.getAttribute('role'),
+        type: add.getAttribute('type'),
+        tabIndex: add.tabIndex,
+        disabled: add.disabled
+      }
+    };
+  });
+  const before = await readContract();
+  assert.equal(before.card[2], 300, 'fixture must retain the official 300px card width');
+  assert.equal(before.rows.length, 4);
+  const beforeAddHits = await nativeHitPattern(page, selectors.rightAdd);
+
+  await page.evaluate(expression);
+  await page.waitForFunction(() => (
+    document.querySelector('[data-pip-obstacle="thread-summary-panel"]')
+      ?.classList.contains('forge-right-panel') &&
+    document.querySelector('[data-native-slot="right-card"]')
+      ?.classList.contains('forge-right-card') &&
+    document.querySelectorAll('.forge-right-row').length === 4
+  ));
+
+  assert.deepEqual(
+    await readContract(),
+    before,
+    'environment-panel geometry, row order and native semantics must remain exact'
+  );
+  assert.deepEqual(
+    await nativeHitPattern(page, selectors.rightAdd),
+    beforeAddHits,
+    'environment add control hit region changed'
+  );
+  assert.equal(await page.locator('.forge-right-panel').count(), 1);
+  assert.equal(await page.locator('.forge-right-card').count(), 1);
+  assert.equal(await page.locator('.forge-right-title').count(), 1);
+  assert.equal(await page.locator('.forge-right-row').count(), 4);
+
+  const defaultPaint = await page.evaluate(() => {
+    const card = document.querySelector('.forge-right-card');
+    const row = document.querySelector('.forge-right-row');
+    const style = getComputedStyle(card);
+    const paper = getComputedStyle(card, '::before');
+    const rail = getComputedStyle(card, '::after');
+    const separator = getComputedStyle(row, '::after');
+    return {
+      cardBackgroundColor: style.backgroundColor,
+      cardBackgroundImage: style.backgroundImage,
+      cardClipPath: style.clipPath,
+      cardBorderRadius: style.borderRadius,
+      cardColor: style.color,
+      paperContent: paper.content,
+      paperPointerEvents: paper.pointerEvents,
+      paperBackgroundImage: paper.backgroundImage,
+      paperBackgroundSize: paper.backgroundSize,
+      paperClipPath: paper.clipPath,
+      railContent: rail.content,
+      separatorContent: separator.content,
+      rowBackgroundColor: getComputedStyle(row).backgroundColor
+    };
+  });
+  assert.equal(defaultPaint.cardBackgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(defaultPaint.cardBackgroundImage, 'none');
+  assert.equal(defaultPaint.cardClipPath, 'none');
+  assert.equal(defaultPaint.paperContent, '""');
+  assert.equal(defaultPaint.paperPointerEvents, 'none');
+  assert.match(defaultPaint.paperBackgroundImage, /linear-gradient/);
+  assert.match(defaultPaint.paperBackgroundImage, /data:image\/svg\+xml/);
+  assert.equal(defaultPaint.paperBackgroundSize, '100% 100%, 512px 220px');
+  assert.match(defaultPaint.paperClipPath, /^polygon\(/);
+  assert.equal(defaultPaint.railContent, '""');
+  assert.equal(defaultPaint.separatorContent, '""');
+  assert.notEqual(defaultPaint.cardColor, 'rgba(0, 0, 0, 0)');
+
+  const firstRow = page.locator('.forge-right-row').first();
+  await firstRow.hover();
+  assert.notEqual(
+    await firstRow.evaluate(element => getComputedStyle(element).backgroundColor),
+    defaultPaint.rowBackgroundColor,
+    'environment row hover must be visible without changing its geometry'
+  );
+  await page.locator(selectors.rightAdd).focus();
+  assert.notEqual(
+    await page.locator(selectors.rightAdd).evaluate(
+      element => getComputedStyle(element).outlineStyle
+    ),
+    'none',
+    'environment control focus must remain visible'
+  );
+  assert.deepEqual(await readContract(), before);
+
+  await page.evaluate(RESTORE_EXPRESSION);
+  assert.equal(await page.locator('.forge-right-card').count(), 0);
+  assert.equal(await page.locator('.forge-right-row').count(), 0);
+  assert.deepEqual(await readContract(), before);
+  await page.close();
+});
+
 test('V15 yields all journal materials to Windows forced-colors mode', async () => {
   const page = await browser.newPage({
     viewport: { width: 1280, height: 820 },
@@ -2253,7 +2384,10 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
       '.forge-sidebar-action',
       '.forge-sidebar-level1',
       '.forge-sidebar-level2',
-      '.forge-sidebar-selected'
+      '.forge-sidebar-selected',
+      '.forge-right-card',
+      '.forge-right-title',
+      '.forge-right-row'
     ].join(',');
     return [...new Set(document.querySelectorAll(selector))].map((element, index) => {
       const style = getComputedStyle(element);

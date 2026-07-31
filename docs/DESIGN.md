@@ -56,6 +56,14 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 
 用户最新要求把整套输入纸面收进能衔接战斗/风景背景与深墨侧栏的暖灰黄赭范围。V17 生成器以同一 `RGB(135,117,93)` 目标和 `0.86` 纹理对比系数重建；实际 main/strip/pill/tile 中位色落在 `RGB(134–135,117,93–94)`。CSS 回退色统一为 `#87755d`，主墨色为 `#080604`；纸纹无运行时 filter，暗纹理对比度和 forced-colors 回退继续由定向合同锁定。
 
+### V23 环境信息经卷卡片
+
+右侧环境信息窗口不使用截图尺寸、文本猜测或自建面板。当前 `OpenAI.Codex 26.715.2305.0` 的 `thread-summary-panel-components-t019TZYb.js` 是唯一结构真值：外层以 `data-pip-obstacle="thread-summary-panel"` 标识，卡片固定宽度为 `300px`，内容宿主保留官方 `rounded-3xl`、滚动与最大高度结构；标题、行、操作按钮继续使用 `thread-summary-panel-*` 的原生 `data-slot`。
+
+运行时只在上述官方节点上增加 `forge-right-panel`、`forge-right-card`、`forge-right-title` 与 `forge-right-row` 标记。卡片宿主本身保持透明、`clip-path:none` 和原生矩形命中区；暖褐纸纤维、8px 角饰、双层内沿及标题压纹全部画在 `pointer-events:none` 的静态伪元素上。行高、分隔位置、加号按钮、折叠箭头、链接、键盘焦点、ARIA、滚动和 300px 宽度均不改写。hover/focus 只改变墨色明暗，forced-colors 隐藏位图和伪元素并交回系统色。
+
+`tests/native-asar-ui-contract.test.mjs` 直接锁定本机 300px、宿主 class token 与稳定 slot；`tests/native-surfaces-runtime-v14.test.mjs` 则逐项比较主题前后的面板、卡片、标题、四行和加号九点命中几何。完整无头证据位于 `artifacts/test-runs/v23-environment-panel-2026-07-31T23-14-14-461Z/01-full-multi-guided.png`，其中排队、目标、主输入器、侧栏、顶部栏和环境卡同屏；该证据仍不等于真实 Codex 用户验收。
+
 ### 侧栏与顶部状态映射
 
 | 原生对象 | 游记映射 | 状态 |

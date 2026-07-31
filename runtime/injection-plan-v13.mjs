@@ -981,6 +981,73 @@ function applyRuntime(payload) {
       submit
     ];
   };
+  const markRightPanelSurfaces = () => {
+    /*
+     * ChatGPT.exe 26.715.2305.0 owns the floating panel geometry: the
+     * data-pip obstacle is its stable mount, the inner card is exactly 300px
+     * wide, and each native row exposes a thread-summary-panel-item slot.
+     * Map those source-backed nodes only; paint must never infer a replacement
+     * box from the current color, radius or shadow.
+     */
+    const panel = [...document.querySelectorAll(
+      '[data-pip-obstacle="thread-summary-panel"]'
+    )].find(layoutPresent) || null;
+    if (!panel) return [];
+    mark(panel, 'forge-right-panel');
+
+    const cardTokens = [
+      'relative',
+      'flex',
+      'max-h-full',
+      'min-h-0',
+      'flex-col',
+      'overflow-hidden',
+      'rounded-3xl',
+      'bg-token-dropdown-background',
+      'pt-2.5'
+    ];
+    const sourceCard = [panel, ...panel.querySelectorAll('div, section')]
+      .find(element => layoutPresent(element) && hasClassTokens(element, cardTokens)) || null;
+    const titlePattern = /^(?:环境信息|environment(?: info(?:rmation)?)?)$/i;
+    const titleCandidates = [...panel.querySelectorAll(
+      'h1, h2, h3, h4, h5, h6, [role="heading"], p, span, div'
+    )].filter(element => (
+      layoutPresent(element) && titlePattern.test(textOf(element))
+    )).sort((left, right) => {
+      const leftRect = left.getBoundingClientRect();
+      const rightRect = right.getBoundingClientRect();
+      return leftRect.width * leftRect.height - rightRect.width * rightRect.height;
+    });
+    const title = titleCandidates[0] || null;
+    let fallbackCard = null;
+    for (let element = title?.parentElement; element && element !== panel; element = element.parentElement) {
+      const rect = element.getBoundingClientRect();
+      if (
+        layoutPresent(element) &&
+        rect.width >= 280 &&
+        rect.width <= 320 &&
+        rect.height >= 84 &&
+        rect.height <= innerHeight * .78
+      ) {
+        fallbackCard = element;
+        break;
+      }
+    }
+    const card = sourceCard || fallbackCard;
+    if (!card) return [panel];
+    mark(card, 'forge-right-card');
+    if (title && card.contains(title)) mark(title, 'forge-right-title');
+
+    const slottedRows = [...card.querySelectorAll(
+      '[data-slot="thread-summary-panel-item"]'
+    )].filter(layoutPresent);
+    const fixtureRows = slottedRows.length
+      ? []
+      : [...card.querySelectorAll('.summary-row')].filter(layoutPresent);
+    const rows = [...new Set([...slottedRows, ...fixtureRows])];
+    rows.forEach(row => mark(row, 'forge-right-row'));
+    return [panel, card, title, ...rows];
+  };
   const firstTextLeft = element => {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
     let node = walker.nextNode();
@@ -1202,11 +1269,13 @@ function applyRuntime(payload) {
     let topbarTargets;
     let composerTargets;
     let sidebarTargets;
+    let rightPanelTargets;
     try {
       mark(workspace, 'forge-workspace');
       topbarTargets = markTopbarMenus();
       composerTargets = markComposerSurfaces();
       sidebarTargets = markSidebarSurfaces();
+      rightPanelTargets = markRightPanelSurfaces();
       if (surface === 'landing') markLandingHero(workspace, landingTitle);
     } finally {
       pendingMarkPlan = null;
@@ -1255,6 +1324,7 @@ function applyRuntime(payload) {
       ...topbarTargets,
       ...composerTargets,
       ...sidebarTargets,
+      ...rightPanelTargets,
       ...landingMountTargets
     ]);
   };
@@ -1378,6 +1448,8 @@ function applyRuntime(payload) {
     '[data-above-composer-portal]',
     '.composer-surface-chrome',
     '[data-composer-navigation-target]',
+    '[data-pip-obstacle="thread-summary-panel"]',
+    '[data-slot^="thread-summary-panel-"]',
     '.app-shell-left-panel',
     '[data-app-action-sidebar-scroll]',
     '[data-app-action-sidebar-section]',

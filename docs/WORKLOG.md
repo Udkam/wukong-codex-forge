@@ -2,6 +2,15 @@
 
 ## 2026-07-31
 
+### V23 环境信息原生卡片经卷化
+
+- 只读复核本机 `OpenAI.Codex 26.715.2305.0` 的 `thread-summary-panel-components-t019TZYb.js`，锁定 `data-pip-obstacle="thread-summary-panel"`、官方固定 `300px` 宽度、内容宿主 class token 和 `thread-summary-panel-*` 稳定 slot；生产映射不再按“环境信息”文本或截图猜祖先。
+- 新增 `forge-right-panel / card / title / row` 标记。卡片宿主自身保持透明、`clip-path:none` 和原生矩形热区；暖褐纸纤维、8px 角饰、双层内沿及标题轨只画在 `pointer-events:none` 的伪元素，四行、加号、折叠箭头、链接、ARIA、滚动和原生宽高不变。
+- 定向 ASAR 合同 1/1 与 `V23 maps the official 300px environment panel as paint-only scripture paper` Playwright 合同 1/1 通过；后者覆盖面板、卡片、标题、四行和加号九点命中几何、hover/focus、forced-colors 与 restore。
+- 完整页面证据位于 `artifacts/test-runs/v23-environment-panel-2026-07-31T23-14-14-461Z/01-full-multi-guided.png`：侧栏、顶部栏、杨戬/悟空背景、进度 pill、两条排队消息、进行中目标、短卷输入器与环境卡同屏，队列上方黑色渐隐未回归。该图为无头原生结构 fixture，不冒充真实 Codex 窗口验收。
+- 捕获器仅启动一个临时无头 browser/page，并在 `finally` 关闭；第一次因仍要求输入器高度完全等于官方 84px 而按预期 fail closed，随后把守卫修正为用户已批准的 96–120px 短卷例外，同时继续锁定宽度、底部锚点及排队/目标等量上移。失败证据原位保留，没有删除文件。
+- 收尾前资源采样为 CPU `33.7%`、可用内存 `15.17 GB`、磁盘队列 `0`；进程核对只命中执行检查本身的 PowerShell，没有项目浏览器、Node helper、调试窗口或监听端口残留。本检查点不标记完整主题、双宠物或最终生命周期完成。
+
 ### V22 原生 queue 内层消息连续纸面
 
 - 用户指出 V21 虽能按消息数分层，但每层没有衔接，视觉上仍像互不相干的卡片；同时要求以后以解包后的 Codex 原生数据为替换依据。只读复核当前 `OpenAI.Codex 26.715.2305.0` 的 `above-composer-panel-row-DClLFgUZ.js`、`queued-message-list-BofaaHos.js` 与 `codex-composer-adapter-DId2iEtu.js`，确认 V21 fixture 把每条 queued message 错误提升成了 outer panel。

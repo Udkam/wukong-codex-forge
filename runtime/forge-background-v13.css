@@ -596,6 +596,122 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 /*
+ * Native 300px environment panel, repainted as a smoked scripture leaf.
+ * The official panel/card/row boxes remain untouched: the clipped silhouette
+ * lives on a pointer-transparent paint layer so every native control keeps its
+ * original position and rectangular hit region.
+ */
+:root.forge-ink-mountain #root .forge-right-card {
+  --color-token-foreground: #eee2cc;
+  --color-token-text-primary: #eee2cc;
+  --color-token-text-secondary: #cbbda8;
+  --color-token-text-tertiary: #a99b88;
+  --color-token-description-foreground: #b5a791;
+  --color-token-icon-foreground: #eadcc5;
+  --color-token-icon-secondary: #c9baa4;
+  --color-token-icon-tertiary: #9f917e;
+  color: #eee2cc !important;
+  position: relative !important;
+  isolation: isolate;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 11px 26px rgba(8, 6, 4, .34) !important;
+  clip-path: none !important;
+}
+
+:root.forge-ink-mountain #root .forge-right-card::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  z-index: -1;
+  pointer-events: none;
+  background-color: #665844;
+  background-image:
+    linear-gradient(rgba(43, 34, 24, .48), rgba(43, 34, 24, .48)),
+    var(--forge-ui-paper-tile);
+  background-position: center, center;
+  background-repeat: no-repeat, repeat;
+  background-size: 100% 100%, 512px 220px !important;
+  clip-path: polygon(
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px),
+    0 8px
+  );
+  box-shadow:
+    0 0 0 1px rgba(222, 198, 157, .18) inset,
+    0 0 0 2px rgba(55, 38, 23, .34) inset,
+    3px 0 0 rgba(128, 89, 48, .28) inset;
+}
+
+:root.forge-ink-mountain #root .forge-right-card::after {
+  content: "";
+  position: absolute;
+  inset-inline: 15px;
+  top: 39px;
+  height: 1px;
+  z-index: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    rgba(207, 178, 132, .08),
+    rgba(207, 178, 132, .42) 17%,
+    rgba(83, 57, 33, .48) 78%,
+    rgba(83, 57, 33, .06)
+  );
+}
+
+:root.forge-ink-mountain #root .forge-right-title {
+  color: #f3e6cf !important;
+  text-shadow: 0 1px 0 rgba(26, 17, 10, .52);
+}
+
+:root.forge-ink-mountain #root .forge-right-row {
+  color: inherit !important;
+  position: relative !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain #root .forge-right-row::after {
+  content: "";
+  position: absolute;
+  inset-inline: 1px;
+  bottom: 0;
+  height: 1px;
+  z-index: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    rgba(218, 193, 153, .05),
+    rgba(218, 193, 153, .24) 16%,
+    rgba(78, 53, 30, .48) 78%,
+    rgba(78, 53, 30, .05)
+  );
+}
+
+:root.forge-ink-mountain #root .forge-right-row:is(:hover, :focus-within) {
+  background-color: rgba(235, 218, 187, .075) !important;
+}
+
+:root.forge-ink-mountain #root .forge-right-card :is(
+  button,
+  [role="button"],
+  a[href]
+):focus-visible {
+  outline: 1px solid rgba(235, 210, 169, .82) !important;
+  outline-offset: -1px !important;
+}
+
+/*
  * Journal-directory sidebar mapping:
  *   level 1 default/hover  -> thick dark ink paper
  *   level 2 default        -> transparent with broken ink trace
@@ -1048,7 +1164,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :root.forge-ink-mountain #root .forge-sidebar-action,
   :root.forge-ink-mountain #root .forge-sidebar-level1,
   :root.forge-ink-mountain #root .forge-sidebar-level2,
-  :root.forge-ink-mountain #root .forge-sidebar-selected {
+  :root.forge-ink-mountain #root .forge-sidebar-selected,
+  :root.forge-ink-mountain #root .forge-right-card,
+  :root.forge-ink-mountain #root .forge-right-title,
+  :root.forge-ink-mountain #root .forge-right-row {
     --color-token-foreground: CanvasText;
     --color-token-text-primary: CanvasText;
     --color-token-text-secondary: CanvasText;
@@ -1081,7 +1200,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :root.forge-ink-mountain #root .forge-composer-panel::before,
   :root.forge-ink-mountain #root .forge-composer-panel::after,
   :root.forge-ink-mountain #root .forge-composer-queue-item::before,
-  :root.forge-ink-mountain #root .forge-composer-queue-item::after {
+  :root.forge-ink-mountain #root .forge-composer-queue-item::after,
+  :root.forge-ink-mountain #root .forge-right-card::before,
+  :root.forge-ink-mountain #root .forge-right-card::after,
+  :root.forge-ink-mountain #root .forge-right-row::after {
     content: none !important;
   }
 
