@@ -26,6 +26,7 @@ export const MARK_CLASSES = [
   'forge-composer-panel-stack',
   'forge-composer-panel',
   'forge-composer-queue-item',
+  'forge-composer-progress-fade',
   'forge-composer-progress-pill',
   'forge-plan-pill',
   'forge-diff-summary',
@@ -848,6 +849,22 @@ function applyRuntime(payload) {
         child.classList.contains('self-end')
       ))
     ));
+    const progressFadeTokens = [
+      'pointer-events-none',
+      'absolute',
+      'inset-x-0',
+      '-bottom-1',
+      'h-7',
+      'bg-gradient-to-t',
+      'from-token-main-surface-primary',
+      'to-transparent'
+    ];
+    const progressFades = progressHosts.flatMap(host => (
+      [...host.children].filter(child => (
+        layoutPresent(child) && hasClassTokens(child, progressFadeTokens)
+      ))
+    )).filter((fade, index, fades) => fades.indexOf(fade) === index);
+    progressFades.forEach(fade => mark(fade, 'forge-composer-progress-fade'));
     const progressPills = progressHosts.map(host => {
       const descendants = [host, ...host.querySelectorAll('*')].filter(element => {
         if (!visible(element)) return false;
@@ -959,6 +976,7 @@ function applyRuntime(payload) {
       context,
       ...panelStacks,
       ...panelCandidates,
+      ...progressFades,
       ...progressPills,
       submit
     ];

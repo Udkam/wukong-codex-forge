@@ -10,6 +10,9 @@
 - `node --check` 覆盖注入器、fixture、定向测试和捕获脚本；`tests/ui-materials-v17.test.py` 4/4 通过；只运行了 `V16 maps the native guided stack once and remaps context without a resize trigger` 一项 Playwright 定向测试并通过。新增三状态短捕获器只采 default / guided / multi-guided，证据位于 `artifacts/test-runs/v22-native-composer-stack-2026-07-31T00-40-21-809Z/`。
 - multi-guided 证据中 queue outer panel 为 `710×62px`、goal outer panel 为 `710×32px`、两条内部消息均为 `684×25px` 且接缝为 1px；guided/multi-guided 的原生控件尺寸和主题前后 DOMRect 全等。截图后浏览器、项目 helper 与监听端口均为 `0`。该证据只证明无头原生结构和绘制连续性，不等于用户实机视觉验收，也不标记输入区、宠物或最终生命周期完成。
 - 本轮继续遵守资源黄档串行策略；恢复后复核为 CPU `70%`、可用内存 `17.31 GB`、磁盘队列 `0`，不再启动调试窗口或追加全量测试。
+- 应用户追加验收要求，捕获器为 multi-guided 状态新增 `1600×900` 完整视口。`artifacts/test-runs/v22-native-composer-stack-2026-07-31T20-58-29-782Z/14-full-multi-guided.png` 明确保留为修复前问题证据：Codex 原生 `from-token-main-surface-primary → transparent` 进度渐隐在图片工作区上形成了队列上方黑带，不标记通过。
+- 生产映射新增精确的 `forge-composer-progress-fade` 标记，只接受当前 ASAR 对应的八个原生 class token，并仅清除该渐隐的背景绘制；DOM、宿主、相对位置、`28px` 高度和命中区保持不变。识别改用 layout-present 而非 opacity-visible，避免透明后观察器反复撤销/重加标记。
+- 修复后完整页面证据为 `artifacts/test-runs/v22-native-composer-stack-2026-07-31T21-35-40-482Z/14-full-multi-guided.png`：黑带已消失，进度胶囊、两条排队消息、进行中目标与主输入器仍连续堆叠。捕获合同同时断言 guided / multi-guided 各有一个渐隐节点且 `background-image: none`、`opacity: 0`；定向 Playwright 1/1 通过。截图后项目归属浏览器/Node 进程为 `0`，CPU `27.6%`、可用内存 `15.68 GB`、磁盘队列 `0`。两张完整页面均为无头原生结构 fixture，不冒充真实 Codex 窗口验收。
 
 ### V21 最小包清单去除退役主题定义
 

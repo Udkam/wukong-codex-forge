@@ -536,6 +536,12 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   box-shadow: none !important;
 }
 
+:root.forge-ink-mountain .forge-composer-progress-fade {
+  background-color: transparent !important;
+  background-image: none !important;
+  opacity: 0 !important;
+}
+
 :root.forge-ink-mountain .forge-composer-progress-pill,
 :root.forge-ink-mountain .forge-plan-pill,
 :root.forge-ink-mountain .forge-diff-summary {
@@ -1060,6 +1066,12 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     clip-path: none !important;
     forced-color-adjust: auto;
     outline: revert !important;
+  }
+
+  :root.forge-ink-mountain #root .forge-composer-progress-fade {
+    background: none !important;
+    opacity: 0 !important;
+    forced-color-adjust: none;
   }
 
   :root.forge-ink-mountain #root .forge-composer-frame::before,

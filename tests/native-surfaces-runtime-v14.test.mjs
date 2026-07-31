@@ -990,6 +990,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       return rect.width > 1 && rect.height > 1;
     });
     const progressHost = portal.querySelector('.native-progress-host');
+    const progressFade = portal.querySelector('.native-progress-gradient');
     const progress = portal.querySelector('[data-fixture-control="plan"]');
     const stack = root.querySelector('[data-fixture-surface="composer-stack"]');
     const queued = root.querySelector('[data-fixture-surface="queued-panel"]');
@@ -999,6 +1000,13 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       editor: rectOf(editor),
       submit: rectOf(submit),
       progressHost: rectOf(progressHost),
+      progressFade: rectOf(progressFade),
+      progressFadeRelative: [
+        progressFade.getBoundingClientRect().x - progressHost.getBoundingClientRect().x,
+        progressFade.getBoundingClientRect().y - progressHost.getBoundingClientRect().y,
+        progressFade.getBoundingClientRect().width,
+        progressFade.getBoundingClientRect().height
+      ],
       progress: rectOf(progress),
       stack: rectOf(stack),
       queued: rectOf(queued),
@@ -1018,6 +1026,17 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       ),
       stackInsideComponent: component.contains(stack),
       progressInsidePortal: portal.contains(progress),
+      progressFadeInsideHost: progressFade.parentElement === progressHost,
+      progressFadeSignature: [
+        'pointer-events-none',
+        'absolute',
+        'inset-x-0',
+        '-bottom-1',
+        'h-7',
+        'bg-gradient-to-t',
+        'from-token-main-surface-primary',
+        'to-transparent'
+      ].every(token => progressFade.classList.contains(token)),
       progressInsideStack: stack.contains(progress),
       stackInsidePortal: portal.contains(stack),
       progressSignature: [
@@ -1075,6 +1094,8 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.equal(nativeStateContract.fixtureDoesNotDeclareComponentIdentity, true);
   assert.equal(nativeStateContract.stackInsideComponent, true);
   assert.equal(nativeStateContract.progressInsidePortal, true);
+  assert.equal(nativeStateContract.progressFadeInsideHost, true);
+  assert.equal(nativeStateContract.progressFadeSignature, true);
   assert.equal(nativeStateContract.progressInsideStack, false);
   assert.equal(nativeStateContract.stackInsidePortal, false);
   assert.equal(nativeStateContract.progressSignature, true);
@@ -1113,6 +1134,8 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       ?.classList.contains('forge-composer-progress-pill') &&
     document.querySelector('[data-fixture-control="plan"]')
       ?.classList.contains('forge-plan-pill') &&
+    document.querySelector('.native-progress-gradient')
+      ?.classList.contains('forge-composer-progress-fade') &&
     document.querySelector('[data-fixture-surface="composer-stack"]')
       ?.classList.contains('forge-composer-panel-stack') &&
     document.querySelectorAll('.forge-composer-panel').length === 2 &&
@@ -1126,6 +1149,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.equal(await page.locator('.forge-composer-panel').count(), 2);
   assert.equal(await page.locator('.forge-composer-queue-item').count(), 1);
   assert.equal(await page.locator('.forge-composer-progress-pill').count(), 1);
+  assert.equal(await page.locator('.forge-composer-progress-fade').count(), 1);
   assert.equal(await page.locator('.forge-plan-pill').count(), 1);
   assert.equal(await page.locator('.forge-diff-summary').count(), 1);
   const guidedPaint = await page.evaluate(() => {
@@ -1193,6 +1217,11 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     const pillStyle = getComputedStyle(
       document.querySelector('.forge-composer-progress-pill')
     );
+    const fade = document.querySelector('.forge-composer-progress-fade');
+    const fadeHost = fade.parentElement;
+    const fadeStyle = getComputedStyle(fade);
+    const fadeRect = fade.getBoundingClientRect();
+    const fadeHostRect = fadeHost.getBoundingClientRect();
     return {
       stackClipPath: stackStyle.clipPath,
       stackBackgroundImage: stackStyle.backgroundImage,
@@ -1200,7 +1229,18 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       stackBorderRadius: stackStyle.borderRadius,
       panelPaint,
       queueItemPaint,
-      pillBorderRadius: pillStyle.borderRadius
+      pillBorderRadius: pillStyle.borderRadius,
+      fade: {
+        relativeRect: [
+          fadeRect.x - fadeHostRect.x,
+          fadeRect.y - fadeHostRect.y,
+          fadeRect.width,
+          fadeRect.height
+        ],
+        backgroundColor: fadeStyle.backgroundColor,
+        backgroundImage: fadeStyle.backgroundImage,
+        opacity: fadeStyle.opacity
+      }
     };
   });
   assert.equal(
@@ -1271,6 +1311,14 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     '999px',
     'the separate progress pill remains rounded on all sides'
   );
+  assert.deepEqual(
+    guidedPaint.fade.relativeRect,
+    nativeStateContract.progressFadeRelative,
+    'the native fade geometry relative to its host must remain untouched'
+  );
+  assert.equal(guidedPaint.fade.backgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(guidedPaint.fade.backgroundImage, 'none');
+  assert.equal(guidedPaint.fade.opacity, '0');
   assert.equal(
     await page.locator('[data-native-slot="composer-submit"]').getAttribute('aria-label'),
     '停止'
@@ -1487,6 +1535,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       name: 'running',
       context: 0,
       progress: 1,
+      fades: 1,
       stacks: 1,
       panels: 1,
       submitLabel: '停止'
@@ -1495,6 +1544,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       name: 'guided',
       context: 0,
       progress: 1,
+      fades: 1,
       stacks: 1,
       panels: 2,
       submitLabel: '停止',
@@ -1504,6 +1554,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       name: 'expanded-guided',
       context: 0,
       progress: 1,
+      fades: 1,
       stacks: 1,
       panels: 2,
       submitLabel: '停止',
@@ -1513,6 +1564,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       name: 'default',
       context: 0,
       progress: 0,
+      fades: 0,
       stacks: 0,
       panels: 0,
       submitLabel: null
@@ -1525,6 +1577,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       return (
         document.querySelectorAll('.forge-composer-context').length === state.context &&
         document.querySelectorAll('.forge-composer-progress-pill').length === state.progress &&
+        document.querySelectorAll('.forge-composer-progress-fade').length === state.fades &&
         document.querySelectorAll('.forge-composer-panel-stack').length === state.stacks &&
         document.querySelectorAll('.forge-composer-panel').length === state.panels &&
         submit?.getAttribute('aria-label') === state.submitLabel &&

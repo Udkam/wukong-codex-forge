@@ -41,19 +41,23 @@ const stateContracts = [
     state: 'default',
     file: '03-composer-default.png',
     panels: 0,
-    queueItems: 0
+    queueItems: 0,
+    progressFades: 0
   },
   {
     state: 'guided',
     file: '08-composer-guided.png',
     panels: 2,
-    queueItems: 1
+    queueItems: 1,
+    progressFades: 1
   },
   {
     state: 'multi-guided',
     file: '13-composer-multi-guided.png',
+    fullFile: '14-full-multi-guided.png',
     panels: 2,
-    queueItems: 2
+    queueItems: 2,
+    progressFades: 1
   }
 ];
 
@@ -100,6 +104,7 @@ const paintSnapshot = page => page.evaluate(() => {
   const queueItems = stack
     ? [...stack.querySelectorAll('.forge-composer-queue-item')]
     : [];
+  const progressFades = [...document.querySelectorAll('.forge-composer-progress-fade')];
   return {
     panelCount: panels.length,
     queueItemCount: queueItems.length,
@@ -128,6 +133,16 @@ const paintSnapshot = page => page.evaluate(() => {
         leafBackgroundSize: leaf.backgroundSize,
         leafBoxShadow: leaf.boxShadow
       };
+    }),
+    progressFades: progressFades.map(fade => {
+      const style = getComputedStyle(fade);
+      const rect = fade.getBoundingClientRect();
+      return {
+        rect: [rect.x, rect.y, rect.width, rect.height],
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        opacity: style.opacity
+      };
     })
   };
 });
@@ -145,7 +160,9 @@ try {
         body: runtimeFixtureHtml,
         contentType: 'text/html; charset=utf-8'
       }));
-      await page.goto(`http://wukong-v22-composer.test/?state=${contract.state}`);
+      await page.goto(`http://wukong-v22-composer.test/?state=${contract.state}`, {
+        waitUntil: 'networkidle'
+      });
       await installComposerState(page, contract.state);
       const before = await geometrySnapshot(page);
 
@@ -155,7 +172,9 @@ try {
           ?.classList.contains('forge-composer-frame') &&
         document.querySelectorAll('.forge-composer-panel').length === expected.panels &&
         document.querySelectorAll('.forge-composer-queue-item').length ===
-          expected.queueItems
+          expected.queueItems &&
+        document.querySelectorAll('.forge-composer-progress-fade').length ===
+          expected.progressFades
       ), contract);
 
       const after = await geometrySnapshot(page);
@@ -163,12 +182,25 @@ try {
       const paint = await paintSnapshot(page);
       assert.equal(paint.panelCount, contract.panels);
       assert.equal(paint.queueItemCount, contract.queueItems);
+      assert.equal(paint.progressFades.length, contract.progressFades);
+      paint.progressFades.forEach(fade => {
+        assert.equal(fade.backgroundColor, 'rgba(0, 0, 0, 0)');
+        assert.equal(fade.backgroundImage, 'none');
+        assert.equal(fade.opacity, '0');
+      });
 
       const file = path.join(outputDirectory, contract.file);
       await page.locator('.composer-area').screenshot({ path: file });
+      const fullFile = contract.fullFile
+        ? path.join(outputDirectory, contract.fullFile)
+        : null;
+      if (fullFile) {
+        await page.screenshot({ path: fullFile, fullPage: false });
+      }
       results.push({
         state: contract.state,
         file,
+        fullFile,
         geometry: { before, after },
         paint
       });
