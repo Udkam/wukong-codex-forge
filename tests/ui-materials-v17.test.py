@@ -126,19 +126,31 @@ class V17FullFieldDarkPaperTest(unittest.TestCase):
         self.assertRegex(main_rule.group("body"), r"min-height:\s*96px")
         self.assertRegex(main_rule.group("body"), r"max-height:\s*120px")
 
-        row_layer_rule = re.search(
+        outer_field_rule = re.search(
             r"\.forge-composer-context::before,\s*"
             r":root\.forge-ink-mountain \.forge-composer-panel::before\s*\{"
             r"(?P<body>.*?)\n\}",
             css,
             re.S,
         )
-        self.assertIsNotNone(row_layer_rule)
-        row_layer_body = row_layer_rule.group("body")
-        self.assertIn("100% 200%,", row_layer_body)
-        self.assertIn("0 100%,", row_layer_body)
-        self.assertNotIn("calc(100% - 8px) 100%", row_layer_body)
-        self.assertNotRegex(row_layer_body, r"\n\s*8px\s+100%")
+        self.assertIsNotNone(outer_field_rule)
+        outer_field_body = outer_field_rule.group("body")
+        self.assertIn("100% 100%, 512px 220px", outer_field_body)
+        self.assertRegex(outer_field_body, r"clip-path:\s*none")
+        self.assertNotIn("var(--forge-ui-composer-strip)", outer_field_body)
+        self.assertRegex(
+            css,
+            r"(?s)\.forge-composer-panel-stack\s*"
+            r">\s*\.forge-composer-panel:first-child::before\s*\{.*?"
+            r"clip-path:\s*polygon\(",
+        )
+        self.assertRegex(
+            css,
+            r"(?s)\.forge-composer-panel-stack\s*"
+            r">\s*\.forge-composer-panel:first-child::after\s*\{.*?"
+            r"background-image:\s*var\(--forge-ui-composer-strip\);.*?"
+            r"background-size:\s*100%\s+58px\s*!important;",
+        )
         self.assertRegex(
             css,
             r"(?s)\.forge-composer-panel\s*\{.*?"
@@ -149,6 +161,14 @@ class V17FullFieldDarkPaperTest(unittest.TestCase):
             css,
             r"(?s)\.forge-composer-panel-stack::before\s*\{"
             r".*?content:\s*none\s*!important;",
+        )
+        self.assertRegex(
+            css,
+            r"(?s)\.forge-composer-queue-item::before\s*\{.*?"
+            r"background-image:\s*var\(--forge-ui-paper-tile\);.*?"
+            r"background-size:\s*512px\s+220px\s*!important;.*?"
+            r"clip-path:\s*none;.*?"
+            r"box-shadow:\s*none;",
         )
 
         self.assertRegex(

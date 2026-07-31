@@ -406,13 +406,28 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-color: transparent;
+  background-color: #87755d;
   background-image:
-    var(--forge-ui-composer-strip),
+    linear-gradient(
+      to bottom,
+      rgba(75, 51, 27, .62) 0 1px,
+      rgba(235, 216, 184, .1) 1px 2px,
+      transparent 2px
+    ),
     var(--forge-ui-paper-tile);
-  background-position: center top, center;
+  background-position: center, center;
   background-repeat: no-repeat, repeat;
-  background-size: 100% 200%, 512px 220px !important;
+  background-size: 100% 100%, 512px 220px !important;
+  clip-path: none;
+  box-shadow:
+    1px 0 0 rgba(75, 51, 27, .42) inset,
+    -1px 0 0 rgba(75, 51, 27, .42) inset;
+}
+
+:root.forge-ink-mountain .forge-composer-context::before,
+:root.forge-ink-mountain
+  .forge-composer-panel-stack
+  > .forge-composer-panel:first-child::before {
   clip-path: polygon(
     8px 0,
     calc(100% - 8px) 0,
@@ -421,11 +436,32 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     0 100%,
     0 8px
   );
-  box-shadow:
-    0 1px 0 rgba(235, 216, 184, .14) inset,
-    0 -1px 0 rgba(75, 51, 27, .3) inset,
-    0 2px 0 rgba(20, 14, 8, .24),
-    0 4px 13px rgba(5, 4, 3, .22);
+}
+
+:root.forge-ink-mountain .forge-composer-context::after,
+:root.forge-ink-mountain
+  .forge-composer-panel-stack
+  > .forge-composer-panel:first-child::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 29px;
+  z-index: -1;
+  pointer-events: none;
+  background-color: transparent;
+  background-image: var(--forge-ui-composer-strip);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 100% 58px !important;
+  clip-path: polygon(
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% 100%,
+    0 100%,
+    0 8px
+  );
 }
 
 :root.forge-ink-mountain .forge-composer-panel {
@@ -446,6 +482,47 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 
 :root.forge-ink-mountain .forge-composer-panel + .forge-composer-panel {
   box-shadow: none !important;
+}
+
+:root.forge-ink-mountain .forge-composer-queue-item {
+  color: inherit !important;
+  position: relative !important;
+  isolation: isolate;
+  background: transparent !important;
+  border-radius: 0 !important;
+  corner-shape: initial !important;
+  clip-path: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain .forge-composer-queue-item::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline: calc((var(--spacing, 4px) * -3) + 1px);
+  z-index: -1;
+  pointer-events: none;
+  background-color: #87755d;
+  background-image: var(--forge-ui-paper-tile);
+  background-position: center;
+  background-repeat: repeat;
+  background-size: 512px 220px !important;
+  clip-path: none;
+  box-shadow: none;
+}
+
+:root.forge-ink-mountain
+  .forge-composer-queue-item
+  + .forge-composer-queue-item::after {
+  content: "";
+  position: absolute;
+  inset-inline: calc((var(--spacing, 4px) * -3) + 1px);
+  top: -1px;
+  height: 1px;
+  z-index: 0;
+  pointer-events: none;
+  background: rgba(75, 51, 27, .5);
 }
 
 :root.forge-ink-mountain .forge-composer-context button,
@@ -955,6 +1032,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :root.forge-ink-mountain #root .forge-composer-context,
   :root.forge-ink-mountain #root .forge-composer-panel-stack,
   :root.forge-ink-mountain #root .forge-composer-panel,
+  :root.forge-ink-mountain #root .forge-composer-queue-item,
   :root.forge-ink-mountain #root .forge-composer-progress-pill,
   :root.forge-ink-mountain #root .forge-plan-pill,
   :root.forge-ink-mountain #root .forge-diff-summary,
@@ -986,8 +1064,12 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 
   :root.forge-ink-mountain #root .forge-composer-frame::before,
   :root.forge-ink-mountain #root .forge-composer-context::before,
+  :root.forge-ink-mountain #root .forge-composer-context::after,
   :root.forge-ink-mountain #root .forge-composer-panel-stack::before,
-  :root.forge-ink-mountain #root .forge-composer-panel::before {
+  :root.forge-ink-mountain #root .forge-composer-panel::before,
+  :root.forge-ink-mountain #root .forge-composer-panel::after,
+  :root.forge-ink-mountain #root .forge-composer-queue-item::before,
+  :root.forge-ink-mountain #root .forge-composer-queue-item::after {
     content: none !important;
   }
 

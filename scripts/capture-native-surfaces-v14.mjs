@@ -108,7 +108,8 @@ const readComposerContract = page => page.evaluate(() => {
       maxHeight: style.maxHeight,
       forgePaintHost: element.matches(
         '.forge-composer-frame, .forge-composer-context, ' +
-        '.forge-composer-panel-stack, .forge-composer-panel'
+        '.forge-composer-panel-stack, .forge-composer-panel, ' +
+        '.forge-composer-queue-item'
       ),
       ariaLabel: element.getAttribute('aria-label'),
       type: element.getAttribute('type'),
@@ -236,11 +237,19 @@ try {
       state === 'expanded-guided' ||
       state === 'multi-guided'
     ) {
-      await page.waitForFunction(expectedPanels => (
+      await page.waitForFunction(expected => (
         document.querySelector('.forge-composer-progress-pill') &&
         document.querySelector('.forge-composer-panel-stack') &&
-        document.querySelectorAll('.forge-composer-panel').length === expectedPanels
-      ), state === 'running' ? 1 : state === 'multi-guided' ? 3 : 2);
+        document.querySelectorAll('.forge-composer-panel').length === expected.panels &&
+        document.querySelectorAll('.forge-composer-queue-item').length === expected.queueItems
+      ), {
+        panels: state === 'running' ? 1 : 2,
+        queueItems: state === 'multi-guided'
+          ? 2
+          : state === 'guided' || state === 'expanded-guided'
+            ? 1
+            : 0
+      });
     }
     const themedContract = await readComposerContract(page);
     assertComposerInvariant(state, nativeContract, themedContract);
@@ -392,13 +401,15 @@ try {
   await guidedPage.waitForFunction(() => (
     document.querySelector('.forge-plan-pill') &&
     document.querySelectorAll('.forge-composer-panel-stack').length === 1 &&
-    document.querySelectorAll('.forge-composer-panel').length === 2
+    document.querySelectorAll('.forge-composer-panel').length === 2 &&
+    document.querySelectorAll('.forge-composer-queue-item').length === 1
   ));
   await guidedPage.locator('.composer-area').screenshot({ path: files.composerGuided });
   const guidedMarks = {
     plan: await guidedPage.locator('.forge-plan-pill').count(),
     stacks: await guidedPage.locator('.forge-composer-panel-stack').count(),
-    panels: await guidedPage.locator('.forge-composer-panel').count()
+    panels: await guidedPage.locator('.forge-composer-panel').count(),
+    queueItems: await guidedPage.locator('.forge-composer-queue-item').count()
   };
   await guidedPage.evaluate(RESTORE_EXPRESSION);
   await guidedPage.close();
@@ -411,14 +422,16 @@ try {
   await expandedPage.waitForFunction(() => (
     document.querySelector('.forge-plan-pill') &&
     document.querySelectorAll('.forge-composer-panel-stack').length === 1 &&
-    document.querySelectorAll('.forge-composer-panel').length === 2
+    document.querySelectorAll('.forge-composer-panel').length === 2 &&
+    document.querySelectorAll('.forge-composer-queue-item').length === 1
   ));
   await expandedPage.locator('.composer-area')
     .screenshot({ path: files.composerExpanded });
   const expandedMarks = {
     plan: await expandedPage.locator('.forge-plan-pill').count(),
     stacks: await expandedPage.locator('.forge-composer-panel-stack').count(),
-    panels: await expandedPage.locator('.forge-composer-panel').count()
+    panels: await expandedPage.locator('.forge-composer-panel').count(),
+    queueItems: await expandedPage.locator('.forge-composer-queue-item').count()
   };
   await expandedPage.evaluate(RESTORE_EXPRESSION);
   await expandedPage.close();
@@ -431,14 +444,16 @@ try {
   await multiGuidedPage.waitForFunction(() => (
     document.querySelector('.forge-plan-pill') &&
     document.querySelectorAll('.forge-composer-panel-stack').length === 1 &&
-    document.querySelectorAll('.forge-composer-panel').length === 3
+    document.querySelectorAll('.forge-composer-panel').length === 2 &&
+    document.querySelectorAll('.forge-composer-queue-item').length === 2
   ));
   await multiGuidedPage.locator('.composer-area')
     .screenshot({ path: files.composerMultiGuided });
   const multiGuidedMarks = {
     plan: await multiGuidedPage.locator('.forge-plan-pill').count(),
     stacks: await multiGuidedPage.locator('.forge-composer-panel-stack').count(),
-    panels: await multiGuidedPage.locator('.forge-composer-panel').count()
+    panels: await multiGuidedPage.locator('.forge-composer-panel').count(),
+    queueItems: await multiGuidedPage.locator('.forge-composer-queue-item').count()
   };
   await multiGuidedPage.evaluate(RESTORE_EXPRESSION);
   await multiGuidedPage.close();

@@ -452,12 +452,8 @@ export const runtimeFixtureHtml = String.raw`
       flex-direction: column;
     }
     .native-above-composer-row {
-      display: flex;
       width: 100%;
       min-width: 0;
-      align-items: center;
-      gap: 8px;
-      padding: var(--padding-row-y) 12px;
       border-right: 1px solid var(--color-token-border);
       border-left: 1px solid var(--color-token-border);
       border-top: 1px solid var(--color-token-border);
@@ -465,6 +461,33 @@ export const runtimeFixtureHtml = String.raw`
     }
     .native-above-composer-row:first-child {
       border-radius: 16px 16px 0 0;
+    }
+    .native-above-composer-content,
+    .native-queued-message-content {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .native-above-composer-content {
+      padding: var(--padding-row-y) 12px;
+    }
+    .native-queued-message-list {
+      display: flex;
+      max-height: 30dvh;
+      flex-direction: column;
+      gap: 1px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: var(--padding-row-y) 12px;
+    }
+    .native-queued-message-wrap {
+      overflow: visible;
+    }
+    .native-queued-message-content {
+      padding-block: 2px;
+      font-size: var(--text-base);
     }
     .native-progress-host {
       position: relative;
@@ -876,9 +899,10 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
         )
           ? 1
           : 0;
-      const queueRows = Array.from({ length: queueCount }, (_, index) => `
-          <div class="relative min-w-0 overflow-clip text-token-foreground ${compactRowClasses} vertical-scroll-fade-mask hide-scrollbar max-h-[30dvh] native-above-composer-row"
-            data-fixture-surface="${index === 0 ? 'queued-panel' : `queued-panel-${index + 1}`}">
+      const queueItems = Array.from({ length: queueCount }, (_, index) => `
+          <div class="overflow-visible native-queued-message-wrap"
+            data-fixture-surface="queued-message-${index + 1}">
+            <div class="group flex min-w-0 items-center justify-between gap-2 py-0.5 text-sm native-queued-message-content">
             <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
               <path d="M4 3v6.5A2.5 2.5 0 0 0 6.5 12H12"/>
               <path d="m9.5 9.5 2.5 2.5-2.5 2.5"/>
@@ -897,7 +921,17 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
                 <circle cx="12" cy="8" r=".7" fill="currentColor" stroke="none"/>
               </svg>
             </button>
+            </div>
           </div>`).join('');
+      const queuePanel = queueCount > 0
+        ? `
+          <div class="relative min-w-0 overflow-clip text-token-foreground ${compactRowClasses} native-above-composer-row"
+            data-fixture-surface="queued-panel">
+            <div class="vertical-scroll-fade-mask hide-scrollbar flex max-h-[30dvh] flex-col gap-px overflow-x-hidden overflow-y-auto px-3 py-row-y native-queued-message-list">
+              ${queueItems}
+            </div>
+          </div>`
+        : '';
 
       abovePortal.innerHTML = `
         <div class="relative col-start-1 row-start-1 h-8 self-end native-progress-host">
@@ -924,9 +958,10 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
           data-fixture-stack-mode="${expandedStack ? 'expanded' : 'collapsed'}">
           <div class="order-2 flex min-w-0 flex-col native-above-composer-stack"
             data-fixture-surface="composer-stack">
-            ${queueRows}
+            ${queuePanel}
             <div class="relative min-w-0 overflow-clip text-token-foreground ${compactRowClasses} native-above-composer-row"
               data-fixture-surface="goal-panel">
+            <div class="flex items-center justify-between gap-2 px-3 py-row-y native-above-composer-content">
             <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
               <circle cx="8" cy="8" r="5"/>
               <circle cx="8" cy="8" r="2"/>
@@ -958,6 +993,7 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
                 <path d="m6 3 5 5-5 5"/>
               </svg>
             </button>
+            </div>
             </div>
           </div>
         </div>`;

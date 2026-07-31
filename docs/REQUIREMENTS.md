@@ -21,11 +21,11 @@
 | V15-15 | 用户否决的 `destined-afterimage.jpg` 与 `yaksha-king-rift.jpg` 必须从 active/default/native preview/最小包全部撤下，但本地文件不得删除；活动图库固定为 2 主战斗 + 2 次级战斗 + 5 风景 | active/default 深比较、最小包排除断言、真实 Codex 截图 |
 | V15-16 | 新建页只保留“悟空”字标与“此去，欲破何局？”；原生“新建任务”和描述说明在主题激活时视觉透明，但 DOM、文本、ARIA、布局占位和停用恢复不得改变 | 首帧自动标记、computed opacity、前后 DOMRect/innerText、延迟挂载与 restore 测试 |
 | V15-17 | 主输入器高度受限但不直接套原生框：宽度与底部锚点保持原生，外框按 `184:25` 响应并钳制为 `96–120px`；最大原生列宽 `736px` 时 surface 约为 `100px`，不得回到 120px 偏高版或套用高大概念稿。editor wrapper 只保留 12px 原生横向内距与 8px 纸面顶部安全区，footer 恢复原生 8px 横向内距和底距；五类按钮的尺寸、坐标、文本、ARIA、状态拓扑和命中区不得改变 | 360/400/560/736/1600 宽度公式测试、用户最新 `736×约100px` 原生截图、按钮完整 DOMRect 与语义深比较、forced-colors 回退 |
-| V15-18 | 排队消息与进行中目标必须保留官方 above-composer stack，并共用一张只含左上/右上两角的纸面；stack 底边为直线并与主卷页相接，不得出现下方两角。独立计划/变更进度 pill 仍为四周圆角 | guided/context/queue fixture、computed `clip-path` 精确值、strip 只绘制源图上半区、pill radius、相邻行 DOMRect 全等 |
+| V15-18 | 排队消息与进行中目标必须保留官方 above-composer stack 的真实生产拓扑：一个外层 queue panel 内含 N 个 internal queue item，再接一个外层 goal panel。只有整组首个外层 panel 拥有左上/右上两个外部角；后续外层 panel 直边承接。每个内部消息拥有独立纸纹与原生 1px 接缝，不得提升为独立外层卡片，也不得把一张总背景按条目数拉长。独立计划/变更进度 pill 仍为四周圆角 | 当前 ASAR 解包源码、guided/multi-guided fixture、outer panel / internal item 数量、固定顶饰高度、原生 gap、pill radius、相邻行与控件 DOMRect 全等 |
 | V15-19 | 当前 Codex 内部 editor class/role 漂移不得导致输入框漏替换；官方 `.composer-surface-chrome` 是主 surface 身份，内部 editor 仅作可选语义辅助；主题不得伪造 editor、contenteditable 或 ARIA | 删除 ProseMirror/role 的漂移回归测试、真实 Codex DOM audit、主题化覆盖率与 restore |
-| V15-20 | composer component、above-composer portal、joined stack 与独立 progress pill 的对应关系必须从当前安装包的生产结构推导；fixture 不得用测试属性伪造 component 身份。compact queue/goal row 只允许官方上角 token，不得出现任何下角 token | 当前 ASAR 只读源码核对、root 直属子节点关系、生产 class 签名、portal/component 互斥与上下角 token 定向断言 |
+| V15-20 | composer component、above-composer portal、queue 外层 panel、内部 message wrapper、goal 外层 panel 与独立 progress pill 的对应关系必须从当前安装包的生产结构推导；fixture 不得用测试属性或每条消息一个 outer panel 的简化结构伪造 component 身份。内部 message wrapper 只能通过完整生产 class token 识别，不得猜本地化文案 | 当前 ASAR 只读源码核对、root 直属子节点关系、queue list / message row 生产 class 签名、portal/component 互斥、guided/multi-guided 数量与重映射定向断言 |
 | V15-21 | 临时真实 Codex 验收不得留下调试窗口、便携 profile 子进程或监听端口；普通截图仍不得关闭任意窗口。只有 launcher、disable request 与 CDP browser PID 三者一致时，捕获器才可在 `Browser.close` 超时后结束该精确 PID 树，且不能按名称或映像批量结束 | 临时实例真实截图、CDP PID 匹配、精确 `/PID` 树兜底、root/owner/profile process/port 四项归零与生命周期合同 |
-| V15-22 | 主输入器四角与 joined queue/goal stack 两个上角只能裁切主题纸面，不得裁掉原生宿主的矩形命中区；joined stack 仍保持直底边，独立 progress pill 仍保持全圆。纸面绘制层必须 `pointer-events:none`，高对比模式必须完全撤下 | 宿主 computed `clip-path:none`、绘制伪元素精确 polygon、`pointer-events:none`、forced-colors、原生坐标/尺寸/语义深比较 |
+| V15-22 | 主输入器四角与 above-composer stack 首个外层 panel 的两个上角只能裁切主题纸面，不得裁掉原生宿主或内部消息的矩形命中区；后续外层 panel 与内部消息均不得重复外部角或卡片阴影，独立 progress pill 仍保持全圆。所有纸面绘制层必须 `pointer-events:none`，高对比模式必须完全撤下 | 宿主与内部消息 computed `clip-path:none`、仅首个外层绘制层的 polygon/固定顶饰、内部 item 无 shadow、`pointer-events:none`、forced-colors、原生坐标/尺寸/语义深比较 |
 | V15-23 | 已缓存或 data URL 背景即使在赋值后同步报告 `Image.complete=true`，也必须等待同一图像的 `decode()` 门完成后才能公开 ready；稳定页面刷新必须差量对账主题标记，禁止通过每轮全量移除/重加 class 或重复写入相同 ARIA 触发 ResizeObserver/MutationObserver 自循环 | 同步 complete + 悬挂 decode 门禁、ready 前原生 paint、稳定 2.2 秒 refreshCount 不增长、停用恢复与项目资源归零 |
 
 当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 合同、7 项原生表面测试和 Windows forced-colors 组合态测试；最新证据目录为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。Electron 原生下拉菜单本体不在 renderer DOM 中，当前验收范围只包含四个原生触发页签；不得把夹具中的页面元素当作下拉本体交付。
@@ -34,7 +34,7 @@ V15-05 / V15-16 当前技术候选使用官方“悟空”书法生成 336×336 
 
 V15-14 / V15-15 当前实测：9 张唯一活动背景共 19,258,880 px，最大两张合计 4,743,680 px；8 张活动 UI WebP 单张最大 580,608 px。除用户指定的 2560×1043 杨戬超宽构图外，其余活动背景均至少 1920×1080；低分辨率 `great-sage-return.jpg`、被否决候选与夜叉王裂焰图均不进入运行包。
 
-V15-17 至 V15-20 当前技术候选已通过 9 项定向运行时测试。用户最新两张原生截图复核把最大宽主纸面锁定为约 `736×100px`；V20 无头证据位于 `artifacts/test-runs/v20-composer-native-proportion-20260730-2/`，其中 home 与 guided 主纸面均为 `736×100px`，joined stack 只有两个上角、直底边，独立 pill 全圆。V17 的 `736×120px` 真实截图继续保留为被本轮取代的历史证据；这些技术证据仍不等于用户实机视觉验收。
+V15-17 至 V15-20 当前技术候选已通过定向运行时合同。用户最新两张原生截图复核把最大宽主纸面锁定为约 `736×100px`；V22 又按当前 ASAR 生产源码把 joined stack 校正为“一个 queue 外层面板 + N 个内部消息叶片 + 一个 goal 外层面板”。guided / multi-guided 夹具证明新增消息只增加内部纸纹叶片，整组首个外层面板才拥有两个上角，后续目标层直边承接，独立 pill 全圆；所有原生行与按钮 DOMRect 前后全等。证据位于 `artifacts/test-runs/v22-native-composer-stack-2026-07-31T00-40-21-809Z/`。V17 的 `736×120px` 与 V21 的“每条消息一个 outer panel”继续保留为被本轮取代的历史证据；这些技术证据仍不等于用户实机视觉验收。
 
 > **0.12.3 / V13.3 历史验收合同。** 以下内容继续保留；冲突处以 V15 为准。
 

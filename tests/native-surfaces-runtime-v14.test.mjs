@@ -1116,6 +1116,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     document.querySelector('[data-fixture-surface="composer-stack"]')
       ?.classList.contains('forge-composer-panel-stack') &&
     document.querySelectorAll('.forge-composer-panel').length === 2 &&
+    document.querySelectorAll('.forge-composer-queue-item').length === 1 &&
     document.querySelector('[data-native-slot="composer-submit"]')
       ?.classList.contains('forge-composer-submit')
   ));
@@ -1123,6 +1124,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.equal(await page.locator('.forge-composer-context').count(), 0);
   assert.equal(await page.locator('.forge-composer-panel-stack').count(), 1);
   assert.equal(await page.locator('.forge-composer-panel').count(), 2);
+  assert.equal(await page.locator('.forge-composer-queue-item').count(), 1);
   assert.equal(await page.locator('.forge-composer-progress-pill').count(), 1);
   assert.equal(await page.locator('.forge-plan-pill').count(), 1);
   assert.equal(await page.locator('.forge-diff-summary').count(), 1);
@@ -1134,6 +1136,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       .map(panel => {
         const panelStyle = getComputedStyle(panel);
         const paintStyle = getComputedStyle(panel, '::before');
+        const capStyle = getComputedStyle(panel, '::after');
         const controls = [...panel.querySelectorAll('button,[role="button"]')];
         const previousPanelPointerEvents = panel.style.pointerEvents;
         const previousControlPointerEvents = controls.map(
@@ -1164,7 +1167,27 @@ test('V16 maps the native guided stack once and remaps context without a resize 
           paintBackgroundSize: paintStyle.backgroundSize,
           paintBackgroundPosition: paintStyle.backgroundPosition,
           paintPointerEvents: paintStyle.pointerEvents,
+          capContent: capStyle.content,
+          capClipPath: capStyle.clipPath,
+          capBackgroundImage: capStyle.backgroundImage,
+          capBackgroundSize: capStyle.backgroundSize,
           controlsRemainHittable
+        };
+      });
+    const queueItemPaint = [...stack.querySelectorAll('.forge-composer-queue-item')]
+      .map(item => {
+        const itemStyle = getComputedStyle(item);
+        const paintStyle = getComputedStyle(item, '::before');
+        return {
+          itemClipPath: itemStyle.clipPath,
+          itemBackgroundImage: itemStyle.backgroundImage,
+          itemBorderRadius: itemStyle.borderRadius,
+          paintContent: paintStyle.content,
+          paintClipPath: paintStyle.clipPath,
+          paintBackgroundImage: paintStyle.backgroundImage,
+          paintBackgroundSize: paintStyle.backgroundSize,
+          paintBoxShadow: paintStyle.boxShadow,
+          paintPointerEvents: paintStyle.pointerEvents
         };
       });
     const pillStyle = getComputedStyle(
@@ -1176,6 +1199,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       stackPaintContent: stackPaintStyle.content,
       stackBorderRadius: stackStyle.borderRadius,
       panelPaint,
+      queueItemPaint,
       pillBorderRadius: pillStyle.borderRadius
     };
   });
@@ -1192,32 +1216,55 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   );
   assert.equal(guidedPaint.stackBorderRadius, '0px');
   assert.equal(guidedPaint.panelPaint.length, 2);
-  for (const row of guidedPaint.panelPaint) {
+  guidedPaint.panelPaint.forEach((row, index) => {
     assert.equal(row.panelClipPath, 'none');
     assert.equal(row.panelBackgroundImage, 'none');
     assert.equal(row.panelBorderRadius, '0px');
     assert.equal(row.paintContent, '""');
     assert.equal(
       row.paintClipPath,
-      'polygon(8px 0px, calc(100% - 8px) 0px, 100% 8px, 100% 100%, 0px 100%, 0px 8px)',
-      'each queue/goal row paper must have only its two upper cut corners'
+      index === 0
+        ? 'polygon(8px 0px, calc(100% - 8px) 0px, 100% 8px, 100% 100%, 0px 100%, 0px 8px)'
+        : 'none',
+      'only the first native outer panel may own the two exterior top corners'
     );
     assert.equal(
       row.paintBackgroundSize,
-      '100% 200%, 512px 220px',
-      'each row must paint its own upper-half paper source'
+      '100% 100%, 512px 220px',
+      'every outer panel must retain an independent non-stretched paper field'
     );
     assert.match(
       row.paintBackgroundPosition,
-      /^50% 0%/,
-      'every row must use the source upper edge and keep a straight lower edge'
+      /^50% 50%/,
+      'outer rows must use the same continuous paper registration'
     );
     assert.equal(row.paintPointerEvents, 'none');
+    assert.equal(row.capContent, index === 0 ? '""' : 'none');
+    if (index === 0) {
+      assert.notEqual(row.capBackgroundImage, 'none');
+      assert.equal(row.capBackgroundSize, '100% 58px');
+      assert.equal(
+        row.capClipPath,
+        'polygon(8px 0px, calc(100% - 8px) 0px, 100% 8px, 100% 100%, 0px 100%, 0px 8px)'
+      );
+    }
     assert.equal(
       row.controlsRemainHittable,
       true,
       'a row paper layer must not cover its native controls'
     );
+  });
+  assert.equal(guidedPaint.queueItemPaint.length, 1);
+  for (const item of guidedPaint.queueItemPaint) {
+    assert.equal(item.itemClipPath, 'none');
+    assert.equal(item.itemBackgroundImage, 'none');
+    assert.equal(item.itemBorderRadius, '0px');
+    assert.equal(item.paintContent, '""');
+    assert.equal(item.paintClipPath, 'none');
+    assert.notEqual(item.paintBackgroundImage, 'none');
+    assert.equal(item.paintBackgroundSize, '512px 220px');
+    assert.equal(item.paintBoxShadow, 'none');
+    assert.equal(item.paintPointerEvents, 'none');
   }
   assert.equal(
     guidedPaint.pillBorderRadius,
@@ -1262,40 +1309,74 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   await installComposerState(page, 'multi-guided');
   await page.waitForFunction(() => (
     document.querySelectorAll('.forge-composer-panel-stack').length === 1 &&
-    document.querySelectorAll('.forge-composer-panel').length === 3
+    document.querySelectorAll('.forge-composer-panel').length === 2 &&
+    document.querySelectorAll('.forge-composer-queue-item').length === 2
   ));
   const multiRowPaint = await page.evaluate(() => {
     const stack = document.querySelector('.forge-composer-panel-stack');
     const rows = [...stack.querySelectorAll(':scope > .forge-composer-panel')];
+    const queueItems = [...stack.querySelectorAll('.forge-composer-queue-item')];
     return {
       stackPaintContent: getComputedStyle(stack, '::before').content,
       rows: rows.map(row => {
         const rect = row.getBoundingClientRect();
         const paint = getComputedStyle(row, '::before');
+        const cap = getComputedStyle(row, '::after');
         return {
           y: rect.y,
           height: rect.height,
           content: paint.content,
           backgroundSize: paint.backgroundSize,
-          clipPath: paint.clipPath
+          clipPath: paint.clipPath,
+          capContent: cap.content
+        };
+      }),
+      queueItems: queueItems.map(item => {
+        const rect = item.getBoundingClientRect();
+        const paint = getComputedStyle(item, '::before');
+        return {
+          y: rect.y,
+          height: rect.height,
+          content: paint.content,
+          backgroundSize: paint.backgroundSize,
+          clipPath: paint.clipPath,
+          boxShadow: paint.boxShadow
         };
       })
     };
   });
   assert.equal(multiRowPaint.stackPaintContent, 'none');
-  assert.equal(multiRowPaint.rows.length, 3);
+  assert.equal(multiRowPaint.rows.length, 2);
   multiRowPaint.rows.forEach((row, index) => {
-    assert.equal(row.content, '""', `row ${index + 1} must own a paper layer`);
-    assert.equal(row.backgroundSize, '100% 200%, 512px 220px');
+    assert.equal(row.content, '""', `outer row ${index + 1} must own a paper field`);
+    assert.equal(row.backgroundSize, '100% 100%, 512px 220px');
     assert.equal(
       row.clipPath,
-      'polygon(8px 0px, calc(100% - 8px) 0px, 100% 8px, 100% 100%, 0px 100%, 0px 8px)'
+      index === 0
+        ? 'polygon(8px 0px, calc(100% - 8px) 0px, 100% 8px, 100% 100%, 0px 100%, 0px 8px)'
+        : 'none'
     );
+    assert.equal(row.capContent, index === 0 ? '""' : 'none');
     if (index > 0) {
       const previous = multiRowPaint.rows[index - 1];
       assert.ok(
         Math.abs(previous.y + previous.height - row.y) <= .25,
         'native rows must remain contiguous while each receives its own paper layer'
+      );
+    }
+  });
+  assert.equal(multiRowPaint.queueItems.length, 2);
+  multiRowPaint.queueItems.forEach((item, index) => {
+    assert.equal(item.content, '""', `queued message ${index + 1} must own one paper leaf`);
+    assert.equal(item.backgroundSize, '512px 220px');
+    assert.equal(item.clipPath, 'none');
+    assert.equal(item.boxShadow, 'none');
+    if (index > 0) {
+      const previous = multiRowPaint.queueItems[index - 1];
+      const nativeGap = item.y - (previous.y + previous.height);
+      assert.ok(
+        nativeGap >= .75 && nativeGap <= 1.25,
+        'queued messages must retain the native one-pixel seam'
       );
     }
   });
@@ -2109,6 +2190,7 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
       '.forge-composer-context',
       '.forge-composer-panel-stack',
       '.forge-composer-panel',
+      '.forge-composer-queue-item',
       '.forge-composer-progress-pill',
       '.forge-plan-pill',
       '.forge-diff-summary',

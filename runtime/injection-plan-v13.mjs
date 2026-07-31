@@ -25,6 +25,7 @@ export const MARK_CLASSES = [
   'forge-composer-context',
   'forge-composer-panel-stack',
   'forge-composer-panel',
+  'forge-composer-queue-item',
   'forge-composer-progress-pill',
   'forge-plan-pill',
   'forge-diff-summary',
@@ -762,10 +763,12 @@ function applyRuntime(payload) {
     ) mark(context, 'forge-composer-context');
 
     /*
-     * Queued guidance and the active goal remain rows of one official
-     * above-composer stack. Mark the native stack for shared color tokens and
-     * every native row as an independent paint host: each added message gains
-     * one paper layer without stretching a single background over the stack.
+     * Codex owns two distinct layers here:
+     * 1. one AboveComposerPanelRow for the entire queued-message list;
+     * 2. one motion wrapper per queued message inside that list.
+     * The active goal is a second AboveComposerPanelRow. Preserve that native
+     * topology so several queued messages become joined inner leaves instead
+     * of several unrelated outer cards.
      */
     const aboveComposerPortals = aboveComposerPortal
       ? [aboveComposerPortal]
@@ -793,6 +796,45 @@ function applyRuntime(payload) {
       [...stack.children].filter(nativePanelRow)
     ));
     panelCandidates.forEach(panel => mark(panel, 'forge-composer-panel'));
+    const queuedListTokens = [
+      'vertical-scroll-fade-mask',
+      'hide-scrollbar',
+      'flex',
+      'max-h-[30dvh]',
+      'flex-col',
+      'gap-px',
+      'overflow-x-hidden',
+      'overflow-y-auto',
+      'px-3',
+      'py-row-y'
+    ];
+    const queuedMessageRowTokens = [
+      'group',
+      'flex',
+      'min-w-0',
+      'items-center',
+      'justify-between',
+      'gap-2',
+      'py-0.5',
+      'text-sm'
+    ];
+    const queuedLists = panelCandidates.flatMap(panel => (
+      [...panel.querySelectorAll('div')].filter(element => (
+        visible(element) &&
+        hasClassTokens(element, queuedListTokens)
+      ))
+    ));
+    const queuedItems = queuedLists.flatMap(list => (
+      [...list.children].filter(item => (
+        visible(item) &&
+        item.classList.contains('overflow-visible') &&
+        [...item.querySelectorAll('div')].some(row => (
+          visible(row) &&
+          hasClassTokens(row, queuedMessageRowTokens)
+        ))
+      ))
+    ));
+    queuedItems.forEach(item => mark(item, 'forge-composer-queue-item'));
 
     const planPattern = /(?:第\s*\d+\s*\/\s*\d+\s*步|step\s*\d+\s*\/\s*\d+)/i;
     const diffPattern = /(?:\d+\s*个文件(?:已)?(?:更改|修改)|\d+\s*files?\s+changed)/i;

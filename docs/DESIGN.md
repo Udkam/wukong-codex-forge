@@ -33,7 +33,7 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 
 所有材质由用户最终参考的透明合同源确定性重建。V17 活动纸面使用完整实心中央与周期化底纹：主卷和各原生行只在 `pointer-events:none` 静态绘制层缩放一次对应源图，不能把一个绘制层跨多行纵向拉伸。原生 editor、footer、按钮、文字、placeholder、ARIA 和 hit box 均保留。助手回答不套纸框。
 
-### V21 短卷页输入器与逐行叠层
+### V22 短卷页输入器与原生内层消息叠页
 
 用户最新授权主输入器不再完全沿用原生高度和圆角框，但要求保持新建对话运行界面的短输入器比例。运行时因此把可见官方 `.composer-surface-chrome` 标记为 `forge-composer-frame`，把可识别 editor 的直属原生外壳标记为 `forge-composer-input-shell`，并用原生结构识别 footer 后标记为 `forge-composer-footer`；不增加替代输入框、按钮或文字节点。当前 Codex 内部 editor 已不稳定保留 `.ProseMirror[role=textbox]`，所以 editor 只作可选辅助，不能再成为整块纸面是否生效的前置条件。composer component 由 `data-codex-composer-root` 的直属子节点关系推导：它必须包含官方 surface，并且不能是直属 above-composer portal；生产和 fixture 都不依赖测试专用组件属性。
 
@@ -45,7 +45,14 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 - 四角卷页只绘制在主输入器的 `::before` 静态纸面层；该层不命中鼠标，原生宿主自身保持 `clip-path:none` 与完整矩形热区。焦点阴影也只作用于纸面层，不削减或移动编辑器与五类按钮。
 - Windows forced-colors 取消纸面伪元素、切角和位图，回退系统原生矩形与系统色。
 
-该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。排队与目标原生行仍收敛在同一个 above-composer stack，但 stack 的 `::before` 明确关闭；每个已识别原生行各自成为隔离绘制宿主，并在自己的 `::before` 上画一层纸面。这样两条消息是两层、三条消息是三层，不会把一张图拉伸到整组高度。每层都使用 `polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%, 0 8px)`，只有左上/右上切角，底边保持直线；宿主本身不裁切并保留矩形热区。`composer-strip.webp` 以 `100% 200%` 绘制并定位在上方，只取四角源图的上半部，物理上避免下方角饰。独立进度 pill 位于直属 portal 内，继续使用 `999px` 圆角，不能与逐行 stack 混用。
+该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。V21 夹具曾错误地把每条排队消息提升为独立 outer panel，导致每层都像一张互不衔接的卡片；V22 以当前 `OpenAI.Codex 26.715.2305.0` 解包源码重新建立生产拓扑：
+
+- above-composer wrapper 仍为官方 `order-2 flex min-w-0 flex-col`。
+- 排队区只有一个 `relative min-w-0 overflow-clip text-token-foreground` 外层 panel；其内部 list 保留官方 `vertical-scroll-fade-mask hide-scrollbar flex max-h-[30dvh] flex-col gap-px overflow-x-hidden overflow-y-auto px-3 py-row-y`。
+- 每条排队消息是 list 内的 `overflow-visible` wrapper，内部行继续保留 `group flex min-w-0 items-center justify-between gap-2 py-0.5 text-sm`；进行中目标则是紧随其后的另一个外层 panel，内部行保留 `px-3 py-row-y`。
+- 运行时必须同时命中这些生产 token 才标记 `forge-composer-queue-item`，不得按“引导”“目标”或其他本地化文本猜测。
+
+外层 queue / goal panel 共同提供一块连续、实心的暖灰黄赭纸面；只有 stack 中第一个外层 panel 的绘制层使用两个外部上角。其 29px 顶饰由固定高度 `::after` 单独绘制，`composer-strip.webp` 按 `100% 58px` 取上半部，因此排队项增多时不会拉伸角饰。后续 goal panel 不再重复外部切角或阴影，只通过直边与前层连续衔接。每个内部 queue item 再拥有一层独立 `paper-tile.webp`，按原生 12px list 内距向两侧安全延伸，并用 `gap-px` 形成 1px 接缝；内部叶片本身不裁切、不加卡片阴影、不改变矩形热区。主输入器和独立 progress pill 不属于该叠页：前者仍使用四角短卷页，后者继续使用 `999px` 全圆轮廓。
 
 用户最新要求把整套输入纸面收进能衔接战斗/风景背景与深墨侧栏的暖灰黄赭范围。V17 生成器以同一 `RGB(135,117,93)` 目标和 `0.86` 纹理对比系数重建；实际 main/strip/pill/tile 中位色落在 `RGB(134–135,117,93–94)`。CSS 回退色统一为 `#87755d`，主墨色为 `#080604`；纸纹无运行时 filter，暗纹理对比度和 forced-colors 回退继续由定向合同锁定。
 

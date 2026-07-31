@@ -2,6 +2,15 @@
 
 ## 2026-07-31
 
+### V22 原生 queue 内层消息连续纸面
+
+- 用户指出 V21 虽能按消息数分层，但每层没有衔接，视觉上仍像互不相干的卡片；同时要求以后以解包后的 Codex 原生数据为替换依据。只读复核当前 `OpenAI.Codex 26.715.2305.0` 的 `above-composer-panel-row-DClLFgUZ.js`、`queued-message-list-BofaaHos.js` 与 `codex-composer-adapter-DId2iEtu.js`，确认 V21 fixture 把每条 queued message 错误提升成了 outer panel。
+- 生产拓扑现改为一个 queue outer panel 内含 N 个 `overflow-visible` message wrapper，再接一个 goal outer panel。运行时通过完整 queue list / message row class token 标记内部叶片，不猜本地化文字；fixture 同步改成同一结构，multi-guided 只产生两个 outer panel 和两个 internal queue item。
+- 绘制改为连续叠页：外层面板共同承接实心暖灰黄赭底，只有首个外层面板拥有两个外部上角和固定 29px 顶饰；每条内部消息拥有独立 `paper-tile.webp`，以官方 `gap-px` 留出 1px 接缝，不使用独立外角、裁切或卡片阴影。后续 goal panel 以直边连续承接，主输入器与独立全圆 progress pill 不受该拓扑补丁影响。
+- `node --check` 覆盖注入器、fixture、定向测试和捕获脚本；`tests/ui-materials-v17.test.py` 4/4 通过；只运行了 `V16 maps the native guided stack once and remaps context without a resize trigger` 一项 Playwright 定向测试并通过。新增三状态短捕获器只采 default / guided / multi-guided，证据位于 `artifacts/test-runs/v22-native-composer-stack-2026-07-31T00-40-21-809Z/`。
+- multi-guided 证据中 queue outer panel 为 `710×62px`、goal outer panel 为 `710×32px`、两条内部消息均为 `684×25px` 且接缝为 1px；guided/multi-guided 的原生控件尺寸和主题前后 DOMRect 全等。截图后浏览器、项目 helper 与监听端口均为 `0`。该证据只证明无头原生结构和绘制连续性，不等于用户实机视觉验收，也不标记输入区、宠物或最终生命周期完成。
+- 本轮继续遵守资源黄档串行策略；恢复后复核为 CPU `70%`、可用内存 `17.31 GB`、磁盘队列 `0`，不再启动调试窗口或追加全量测试。
+
 ### V21 最小包清单去除退役主题定义
 
 - 只读审计发现页面运行时始终读取 `themes/active.json`，但 `scripts/package-runtime.mjs` 仍把历史 `themes/ink-mountain.json` 写入发布白名单；该旧定义包含已取消的葫芦、旧静态宠物、旧 companion 和过期构图参数，而且其引用资产并不由当前活动清单复制，既违背当前目标也会形成不可用的发布清单。
