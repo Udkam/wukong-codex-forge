@@ -97,6 +97,12 @@ test('minimal managed package imports independently and omits development surfac
     'themes/motifs/xiangfei-gourd-icon.webp'
   ]) assert.equal(fs.existsSync(path.join(target, rejected)), false, `rejected asset packaged: ${rejected}`);
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'capture-live.mjs')), false);
+  const portableReadme = fs.readFileSync(path.join(target, 'PORTABLE-README.txt'), 'utf8');
+  assert.match(portableReadme, /CURRENT V15 \/ V26 DEVELOPMENT PREVIEW/);
+  assert.match(portableReadme, /HISTORICAL V12 INSTRUCTIONS \(retained; superseded above\)/);
+  assert.match(portableReadme, /releasedPetIds is empty/);
+  assert.match(portableReadme, /final non-PowerShell lifecycle integration remain incomplete/);
+  assert.doesNotMatch(portableReadme.split('HISTORICAL V12 INSTRUCTIONS')[0], /V12 changes only/);
 
   const runtime = await import(pathToFileURL(path.join(target, 'runtime', 'forge-runtime.mjs')));
   const payload = runtime.payloadFromThemeFile(path.join(target, 'themes', 'active.json'));

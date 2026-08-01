@@ -130,4 +130,5 @@
 - 宠物已进入 Hatch Pet v2 全量重做：新建 `little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725` 与 `little-bajie-v4-inart-game-motion` 两个独立 run，待审批 id 分别为 `little-wukong-v5-yaksha-shenfeng` 与 `little-bajie-v4-inart-game-motion`，不复用旧冻结 id。两只 base 候选已分别通过完整神锋/双足与成年猪妖/完整九齿钉耙的本地门，并完成透明边缘与 192×208 留白验证；下一步是用户母版审计，未通过前不扩展动作。小天命人 schema row 4 改为双足落地、身高稳定的原地反应，不再生成跳跃动作。
 - V25 已把宠物发布门收口到唯一 `pets/release-policy.json`：`releasedPetIds` 当前为空，旧小八戒 v3 与旧小天命人 v4 均列入 `frozenPetIds`。准备脚本不读取旧候选，最小包不携带其 manifest/atlas/proof，安装器在解析空批准集合后、触碰 Codex 用户目录前直接无操作退出；仓库旧包、用户 discovery 目录、当前选择和既有事件记录全部保留不变。只有用户明确通过新母版后，才允许在独立检查点更新该策略。
 - V26 修复两个新 run 曾沿用旧包 id 的身份冲突：发布策略新增独立 `pendingPetIds`，loader、准备脚本与安装器强制 `released / pending / frozen` 三态两两互斥；新候选 request 与 verdict 同步使用独立 id。待审批候选仍不进入准备、最小包或安装链，旧冻结包也未被改写。
+- V27 将 V23 环境卡完整页及 V24 四阶段背景完整页连同机器可读 JSON 纳入 Git，并同步现行 README、便携说明、需求、分工和工作日志。证据文件继续明确标注为无头原生结构 fixture，不代表真实 Codex 窗口或用户视觉验收；本检查点不改运行时、不启动调试窗口，也不越过两只宠物母版审批门。
 - 最终随 Codex 启停方案尚未开始，按要求留到所有视觉内容完成后处理。
