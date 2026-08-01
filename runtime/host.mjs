@@ -7,13 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import {
-  commandTimeoutMs,
-  getBrowserVersion,
-  getTargets,
-  evaluateTarget,
-  isCodexTarget
-} from './cdp-client.mjs';
+import { getBrowserVersion, getTargets, evaluateTarget, isCodexTarget } from './cdp-client.mjs';
 import { payloadFromThemeFile } from './forge-runtime.mjs';
 import {
   ACTIVE_PROBE_EXPRESSION,
@@ -27,13 +21,7 @@ import {
 export const HOST_MARKER = 'WukongCodexForgeEventHostV1';
 const CONTROL_TIMEOUT_MS = 12_000;
 const STARTUP_TIMEOUT_MS = 45_000;
-const RENDERER_STARTUP_GRACE_MS = 20_000;
 const INITIAL_TARGET_SETTLE_MS = 650;
-
-export const startupTimeoutMsForExpression = expression => Math.max(
-  STARTUP_TIMEOUT_MS,
-  commandTimeoutMs('Runtime.evaluate', { expression }) + RENDERER_STARTUP_GRACE_MS
-);
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -716,7 +704,6 @@ export async function runHost({ root, portable = false, signalDisable = false })
       styleSheet: fs.readFileSync(paths.stylePath, 'utf8'),
       variables: payloadFromThemeFile(paths.themePath).variables
     });
-    const startupTimeoutMs = startupTimeoutMsForExpression(expression);
     const reportedProgress = new Set();
     const reportProgress = progress => {
       const key = JSON.stringify(progress);
@@ -750,14 +737,25 @@ export async function runHost({ root, portable = false, signalDisable = false })
     });
     const startup = await Promise.race([
       ready.then(proof => ({ type: 'ready', proof })),
-      watcherPromise.then(result => ({ type: 'stopped', result })),
-      delay(startupTimeoutMs).then(() => ({ type: 'timeout' }))
+      watcherPromise.then(result => ({ type: 'stopped', result }))
     ]);
     if (startup.type !== 'ready') {
-      signals.requestTerminate();
-      throw Error(startup.type === 'timeout'
-        ? `Timed out waiting ${startupTimeoutMs} ms for a verified themed renderer`
-        : `Lifecycle host stopped before renderer verification: ${startup.result.reason}`);
+      writeRuntimeEvent(paths.eventPath, {
+        session,
+        state: startup.result.reason,
+        appPath: paths.rootPath,
+        profilePath: paths.profilePath,
+        rootPid,
+        hostPid: process.pid,
+        port,
+        disableRequest,
+        targets: startup.result.targets,
+        deferredNative: startup.result.deferredNative
+      });
+      if (startup.result.error) {
+        throw Error(`Lifecycle host stopped without verified native restoration: ${startup.result.error}`);
+      }
+      return startup.result;
     }
     writeRuntimeEvent(paths.eventPath, {
       session,

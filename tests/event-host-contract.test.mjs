@@ -10,8 +10,7 @@ import {
   deriveOfficialPaths,
   parseHostArgs,
   resolveHostPaths,
-  runEventWatcher,
-  startupTimeoutMsForExpression
+  runEventWatcher
 } from '../runtime/host.mjs';
 import {
   ACTIVE_PROBE_EXPRESSION,
@@ -111,8 +110,6 @@ test('event host arguments, official path derivation and pipe ownership are dete
     webSocketDebuggerUrl: 'ws://127.0.0.1:17777/devtools/browser/stable'
   }), /Codex\/test/);
   assert.throws(() => browserIdentity({ webSocketDebuggerUrl: 'ws://example.com/devtools/browser/a' }), /non-loopback/);
-  assert.equal(startupTimeoutMsForExpression('x'), 45_000);
-  assert.equal(startupTimeoutMsForExpression('x'.repeat(1_000_001)), 65_000);
 });
 
 test('event watcher applies once, verifies active state, and restores before disable completes', async () => {
@@ -289,4 +286,68 @@ test('event watcher retries a deferred large apply and reports bounded renderer 
   assert.ok(phases.includes('renderer-applying'));
   assert.ok(phases.includes('reconcile-deferred'));
   assert.ok(phases.includes('renderer-verified'));
+});
+
+test('event watcher remains dormant until a delayed renderer appears', async () => {
+  const runRoot = path.join(os.tmpdir(), `wukong-event-host-delayed-${process.pid}-${Date.now()}`);
+  fs.mkdirSync(runRoot, { recursive: false });
+  const markerPath = path.join(runRoot, 'package.json');
+  fs.writeFileSync(markerPath, '{"name":"wukong-codex-forge"}\n', { encoding: 'utf8', flag: 'wx' });
+  const signals = createHostSignals();
+  const never = new Promise(() => {});
+  const target = { id: 'page-delayed', type: 'page', url: 'app://codex/index.html' };
+  let rendererVisible = false;
+  let themed = false;
+  let browserEvent;
+
+  const resultPromise = runEventWatcher({
+    port: 17780,
+    expression: 'APPLY',
+    disableRequest: '',
+    rootPid: process.pid,
+    markerPath,
+    signals,
+    rootExit: never,
+    onReady: () => { signals.requestTerminate(); },
+    dependencies: {
+      getBrowserVersion: async () => ({
+        Browser: 'Codex/test',
+        webSocketDebuggerUrl: 'ws://127.0.0.1:17780/devtools/browser/stable'
+      }),
+      getTargets: async () => rendererVisible ? [target] : [],
+      isCodexTarget: () => true,
+      connectBrowserEvents: async (_endpoint, onEvent) => {
+        browserEvent = onEvent;
+        return {
+          closed: never,
+          command: async () => ({}),
+          close: () => {}
+        };
+      },
+      evaluateTarget: async (_target, expression) => {
+        if (expression === 'APPLY') {
+          themed = true;
+          return true;
+        }
+        if (expression === ACTIVE_PROBE_EXPRESSION) return themed;
+        if (expression === THEME_STATE_EXPRESSION) return themed ? activeState : nativeState;
+        if (expression === RESTORE_EXPRESSION) {
+          themed = false;
+          return true;
+        }
+        throw Error(`Unexpected expression: ${expression.slice(0, 24)}`);
+      },
+      targetSettleMs: 0,
+      log: () => {}
+    }
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(themed, false);
+  rendererVisible = true;
+  browserEvent({ method: 'Target.targetCreated', params: { targetInfo: target } }, { command: async () => ({}) });
+  const result = await resultPromise;
+
+  assert.equal(result.reason, 'terminated-verified');
+  assert.equal(themed, false);
 });
