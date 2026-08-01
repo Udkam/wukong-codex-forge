@@ -1,5 +1,12 @@
 # Local work log
 
+## 2026-07-31 — V24 background transition lifecycle proof
+
+- Added one-page, four-stage full-viewport capture evidence for landing battle, landing-to-thread crossfade, thread scenery, and returned landing battle states.
+- Locked every background/veil layer to viewport coverage, stable/transition texture counts to `1/2`, prefetch to `0`, and rejected persistent full-screen filters or `will-change`.
+- Updated one stale background assertion to recognize the official V23 environment panel mapping; focused background tests passed 8/8 and pixel/scene gates passed 6/6.
+- Evidence is under `artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/`; it is a headless native-structure fixture checkpoint, not final installed-Codex acceptance.
+
 ## 2026-07-31 — V23 environment panel scripture surface
 
 - Read the installed `OpenAI.Codex 26.715.2305.0` ASAR and made the official `thread-summary-panel` obstacle, 300px width, content class signature, and native slots the fail-closed source of truth.

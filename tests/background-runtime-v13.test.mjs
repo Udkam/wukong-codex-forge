@@ -236,7 +236,11 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(await page.locator('.forge-landing-subtitle').count(), 1);
   assert.equal(await page.locator('.forge-composer').count(), 1);
   assert.equal(await page.locator('.forge-sidebar').count(), 1);
-  assert.equal(await page.locator('.forge-input,.forge-right-card,.forge-button').count(), 0);
+  assert.equal(await page.locator('.forge-input,.forge-button').count(), 0);
+  assert.equal(await page.locator('.forge-right-panel').count(), 1);
+  assert.equal(await page.locator('.forge-right-card').count(), 1);
+  assert.equal(await page.locator('.forge-right-title').count(), 1);
+  assert.equal(await page.locator('.forge-right-row').count(), 4);
 
   const background = await page.evaluate(() => {
     const overlay = document.getElementById('wukong-forge-background');

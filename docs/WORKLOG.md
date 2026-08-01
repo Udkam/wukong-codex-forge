@@ -2,6 +2,13 @@
 
 ## 2026-07-31
 
+### V24 背景四阶段覆盖与资源门
+
+- 新增单页四阶段定向捕获器，连续记录新建页战斗稳态、进入对话交叉淡化、对话风景稳态和返回新建页战斗稳态；四张完整 `1600×900` 页面位于 `artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/`，没有只截输入框。
+- 捕获合同逐帧断言 overlay、活动层、图片层与 veil 完整覆盖视口并使用 `cover`；稳态加载数为 `1`，过渡为 `2`，预取始终为 `0`，没有全屏 filter、永久 `will-change` 或第三张纹理。返回新建页后题字和印记无需 resize 即出现，restore 后本项目 overlay/标记归零。
+- 背景运行时定向测试首次出现 1 项失败，原因是旧测试仍假定 V23 已合法加入的官方环境卡不得存在；只校正该过时断言为“环境面板/卡片/标题/四行必须各自准确映射”，没有放宽原生几何或命中区合同。修正后背景状态机 8/8、像素预算与场景色板 6/6 通过。
+- 捕获器只启动一个临时 headless Chromium/page，并在 `finally` 关闭；证据是原生结构 fixture，不冒充真实 Codex 安装窗口验收。本检查点只关闭背景技术门，不标记输入区实机视觉、双宠物或最终生命周期完成。
+
 ### V23 环境信息原生卡片经卷化
 
 - 只读复核本机 `OpenAI.Codex 26.715.2305.0` 的 `thread-summary-panel-components-t019TZYb.js`，锁定 `data-pip-obstacle="thread-summary-panel"`、官方固定 `300px` 宽度、内容宿主 class token 和 `thread-summary-panel-*` 稳定 slot；生产映射不再按“环境信息”文本或截图猜祖先。

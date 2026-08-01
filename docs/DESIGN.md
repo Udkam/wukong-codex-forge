@@ -64,6 +64,14 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 
 `tests/native-asar-ui-contract.test.mjs` 直接锁定本机 300px、宿主 class token 与稳定 slot；`tests/native-surfaces-runtime-v14.test.mjs` 则逐项比较主题前后的面板、卡片、标题、四行和加号九点命中几何。完整无头证据位于 `artifacts/test-runs/v23-environment-panel-2026-07-31T23-14-14-461Z/01-full-multi-guided.png`，其中排队、目标、主输入器、侧栏、顶部栏和环境卡同屏；该证据仍不等于真实 Codex 用户验收。
 
+### V24 背景四阶段覆盖与纹理生命周期
+
+背景技术门以同一个临时无头页面连续验证四个真实状态，不通过重新加载页面伪造切换：新建页战斗稳态、新建页进入对话的交叉淡化帧、对话风景稳态、返回新建页后的战斗稳态。每一帧同时量取 overlay、活动层、图片层和 veil；四层必须逐边等于 `1600×900` 视口并保持 `background-size: cover`，不能出现只覆盖中央内容区、侧栏露底或窗口缩放后才补挂题字的情况。
+
+纹理生命周期继续执行低占用硬合同：稳态只允许一个已解码背景节点；交叉淡化期间只允许当前与下一张两个节点；不预取第三张，不保留永久全屏 `will-change`，不使用全屏 CSS filter。首次图片只有在 `decode()` 完成后才公开主题 ready，返回新建页后同样由状态变化直接提交“悟空”印记与题字，不依赖 resize。restore 必须移除主题 overlay 和所有本项目标记，交回原生 paint。
+
+定向证据位于 `artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/`：四张 `1600×900` 完整页面截图与 `capture.json` 分别记录 `1 → 2 → 1 → 1` 个已加载背景、`0` 个预取节点和正确的 battle/scenery 模式。该捕获只证明当前源码、运行时与原生结构 fixture 的背景职责，不替代正式安装窗口的最终用户验收。
+
 ### 侧栏与顶部状态映射
 
 | 原生对象 | 游记映射 | 状态 |
