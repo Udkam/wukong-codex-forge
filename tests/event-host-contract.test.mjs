@@ -10,7 +10,8 @@ import {
   deriveOfficialPaths,
   parseHostArgs,
   resolveHostPaths,
-  runEventWatcher
+  runEventWatcher,
+  startupTimeoutMsForExpression
 } from '../runtime/host.mjs';
 import {
   ACTIVE_PROBE_EXPRESSION,
@@ -110,6 +111,8 @@ test('event host arguments, official path derivation and pipe ownership are dete
     webSocketDebuggerUrl: 'ws://127.0.0.1:17777/devtools/browser/stable'
   }), /Codex\/test/);
   assert.throws(() => browserIdentity({ webSocketDebuggerUrl: 'ws://example.com/devtools/browser/a' }), /non-loopback/);
+  assert.equal(startupTimeoutMsForExpression('x'), 45_000);
+  assert.equal(startupTimeoutMsForExpression('x'.repeat(1_000_001)), 65_000);
 });
 
 test('event watcher applies once, verifies active state, and restores before disable completes', async () => {
@@ -163,6 +166,7 @@ test('event watcher applies once, verifies active state, and restores before dis
         if (expression === THEME_STATE_EXPRESSION) return themed ? activeState : nativeState;
         throw Error(`Unexpected expression: ${expression.slice(0, 24)}`);
       },
+      targetSettleMs: 0,
       log: () => {}
     }
   });
@@ -216,6 +220,7 @@ test('disable fails closed when native restoration cannot be verified', async ()
         if (expression === RESTORE_EXPRESSION) throw Error('restore refused');
         return true;
       },
+      targetSettleMs: 0,
       log: () => {}
     }
   });
@@ -223,4 +228,65 @@ test('disable fails closed when native restoration cannot be verified', async ()
   assert.equal(result.reason, 'native-restore-failed');
   assert.match(result.error, /restore refused/);
   await assert.rejects(disablePromise, /restore refused/);
+});
+
+test('event watcher retries a deferred large apply and reports bounded renderer phases', async () => {
+  const runRoot = path.join(os.tmpdir(), `wukong-event-host-retry-${process.pid}-${Date.now()}`);
+  fs.mkdirSync(runRoot, { recursive: false });
+  const markerPath = path.join(runRoot, 'package.json');
+  fs.writeFileSync(markerPath, '{"name":"wukong-codex-forge"}\n', { encoding: 'utf8', flag: 'wx' });
+  const signals = createHostSignals();
+  const never = new Promise(() => {});
+  const phases = [];
+  let applyCount = 0;
+  let themed = false;
+
+  const result = await runEventWatcher({
+    port: 17779,
+    expression: 'APPLY',
+    disableRequest: '',
+    rootPid: process.pid,
+    markerPath,
+    signals,
+    rootExit: never,
+    onReady: () => { signals.requestTerminate(); },
+    onProgress: progress => phases.push(progress.phase),
+    dependencies: {
+      getBrowserVersion: async () => ({
+        Browser: 'Codex/test',
+        webSocketDebuggerUrl: 'ws://127.0.0.1:17779/devtools/browser/stable'
+      }),
+      getTargets: async () => [{ id: 'page-1', type: 'page', url: 'app://codex/index.html' }],
+      isCodexTarget: () => true,
+      connectBrowserEvents: async () => ({
+        closed: never,
+        command: async () => ({}),
+        close: () => {}
+      }),
+      evaluateTarget: async (_target, expression) => {
+        if (expression === 'APPLY') {
+          applyCount += 1;
+          if (applyCount === 1) throw Error('renderer navigated during apply');
+          themed = true;
+          return true;
+        }
+        if (expression === ACTIVE_PROBE_EXPRESSION) return themed;
+        if (expression === THEME_STATE_EXPRESSION) return themed ? activeState : nativeState;
+        if (expression === RESTORE_EXPRESSION) {
+          themed = false;
+          return true;
+        }
+        throw Error(`Unexpected expression: ${expression.slice(0, 24)}`);
+      },
+      targetSettleMs: 0,
+      delay: async () => {},
+      log: () => {}
+    }
+  });
+
+  assert.equal(result.reason, 'terminated-verified');
+  assert.equal(applyCount, 2);
+  assert.ok(phases.includes('renderer-applying'));
+  assert.ok(phases.includes('reconcile-deferred'));
+  assert.ok(phases.includes('renderer-verified'));
 });

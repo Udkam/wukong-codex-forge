@@ -7,7 +7,13 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { getBrowserVersion, getTargets, evaluateTarget, isCodexTarget } from './cdp-client.mjs';
+import {
+  commandTimeoutMs,
+  getBrowserVersion,
+  getTargets,
+  evaluateTarget,
+  isCodexTarget
+} from './cdp-client.mjs';
 import { payloadFromThemeFile } from './forge-runtime.mjs';
 import {
   ACTIVE_PROBE_EXPRESSION,
@@ -21,6 +27,13 @@ import {
 export const HOST_MARKER = 'WukongCodexForgeEventHostV1';
 const CONTROL_TIMEOUT_MS = 12_000;
 const STARTUP_TIMEOUT_MS = 45_000;
+const RENDERER_STARTUP_GRACE_MS = 20_000;
+const INITIAL_TARGET_SETTLE_MS = 650;
+
+export const startupTimeoutMsForExpression = expression => Math.max(
+  STARTUP_TIMEOUT_MS,
+  commandTimeoutMs('Runtime.evaluate', { expression }) + RENDERER_STARTUP_GRACE_MS
+);
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -294,6 +307,7 @@ export async function runEventWatcher({
   signals,
   rootExit,
   onReady = () => {},
+  onProgress = () => {},
   dependencies = {}
 }) {
   if (!Number.isInteger(port) || port < 1024 || port > 65535) throw Error('Port must be 1024..65535');
@@ -309,6 +323,7 @@ export async function runEventWatcher({
   const confirmDisable = dependencies.writeDisableConfirmation || writeDisableConfirmation;
   const pause = dependencies.delay || delay;
   const log = dependencies.log || (message => console.log(message));
+  const targetSettleMs = dependencies.targetSettleMs ?? INITIAL_TARGET_SETTLE_MS;
 
   let expectedIdentity = null;
   let client = null;
@@ -318,6 +333,7 @@ export async function runEventWatcher({
   let reconcileQueued = false;
   let ready = false;
   let restorationInFlight = false;
+  const settledTargets = new Set();
   let stopResolve;
   const stoppedPromise = new Promise(resolve => { stopResolve = resolve; });
 
@@ -340,6 +356,7 @@ export async function runEventWatcher({
       do {
         reconcileQueued = false;
         const targets = (await targetsFor(port)).filter(targetMatches);
+        onProgress({ phase: targets.length ? 'renderer-found' : 'waiting-for-renderer', targets: targets.length });
         const themeMissing = !exists(markerPath);
         const disableRequested = signals.disableRequested || Boolean(disableRequest && exists(disableRequest));
         const terminating = signals.terminateRequested;
@@ -389,6 +406,16 @@ export async function runEventWatcher({
         for (const target of targets) {
           let active = await evaluate(target, ACTIVE_PROBE_EXPRESSION).catch(() => false);
           if (!active) {
+            if (targetSettleMs > 0 && !settledTargets.has(target.id)) {
+              settledTargets.add(target.id);
+              states.push(null);
+              onProgress({ phase: 'renderer-settling', targets: targets.length });
+              void pause(targetSettleMs).then(() => {
+                if (!stopped) scheduleReconcile();
+              });
+              continue;
+            }
+            onProgress({ phase: 'renderer-applying', targets: targets.length });
             await evaluate(target, expression);
             active = await evaluate(target, ACTIVE_PROBE_EXPRESSION).catch(() => false);
           }
@@ -396,6 +423,7 @@ export async function runEventWatcher({
         }
         if (states.length && states.every(isActiveThemeState) && !ready) {
           ready = true;
+          onProgress({ phase: 'renderer-verified', targets: states.length });
           onReady({ targets: states.length, states });
         }
       } while (reconcileQueued && !stopped);
@@ -411,6 +439,7 @@ export async function runEventWatcher({
         if (signals.disableRequested) signals.failDisabled(error);
         finish(result);
       } else {
+        onProgress({ phase: 'reconcile-deferred', targets: 0, error: error.message });
         log(`Wukong lifecycle reconcile deferred: ${error.message}`);
         void pause(320).then(() => {
           if (!stopped) scheduleReconcile();
@@ -687,6 +716,25 @@ export async function runHost({ root, portable = false, signalDisable = false })
       styleSheet: fs.readFileSync(paths.stylePath, 'utf8'),
       variables: payloadFromThemeFile(paths.themePath).variables
     });
+    const startupTimeoutMs = startupTimeoutMsForExpression(expression);
+    const reportedProgress = new Set();
+    const reportProgress = progress => {
+      const key = JSON.stringify(progress);
+      if (reportedProgress.has(key)) return;
+      reportedProgress.add(key);
+      writeRuntimeEvent(paths.eventPath, {
+        session,
+        state: 'renderer-probe',
+        phase: progress.phase,
+        targets: progress.targets,
+        ...(progress.error ? { error: progress.error } : {}),
+        appPath: paths.rootPath,
+        profilePath: paths.profilePath,
+        rootPid,
+        hostPid: process.pid,
+        port
+      });
+    };
     let readyResolve;
     const ready = new Promise(resolve => { readyResolve = resolve; });
     watcherPromise = runEventWatcher({
@@ -697,17 +745,18 @@ export async function runHost({ root, portable = false, signalDisable = false })
       markerPath: paths.markerPath,
       signals,
       rootExit,
-      onReady: readyResolve
+      onReady: readyResolve,
+      onProgress: reportProgress
     });
     const startup = await Promise.race([
       ready.then(proof => ({ type: 'ready', proof })),
       watcherPromise.then(result => ({ type: 'stopped', result })),
-      delay(STARTUP_TIMEOUT_MS).then(() => ({ type: 'timeout' }))
+      delay(startupTimeoutMs).then(() => ({ type: 'timeout' }))
     ]);
     if (startup.type !== 'ready') {
       signals.requestTerminate();
       throw Error(startup.type === 'timeout'
-        ? 'Timed out waiting for a verified themed renderer'
+        ? `Timed out waiting ${startupTimeoutMs} ms for a verified themed renderer`
         : `Lifecycle host stopped before renderer verification: ${startup.result.reason}`);
     }
     writeRuntimeEvent(paths.eventPath, {
