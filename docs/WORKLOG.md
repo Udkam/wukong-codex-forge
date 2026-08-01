@@ -2,6 +2,16 @@
 
 ## 2026-08-01
 
+### V30 真实 Codex landing 整页技术预验收
+
+- 修复后的捕获器第二次启动一个独立便携真实 Codex 窗口，等待原生 shell 与 V13 背景双 ready 后进入“新建任务”并截取整页；报告记录 `app://-/index.html`、60 个主题标记、landing/battle 场景和已映射的原生 composer/editor。
+- `1280×820 @ 125%` 下，原生侧栏为 `275×784`、工作区 `1005×784`、composer 列为 `736×143`、实际纸面 surface 为 `736×100`。背景层使用 `cover / 50% 50%`，两层容器中只有一个加载的活动场景，overlay inert、`aria-hidden` 且不接收指针。
+- 原图包含用户工作区项目名，因此只在本机 `artifacts/test-runs/v29-live-full-page-20260801-095425/` 保留，不推入公开仓库；去标识化几何/状态/清理摘要与原图、报告 SHA-256 归档在 V30 `acceptance.json`。
+- 截图后先恢复原生 DOM，再关闭已核验的 browser PID；本次 exact-tree 兜底只作用于同一临时 root。root、launcher、专用端口和项目归属进程均归零，当前控制窗口未受影响。
+- 该证据只关闭 landing 技术预验收，不标记用户视觉通过；真实 queue/goal、环境信息卡、两只待审批宠物与最终非 PowerShell 生命周期仍保留为未完成门。
+- 新增 `tests/live-landing-evidence-contract.test.mjs`，定向锁定真实 renderer 来源、私密截图只本地保留、原生几何、单活动背景层、原生 editor、双宠物审批门、四项资源清理与明确的验收边界；`node --check` 和单测试均通过（1/1，约 58 ms）。
+- 提交前轻量资源抽样为 CPU `20%`、可用内存 `18.59 GB`、磁盘队列 `0`；本段未启动新窗口、服务、watcher 或监听端口。
+
 ### V29 真实 Codex 整页捕获 readiness 修复
 
 - 首次一次性真实 Codex 整页捕获只得到带战斗背景的启动 Logo。JSON 证明 V13 运行时已激活，但原生 composer 尚不存在、主题表面标记仅 1 个；该图明确判定为失败证据，不作为视觉验收。

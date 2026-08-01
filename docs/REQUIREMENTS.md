@@ -32,6 +32,7 @@
 | V15-26 | README、便携说明、需求、设计、分工与工作日志必须区分现行 V15、历史版本和未完成门槛；文档引用的 V23/V24 完整页及 JSON 必须被 Git 跟踪并在文件内声明 fixture-only，禁止把无头证据写成真实 Codex 窗口或用户视觉通过 | 证据路径/PNG 尺寸/JSON source 与覆盖状态定向合同、最小包便携说明真值断言、Git 精确暂存审计 |
 | V15-27 | 当前本机 `app.asar` 是非例外组件几何与结构的唯一真值；包目录名、文件长度或 SHA-256 任一变化必须使原生合同失效即停，禁止静默使用旧 fixture。哈希计算必须有固定内存上限，不得把约 192 MiB 归档一次性读入内存 | `docs/native-asar-provenance.json`、1 MiB 分块 SHA-256、当前安装包目录/长度/哈希断言与清晰漂移错误 |
 | V15-28 | 真实 Codex 整页验收不得在启动 Logo / preloader 阶段截图；必须先出现原生 app shell 与 landing 或 composer 实体，再确认 V13 根节点和背景 overlay 都已 ready，最后等待短稳定期。捕获失败或超时仍须只回收明确归属的临时实例 | 单实例完整页截图、原生 shell/surface 与背景 ready 前置等待、CDP browser/launcher/disable request 三重归属、root/owner/port/project-process 四项归零 |
+| V15-29 | 真实 renderer 截图若含本地项目名、账号或其他用户工作区标识，不得直接提交到公开仓库；应本地保留原图，提交去标识化几何、状态、资源、清理摘要及原图/报告哈希。landing 技术预验收不得冒充 queue/goal、环境卡、宠物或最终生命周期通过 | 本地完整页 PNG、tracked `acceptance.json`、SHA-256、原生/主题几何与四项资源归零、明确 acceptance boundary |
 
 当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 合同、7 项原生表面测试和 Windows forced-colors 组合态测试；最新证据目录为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。Electron 原生下拉菜单本体不在 renderer DOM 中，当前验收范围只包含四个原生触发页签；不得把夹具中的页面元素当作下拉本体交付。
 
