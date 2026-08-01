@@ -15,9 +15,22 @@ const expectedIds = [
 ];
 const releasePolicy = loadNativePetReleasePolicy(root);
 const releasedIds = [...releasePolicy.releasedPetIds];
+const pendingIds = [...releasePolicy.pendingPetIds];
 const frozenIds = [...releasePolicy.frozenPetIds];
 const expectedInstallIds = releasedIds.map(id => `${id}-wukong-forge`);
 const historicalBajieReleaseEnabled = releasedIds.length === 1 && releasedIds[0] === 'little-bajie-v3-inart';
+const pendingCandidates = Object.freeze([
+  {
+    id: 'little-bajie-v4-inart-game-motion',
+    run: 'artifacts/native-pets/little-bajie-v4-inart-game-motion',
+    metrics: 'qa/base-candidate-03-metrics.json'
+  },
+  {
+    id: 'little-wukong-v5-yaksha-shenfeng',
+    run: 'artifacts/native-pets/little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725',
+    metrics: 'qa/base-candidate-01-metrics.json'
+  }
+]);
 const approvedSources = Object.freeze({
   'little-bajie-v3-inart': {
     atlasSha256: '511bc2b8ca7c197407ab8e3be194aaa5f2036428c05fdcb811400525005c2277',
@@ -182,6 +195,7 @@ test('the repository retains exactly two direct, proof-bound Hatch Pet v2 packag
 test('release policy freezes both historical packages and preparation is a byte-preserving no-op', () => {
   assert.equal(releasePolicy.schemaVersion, 1);
   assert.deepEqual(releasedIds, []);
+  assert.deepEqual(pendingIds, pendingCandidates.map(candidate => candidate.id));
   assert.deepEqual(frozenIds, expectedIds);
   assert.match(releasePolicy.approvalGate, /explicit user approval/i);
   const before = snapshotTree(petRoot);
@@ -193,8 +207,41 @@ test('release policy freezes both historical packages and preparation is a byte-
   assert.equal(result.status, 0, `prepare no-op\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
   assert.match(result.stdout, /little-bajie-v3-inart: frozen/);
   assert.match(result.stdout, /little-wukong-yaksha-shenfeng: frozen/);
+  assert.match(result.stdout, /little-bajie-v4-inart-game-motion: pending/);
+  assert.match(result.stdout, /little-wukong-v5-yaksha-shenfeng: pending/);
   assert.match(result.stdout, /without reading or modifying historical packages/i);
   assert.deepEqual(snapshotTree(petRoot), before);
+});
+
+test('rebuilt base candidates use unique pending ids and remain user-gated', () => {
+  const allPolicyIds = [...releasedIds, ...pendingIds, ...frozenIds];
+  assert.equal(new Set(allPolicyIds).size, allPolicyIds.length, 'release states must be pairwise disjoint');
+
+  for (const candidate of pendingCandidates) {
+    const runRoot = path.join(root, ...candidate.run.split('/'));
+    const request = JSON.parse(fs.readFileSync(path.join(runRoot, 'pet_request.json'), 'utf8'));
+    const verdict = fs.readFileSync(path.join(runRoot, 'BASE_VERDICT.md'), 'utf8');
+    const metrics = JSON.parse(fs.readFileSync(path.join(runRoot, ...candidate.metrics.split('/')), 'utf8'));
+
+    assert.equal(request.pet_id, candidate.id);
+    assert.equal(request.sprite_version_number, 2);
+    assert.match(verdict, /INTERNAL_PASS\s*\/\s*USER_PENDING/);
+    assert.match(verdict, new RegExp(candidate.id));
+    assert.equal(metrics.safe_margin_pass, true);
+    assert.equal(metrics.key_residue.key_dominant_pixels, 0);
+    assert.equal(fs.existsSync(path.join(runRoot, 'references', 'canonical-base.png')), false);
+    assert.equal(fs.existsSync(path.join(petRoot, candidate.id)), false);
+  }
+
+  const wukongRequest = JSON.parse(fs.readFileSync(
+    path.join(root, 'artifacts', 'native-pets', 'little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725', 'pet_request.json'),
+    'utf8'
+  ));
+  const jumpingRow = wukongRequest.rows.find(row => row.state === 'jumping');
+  assert.ok(jumpingRow);
+  assert.match(jumpingRow.purpose, /grounded/i);
+  assert.match(jumpingRow.purpose, /no vertical jump/i);
+  assert.match(jumpingRow.user_semantic_override, /feet stay grounded/i);
 });
 
 test('Windows installer preserves absent and pre-existing Codex pet trees when approval set is empty', {

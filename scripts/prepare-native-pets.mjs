@@ -43,6 +43,7 @@ const pets = [
 ];
 const releasePolicy = loadNativePetReleasePolicy(repositoryRoot);
 const releasedPetIds = new Set(releasePolicy.releasedPetIds);
+const pendingPetIds = new Set(releasePolicy.pendingPetIds);
 const frozenPetIds = new Set(releasePolicy.frozenPetIds);
 const knownPetIds = new Set(pets.map(spec => spec.id));
 for (const id of [...releasedPetIds, ...frozenPetIds]) {
@@ -228,6 +229,10 @@ const prepared = pets.filter(spec => releasedPetIds.has(spec.id)).map(spec => {
 
 for (const spec of pets.filter(candidate => frozenPetIds.has(candidate.id))) {
   console.log(`${spec.id}: frozen; retained source and package files were not read or modified`);
+}
+
+for (const id of pendingPetIds) {
+  console.log(`${id}: pending; rebuilt base awaits explicit user approval`);
 }
 
 if (prepared.length === 0) {

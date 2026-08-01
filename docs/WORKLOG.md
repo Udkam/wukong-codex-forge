@@ -2,6 +2,14 @@
 
 ## 2026-08-01
 
+### V26 待审批宠物身份隔离
+
+- 继续 Hatch Pet 母版门前复核时发现，两个新 run 的 `pet_request.json` 仍分别沿用旧冻结包 id；即使发布集合为空，这也会让后续“批准新母版”与“解冻旧失败包”无法被策略可靠区分。
+- 为两个新候选改用独立 id：`little-wukong-v5-yaksha-shenfeng` 与 `little-bajie-v4-inart-game-motion`。`pets/release-policy.json` 新增 `pendingPetIds`，Node loader 与 PowerShell 安装器均强制 `released / pending / frozen` 三态两两互斥；旧包、旧 atlas、既有 Codex 用户目录和历史证据均未改写。
+- 小天命人 row 4 按用户要求取消跳跃，保留 Hatch Pet v2 schema 行位但锁定为双足落地、身体高度稳定的原地移步反应；母版未获明确通过前仍不生成任何动作行。
+- 本检查点只修复审批身份与动作语义合同，不把本地 base 门冒充用户视觉通过，也不启动浏览器、开发服务器、调试窗口或常驻工具。语法/PowerShell 解析 6/6 通过；`native-pets-contract` 与 `managed-package` 合计 5 pass / 2 historical skip，证明三态互斥、候选 id/row 4 语义、空批准集合安装无写入及最小包排除均成立。
+- 收尾资源采样为 CPU `27.2%`、可用内存 `18.26 GB`、磁盘队列 `0`；项目归属进程与监听端口均为 `0`，没有保留调试窗口或测试子进程。
+
 ### V25 未批准宠物发布门收口
 
 - 只读对账发现现行目标已冻结旧小天命人和旧小八戒，但 `prepare-native-pets.mjs`、`package-runtime.mjs` 与 `install-native-pets.ps1` 仍各自保留旧小八戒 v3 白名单，正式包和启动链因此仍可能携带并安装用户已否决的旧宠物。

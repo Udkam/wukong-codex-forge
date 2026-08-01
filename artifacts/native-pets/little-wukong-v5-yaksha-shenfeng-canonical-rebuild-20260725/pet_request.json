@@ -1,5 +1,5 @@
 {
-  "pet_id": "little-wukong-yaksha-shenfeng",
+  "pet_id": "little-wukong-v5-yaksha-shenfeng",
   "display_name": "\u5c0f\u5929\u547d\u4eba",
   "description": "\u9ad8\u4fdd\u771f\u538c\u706b\u591c\u53c9\u5957\u5929\u547d\u4eba\uff0c\u6301\u5b8c\u6574\u517d\u68cd\u00b7\u795e\u950b\u3002.",
   "created_at": "2026-07-25T05:33:12.043643+00:00",
@@ -41,7 +41,8 @@
       "state": "jumping",
       "row": 4,
       "frames": 5,
-      "purpose": "hover or playful jump"
+      "purpose": "grounded stance-shift reaction with no vertical jump",
+      "user_semantic_override": "Remove the Little Wukong jump action: feet stay grounded and body height remains stable."
     },
     {
       "state": "failed",

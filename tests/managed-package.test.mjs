@@ -46,6 +46,10 @@ test('minimal managed package imports independently and omits development surfac
   );
   const packagedPetPolicy = JSON.parse(fs.readFileSync(path.join(target, 'pets', 'release-policy.json'), 'utf8'));
   assert.deepEqual(packagedPetPolicy.releasedPetIds, []);
+  assert.deepEqual(packagedPetPolicy.pendingPetIds, [
+    'little-bajie-v4-inart-game-motion',
+    'little-wukong-v5-yaksha-shenfeng'
+  ]);
   assert.deepEqual(packagedPetPolicy.frozenPetIds, [
     'little-bajie-v3-inart',
     'little-wukong-yaksha-shenfeng'

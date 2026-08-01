@@ -2,6 +2,8 @@
 
 状态：`INTERNAL_PASS / USER_PENDING`
 
+候选 ID：`little-bajie-v4-inart-game-motion`（与冻结旧包 `little-bajie-v3-inart` 分离）
+
 候选：
 
 - 首轮失败稿：`history/base-candidate-01-rejected-wolf-face.png`

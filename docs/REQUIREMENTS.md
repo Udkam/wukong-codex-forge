@@ -28,6 +28,7 @@
 | V15-22 | 主输入器四角与 above-composer stack 首个外层 panel 的两个上角只能裁切主题纸面，不得裁掉原生宿主或内部消息的矩形命中区；后续外层 panel 与内部消息均不得重复外部角或卡片阴影，独立 progress pill 仍保持全圆。所有纸面绘制层必须 `pointer-events:none`，高对比模式必须完全撤下 | 宿主与内部消息 computed `clip-path:none`、仅首个外层绘制层的 polygon/固定顶饰、内部 item 无 shadow、`pointer-events:none`、forced-colors、原生坐标/尺寸/语义深比较 |
 | V15-23 | 已缓存或 data URL 背景即使在赋值后同步报告 `Image.complete=true`，也必须等待同一图像的 `decode()` 门完成后才能公开 ready；稳定页面刷新必须差量对账主题标记，禁止通过每轮全量移除/重加 class 或重复写入相同 ARIA 触发 ResizeObserver/MutationObserver 自循环 | 同步 complete + 悬挂 decode 门禁、ready 前原生 paint、稳定 2.2 秒 refreshCount 不增长、停用恢复与项目资源归零 |
 | V15-24 | 未经用户明确通过的新宠物母版不得进入准备、最小包或安装链路；发布集合由单一策略文件控制，空集合必须在任何 Codex 用户目录写入前无操作退出。旧包、既有 discovery 目录、当前选择与事件记录全部只保留、不迁移、不升级、不覆盖 | 策略一致性、准备前后目录 hash、最小包缺失断言、CodexHome 不存在/已存在两态字节级不变测试 |
+| V15-25 | 新母版候选必须使用与旧冻结包不同的独立 pet id，并在策略中处于 `pending`，不得借用旧包 id 伪装为可发布版本；`released`、`pending`、`frozen` 三集合必须两两互斥。小天命人 v2 图集仍保留 schema 所需 row 4，但动作语义改为双足着地、身体高度稳定的原地移步反应，不得出现跳跃 | 策略三态互斥校验、候选 request id / verdict / 留白与透明边缘合同、最小包排除断言、row 4 语义与禁跳说明测试 |
 
 当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 合同、7 项原生表面测试和 Windows forced-colors 组合态测试；最新证据目录为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。Electron 原生下拉菜单本体不在 renderer DOM 中，当前验收范围只包含四个原生触发页签；不得把夹具中的页面元素当作下拉本体交付。
 

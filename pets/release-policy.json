@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
   "releasedPetIds": [],
+  "pendingPetIds": [
+    "little-bajie-v4-inart-game-motion",
+    "little-wukong-v5-yaksha-shenfeng"
+  ],
   "frozenPetIds": [
     "little-bajie-v3-inart",
     "little-wukong-yaksha-shenfeng"

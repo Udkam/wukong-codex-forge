@@ -2,6 +2,8 @@
 
 状态：`INTERNAL_PASS / USER_PENDING`
 
+候选 ID：`little-wukong-v5-yaksha-shenfeng`（与冻结旧包 `little-wukong-yaksha-shenfeng` 分离）
+
 候选：
 
 - 保留原图：`history/base-candidate-01-green.png`

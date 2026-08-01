@@ -4,12 +4,13 @@
 
 本节覆盖下方旧版“最终锁定与证据”。用户已明确否决旧小天命人和小八戒的视觉结果；旧 atlas、SHA、机器验证和文档继续保留，但只作为历史/失败证据，不能证明现行视觉通过。
 
-- 小天命人新 run：`artifacts/native-pets/little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725/`。旧 v4 的神锋缺握持点后的后棍身/尾端，远侧脚错误退化为灰布脚；新 base 必须先通过完整神锋六段链和两腿双足逐侧审查，动作任务才能解锁。
-- 小八戒新 run：`artifacts/native-pets/little-bajie-v4-inart-game-motion/`。旧 v3 的脸、亮青衣装和皇冠式耙头被用户否决；新 base 必须先通过成年游戏骨相、低饱和旧衣和完整九齿钉耙审查。
+- 小天命人新 run：`artifacts/native-pets/little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725/`，待审批 id 为 `little-wukong-v5-yaksha-shenfeng`。旧 v4 的冻结 id `little-wukong-yaksha-shenfeng` 不复用；其神锋缺握持点后的后棍身/尾端，远侧脚错误退化为灰布脚。新 base 必须先通过完整神锋六段链和两腿双足逐侧审查，动作任务才能解锁。
+- 小八戒新 run：`artifacts/native-pets/little-bajie-v4-inart-game-motion/`，待审批 id 为 `little-bajie-v4-inart-game-motion`。旧 v3 的冻结 id `little-bajie-v3-inart` 不复用；其脸、亮青衣装和皇冠式耙头已被用户否决。新 base 必须先通过成年游戏骨相、低饱和旧衣和完整九齿钉耙审查。
 - 两个角色因装备、持握与衣装不对称，左右跑和其余最终像素动作均不得镜像。镜像只允许用于不含身份信息的节拍草稿。
 - 两个 run 的 base 候选已通过本地透明边缘、192×208 留白、武器连续性和身份白名单，候选及失败稿均原位保留；本地通过只允许进入用户母版审计。
 - 用户明确通过前，不生成标准动作、16 向 atlas，不写入 canonical，不安装到 `%USERPROFILE%\.codex\pets`。
-- 发布事实源为 `pets/release-policy.json`。当前 `releasedPetIds` 为空，旧小八戒 v3 与旧小天命人 v4 同时冻结；准备、打包和安装三个入口都读取该策略。空批准集合不得读取历史 atlas、不得把旧包写入正式运行包，也不得创建或改变任何 Codex 用户宠物目录。
+- 发布事实源为 `pets/release-policy.json`。当前 `releasedPetIds` 为空，两个新 id 只位于 `pendingPetIds`，旧小八戒 v3 与旧小天命人 v4 的不同 id 同时冻结；三种状态两两互斥。准备、打包和安装三个入口都读取该策略。空批准集合不得读取历史 atlas、不得把待审批 base 或旧包写入正式运行包，也不得创建或改变任何 Codex 用户宠物目录。
+- Hatch Pet v2 的第 4 行仍需保留以满足 11 行 schema，但小天命人按用户要求取消跳跃：该行只允许双足落地的原地移步/稳身反应，角色高度不得出现跳起曲线。未获母版批准前只锁定语义，不生成该动作。
 
 ## 小悟空 v4：厌火夜叉套 + 兽棍·神锋
 

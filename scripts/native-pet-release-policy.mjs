@@ -24,9 +24,20 @@ export function loadNativePetReleasePolicy(repositoryRoot) {
   const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
   if (policy.schemaVersion !== 1) throw new Error('Native pet release policy schemaVersion must be 1.');
   const releasedPetIds = requireIdList(policy.releasedPetIds, 'releasedPetIds');
+  const pendingPetIds = requireIdList(policy.pendingPetIds, 'pendingPetIds');
   const frozenPetIds = requireIdList(policy.frozenPetIds, 'frozenPetIds');
-  for (const id of releasedPetIds) {
-    if (frozenPetIds.includes(id)) throw new Error(`Native pet id cannot be both released and frozen: ${id}`);
+  const states = [
+    ['released', releasedPetIds],
+    ['pending', pendingPetIds],
+    ['frozen', frozenPetIds]
+  ];
+  const seen = new Map();
+  for (const [state, ids] of states) {
+    for (const id of ids) {
+      const previous = seen.get(id);
+      if (previous) throw new Error(`Native pet id cannot be both ${previous} and ${state}: ${id}`);
+      seen.set(id, state);
+    }
   }
   if (typeof policy.approvalGate !== 'string' || !policy.approvalGate.trim()) {
     throw new Error('Native pet release policy approvalGate is required.');
@@ -35,6 +46,7 @@ export function loadNativePetReleasePolicy(repositoryRoot) {
     policyPath,
     schemaVersion: 1,
     releasedPetIds,
+    pendingPetIds,
     frozenPetIds,
     approvalGate: policy.approvalGate
   });

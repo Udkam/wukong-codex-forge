@@ -216,19 +216,21 @@ $policyPath = Join-Path $packagesRoot 'release-policy.json'
 Assert-DirectFile $policyPath 'Native pet release policy' | Out-Null
 $policy = Get-Content -LiteralPath $policyPath -Raw -Encoding UTF8 | ConvertFrom-Json
 if ([int]$policy.schemaVersion -ne 1) { throw 'Native pet release policy schemaVersion must be 1.' }
-if (-not ($policy.PSObject.Properties.Name -contains 'releasedPetIds') -or -not ($policy.PSObject.Properties.Name -contains 'frozenPetIds')) {
-    throw 'Native pet release policy must define releasedPetIds and frozenPetIds.'
+if (-not ($policy.PSObject.Properties.Name -contains 'releasedPetIds') -or -not ($policy.PSObject.Properties.Name -contains 'pendingPetIds') -or -not ($policy.PSObject.Properties.Name -contains 'frozenPetIds')) {
+    throw 'Native pet release policy must define releasedPetIds, pendingPetIds, and frozenPetIds.'
 }
-if (-not ($policy.releasedPetIds -is [Array]) -or -not ($policy.frozenPetIds -is [Array])) {
-    throw 'Native pet release policy releasedPetIds and frozenPetIds must be arrays.'
+if (-not ($policy.releasedPetIds -is [Array]) -or -not ($policy.pendingPetIds -is [Array]) -or -not ($policy.frozenPetIds -is [Array])) {
+    throw 'Native pet release policy releasedPetIds, pendingPetIds, and frozenPetIds must be arrays.'
 }
 if (-not ($policy.PSObject.Properties.Name -contains 'approvalGate') -or [string]::IsNullOrWhiteSpace([string]$policy.approvalGate)) {
     throw 'Native pet release policy approvalGate is required.'
 }
 $releasedPetIds = @($policy.releasedPetIds | ForEach-Object { [string]$_ })
+$pendingPetIds = @($policy.pendingPetIds | ForEach-Object { [string]$_ })
 $frozenPetIds = @($policy.frozenPetIds | ForEach-Object { [string]$_ })
 foreach ($list in @(
     [pscustomobject]@{ Name = 'releasedPetIds'; Values = $releasedPetIds },
+    [pscustomobject]@{ Name = 'pendingPetIds'; Values = $pendingPetIds },
     [pscustomobject]@{ Name = 'frozenPetIds'; Values = $frozenPetIds }
 )) {
     foreach ($petId in $list.Values) {
@@ -240,9 +242,17 @@ foreach ($list in @(
         throw "$($list.Name) contains duplicate ids."
     }
 }
-foreach ($releasedPetId in $releasedPetIds) {
-    if ($frozenPetIds -contains $releasedPetId) {
-        throw "Native pet id cannot be both released and frozen: $releasedPetId"
+$stateByPetId = @{}
+foreach ($state in @(
+    [pscustomobject]@{ Name = 'released'; Values = $releasedPetIds },
+    [pscustomobject]@{ Name = 'pending'; Values = $pendingPetIds },
+    [pscustomobject]@{ Name = 'frozen'; Values = $frozenPetIds }
+)) {
+    foreach ($petId in $state.Values) {
+        if ($stateByPetId.ContainsKey($petId)) {
+            throw "Native pet id cannot be both $($stateByPetId[$petId]) and $($state.Name): $petId"
+        }
+        $stateByPetId[$petId] = $state.Name
     }
 }
 if ($releasedPetIds.Count -eq 0) {
