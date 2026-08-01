@@ -112,6 +112,39 @@ try {
   const pages = browser.contexts().flatMap(context => context.pages());
   const page = pages.find(candidate => /^app:\/(?:\/codex\/|\/-\/index\.html)/.test(candidate.url()));
   if (!page) throw Error('No Codex app renderer page was found');
+  await page.waitForFunction(
+    () => {
+      const nativeShell = document.querySelector([
+        'aside.app-shell-left-panel',
+        'aside[data-testid="app-shell-floating-left-panel"]',
+        '[data-app-shell-main-content-layout]'
+      ].join(','));
+      const nativeSurface = document.querySelector([
+        '.composer-surface-chrome',
+        '[data-testid="home-icon"]',
+        '[data-feature="game-source"]',
+        '.heading-xl'
+      ].join(','));
+      return Boolean(nativeShell && nativeSurface);
+    },
+    null,
+    { timeout: 30000 }
+  );
+  await page.waitForFunction(
+    () => {
+      const root = document.documentElement;
+      const overlay = document.getElementById('wukong-forge-background');
+      return Boolean(
+        window.__wukongCodexForgeRuntimeV13 &&
+        root.classList.contains('forge-ink-mountain') &&
+        root.dataset.forgeBackgroundReady === 'true' &&
+        overlay?.dataset.forgeReady === 'true'
+      );
+    },
+    null,
+    { timeout: 30000 }
+  );
+  await page.waitForTimeout(650);
   let transitionProof = null;
   const captureTransition = async () => {
     if (values['sample-transition'] !== 'true') {

@@ -2,6 +2,13 @@
 
 ## 2026-08-01
 
+### V29 真实 Codex 整页捕获 readiness 修复
+
+- 首次一次性真实 Codex 整页捕获只得到带战斗背景的启动 Logo。JSON 证明 V13 运行时已激活，但原生 composer 尚不存在、主题表面标记仅 1 个；该图明确判定为失败证据，不作为视觉验收。
+- 根因是捕获器连接到正确 `app://-/index.html` 后立即截图，没有等待启动页切换到原生 app shell。现在先等待 `aside.app-shell-left-panel` / 官方 shell layout 与 landing/composer 任一实体同时存在，再等待根节点 `forgeBackgroundReady` 和 overlay `forgeReady`，最后保留 650 ms 静止期。
+- 失败捕获也按三重归属关闭：CDP browser PID、独立 launcher PID 与唯一 disable request 一致后恢复原生 DOM；root、owner、专用端口和项目进程均归零。期间没有碰当前控制窗口，没有按进程名批量关闭，也没有保留调试窗口。
+- 本段只修验收工具的截图时序，不改变主题视觉、原生 DOM、宠物或最终生命周期；修复后须再执行一次单窗口整页捕获才能形成真实视觉证据。
+
 ### V28 当前 Codex ASAR 来源锁
 
 - 只读复核 Microsoft Store 包仍为 `OpenAI.Codex_26.715.2305.0_x64__2p2nqsd0c76g0`；`app.asar` 长度为 `201143773` 字节，SHA-256 为 `D909924D6AE7A160AC78B88F01F9B16F079E6ABBE3F677427B752A411C6A3449`。

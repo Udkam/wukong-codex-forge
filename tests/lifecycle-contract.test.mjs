@@ -54,6 +54,14 @@ test('live capture closes only an explicitly owned transient debug session', () 
   assert.match(capture, /disable-\[0-9a-f\]\{32\}/i);
   assert.match(capture, /SystemInfo\.getProcessInfo/);
   assert.match(capture, /Transient cleanup PID mismatch/);
+  assert.match(capture, /aside\.app-shell-left-panel/);
+  assert.match(capture, /\.composer-surface-chrome/);
+  assert.match(capture, /root\.dataset\.forgeBackgroundReady === 'true'/);
+  assert.match(capture, /overlay\?\.dataset\.forgeReady === 'true'/);
+  assert.ok(
+    capture.indexOf('aside.app-shell-left-panel') < capture.indexOf('page.screenshot'),
+    'capture must wait for the native shell before taking evidence'
+  );
   assert.match(capture, /Browser\.close/);
   assert.match(
     capture,
