@@ -9,7 +9,8 @@
 - **正式生命周期不再依赖常驻 PowerShell**：普通受管入口使用 Codex 自带 Node，经过 append-only `.mjs` bridge 启动 `runtime/host.mjs`，再启动官方 `ChatGPT.exe`。host 通过浏览器 Target/Page/Runtime 事件与文件系统 marker 事件工作，不做 1700ms target 轮询，并跟随官方根进程退出。
 - **移除即回原生**：保留式主题目录或 marker 不存在时，同一 bridge 在下一次受管启动中直接运行官方 `ChatGPT.exe`。不会修改 `ChatGPT.exe`、`app.asar`、WindowsApps 或官方配置；不会强制改写当前已打开的非受管窗口。
 - **适用入口有明确边界**：安装器管理的开始菜单 `ChatGPT` 与 `ChatGPT - Wukong Theme` 进入上述链路；直接运行 WindowsApps、AUMID、协议链接或第三方快捷方式可能绕过它。Store 包升级后需重新运行适配器验证，以刷新版本化的内置 Node 路径。
-- **当前剩余发布门**：定向合同、保留式安装、真实单实例随启随停与完整页非宠物视觉/资源清理证据。无头 fixture 不能代替真实 Codex 验收。
+- **正式安装与生命周期已落地**：append-only release `0.13.0-20260801-144611` 已安装；两个开始菜单入口均使用 Codex 内置 Node + 同一 bridge，仓库与安装副本的 event host 哈希一致。生命周期/恢复合同 23/23、最小包 1/1 通过。
+- **当前唯一剩余发布门**：在绿色资源窗口用一个临时受管实例取得含 queue/goal 的完整页非宠物视觉证据，并在截图后证明 root、host、子进程和端口归零。无头 fixture 不能代替真实 Codex 验收；宠物与葫芦均不在本轮门内。
 
 ## V15–V33 实现与审计历史
 
@@ -34,7 +35,7 @@
 - **最终随 Codex 启动集成（已由 V34 取代）**：本条记录的是旧暂缓状态；现行正式候选链以本页 V34 小节为准。
 - **本地素材只读**：`E:\GameRecord\Black Myth Wukong` 与 `D:\SteamLibrary\steamapps\common\BlackMythWukong` 可用于索引、比对和复制式抽帧；项目不得删除、移动或覆盖其中任何原文件。
 
-当前定向合同覆盖 `cover` 全窗、首帧解码门控、主表面透明、DOMRect 约束、稳态单纹理、单请求解码、9 图像素预算、当前定义与最小包排除门禁。真实 Codex 独立调试包仍只在截图和资源采样期间临时启动，取证后立即关闭；输入框和宠物继续以视觉审查为发布门槛。
+当前定向合同覆盖 `cover` 全窗、首帧解码门控、主表面透明、DOMRect 约束、稳态单纹理、单请求解码、9 图像素预算、当前定义与最小包排除门禁。真实 Codex 独立调试包仍只在截图和资源采样期间临时启动，取证后立即关闭；输入框/queue/goal 的最终完整页仍需实机视觉证据，延期宠物不再是本轮发布门槛。
 
 当前新增归档的完整页面技术证据（均为无头原生结构 fixture，不等于真实 Codex 窗口或用户视觉验收）：
 

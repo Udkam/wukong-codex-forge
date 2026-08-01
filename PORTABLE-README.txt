@@ -12,7 +12,7 @@ CURRENT V34 RELEASE CANDIDATE
 
 The event host follows the official ChatGPT root process, subscribes to browser Target/Page/Runtime events, and exits when that root exits. Removing the retained theme package makes the append-only bridge fall back to the official native ChatGPT executable on the next managed launch. Direct WindowsApps/AUMID/protocol/third-party entries can bypass this managed Start Menu chain. The currently open unmanaged Codex window is never force-rewritten.
 
-The two deferred pets and the canceled gourd are not part of this release gate. Fixture screenshots remain technical evidence rather than user visual approval; final installation evidence must come from one temporary managed Codex instance that is closed immediately after capture.
+The two deferred pets and the canceled gourd are not part of this release gate. Retained release 0.13.0-20260801-144611 is installed, both managed Start Menu entries use the Codex embedded Node bridge, and focused lifecycle/restore contracts pass 23/23 with the minimal package contract at 1/1. Fixture screenshots remain technical evidence rather than user visual approval; the only remaining gate is one complete-page managed Codex capture with queue/goal state, followed by exact root/host/port cleanup.
 
 HISTORICAL V12 INSTRUCTIONS (retained; superseded above)
 

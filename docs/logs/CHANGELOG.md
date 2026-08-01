@@ -5,9 +5,10 @@
 - Replaced the formal persistent PowerShell/watcher launch path with Codex embedded Node, an append-only bridge, `runtime/host.mjs`, and the official ChatGPT root process.
 - The host is event-driven through browser Target/Page/Runtime and marker filesystem events; it exits with the official root and verifies native restoration on disable.
 - Pets are deferred and excluded from this release gate; `releasedPetIds` remains empty, existing pet state is preserved, and the canceled gourd remains outside the active package.
-- Version and current documentation move to 0.13.0 / V34. Real retained installation and one-instance lifecycle/visual/resource evidence remain the final verification step.
+- Version and current documentation move to 0.13.0 / V34. Append-only retained release `0.13.0-20260801-144611` is installed; both managed Start Menu entries use the Codex embedded Node bridge, and the installed/repository host hashes match.
 - Renderer startup now waits without a global timeout while individual CDP operations remain bounded. Focused lifecycle/restore contracts pass 23/23 and the minimal managed package passes 1/1.
-- A single owned live attempt was stopped when machine CPU reached the red threshold; disable was verified and its exact root, host, descendants, and port were released. No screenshot was produced or claimed as acceptance.
+- Three single-owned live attempts failed closed: one earlier red-threshold stop, one renderer-ready/deadline collision, and one later red-threshold stop. Every attempt returned `disabled-verified` and released its exact root, host, descendants, and port. No screenshot was produced or claimed as acceptance.
+- With pets deferred and the gourd canceled, the only remaining release gate is one real managed complete-page capture containing queue/goal state and post-capture resource cleanup; fixture evidence is not substituted for this gate.
 
 ## 2026-08-01 — V25 unapproved native pet release gate
 

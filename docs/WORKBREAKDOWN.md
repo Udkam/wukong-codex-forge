@@ -5,7 +5,7 @@
 | 工作项 | 范围 | 完成证据 |
 | --- | --- | --- |
 | 非宠物视觉收口 | 背景、过渡、landing、侧栏/顶部、composer/queue/goal、progress、环境卡 | 定向合同 + 一个临时真实 Codex 完整页；fixture 不冒充实机 |
-| 正式生命周期 | 内置 Node、append-only bridge、事件 host、官方根进程跟随、移除回原生 | 保留式安装、双快捷方式核验、启停/恢复、host/端口归零 |
+| 正式生命周期 | 内置 Node、append-only bridge、事件 host、官方根进程跟随、移除回原生 | `0.13.0-20260801-144611` 已保留式安装；双快捷方式与 host 哈希已核验，23/23 生命周期/恢复合同通过 |
 | 资源与发布 | 稳态单纹理、过渡双纹理、无常驻 PowerShell/服务/轮询、精确暂存与 push | 资源采样、focused tests、gitleaks、远端 SHA |
 | 宠物 | 整体延期，保持现状 | 本轮宠物/策略/安装状态零修改；不作为完成阻断项 |
 | 葫芦 | 取消 | 活动包与运行时不存在引用 |
@@ -46,7 +46,7 @@
 | 主对话 · decoded asset guard | 在不启动调试窗口的前提下阻断高压缩率超大位图造成的解码峰值 | 9 图总计 19,258,880 px、最坏双图 4,743,680 px；内存内超大 PNG 拒绝、实际 JPEG/WebP 头解析与最小包导入通过 |
 | 主对话 · rejected background withdrawal | 按用户最新审稿撤下候选大圣图与原夜叉王裂焰图，同时保留源文件 | 活动图库收敛为 9 图、解码总量降至 19,258,880 px；active/default/native preview/最小包排除合同已通过，等待单一临时 Codex 实机截图 |
 | 主对话 · pets | 本轮延期，保留现状 | 用户已把两个宠物整体移出当前完成标准；不修改造型、动作、武器、图集、策略或安装状态，后续收到明确指令再恢复 |
-| 主对话 · startup | 最后实现非 PowerShell 的宿主生命周期绑定 | 当前非宠物视觉范围收口后推进；延期宠物不再阻断，不得用开发 PowerShell watcher 冒充正式方案 |
+| 主对话 · startup | 实现并安装非 PowerShell 的宿主生命周期绑定 | 已完成 Codex 内置 Node + append-only bridge + event host 正式链及保留式安装；只剩一个绿色资源窗口下的完整页 queue/goal 联合实机证据与截图后精确归零，延期宠物不再阻断 |
 
 ### V15 小步推送门禁
 

@@ -9,8 +9,9 @@
 - 本轮完成标准只包含非宠物主题、背景/过渡/覆盖、输入区与相邻原生状态、侧栏/顶部/环境卡、资源预算、正式生命周期、定向测试、文档与分段推送。
 - 小天命人和小八戒整体延期：不修改造型、动作、武器、图集、发布策略或本地安装状态，也不再阻塞本轮完成。
 - 葫芦保持取消，不进入活动主题、运行包或验收。
-- 正式生命周期候选已经实现为 `Codex embedded Node -> append-only bridge -> runtime/host.mjs -> official ChatGPT.exe`；下一门是保留式安装、真实单实例启停/恢复和资源归零验证。
-- 当前生命周期与恢复定向合同为 23/23、最小发布包合同为 1/1。2026-08-01 的最新单实例尝试在 renderer 等待阶段把整机 CPU 推至 94.1% 红线，已按资源合同中止；停用得到 `disabled-verified`，精确 root、host、子进程与专用端口全部归零。该次尝试没有截图，因此不冒充最终视觉验收。
+- 正式生命周期已经实现为 `Codex embedded Node -> append-only bridge -> runtime/host.mjs -> official ChatGPT.exe`，并完成保留式安装：当前 append-only release 为 `0.13.0-20260801-144611`，两个开始菜单入口均指向 Codex 内置 Node 与同一 bridge；仓库和安装副本的 `runtime/host.mjs` SHA-256 一致。
+- 当前生命周期与恢复定向合同为 23/23、最小发布包合同为 1/1，`releasedPetIds` 为空且安装阶段对宠物无操作。当前唯一剩余联合门是：在绿色资源窗口用一个临时受管实例取得含侧栏、顶部栏、工作区、queue/goal、短卷输入器与环境卡的完整页实机证据，并在截图后证明 root、host、子进程与端口全部归零。
+- 2026-08-01 后续两次单实例尝试均按 fail-closed 处理：一次在 renderer 刚就绪时撞到外层时限，另一次在整机 CPU 越过 90% 红线时主动中止；两次均得到 `disabled-verified` 且精确 root、host 与专用端口归零，没有生成 PNG，也不冒充最终视觉验收。
 - 当前已打开的非受管 Codex 窗口不被强制关闭或改写；受管开始菜单入口在下一次完整启动生效。直接 WindowsApps/AUMID/协议/第三方入口可能绕过受管链，必须如实披露。
 
 ## 最终目标
@@ -81,11 +82,11 @@
 
 ### 7. 最终随 Codex 启停
 
-仅在当前非宠物视觉范围完成后集中处理；宠物延期不再阻断本阶段。
+正式实现与保留式安装已经完成；宠物延期不再阻断本阶段。
 
-- 优先寻找与 Codex 宿主生命周期绑定的原生或轻量宿主方案。
-- 不把 PowerShell 常驻 watcher、启动快捷方式或手动重启作为正式交付。
-- 保持“安装即用、移除即回原生”的用户体验。
+- 当前受管链使用 Codex 内置 Node、append-only bridge 与事件驱动 host，不保留 PowerShell watcher，也不通过固定周期轮询 renderer。
+- 保留式主题 marker 存在时进入主题 host；marker 或主题目录不存在时，同一 bridge 在下一次受管启动直接运行官方 `ChatGPT.exe`。
+- 当前已打开的非受管窗口不强制改写；最终还需把一次真实受管窗口的完整页视觉与启停/资源归零证据合并为同一验收记录。
 
 ## 不可违反的约束
 
@@ -139,4 +140,4 @@
 - V29 已定位一次真实整页捕获只出现启动 Logo 的原因：背景运行时已 ready，但捕获器未等待原生 shell 与 composer/landing 节点。验收脚本现在把两组 ready 条件设为截图硬门，并保留 650 ms 静止期；首次失败捕获已完成原生恢复，root、launcher、端口和项目进程均归零，不把它冒充视觉通过。
 - V30 已用修复后的捕获器完成一次真实 Codex landing 整页技术预验收：`1280×820 @ 125%` 下原生侧栏为 `275×784`、工作区 `1005×784`、composer 列 `736×143`、实际纸面 `736×100`；背景为 `cover` 且只有一层加载活动纹理，60 个主题节点、原生 editor 与 contenteditable 均存在。原图含用户项目名，仅本地保留；tracked 摘要与哈希位于 `artifacts/test-runs/v30-live-landing-contract-20260801/acceptance.json`。该门不代表用户视觉通过，也不覆盖 queue/goal、环境卡、双宠物或最终生命周期。
 - V31 修复真实捕获在选任务超时后绕过关闭逻辑的资源缺口：成功与失败现在共用同一三重归属清理函数。真实 renderer 故意打开不存在任务触发 `TimeoutError` 后未生成 PNG，仍观察到原生恢复与 watcher 确认，唯一 root、launcher、端口和项目进程全部归零；去标识化证据位于 `artifacts/test-runs/v31-live-capture-failure-contract-20260801/acceptance.json`。当前便携 profile 未出现目标任务标题，因此真实 queue/goal 页面仍未通过，不能由 fixture 顶替。
-- 最终随 Codex 启停方案尚未开始，按要求留到所有视觉内容完成后处理。
+- V34 已完成非 PowerShell 正式随启随停实现与 `0.13.0-20260801-144611` 保留式安装；两个开始菜单入口均使用 Codex 内置 Node + append-only bridge，安装副本与仓库 `runtime/host.mjs` 哈希一致。生命周期/恢复合同 23/23、最小包 1/1 通过；剩余的是资源绿色窗口下的一次完整页真实 queue/goal 联合取证，不再包含宠物或葫芦。
