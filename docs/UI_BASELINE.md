@@ -7,6 +7,8 @@
 - 2026-07-21 只读检查本机 Microsoft Store 包：`C:\Program Files\WindowsApps\OpenAI.Codex_26.715.2305.0_x64__2p2nqsd0c76g0`。
 - UI 来源是 `app\resources\app.asar` 内的 `webview/index.html` 与打包 CSS/JS；只把检查副本展开到项目的只读临时工作目录，没有修改 `WindowsApps`、`app.asar`、`ChatGPT.exe` 或签名文件。
 - 本轮没有使用 computer use，也没有用视觉点击推测 DOM。仓库保留的只读摘录位于 `docs/logs/asar-inspect/`。
+- 2026-08-01 复核当前安装包仍为 `26.715.2305.0`；`app.asar` 长度为 `201143773` 字节，SHA-256 为 `D909924D6AE7A160AC78B88F01F9B16F079E6ABBE3F677427B752A411C6A3449`。结构化来源锁位于 `docs/native-asar-provenance.json`。
+- `native-asar-ui-contract` 使用固定 1 MiB 缓冲区分块计算哈希；包目录名、长度或哈希任一漂移都会明确失败，禁止在重新只读审计前继续沿用旧选择器、旧尺寸或旧截图。
 
 ## 原生结构合同
 

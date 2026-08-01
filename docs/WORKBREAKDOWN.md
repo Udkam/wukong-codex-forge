@@ -23,6 +23,7 @@
 | 主对话 · V24 background transition | 在同一原生结构页面中证明战斗稳态、转入风景、风景稳态和返回战斗四阶段的覆盖与资源边界 | 四张 `2000×1125` 完整页面与 JSON 已归档；CSS 视口为 `1600×900`，四层逐边覆盖，持图 `1 → 2 → 1 → 1`、预取 0、无全屏 filter / 永久 `will-change`。只关闭背景技术门，不替代正式窗口验收 |
 | 主对话 · V25/V26 pet release gate | 把旧否决包、新待审批母版与未来可发布包分成冻结/待审/批准三态，并保持空批准集合无写入 | `released` 为空，两个新 id 只在 `pending`，两个旧 id 只在 `frozen`；三态两两互斥，准备/最小包/安装链不携带待审或冻结包。仍须用户分别通过两只母版后才能进入动作阶段 |
 | 主对话 · V27 evidence archive | 把 V23/V24 已引用的完整页与机器可读证据纳入 Git，并同步 README、便携说明、需求、分工与工作日志 | 只归档不可变 fixture 证据和文档合同；不改运行时、不启动浏览器/调试窗口，也不把 fixture 写成真实 Codex 或用户视觉通过 |
+| 主对话 · V28 ASAR provenance lock | 将当前原生包版本、目录、字节数与 SHA-256 写成可审计来源锁，并让结构/几何合同在应用漂移时失效即停 | 1 MiB 分块哈希，不一次性载入 ASAR；不展开、不修改 WindowsApps 或官方包；通过后仍不等于真实 Codex 视觉验收 |
 | 主对话 · V21 minimal package contract | 核对活动主题、历史定义与最小包白名单，排除已退役葫芦/旧宠物引用而不删除本地文件 | `active.json` 为页面 payload 唯一活动清单；`native-wukong.json` 保留为原生预览；`ink-mountain.json` 只作历史留档且受反向打包断言保护。最小包/主题/像素预算定向测试 9/9 通过 |
 | 主对话 · V19 first-frame/quiescence | 修复缓存背景 ready 竞态与稳定页面标记重贴造成的观察器自循环；不改变图库、遮罩、构图或输入器验收形状 | 同步 complete 仍等待 decode；标记按目标集合差量对账，相同题字 ARIA 不重复写入。背景/资源/包定向 24/24，稳定 2.2 秒无新增 refresh，未启动真实调试窗口 |
 | 主对话 · transient review cleanup | 临时真实窗口截图后按归属关闭并证明无残留 | 普通 capture 不关窗；显式清理需 launcher + disable request + CDP browser PID 三重一致。Windows Electron 根进程超时仅允许精确 `/PID` 树兜底；真实复验后 root/owner/profile process/port 均为 0，生命周期定向测试 12/12 |

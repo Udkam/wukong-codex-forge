@@ -2,10 +2,31 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { nativeUiBaseline } from './runtime-fixture.mjs';
 
 const require = createRequire(import.meta.url);
+const provenance = JSON.parse(fs.readFileSync(
+  new URL('../docs/native-asar-provenance.json', import.meta.url),
+  'utf8'
+));
+
+const sha256FileBounded = filePath => {
+  const hash = createHash('sha256');
+  const buffer = Buffer.allocUnsafe(1024 * 1024);
+  const handle = fs.openSync(filePath, 'r');
+  try {
+    let bytesRead = 0;
+    do {
+      bytesRead = fs.readSync(handle, buffer, 0, buffer.length, null);
+      if (bytesRead > 0) hash.update(buffer.subarray(0, bytesRead));
+    } while (bytesRead > 0);
+  } finally {
+    fs.closeSync(handle);
+  }
+  return hash.digest('hex').toUpperCase();
+};
 
 const findLocalAsar = () => {
   const explicit = process.env.CODEX_LOCAL_ASAR;
@@ -72,6 +93,30 @@ const readMatchingAsset = (entries, pattern, requiredText) => {
 test('local ChatGPT.exe ASAR remains the authoritative native geometry contract', {
   skip: skipReason
 }, () => {
+  const packageDirectory = path.dirname(path.dirname(path.dirname(archive)));
+  const packageDirectoryName = path.basename(packageDirectory);
+  assert.equal(provenance.schemaVersion, 1);
+  assert.equal(
+    path.relative(packageDirectory, archive).replaceAll('\\', '/'),
+    provenance.asarRelativePath,
+    'native Codex app.asar relative path drifted; re-audit the installed package layout'
+  );
+  assert.equal(
+    packageDirectoryName,
+    provenance.packageDirectoryName,
+    'native Codex package drifted; re-audit app.asar before changing theme selectors or geometry'
+  );
+  assert.equal(
+    fs.statSync(archive).size,
+    provenance.sizeBytes,
+    'native Codex app.asar size drifted; re-audit before updating the provenance lock'
+  );
+  assert.equal(
+    sha256FileBounded(archive),
+    provenance.sha256,
+    'native Codex app.asar hash drifted; do not reuse the previous UI baseline'
+  );
+
   const entries = asar.listPackage(archive);
   const baseCss = readMatchingAsset(
     entries,
@@ -291,7 +336,7 @@ test('local ChatGPT.exe ASAR remains the authoritative native geometry contract'
   }
 
   assert.deepEqual(nativeUiBaseline, {
-    source: 'ChatGPT.exe 26.715.2305.0 app.asar',
+    source: `ChatGPT.exe ${provenance.packageVersion} app.asar`,
     rendererDeviceScaleFactor: 1.25,
     spacing: 4,
     toolbarHeight: 46,
