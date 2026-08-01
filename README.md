@@ -13,7 +13,7 @@
 - **输入框已进入 V22 原生内层消息连续纸面验收**：主纸面按 `184:25` 比例钳制在 `96–120px`，最大原生列宽 `736px` 时约为 `736×100px`。只读解包当前 Codex 后，排队区按“一个外层 queue panel 内含 N 个 internal queue item，再接一个目标 panel”的真实拓扑绘制：只有整组首个外层面板拥有外部上角和固定高度顶饰，每条内部消息各有独立纸纹与原生 `gap-px` 接缝，后续目标面板以直边连续承接；不会再把每条消息伪装成独立四角卡片，也不会拉长一张总背景。独立 progress pill 才是全圆。原生文字、按钮、ARIA、底部锚点和命中区保持不变，技术门禁通过不等于用户视觉验收完成。
 - **composer 不堆微缩道具**：夜叉套与兽棍·神锋由 Hatch Pet 小天命人完整表现，金箍棒由战斗背景完整表现；输入框只在授权的短卷页轮廓内承接游戏 UI 的纸面、云纹、回纹角饰与信息层级。不得加栏、改字、改命中区或用生成图补造装备细节。
 - **Hatch Pet 分开验收**：当前重新建立 `little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725` 与 `little-bajie-v4-inart-game-motion` 两条 run；基础候选已通过完整神锋/双足和成年猪妖/完整九齿钉耙的本地门，仍须先由用户审定母版，未通过前不扩展动作。
-- **错误小天命人继续受发布门禁保护**：仓库旧文件、用户 discovery 目录与当前宠物选择均保留；准备、打包和安装采用显式白名单，不读取、不复制、不迁移或升级被否决的悟空包。
+- **两个旧宠物均受发布门禁保护**：仓库旧文件、用户 discovery 目录与当前宠物选择均保留；当前批准集合为空，准备、打包和安装不读取、不复制、不迁移或升级任何被否决的旧宠物包。
 - **最小包只携带现行定义**：`themes/active.json` 是页面 payload 的唯一活动清单，`themes/native-wukong.json` 只承担原生外观预览；含退役葫芦与旧宠物引用的 `themes/ink-mountain.json` 原位保留为历史文件，但不会进入正式运行包。
 - **最终随 Codex 启动集成暂缓**：现有 retained-release / hash bridge 继续只承担开发与回归入口，不再把 PowerShell 快捷方式桥接描述为最终交付。按用户指定顺序，待背景、新建页、composer 与两只 Hatch Pet 全部视觉验收后，再单独实现宿主级随启随停方案。
 - **本地素材只读**：`E:\GameRecord\Black Myth Wukong` 与 `D:\SteamLibrary\steamapps\common\BlackMythWukong` 可用于索引、比对和复制式抽帧；项目不得删除、移动或覆盖其中任何原文件。
@@ -44,7 +44,7 @@ fixture 只用于稳定复核 landing/thread 两类 DOM。真实 Codex renderer 
 - [小八戒原生宠物层](docs/screenshots/live-codex-v11-bajie-pet-linked-payload-20260722.png)与[小悟空原生宠物层](docs/screenshots/live-codex-v11-wukong-pet-linked-payload-20260722.png)
 - [小八戒 11 行动作表](docs/pets/little-bajie-v3-inart/contact-sheet.png)、[小悟空 11 行动作表](docs/pets/little-wukong-yaksha-shenfeng/contact-sheet.png)
 
-`start-theme.cmd` 会先运行 `scripts/install-native-pets.ps1`。V12 发布白名单当前只包含已保留的小八戒包；被否决的小天命人源包仍留在仓库，但不会被新发行物复制或被安装器读取。官方 Codex 只扫描 `Dirent.isDirectory()` 为真的顶层目录，因此安装器为白名单包建立真实发现目录，并在其内部放置 hash 版本化 `payload-*` 目录 junction；派生 `pet.json` 指向对应 `payload-*/spritesheet.webp`。这样不需要管理员或 Developer Mode，不复制多兆字节 atlas。若检测到白名单宠物的早期直接副本，安装器先把原 manifest 逐字节保存在 `source-pet.json`，旧 atlas 也原位保留，再迁移到 payload 路径；不删除、不移动任何已有文件。安装记录只追加到包内 `.wukong-runtime/native-pet-links.jsonl`，内容冲突时 fail closed。
+`start-theme.cmd` 会调用 `scripts/install-native-pets.ps1`，但宠物发布集合只由包内 `pets/release-policy.json` 决定。当前两个重建母版都尚待用户审计，因此批准集合为空：安装器在创建 CodexHome、宠物目录或事件日志前直接无操作返回，既有宠物、选择与 discovery 目录完全不变。未来只有在用户明确通过新母版并单独更新发布策略后，安装器才会为获准包建立真实发现目录，并在其内部使用 hash 版本化 `payload-*` junction；旧 payload 和 metadata 仍按 append-only 合同保留。
 
 ## 0.9.0 / V10 历史交付（保留）
 

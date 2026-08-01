@@ -1,5 +1,11 @@
 # Local work log
 
+## 2026-08-01 — V25 unapproved native pet release gate
+
+- Unified preparation, packaging, and installation through `pets/release-policy.json`; `releasedPetIds` is empty and both rejected historical pets are frozen.
+- Preparation performs no historical atlas read/write, the managed package includes no old pet payload, and installation returns before touching Codex user directories or runtime records.
+- Focused contracts passed: native pets 3 pass / 2 historical skip and managed package 1/1. No browser, full suite, server, or listener was started.
+
 ## 2026-07-31 — V24 background transition lifecycle proof
 
 - Added one-page, four-stage full-viewport capture evidence for landing battle, landing-to-thread crossfade, thread scenery, and returned landing battle states.

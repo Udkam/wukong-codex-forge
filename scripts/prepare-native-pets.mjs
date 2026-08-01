@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadNativePetReleasePolicy } from './native-pet-release-policy.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packageRoot = path.join(repositoryRoot, 'pets');
@@ -40,9 +41,18 @@ const pets = [
     description: '身着旧青衣、手持完整九齿钉耙的可爱小八戒。'
   }
 ];
-const releasedPetIds = new Set([
-  'little-bajie-v3-inart'
-]);
+const releasePolicy = loadNativePetReleasePolicy(repositoryRoot);
+const releasedPetIds = new Set(releasePolicy.releasedPetIds);
+const frozenPetIds = new Set(releasePolicy.frozenPetIds);
+const knownPetIds = new Set(pets.map(spec => spec.id));
+for (const id of [...releasedPetIds, ...frozenPetIds]) {
+  if (!knownPetIds.has(id)) throw new Error(`Native pet release policy references an unknown package: ${id}`);
+}
+for (const id of knownPetIds) {
+  if (!releasedPetIds.has(id) && !frozenPetIds.has(id)) {
+    throw new Error(`Native pet package is neither released nor frozen: ${id}`);
+  }
+}
 
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 const jsonBytes = value => Buffer.from(`${JSON.stringify(value, null, 2)}\n`, 'utf8');
@@ -216,12 +226,15 @@ const prepared = pets.filter(spec => releasedPetIds.has(spec.id)).map(spec => {
   return { spec, atlasBytes, validationBytes, manifestBytes, proofBytes };
 });
 
-for (const spec of pets.filter(candidate => !releasedPetIds.has(candidate.id))) {
+for (const spec of pets.filter(candidate => frozenPetIds.has(candidate.id))) {
   console.log(`${spec.id}: frozen; retained source and package files were not read or modified`);
 }
 
-assertDirectDirectory(packageRoot, 'Native pet package root');
+if (prepared.length === 0) {
+  console.log('No native Hatch Pet base has user approval; preparation completed without reading or modifying historical packages.');
+}
 for (const item of prepared) {
+  assertDirectDirectory(packageRoot, 'Native pet package root');
   const destination = path.join(packageRoot, item.spec.id);
   assertDirectDirectory(destination, `Native pet package ${item.spec.id}`);
   const results = {

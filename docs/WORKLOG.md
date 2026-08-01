@@ -1,5 +1,14 @@
 # 工作日志
 
+## 2026-08-01
+
+### V25 未批准宠物发布门收口
+
+- 只读对账发现现行目标已冻结旧小天命人和旧小八戒，但 `prepare-native-pets.mjs`、`package-runtime.mjs` 与 `install-native-pets.ps1` 仍各自保留旧小八戒 v3 白名单，正式包和启动链因此仍可能携带并安装用户已否决的旧宠物。
+- 新增单一 `pets/release-policy.json` 与只读 Node 校验器。当前批准集合为空，两个历史包均冻结；准备脚本只输出冻结状态，不读取候选 atlas 或改写历史包。
+- 最小包继续携带安装器与策略文件，但不携带任何旧宠物 manifest、atlas、validation 或 proof。安装器先验证策略，在解析到空批准集合后立即返回，早于 CodexHome、`pets` 和 `.wukong-runtime` 的创建或事件追加。
+- 定向验证：Node 语法 5/5；`native-pets-contract` 3 pass / 2 historical skip；`managed-package` 1/1。隔离证据保留在测试输出所列临时目录；未启动浏览器、开发服务器、监听端口或常驻工具。
+
 ## 2026-07-31
 
 ### V24 背景四阶段覆盖与资源门

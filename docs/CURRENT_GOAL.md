@@ -128,4 +128,5 @@
 - 当前 Electron 的“文件/编辑/视图/帮助”下拉内容由主进程原生菜单绘制，不在 renderer DOM 中；本阶段只对四个原生触发页签做材质替换，不能把测试夹具伪装成已改造原生下拉菜单。
 - 金箍棒图案已从旧版约 40×34 px 的有效占位放大到原生槽位内约 50×42 px，112×112 资源为 3.2 KiB；1× fixture 可辨认完整端箍且无边缘裁切，原生几何不变。无头证据位于 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-49-40-653Z/`，用户实机验收仍未完成。
 - 宠物已进入 Hatch Pet v2 全量重做：新建 `little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725` 与 `little-bajie-v4-inart-game-motion` 两个独立 run，旧 canonical/atlas 全部冻结且不复用。两只 base 候选已分别通过完整神锋/双足与成年猪妖/完整九齿钉耙的本地门，并完成透明边缘与 192×208 留白验证；下一步是用户母版审计，未通过前不扩展动作。
+- V25 已把宠物发布门收口到唯一 `pets/release-policy.json`：`releasedPetIds` 当前为空，旧小八戒 v3 与旧小天命人 v4 均列入 `frozenPetIds`。准备脚本不读取旧候选，最小包不携带其 manifest/atlas/proof，安装器在解析空批准集合后、触碰 Codex 用户目录前直接无操作退出；仓库旧包、用户 discovery 目录、当前选择和既有事件记录全部保留不变。只有用户明确通过新母版后，才允许在独立检查点更新该策略。
 - 最终随 Codex 启停方案尚未开始，按要求留到所有视觉内容完成后处理。

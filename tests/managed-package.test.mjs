@@ -30,12 +30,9 @@ test('minimal managed package imports independently and omits development surfac
     'stop-theme.cmd',
     'remove-theme.cmd',
     'PORTABLE-README.txt',
+    'pets/release-policy.json',
     'themes/active.json',
     'themes/native-wukong.json',
-    'pets/little-bajie-v3-inart/pet.json',
-    'pets/little-bajie-v3-inart/spritesheet.webp',
-    'pets/little-bajie-v3-inart/validation.json',
-    'pets/little-bajie-v3-inart/package-proof.json',
     ...sourceTheme.background.gallery.map(entry => `themes/${entry.asset}`),
     ...Object.values(sourceTheme.motifs || {}).map(asset => `themes/${asset}`),
     ...Object.values(sourceTheme.uiAssets || {}).map(asset => `themes/${asset}`)
@@ -47,13 +44,24 @@ test('minimal managed package imports independently and omits development surfac
     false,
     'legacy theme manifest with retired motifs was packaged'
   );
+  const packagedPetPolicy = JSON.parse(fs.readFileSync(path.join(target, 'pets', 'release-policy.json'), 'utf8'));
+  assert.deepEqual(packagedPetPolicy.releasedPetIds, []);
+  assert.deepEqual(packagedPetPolicy.frozenPetIds, [
+    'little-bajie-v3-inart',
+    'little-wukong-yaksha-shenfeng'
+  ]);
+  assert.deepEqual(fs.readdirSync(path.join(target, 'pets')).sort(), ['release-policy.json']);
   for (const frozenPetFile of [
+    'pets/little-bajie-v3-inart/pet.json',
+    'pets/little-bajie-v3-inart/spritesheet.webp',
+    'pets/little-bajie-v3-inart/validation.json',
+    'pets/little-bajie-v3-inart/package-proof.json',
     'pets/little-wukong-yaksha-shenfeng/pet.json',
     'pets/little-wukong-yaksha-shenfeng/spritesheet.webp',
     'pets/little-wukong-yaksha-shenfeng/validation.json',
     'pets/little-wukong-yaksha-shenfeng/package-proof.json'
   ]) {
-    assert.equal(fs.existsSync(path.join(target, frozenPetFile)), false, `frozen pet file packaged: ${frozenPetFile}`);
+    assert.equal(fs.existsSync(path.join(target, frozenPetFile)), false, `unapproved pet file packaged: ${frozenPetFile}`);
   }
   assert.equal(fs.existsSync(path.join(target, 'node_modules', 'ws')), false, 'ws runtime dependency was packaged');
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client.mjs')), false, 'superseded ws bundle was packaged');

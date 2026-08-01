@@ -210,6 +210,45 @@ $packagesRoot = Join-Path $rootPath 'pets'
 if (-not (Test-Path -LiteralPath $packagesRoot -PathType Container)) {
     throw 'The packaged Hatch Pet directory is missing.'
 }
+Assert-NoReparseSegments $rootPath 'Native pet package root'
+Assert-NoReparseSegments $packagesRoot 'Native pet package root'
+$policyPath = Join-Path $packagesRoot 'release-policy.json'
+Assert-DirectFile $policyPath 'Native pet release policy' | Out-Null
+$policy = Get-Content -LiteralPath $policyPath -Raw -Encoding UTF8 | ConvertFrom-Json
+if ([int]$policy.schemaVersion -ne 1) { throw 'Native pet release policy schemaVersion must be 1.' }
+if (-not ($policy.PSObject.Properties.Name -contains 'releasedPetIds') -or -not ($policy.PSObject.Properties.Name -contains 'frozenPetIds')) {
+    throw 'Native pet release policy must define releasedPetIds and frozenPetIds.'
+}
+if (-not ($policy.releasedPetIds -is [Array]) -or -not ($policy.frozenPetIds -is [Array])) {
+    throw 'Native pet release policy releasedPetIds and frozenPetIds must be arrays.'
+}
+if (-not ($policy.PSObject.Properties.Name -contains 'approvalGate') -or [string]::IsNullOrWhiteSpace([string]$policy.approvalGate)) {
+    throw 'Native pet release policy approvalGate is required.'
+}
+$releasedPetIds = @($policy.releasedPetIds | ForEach-Object { [string]$_ })
+$frozenPetIds = @($policy.frozenPetIds | ForEach-Object { [string]$_ })
+foreach ($list in @(
+    [pscustomobject]@{ Name = 'releasedPetIds'; Values = $releasedPetIds },
+    [pscustomobject]@{ Name = 'frozenPetIds'; Values = $frozenPetIds }
+)) {
+    foreach ($petId in $list.Values) {
+        if ($petId -notmatch '^[a-z0-9][a-z0-9-]{2,63}$') {
+            throw "$($list.Name) contains an invalid Hatch Pet id: $petId"
+        }
+    }
+    if (@($list.Values | Select-Object -Unique).Count -ne $list.Values.Count) {
+        throw "$($list.Name) contains duplicate ids."
+    }
+}
+foreach ($releasedPetId in $releasedPetIds) {
+    if ($frozenPetIds -contains $releasedPetId) {
+        throw "Native pet id cannot be both released and frozen: $releasedPetId"
+    }
+}
+if ($releasedPetIds.Count -eq 0) {
+    Write-Host 'No native Hatch Pet base has user approval. Existing packages, discovery directories, selections, and runtime records were preserved without change.'
+    return
+}
 
 if ([string]::IsNullOrWhiteSpace($CodexHome)) {
     $configuredHome = [Environment]::GetEnvironmentVariable('CODEX_HOME', 'Process')
@@ -237,9 +276,6 @@ if ($eventItem -and (($eventItem.Attributes -band [IO.FileAttributes]::ReparsePo
     throw "Refusing a linked or non-file native pet event log: $eventPath"
 }
 
-$releasedPetIds = @(
-    'little-bajie-v3-inart'
-)
 $packages = @(
     foreach ($releasedPetId in $releasedPetIds) {
         $releasedPackagePath = Join-Path $packagesRoot $releasedPetId

@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { loadNativePetReleasePolicy } from '../scripts/native-pet-release-policy.mjs';
 
 const root = process.cwd();
 const petRoot = path.join(root, 'pets');
@@ -12,13 +13,11 @@ const expectedIds = [
   'little-bajie-v3-inart',
   'little-wukong-yaksha-shenfeng'
 ];
-const releasedIds = [
-  'little-bajie-v3-inart'
-];
-const frozenIds = [
-  'little-wukong-yaksha-shenfeng'
-];
+const releasePolicy = loadNativePetReleasePolicy(root);
+const releasedIds = [...releasePolicy.releasedPetIds];
+const frozenIds = [...releasePolicy.frozenPetIds];
 const expectedInstallIds = releasedIds.map(id => `${id}-wukong-forge`);
+const historicalBajieReleaseEnabled = releasedIds.length === 1 && releasedIds[0] === 'little-bajie-v3-inart';
 const approvedSources = Object.freeze({
   'little-bajie-v3-inart': {
     atlasSha256: '511bc2b8ca7c197407ab8e3be194aaa5f2036428c05fdcb811400525005c2277',
@@ -75,6 +74,29 @@ function assertDirectFile(file, label) {
   assert.equal(item.isFile(), true, `${label} must be a file`);
   assert.equal(item.isSymbolicLink(), false, `${label} must not be linked`);
   return fs.readFileSync(file);
+}
+
+function snapshotTree(directory) {
+  if (!fs.existsSync(directory)) return null;
+  const entries = [];
+  const visit = (current, relative = '') => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const absolute = path.join(current, entry.name);
+      const child = relative ? path.join(relative, entry.name) : entry.name;
+      if (entry.isSymbolicLink()) {
+        entries.push({ path: child, type: 'link', target: fs.readlinkSync(absolute) });
+      } else if (entry.isDirectory()) {
+        entries.push({ path: child, type: 'directory' });
+        visit(absolute, child);
+      } else if (entry.isFile()) {
+        entries.push({ path: child, type: 'file', sha256: sha256(fs.readFileSync(absolute)) });
+      } else {
+        entries.push({ path: child, type: 'other' });
+      }
+    }
+  };
+  visit(directory);
+  return entries;
 }
 
 test('the repository retains exactly two direct, proof-bound Hatch Pet v2 packages', () => {
@@ -157,8 +179,68 @@ test('the repository retains exactly two direct, proof-bound Hatch Pet v2 packag
   }
 });
 
-test('Windows linker reuses retained identical content without creating duplicate pet ids', {
+test('release policy freezes both historical packages and preparation is a byte-preserving no-op', () => {
+  assert.equal(releasePolicy.schemaVersion, 1);
+  assert.deepEqual(releasedIds, []);
+  assert.deepEqual(frozenIds, expectedIds);
+  assert.match(releasePolicy.approvalGate, /explicit user approval/i);
+  const before = snapshotTree(petRoot);
+  const result = spawnSync(process.execPath, [path.join(root, 'scripts', 'prepare-native-pets.mjs')], {
+    cwd: root,
+    encoding: 'utf8',
+    windowsHide: true
+  });
+  assert.equal(result.status, 0, `prepare no-op\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+  assert.match(result.stdout, /little-bajie-v3-inart: frozen/);
+  assert.match(result.stdout, /little-wukong-yaksha-shenfeng: frozen/);
+  assert.match(result.stdout, /without reading or modifying historical packages/i);
+  assert.deepEqual(snapshotTree(petRoot), before);
+});
+
+test('Windows installer preserves absent and pre-existing Codex pet trees when approval set is empty', {
   skip: process.platform !== 'win32'
+}, t => {
+  const retained = fs.mkdtempSync(path.join(os.tmpdir(), 'wukong-native-pet-freeze-proof-'));
+  const releaseRoot = path.join(retained, 'release');
+  const policyTarget = path.join(releaseRoot, 'pets', 'release-policy.json');
+  fs.mkdirSync(path.dirname(policyTarget), { recursive: true });
+  fs.copyFileSync(releasePolicy.policyPath, policyTarget, fs.constants.COPYFILE_EXCL);
+  t.diagnostic(`retained native pet freeze proof: ${retained}`);
+
+  const absentCodexHome = path.join(retained, 'codex-home-absent');
+  const absentResult = spawnSync('powershell.exe', [
+    '-NoProfile',
+    '-ExecutionPolicy', 'Bypass',
+    '-File', path.join(root, 'scripts', 'install-native-pets.ps1'),
+    '-Root', releaseRoot,
+    '-CodexHome', absentCodexHome
+  ], { encoding: 'utf8', windowsHide: true });
+  assert.equal(absentResult.status, 0, `absent Codex home\nstdout: ${absentResult.stdout}\nstderr: ${absentResult.stderr}`);
+  assert.match(absentResult.stdout, /No native Hatch Pet base has user approval/i);
+  assert.equal(fs.existsSync(absentCodexHome), false, 'empty approval must not create a Codex home');
+  assert.equal(fs.existsSync(path.join(releaseRoot, '.wukong-runtime')), false, 'empty approval must not create runtime records');
+
+  const existingCodexHome = path.join(retained, 'codex-home-existing');
+  for (const id of [...expectedIds, 'user-owned-pet']) {
+    const directory = path.join(existingCodexHome, 'pets', `${id}-retained`);
+    fs.mkdirSync(directory, { recursive: true });
+    fs.writeFileSync(path.join(directory, 'sentinel.txt'), `${id}\n`, { encoding: 'utf8', flag: 'wx' });
+  }
+  const before = snapshotTree(existingCodexHome);
+  const existingResult = spawnSync('powershell.exe', [
+    '-NoProfile',
+    '-ExecutionPolicy', 'Bypass',
+    '-File', path.join(root, 'scripts', 'install-native-pets.ps1'),
+    '-Root', releaseRoot,
+    '-CodexHome', existingCodexHome
+  ], { encoding: 'utf8', windowsHide: true });
+  assert.equal(existingResult.status, 0, `existing Codex home\nstdout: ${existingResult.stdout}\nstderr: ${existingResult.stderr}`);
+  assert.deepEqual(snapshotTree(existingCodexHome), before, 'existing discovery directories and files must remain byte-for-byte unchanged');
+  assert.equal(fs.existsSync(path.join(releaseRoot, '.wukong-runtime')), false, 'no-op install must not append an event log');
+});
+
+test('historical V12 Windows linker reuses retained identical content without creating duplicate pet ids', {
+  skip: process.platform !== 'win32' || !historicalBajieReleaseEnabled
 }, t => {
   const retained = fs.mkdtempSync(path.join(os.tmpdir(), 'wukong-native-pet-link-proof-'));
   const codexHome = path.join(retained, 'codex-home');
@@ -357,8 +439,8 @@ test('Windows linker reuses retained identical content without creating duplicat
   assert.equal(fs.existsSync(path.join(conflictRoot, '.wukong-runtime')), false, 'conflict preflight must not create runtime state');
 });
 
-test('Windows linker leaves a pre-existing frozen Wukong discovery directory byte-for-byte untouched', {
-  skip: process.platform !== 'win32'
+test('historical V12 Windows linker leaves a pre-existing frozen Wukong discovery directory byte-for-byte untouched', {
+  skip: process.platform !== 'win32' || !historicalBajieReleaseEnabled
 }, t => {
   const retained = fs.mkdtempSync(path.join(os.tmpdir(), 'wukong-frozen-pet-proof-'));
   const releaseRoot = path.join(retained, 'release');
