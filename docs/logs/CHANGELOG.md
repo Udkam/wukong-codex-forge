@@ -6,6 +6,8 @@
 - The host is event-driven through browser Target/Page/Runtime and marker filesystem events; it exits with the official root and verifies native restoration on disable.
 - Pets are deferred and excluded from this release gate; `releasedPetIds` remains empty, existing pet state is preserved, and the canceled gourd remains outside the active package.
 - Version and current documentation move to 0.13.0 / V34. Real retained installation and one-instance lifecycle/visual/resource evidence remain the final verification step.
+- Renderer startup now waits without a global timeout while individual CDP operations remain bounded. Focused lifecycle/restore contracts pass 23/23 and the minimal managed package passes 1/1.
+- A single owned live attempt was stopped when machine CPU reached the red threshold; disable was verified and its exact root, host, descendants, and port were released. No screenshot was produced or claimed as acceptance.
 
 ## 2026-08-01 — V25 unapproved native pet release gate
 

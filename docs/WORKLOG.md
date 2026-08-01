@@ -8,6 +8,9 @@
 - 正式入口已从常驻 PowerShell/watcher 切换为 Codex 内置 Node + append-only bridge + `runtime/host.mjs` + 官方 `ChatGPT.exe`。host 使用 Target/Page/Runtime 与 marker 文件事件，无周期 renderer target poll，并跟随官方根进程退出。
 - 生命周期定向合同 21/21、event host 4/4、最小包 1/1 已在实现检查点通过；提交 `58dad35` 已推送。下一步只做版本/文档同步、保留式安装、真实单实例启停/恢复、完整页非宠物视觉与资源归零验证。
 - 本检查点不启动浏览器、调试窗口、服务或 watcher；资源采样为 CPU 瞬时约 83%、可用内存约 16.7 GB、磁盘队列约 0.02，故只推进低负载编辑与定向静态检查。
+- 后续 `0d2b120` 增加 renderer settle/阶段诊断，`739e153` 移除错误的全局 renderer 启动超时：host 可在托盘或延迟 renderer 状态下事件休眠，单次 CDP 调用仍保持 45 秒有界。最新生命周期与恢复定向合同为 23/23，最小发布包合同为 1/1。
+- 为补最后一张含真实 queue/goal 的完整页，只启动一个便携 host（host PID 27260、官方 root PID 7816、专用端口 12550）。renderer 等待期间整机 CPU 达到 94.1% 红线，按资源合同立即中止；停用请求返回 `disabled-verified`，随后只对该精确 root 树做归属清理。root、host、taskkill 曾报告的全部子 PID 与端口最终均为 0，当前控制窗口未受影响。
+- 该红线尝试没有生成 PNG，不计作视觉通过；保留式正式安装和最终整页实机证据继续作为唯一剩余发布门。两个宠物与葫芦仍按用户最新范围延期/取消，不参与本轮阻断。
 
 ### V33 原生进度渐隐黑带兼容修复
 
