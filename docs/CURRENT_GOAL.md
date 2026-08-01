@@ -134,4 +134,5 @@
 - V28 将当前 `OpenAI.Codex 26.715.2305.0` 的包目录名、`app.asar` 长度 `201143773` 与 SHA-256 写入结构化来源锁；原生合同以固定 1 MiB 缓冲分块校验，任一漂移都会要求重新只读审计，不能静默沿用旧选择器或旧几何。本检查点不修改官方包、不启动调试窗口，也不越过宠物母版审批门。
 - V29 已定位一次真实整页捕获只出现启动 Logo 的原因：背景运行时已 ready，但捕获器未等待原生 shell 与 composer/landing 节点。验收脚本现在把两组 ready 条件设为截图硬门，并保留 650 ms 静止期；首次失败捕获已完成原生恢复，root、launcher、端口和项目进程均归零，不把它冒充视觉通过。
 - V30 已用修复后的捕获器完成一次真实 Codex landing 整页技术预验收：`1280×820 @ 125%` 下原生侧栏为 `275×784`、工作区 `1005×784`、composer 列 `736×143`、实际纸面 `736×100`；背景为 `cover` 且只有一层加载活动纹理，60 个主题节点、原生 editor 与 contenteditable 均存在。原图含用户项目名，仅本地保留；tracked 摘要与哈希位于 `artifacts/test-runs/v30-live-landing-contract-20260801/acceptance.json`。该门不代表用户视觉通过，也不覆盖 queue/goal、环境卡、双宠物或最终生命周期。
+- V31 修复真实捕获在选任务超时后绕过关闭逻辑的资源缺口：成功与失败现在共用同一三重归属清理函数。真实 renderer 故意打开不存在任务触发 `TimeoutError` 后未生成 PNG，仍观察到原生恢复与 watcher 确认，唯一 root、launcher、端口和项目进程全部归零；去标识化证据位于 `artifacts/test-runs/v31-live-capture-failure-contract-20260801/acceptance.json`。当前便携 profile 未出现目标任务标题，因此真实 queue/goal 页面仍未通过，不能由 fixture 顶替。
 - 最终随 Codex 启停方案尚未开始，按要求留到所有视觉内容完成后处理。

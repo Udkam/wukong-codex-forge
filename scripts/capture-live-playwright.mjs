@@ -108,9 +108,122 @@ const terminateVerifiedDebugTree = async pid => {
 };
 
 const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
+let page = null;
+let report = null;
+let transientCleanupStarted = false;
+let transientCleanupCompleted = false;
+
+const persistReportOnce = payload => {
+  if (fs.existsSync(reportPath)) return;
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(payload, null, 2) + '\n',
+    { encoding: 'utf8', flag: 'wx' }
+  );
+};
+
+const cleanupTransientDebug = async reason => {
+  if (!closeTransientDebug || transientCleanupCompleted) return;
+  if (transientCleanupStarted) {
+    throw Error('Transient debug cleanup was already started but did not complete');
+  }
+  transientCleanupStarted = true;
+
+  const browserSession = await browser.newBrowserCDPSession();
+  const processInfo = await browserSession.send('SystemInfo.getProcessInfo');
+  const browserProcess = processInfo.processInfo?.find(item => item.type === 'browser');
+  if (Number(browserProcess?.id) !== debugRootPid) {
+    throw Error(
+      `Transient cleanup PID mismatch: CDP browser=${browserProcess?.id ?? 'unknown'}, requested=${debugRootPid}`
+    );
+  }
+  if (!processAlive(debugOwnerPid)) {
+    throw Error(`Transient cleanup launcher PID is not alive: ${debugOwnerPid}`);
+  }
+  fs.writeFileSync(
+    disableRequest,
+    `${JSON.stringify({
+      requestedAt: new Date().toISOString(),
+      reason,
+      rootPid: debugRootPid,
+      ownerPid: debugOwnerPid,
+      port
+    })}\n`,
+    { encoding: 'utf8', flag: 'wx' }
+  );
+
+  let nativeRestoreObserved = false;
+  if (page) {
+    try {
+      await page.waitForFunction(
+        () => (
+          !document.getElementById('wukong-forge-style') &&
+          !window.__wukongCodexForgeRuntimeV13 &&
+          !document.documentElement.classList.contains('forge-ink-mountain')
+        ),
+        null,
+        { timeout: 15000 }
+      );
+      nativeRestoreObserved = true;
+    } catch {
+      // A renderer can disappear while the watcher is restoring it. The
+      // append-only watcher confirmation below remains the authoritative
+      // fallback for that failure edge.
+    }
+  }
+  const confirmationPath = `${disableRequest}.confirmed.json`;
+  const watcherConfirmed = await waitUntil(
+    () => fs.existsSync(confirmationPath),
+    15000
+  );
+  if (!nativeRestoreObserved && !watcherConfirmed) {
+    throw Error('Transient debug watcher did not confirm native restoration');
+  }
+
+  try {
+    await browserSession.send('Browser.close');
+  } catch (error) {
+    if (!/closed|disconnected|target/i.test(String(error?.message || error))) throw error;
+  }
+  let rootReleased = await waitUntil(() => !processAlive(debugRootPid), 20000);
+  let verifiedTreeFallback = false;
+  if (!rootReleased) {
+    /*
+     * Some Windows Electron builds close every renderer after Browser.close
+     * but retain the verified portable browser root and its loopback
+     * listener. The PID above was already matched against CDP and the
+     * launcher-owned disable request, so a bounded exact-tree fallback is
+     * safe and cannot target the user's normal Codex control window.
+     */
+    verifiedTreeFallback = await terminateVerifiedDebugTree(debugRootPid);
+    rootReleased = await waitUntil(() => !processAlive(debugRootPid), 10000);
+  }
+  const ownerReleased = await waitUntil(() => !processAlive(debugOwnerPid), 20000);
+  const portReleased = await waitUntil(async () => !(await endpointAccepting(port)), 10000);
+  report ||= {};
+  report.transientCleanup = {
+    requested: true,
+    reason,
+    rootPid: debugRootPid,
+    ownerPid: debugOwnerPid,
+    port,
+    nativeRestoreObserved,
+    watcherConfirmed,
+    verifiedTreeFallback,
+    rootReleased,
+    ownerReleased,
+    portReleased
+  };
+  if (!rootReleased || !ownerReleased || !portReleased) {
+    persistReportOnce(report);
+    throw Error(`Transient debug cleanup was incomplete: ${JSON.stringify(report.transientCleanup)}`);
+  }
+  transientCleanupCompleted = true;
+};
+
 try {
   const pages = browser.contexts().flatMap(context => context.pages());
-  const page = pages.find(candidate => /^app:\/(?:\/codex\/|\/-\/index\.html)/.test(candidate.url()));
+  page = pages.find(candidate => /^app:\/(?:\/codex\/|\/-\/index\.html)/.test(candidate.url()));
   if (!page) throw Error('No Codex app renderer page was found');
   await page.waitForFunction(
     () => {
@@ -205,7 +318,7 @@ try {
     });
     await page.waitForTimeout(1400);
   }
-  const report = await page.evaluate(() => {
+  report = await page.evaluate(() => {
     const rect = element => {
       if (!element) return null;
       const box = element.getBoundingClientRect();
@@ -352,88 +465,37 @@ try {
   await page.screenshot({ path: output, type: 'png' });
 
   if (closeTransientDebug) {
-    /*
-     * This opt-in path is only for a launcher-owned disposable review session.
-     * It verifies the CDP browser PID before creating the append-only disable
-     * request, waits for the watcher to restore native DOM, then closes that
-     * exact browser and proves root/launcher/port release. The normal capture
-     * path never closes a browser, so it cannot terminate the control window.
-     */
-    const browserSession = await browser.newBrowserCDPSession();
-    const processInfo = await browserSession.send('SystemInfo.getProcessInfo');
-    const browserProcess = processInfo.processInfo?.find(item => item.type === 'browser');
-    if (Number(browserProcess?.id) !== debugRootPid) {
-      throw Error(
-        `Transient cleanup PID mismatch: CDP browser=${browserProcess?.id ?? 'unknown'}, requested=${debugRootPid}`
-      );
-    }
-    if (!processAlive(debugOwnerPid)) {
-      throw Error(`Transient cleanup launcher PID is not alive: ${debugOwnerPid}`);
-    }
-    fs.writeFileSync(
-      disableRequest,
-      `${JSON.stringify({
-        requestedAt: new Date().toISOString(),
-        reason: 'capture-complete',
-        rootPid: debugRootPid,
-        ownerPid: debugOwnerPid,
-        port
-      })}\n`,
-      { encoding: 'utf8', flag: 'wx' }
-    );
-    await page.waitForFunction(
-      () => (
-        !document.getElementById('wukong-forge-style') &&
-        !window.__wukongCodexForgeRuntimeV13 &&
-        !document.documentElement.classList.contains('forge-ink-mountain')
-      ),
-      null,
-      { timeout: 15000 }
-    );
-    try {
-      await browserSession.send('Browser.close');
-    } catch (error) {
-      if (!/closed|disconnected|target/i.test(String(error?.message || error))) throw error;
-    }
-    let rootReleased = await waitUntil(() => !processAlive(debugRootPid), 20000);
-    let verifiedTreeFallback = false;
-    if (!rootReleased) {
-      /*
-       * Some Windows Electron builds close every renderer after Browser.close
-       * but retain the verified portable browser root and its loopback
-       * listener. The PID above was already matched against CDP and the
-       * launcher-owned disable request, so a bounded exact-tree fallback is
-       * safe and cannot target the user's normal Codex control window.
-       */
-      verifiedTreeFallback = await terminateVerifiedDebugTree(debugRootPid);
-      rootReleased = await waitUntil(() => !processAlive(debugRootPid), 10000);
-    }
-    const ownerReleased = await waitUntil(() => !processAlive(debugOwnerPid), 20000);
-    const portReleased = await waitUntil(async () => !(await endpointAccepting(port)), 10000);
-    report.transientCleanup = {
-      requested: true,
-      rootPid: debugRootPid,
-      ownerPid: debugOwnerPid,
-      port,
-      verifiedTreeFallback,
-      rootReleased,
-      ownerReleased,
-      portReleased
-    };
-    if (!rootReleased || !ownerReleased || !portReleased) {
-      fs.writeFileSync(
-        reportPath,
-        JSON.stringify(report, null, 2) + '\n',
-        { encoding: 'utf8', flag: 'wx' }
-      );
-      throw Error(`Transient debug cleanup was incomplete: ${JSON.stringify(report.transientCleanup)}`);
-    }
+    await cleanupTransientDebug('capture-complete');
   } else {
     report.transientCleanup = { requested: false };
   }
 
-  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n', { encoding: 'utf8', flag: 'wx' });
+  persistReportOnce(report);
   console.log(JSON.stringify({ output, reportPath, report }));
+} catch (error) {
+  if (closeTransientDebug) {
+    report ||= {};
+    report.captureError = {
+      name: String(error?.name || 'Error'),
+      message: String(error?.message || error)
+    };
+    let cleanupError = null;
+    if (!transientCleanupStarted) {
+      try {
+        await cleanupTransientDebug('capture-failed');
+      } catch (caughtCleanupError) {
+        cleanupError = caughtCleanupError;
+      }
+    }
+    persistReportOnce(report);
+    if (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        `Capture failed and transient cleanup also failed: ${cleanupError.message}`
+      );
+    }
+  }
+  throw error;
 } finally {
   await browser.close().catch(() => {});
 }

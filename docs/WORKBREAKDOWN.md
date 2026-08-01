@@ -26,6 +26,7 @@
 | 主对话 · V28 ASAR provenance lock | 将当前原生包版本、目录、字节数与 SHA-256 写成可审计来源锁，并让结构/几何合同在应用漂移时失效即停 | 1 MiB 分块哈希，不一次性载入 ASAR；不展开、不修改 WindowsApps 或官方包；通过后仍不等于真实 Codex 视觉验收 |
 | 主对话 · V29 live capture readiness | 修复一次性真实 Codex 验收在原生 shell/composer 尚未挂载时误截启动 Logo | 截图前同时等待原生 app shell + landing/composer 与 V13 background ready；失败路径仍只回收三重归属已核验的临时实例 |
 | 主对话 · V30 real landing pre-acceptance | 用一个临时真实 Codex 窗口验证整页 landing、原生几何、主题标记、背景与清理 | 原图本地保留；公开仓库只存去标识化摘要与哈希。landing 技术门已通过，queue/goal、环境卡、双宠物和最终生命周期仍未通过 |
+| 主对话 · V31 capture failure cleanup | 修复选任务/等待阶段超时绕过自动关闭的问题，并用真实 renderer 故意失败验证 | 成功与失败共用三重归属清理；超时无 PNG，原生恢复、watcher、root/launcher/port 全部通过。只关闭开发取证资源门，不关闭真实 queue/goal 视觉门 |
 | 主对话 · V21 minimal package contract | 核对活动主题、历史定义与最小包白名单，排除已退役葫芦/旧宠物引用而不删除本地文件 | `active.json` 为页面 payload 唯一活动清单；`native-wukong.json` 保留为原生预览；`ink-mountain.json` 只作历史留档且受反向打包断言保护。最小包/主题/像素预算定向测试 9/9 通过 |
 | 主对话 · V19 first-frame/quiescence | 修复缓存背景 ready 竞态与稳定页面标记重贴造成的观察器自循环；不改变图库、遮罩、构图或输入器验收形状 | 同步 complete 仍等待 decode；标记按目标集合差量对账，相同题字 ARIA 不重复写入。背景/资源/包定向 24/24，稳定 2.2 秒无新增 refresh，未启动真实调试窗口 |
 | 主对话 · transient review cleanup | 临时真实窗口截图后按归属关闭并证明无残留 | 普通 capture 不关窗；显式清理需 launcher + disable request + CDP browser PID 三重一致。Windows Electron 根进程超时仅允许精确 `/PID` 树兜底；真实复验后 root/owner/profile process/port 均为 0，生命周期定向测试 12/12 |

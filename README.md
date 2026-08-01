@@ -1,6 +1,6 @@
 # Wukong Codex Forge
 
-> 当前开发线为 **0.12.3 / V15（检查点 V30）**。V13.3 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V15 合同为准。
+> 当前开发线为 **0.12.3 / V15（检查点 V31）**。V13.3 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V15 合同为准。
 
 ## V15 当前实现与审计状态
 
@@ -17,6 +17,7 @@
 - **原生 ASAR 基线失效即停**：V28 锁定当前 Codex `26.715.2305.0` 的包目录、`app.asar` 字节数与 SHA-256；任一漂移都要求重新只读审计，避免应用升级后继续套用旧选择器或旧几何。
 - **真实整页证据等待原生 UI**：V29 修复一次性验收脚本过早截到 Codex 启动 Logo 的问题；截图前必须同时出现原生 app shell 与 landing/composer，并确认 V13 背景层 ready，截图后仍按精确 PID/端口证明释放。
 - **真实 landing 整页技术预验收**：V30 在 `1280×820 @ 125%` 的正式 Codex renderer 验证 275 px 原生侧栏、736×100 px 主纸面、全窗 `cover` 背景、60 个主题标记与原生 editor；截图含本地工作区名称，仅本地保留，仓库只归档去标识化摘要与哈希。该结果不冒充用户视觉通过，也不关闭 queue/goal、环境卡、宠物或最终生命周期门。
+- **失败捕获也必须自动归零**：V31 把临时窗口清理移到成功/失败共享路径。真实 renderer 故意打开不存在任务并触发 15 秒超时后，没有生成伪截图；脚本仍自动恢复原生 DOM、等待 watcher 确认并释放唯一 root、launcher 和端口。该门只证明开发取证资源安全，不冒充 queue/goal 视觉或最终生命周期通过。
 - **composer 不堆微缩道具**：夜叉套与兽棍·神锋由 Hatch Pet 小天命人完整表现，金箍棒由战斗背景完整表现；输入框只在授权的短卷页轮廓内承接游戏 UI 的纸面、云纹、回纹角饰与信息层级。不得加栏、改字、改命中区或用生成图补造装备细节。
 - **Hatch Pet 分开验收**：当前重新建立 `little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725` 与 `little-bajie-v4-inart-game-motion` 两条 run；待审批 id 分别为 `little-wukong-v5-yaksha-shenfeng` 与 `little-bajie-v4-inart-game-motion`。基础候选已通过完整神锋/双足和成年猪妖/完整九齿钉耙的本地门，仍须先由用户分别审定母版，未通过前不扩展动作。
 - **宠物发布三态受单一策略保护**：`releasedPetIds` 当前为空；两个新候选只在 `pendingPetIds`，两个被否决旧包只在 `frozenPetIds`，三集合强制两两互斥。仓库旧文件、用户 discovery 目录与当前宠物选择均保留；准备、打包和安装不读取、不复制、不迁移或升级待审批/冻结包。

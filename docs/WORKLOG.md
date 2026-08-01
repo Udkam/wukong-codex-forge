@@ -2,6 +2,13 @@
 
 ## 2026-08-01
 
+### V31 临时真实捕获失败路径自动清理
+
+- 尝试在独立便携真实 Codex 中打开当前任务以补齐 queue/goal 整页证据，但该 profile 未出现精确任务标题；15 秒后 `locator.waitFor` 超时。没有截图、没有把失败结果写成视觉通过，真实 queue/goal 门继续保持未完成。
+- 该失败暴露原捕获器只在成功截图后清理的问题。现在成功与失败共用 `cleanupTransientDebug`：先用 CDP 证明 browser PID 和 launcher 存活，再写唯一 append-only disable request；以原生 DOM 恢复或 watcher confirmation 为恢复证据，最后关闭该 browser，并只在 PID 三重归属成立且正常关闭超时时使用精确 `/PID` 树兜底。
+- 修复后重新启动一个且仅一个临时窗口，故意打开不存在任务。捕获按预期以 `TimeoutError` / exit 1 结束且不生成 PNG；报告记录 `capture-failed`、原生恢复、watcher 确认、root/launcher/port 全部释放。去标识化摘要和原始报告 SHA-256 位于 V31 `acceptance.json`，原始含瞬时 PID/端口的 571 字节报告仅本地保留。
+- `node --check scripts/capture-live-playwright.mjs` 与生命周期定向测试通过（13/13，约 1.61 秒，含 V31 证据断言）；失败回归后的轻量资源抽样为 CPU `13%`、可用内存 `18.56 GB`，便携 profile 归属进程 `0`、测试端口未监听。
+
 ### V30 真实 Codex landing 整页技术预验收
 
 - 修复后的捕获器第二次启动一个独立便携真实 Codex 窗口，等待原生 shell 与 V13 背景双 ready 后进入“新建任务”并截取整页；报告记录 `app://-/index.html`、60 个主题标记、landing/battle 场景和已映射的原生 composer/editor。
