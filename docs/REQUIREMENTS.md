@@ -34,6 +34,8 @@
 | V15-28 | 真实 Codex 整页验收不得在启动 Logo / preloader 阶段截图；必须先出现原生 app shell 与 landing 或 composer 实体，再确认 V13 根节点和背景 overlay 都已 ready，最后等待短稳定期。捕获失败或超时仍须只回收明确归属的临时实例 | 单实例完整页截图、原生 shell/surface 与背景 ready 前置等待、CDP browser/launcher/disable request 三重归属、root/owner/port/project-process 四项归零 |
 | V15-29 | 真实 renderer 截图若含本地项目名、账号或其他用户工作区标识，不得直接提交到公开仓库；应本地保留原图，提交去标识化几何、状态、资源、清理摘要及原图/报告哈希。landing 技术预验收不得冒充 queue/goal、环境卡、宠物或最终生命周期通过 | 本地完整页 PNG、tracked `acceptance.json`、SHA-256、原生/主题几何与四项资源归零、明确 acceptance boundary |
 | V15-30 | 显式受管的临时真实 Codex 捕获无论成功，还是在选任务、等待稳定或截图前失败，都必须走同一清理路径：先验证 CDP browser PID、launcher 与唯一 disable request，再恢复原生 DOM、等待 watcher 确认、关闭该精确 browser，并证明 root/launcher/port 归零。失败不得制造 PNG；含临时 PID/端口的原始报告只本地保留 | 故意打开不存在任务的真实 renderer 超时回归、`capture-failed` 报告、无 PNG、原生恢复/watcher 确认、三项归零与生命周期定向合同 |
+| V15-31 | 当前安装包的 progress 底部渐隐绘制层即使 Tailwind 渐变、方向或颜色 token 漂移，也不得在 queue/goal 上方残留黑带。兼容识别只能命中 progress host 的直属、无子元素、无交互、底缘贴合 paint layer，不能误命中承载原生 pill 的交互 carrier；主题只撤下该层 paint，不改 DOM、几何或命中区 | 移除历史 token 后刷新运行时、唯一 fade 标记、pill carrier 排除、fade/host 相对 DOMRect 前后全等、透明 paint 与 focused joined-stack 回归 |
+| V15-32 | 用户已将两只 Hatch Pet 整体延期；当前交付不得继续修改其造型、动作、武器、图集、发布策略或本地安装状态，也不得用宠物未通过阻断其余非宠物主题与最终生命周期验收 | Git 精确路径审计、宠物目录与策略无本轮 diff、当前目标/分工/工作日志一致性 |
 
 当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 合同、7 项原生表面测试和 Windows forced-colors 组合态测试；最新证据目录为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。Electron 原生下拉菜单本体不在 renderer DOM 中，当前验收范围只包含四个原生触发页签；不得把夹具中的页面元素当作下拉本体交付。
 

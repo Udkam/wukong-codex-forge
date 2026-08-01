@@ -859,9 +859,42 @@ function applyRuntime(payload) {
       'from-token-main-surface-primary',
       'to-transparent'
     ];
+    const nativeProgressFade = (host, child) => {
+      if (!layoutPresent(child)) return false;
+      if (hasClassTokens(child, progressFadeTokens)) return true;
+
+      /*
+       * ChatGPT.exe keeps this paint-only fade as a direct child of the
+       * source-backed progress host, but its Tailwind color/direction tokens
+       * have changed between packaged builds. Identify that single paint
+       * layer by the native geometry and interaction contract instead of by
+       * its palette classes. The sibling that owns the pill remains
+       * interactive and therefore cannot satisfy this predicate.
+       */
+      const hostRect = host.getBoundingClientRect();
+      const rect = child.getBoundingClientRect();
+      const style = getComputedStyle(child);
+      const horizontalInset = Math.max(
+        Math.abs(rect.left - hostRect.left),
+        Math.abs(rect.right - hostRect.right)
+      );
+      const nearHostBottom = (
+        rect.top <= hostRect.bottom + 8 &&
+        rect.bottom >= hostRect.bottom - 8
+      );
+      return (
+        style.position === 'absolute' &&
+        style.pointerEvents === 'none' &&
+        child.childElementCount === 0 &&
+        horizontalInset <= 2 &&
+        rect.height >= 16 &&
+        rect.height <= 48 &&
+        nearHostBottom
+      );
+    };
     const progressFades = progressHosts.flatMap(host => (
       [...host.children].filter(child => (
-        layoutPresent(child) && hasClassTokens(child, progressFadeTokens)
+        nativeProgressFade(host, child)
       ))
     )).filter((fade, index, fades) => fades.indexOf(fade) === index);
     progressFades.forEach(fade => mark(fade, 'forge-composer-progress-fade'));

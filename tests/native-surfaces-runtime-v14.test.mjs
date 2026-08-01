@@ -1325,6 +1325,54 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.equal(guidedPaint.fade.backgroundColor, 'rgba(0, 0, 0, 0)');
   assert.equal(guidedPaint.fade.backgroundImage, 'none');
   assert.equal(guidedPaint.fade.opacity, '0');
+  const driftedFadeContract = await page.evaluate(() => {
+    const fade = document.querySelector('.native-progress-gradient');
+    const host = fade.parentElement;
+    const before = fade.getBoundingClientRect();
+    const hostBefore = host.getBoundingClientRect();
+    fade.classList.remove(
+      'bg-gradient-to-t',
+      'from-token-main-surface-primary',
+      'to-transparent',
+      'forge-composer-progress-fade'
+    );
+    delete fade.dataset.forgeMark;
+    window.__wukongCodexForgeRuntimeV13.refresh();
+    const after = fade.getBoundingClientRect();
+    const hostAfter = host.getBoundingClientRect();
+    const style = getComputedStyle(fade);
+    return {
+      marked: fade.classList.contains('forge-composer-progress-fade'),
+      relativeBefore: [
+        before.x - hostBefore.x,
+        before.y - hostBefore.y,
+        before.width,
+        before.height
+      ],
+      relativeAfter: [
+        after.x - hostAfter.x,
+        after.y - hostAfter.y,
+        after.width,
+        after.height
+      ],
+      backgroundColor: style.backgroundColor,
+      backgroundImage: style.backgroundImage,
+      opacity: style.opacity
+    };
+  });
+  assert.equal(
+    driftedFadeContract.marked,
+    true,
+    'the source-backed fade must survive packaged Tailwind palette-token drift'
+  );
+  assert.deepEqual(
+    driftedFadeContract.relativeAfter,
+    driftedFadeContract.relativeBefore,
+    'palette-token drift recovery must preserve the native fade geometry'
+  );
+  assert.equal(driftedFadeContract.backgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(driftedFadeContract.backgroundImage, 'none');
+  assert.equal(driftedFadeContract.opacity, '0');
   assert.equal(
     await page.locator('[data-native-slot="composer-submit"]').getAttribute('aria-label'),
     '停止'

@@ -259,6 +259,8 @@ try {
   );
   await page.waitForTimeout(650);
   let transitionProof = null;
+  let selectedTask = null;
+  const taskSelectionProof = [];
   const captureTransition = async () => {
     if (values['sample-transition'] !== 'true') {
       await page.waitForTimeout(1800);
@@ -289,12 +291,81 @@ try {
       { timeout: 7000 }
     );
   };
-  if (values['open-task']) {
-    const task = page.getByText(values['open-task'], { exact: true }).first();
-    await task.waitFor({ state: 'visible', timeout: 15000 });
+  const dismissFullAccessWarning = async () => {
+    if (values['dismiss-full-access-warning'] !== 'true') return false;
+    const dismiss = page.getByRole('button', {
+      name: /^(?:Don['’]t show again|不再显示)$/i
+    }).first();
+    if (!await dismiss.isVisible().catch(() => false)) return false;
+    await dismiss.click();
+    await dismiss.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    return true;
+  };
+  const waitForRequestedTaskState = async () => {
+    const requireQueueGoal = values['require-queue-goal'] === 'true';
+    const requireSurface = values['require-surface'] || '';
+    if (!requireQueueGoal && !requireSurface) return;
+    await page.waitForFunction(
+      ({ expectedSurface, queueGoal }) => {
+        const root = document.documentElement;
+        const surfaceReady = !expectedSurface || root.dataset.forgeSurface === expectedSurface;
+        if (!surfaceReady) return false;
+        if (!queueGoal) return true;
+        return Boolean(
+          root.dataset.forgeSurface === 'thread' &&
+          root.dataset.forgeMode === 'scenery' &&
+          document.querySelector('.forge-composer-panel-stack') &&
+          document.querySelectorAll('.forge-composer-panel').length >= 2 &&
+          document.querySelectorAll('.forge-composer-queue-item').length >= 1
+        );
+      },
+      {
+        expectedSurface: requireSurface,
+        queueGoal: requireQueueGoal
+      },
+      { timeout: Number(values['task-state-timeout-ms'] || 12000) }
+    );
+  };
+  const openTaskCandidate = async label => {
+    const task = page.getByText(label, { exact: true }).first();
+    if (!await task.isVisible().catch(() => false)) {
+      taskSelectionProof.push({ label, visible: false, ready: false });
+      return false;
+    }
     await task.evaluate(element => (
       element.closest('button, a, [role="button"], [role="treeitem"]') || element
     ).click());
+    await dismissFullAccessWarning();
+    try {
+      await waitForRequestedTaskState();
+      taskSelectionProof.push({ label, visible: true, ready: true });
+      selectedTask = label;
+      return true;
+    } catch (error) {
+      taskSelectionProof.push({
+        label,
+        visible: true,
+        ready: false,
+        error: String(error?.name || 'Error')
+      });
+      return false;
+    }
+  };
+  const taskCandidates = String(values['open-task-candidates'] || '')
+    .split('|')
+    .map(value => value.trim())
+    .filter(Boolean);
+  if (taskCandidates.length > 0) {
+    for (const candidate of taskCandidates) {
+      if (await openTaskCandidate(candidate)) break;
+    }
+    if (!selectedTask) {
+      throw Error(`No task candidate reached the requested native state: ${JSON.stringify(taskSelectionProof)}`);
+    }
+    await captureTransition();
+  } else if (values['open-task']) {
+    const opened = await openTaskCandidate(values['open-task']);
+    if (!opened) throw Error(`Task did not reach the requested native state: ${values['open-task']}`);
     await captureTransition();
   } else if (values['open-new-task'] === 'true') {
     const newTask = page.getByText(/^(新建任务|新建对话|New task|New chat)$/).first();
@@ -462,6 +533,8 @@ try {
     };
   });
   report.transitionProof = transitionProof;
+  report.taskSelectionProof = taskSelectionProof;
+  report.selectedTask = selectedTask;
   await page.screenshot({ path: output, type: 'png' });
 
   if (closeTransientDebug) {

@@ -79,6 +79,15 @@ test('live capture closes only an explicitly owned transient debug session', () 
   assert.match(capture, /const cleanupTransientDebug = async reason/);
   assert.match(capture, /watcherConfirmed/);
   assert.match(capture, /captureError/);
+  assert.match(capture, /open-task-candidates/);
+  assert.match(capture, /require-queue-goal/);
+  assert.match(capture, /dismiss-full-access-warning/);
+  assert.match(capture, /root\.dataset\.forgeSurface === 'thread'/);
+  assert.match(capture, /root\.dataset\.forgeMode === 'scenery'/);
+  assert.match(capture, /querySelectorAll\('\.forge-composer-panel'\)\.length >= 2/);
+  assert.match(capture, /querySelectorAll\('\.forge-composer-queue-item'\)\.length >= 1/);
+  assert.match(capture, /taskSelectionProof/);
+  assert.match(capture, /selectedTask/);
   assert.match(
     capture,
     /catch \(error\) \{[\s\S]*cleanupTransientDebug\('capture-failed'\)/
