@@ -72,7 +72,7 @@ test('minimal managed package imports independently and omits development surfac
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client.mjs')), false, 'superseded ws bundle was packaged');
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'ws-client-node.mjs')), false, 'diagnostic ws bundle was packaged');
   const packagedManifest = JSON.parse(fs.readFileSync(path.join(target, 'package.json'), 'utf8'));
-  assert.equal(packagedManifest.version, '0.12.3');
+  assert.equal(packagedManifest.version, '0.13.0');
   assert.deepEqual(packagedManifest.dependencies, {});
   for (const rejected of [
     'themes/assets/erlang-meishan.jpg',
@@ -99,10 +99,11 @@ test('minimal managed package imports independently and omits development surfac
   ]) assert.equal(fs.existsSync(path.join(target, rejected)), false, `rejected asset packaged: ${rejected}`);
   assert.equal(fs.existsSync(path.join(target, 'runtime', 'capture-live.mjs')), false);
   const portableReadme = fs.readFileSync(path.join(target, 'PORTABLE-README.txt'), 'utf8');
-  assert.match(portableReadme, /CURRENT V15 \/ V26 DEVELOPMENT PREVIEW/);
+  assert.match(portableReadme, /CURRENT V34 RELEASE CANDIDATE/);
   assert.match(portableReadme, /HISTORICAL V12 INSTRUCTIONS \(retained; superseded above\)/);
   assert.match(portableReadme, /releasedPetIds is empty/);
-  assert.match(portableReadme, /final non-PowerShell lifecycle integration remain incomplete/);
+  assert.match(portableReadme, /Codex embedded Node -> append-only bridge -> event-driven lifecycle host -> official ChatGPT/);
+  assert.match(portableReadme, /Pets are deferred and excluded from this release gate/);
   assert.doesNotMatch(portableReadme.split('HISTORICAL V12 INSTRUCTIONS')[0], /V12 changes only/);
 
   const runtime = await import(pathToFileURL(path.join(target, 'runtime', 'forge-runtime.mjs')));

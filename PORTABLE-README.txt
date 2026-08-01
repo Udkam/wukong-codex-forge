@@ -1,16 +1,18 @@
-Wukong Codex Forge 0.12.3 - development preview
+Wukong Codex Forge 0.13.0 - release candidate
 
-CURRENT V15 / V26 DEVELOPMENT PREVIEW
+CURRENT V34 RELEASE CANDIDATE
 
 1. Keep this extracted directory intact.
-2. The current start-theme.cmd and stop-theme.cmd paths are development and regression adapters only. They are not the final host-bound lifecycle promised for release.
+2. The formal Start Menu chain is: Codex embedded Node -> append-only bridge -> event-driven lifecycle host -> official ChatGPT. It does not keep PowerShell alive and does not use a periodic renderer-target poll.
 3. The active theme preserves the native Codex layout, wording, DOM order and hit boxes while repainting existing full-window backgrounds, landing mark, sidebar/top-bar entries, composer, queued-message/goal stack, progress pill and Environment card.
 4. New-task pages use the battle pool and conversation pages use the scenery pool. Stable states hold one decoded texture; a bounded crossfade holds at most two, with no preload, permanent filter or permanent will-change.
 5. The composer is the approved short scroll shape, about 736 x 100 CSS pixels at the maximum native column width. A queue remains one native outer panel with one paper leaf per message, followed by the native goal panel; only the first outer panel has the two external top corners.
-6. No rebuilt Hatch Pet base has user approval yet. releasedPetIds is empty; the two new identities are pending and the two rejected historical identities are frozen. Startup therefore preserves all existing Codex pet directories, selection, payloads and metadata without installing a candidate.
+6. Pets are deferred and excluded from this release gate. releasedPetIds is empty; startup preserves all existing Codex pet directories, selection, payloads and metadata without installing or modifying a candidate.
 7. No ChatGPT.exe, app.asar, WindowsApps file or official configuration is modified. No source or existing local file is deleted, moved or overwritten.
 
-Real Codex visual acceptance, both Hatch Pet approvals and the final non-PowerShell lifecycle integration remain incomplete. Fixture screenshots and the current adapter must not be represented as the final release.
+The event host follows the official ChatGPT root process, subscribes to browser Target/Page/Runtime events, and exits when that root exits. Removing the retained theme package makes the append-only bridge fall back to the official native ChatGPT executable on the next managed launch. Direct WindowsApps/AUMID/protocol/third-party entries can bypass this managed Start Menu chain. The currently open unmanaged Codex window is never force-rewritten.
+
+The two deferred pets and the canceled gourd are not part of this release gate. Fixture screenshots remain technical evidence rather than user visual approval; final installation evidence must come from one temporary managed Codex instance that is closed immediately after capture.
 
 HISTORICAL V12 INSTRUCTIONS (retained; superseded above)
 

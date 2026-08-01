@@ -1,8 +1,17 @@
 # Wukong Codex Forge
 
-> 当前开发线为 **0.12.3 / V15（检查点 V31）**。V13.3 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V15 合同为准。
+> 当前开发线为 **0.13.0 / V34 release candidate**。V33 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V34 合同为准。
 
-## V15 当前实现与审计状态
+## V34 当前交付边界
+
+- **宠物整体延期**：本轮不修改、准备、打包、安装或验收小天命人和小八戒；`releasedPetIds` 保持为空，现有宠物目录、选择、payload 与元数据原样保留。宠物未通过不再阻塞本轮完成。
+- **葫芦已取消**：活动主题、注入器与最小包均不包含葫芦；历史素材只保留，不进入运行链。
+- **正式生命周期不再依赖常驻 PowerShell**：普通受管入口使用 Codex 自带 Node，经过 append-only `.mjs` bridge 启动 `runtime/host.mjs`，再启动官方 `ChatGPT.exe`。host 通过浏览器 Target/Page/Runtime 事件与文件系统 marker 事件工作，不做 1700ms target 轮询，并跟随官方根进程退出。
+- **移除即回原生**：保留式主题目录或 marker 不存在时，同一 bridge 在下一次受管启动中直接运行官方 `ChatGPT.exe`。不会修改 `ChatGPT.exe`、`app.asar`、WindowsApps 或官方配置；不会强制改写当前已打开的非受管窗口。
+- **适用入口有明确边界**：安装器管理的开始菜单 `ChatGPT` 与 `ChatGPT - Wukong Theme` 进入上述链路；直接运行 WindowsApps、AUMID、协议链接或第三方快捷方式可能绕过它。Store 包升级后需重新运行适配器验证，以刷新版本化的内置 Node 路径。
+- **当前剩余发布门**：定向合同、保留式安装、真实单实例随启随停与完整页非宠物视觉/资源清理证据。无头 fixture 不能代替真实 Codex 验收。
+
+## V15–V33 实现与审计历史
 
 - **活动范围是全窗背景 + 原生表面 paint 替换**：当前 landing 以原 56×56 图标位为锚点，在不改变其 DOMRect 与热区的前提下绘制三倍大小的官方“悟空”书法与朱印，并在原题字位显示“此去，欲破何局？”。原生“新建任务”和描述说明仅视觉透明，DOM、文本、布局与停用恢复保留；不新增卡片、栏位、按钮或 emoji。
 - **不完全覆盖已按官方 UI 源修复**：只读审计 `OpenAI.Codex 26.715.2305.0` 的 `app.asar`，确认中间黑块来自 `<main class="main-surface">` 的实体底色，顶部另有 `[data-app-shell-main-content-top-fade]`。V13.1 只清除二者的背景绘制，保留原生圆角、阴影、裁切、尺寸与命中区。
@@ -22,7 +31,7 @@
 - **Hatch Pet 分开验收**：当前重新建立 `little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725` 与 `little-bajie-v4-inart-game-motion` 两条 run；待审批 id 分别为 `little-wukong-v5-yaksha-shenfeng` 与 `little-bajie-v4-inart-game-motion`。基础候选已通过完整神锋/双足和成年猪妖/完整九齿钉耙的本地门，仍须先由用户分别审定母版，未通过前不扩展动作。
 - **宠物发布三态受单一策略保护**：`releasedPetIds` 当前为空；两个新候选只在 `pendingPetIds`，两个被否决旧包只在 `frozenPetIds`，三集合强制两两互斥。仓库旧文件、用户 discovery 目录与当前宠物选择均保留；准备、打包和安装不读取、不复制、不迁移或升级待审批/冻结包。
 - **最小包只携带现行定义**：`themes/active.json` 是页面 payload 的唯一活动清单，`themes/native-wukong.json` 只承担原生外观预览；含退役葫芦与旧宠物引用的 `themes/ink-mountain.json` 原位保留为历史文件，但不会进入正式运行包。
-- **最终随 Codex 启动集成暂缓**：现有 retained-release / hash bridge 继续只承担开发与回归入口，不再把 PowerShell 快捷方式桥接描述为最终交付。按用户指定顺序，待背景、新建页、composer 与两只 Hatch Pet 全部视觉验收后，再单独实现宿主级随启随停方案。
+- **最终随 Codex 启动集成（已由 V34 取代）**：本条记录的是旧暂缓状态；现行正式候选链以本页 V34 小节为准。
 - **本地素材只读**：`E:\GameRecord\Black Myth Wukong` 与 `D:\SteamLibrary\steamapps\common\BlackMythWukong` 可用于索引、比对和复制式抽帧；项目不得删除、移动或覆盖其中任何原文件。
 
 当前定向合同覆盖 `cover` 全窗、首帧解码门控、主表面透明、DOMRect 约束、稳态单纹理、单请求解码、9 图像素预算、当前定义与最小包排除门禁。真实 Codex 独立调试包仍只在截图和资源采样期间临时启动，取证后立即关闭；输入框和宠物继续以视觉审查为发布门槛。

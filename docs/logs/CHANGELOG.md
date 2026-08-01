@@ -1,5 +1,12 @@
 # Local work log
 
+## 2026-08-01 — V34 event-driven lifecycle release candidate
+
+- Replaced the formal persistent PowerShell/watcher launch path with Codex embedded Node, an append-only bridge, `runtime/host.mjs`, and the official ChatGPT root process.
+- The host is event-driven through browser Target/Page/Runtime and marker filesystem events; it exits with the official root and verifies native restoration on disable.
+- Pets are deferred and excluded from this release gate; `releasedPetIds` remains empty, existing pet state is preserved, and the canceled gourd remains outside the active package.
+- Version and current documentation move to 0.13.0 / V34. Real retained installation and one-instance lifecycle/visual/resource evidence remain the final verification step.
+
 ## 2026-08-01 — V25 unapproved native pet release gate
 
 - Unified preparation, packaging, and installation through `pets/release-policy.json`; `releasedPetIds` is empty and both rejected historical pets are frozen.

@@ -1,5 +1,13 @@
 # 大圣归来 · 潇湘双境 — 设计与实现
 
+## V34 事件驱动正式生命周期与范围冻结
+
+V34 不再把开发期 `PowerShell -> watcher` 路径包装成正式交付。保留式安装器一次性生成并保存开始菜单适配器；快捷方式目标为当前官方 Codex 包内置 Node，参数只包含一个 append-only `.mjs` bridge。bridge 检查 retained package marker：存在时启动 `runtime/host.mjs`，不存在时直接启动官方 `ChatGPT.exe`。
+
+host 只使用 Node 内建 WebSocket、浏览器 Target/Page/Runtime 事件和 marker 文件系统事件；不启动服务、不安装计划任务、不维持 PowerShell、不做 1700ms target poll。它拥有一个官方 ChatGPT 根进程，根进程退出即结束；主题停用先恢复并验证原生 renderer，失败则 fail closed。当前已打开的非受管窗口不被重写。直接 WindowsApps/AUMID/协议/第三方入口可能绕过受管开始菜单链。
+
+两个 Hatch Pet 与葫芦都不属于 V34 发布门。`releasedPetIds` 为空，打包/安装链对宠物 no-op；所有现有宠物文件、选择和历史资产保持原样。V34 的视觉边界仅是已实现的背景、landing、sidebar/topbar、composer/queue/goal、progress pill 与环境卡 paint 替换。
+
 > **V15 现行设计。** V13.3 及更早章节保留为演变记录；冲突处以 `CURRENT_GOAL.md` 和本节为准。
 
 ## V15：本机原生几何上的游记纸面系统

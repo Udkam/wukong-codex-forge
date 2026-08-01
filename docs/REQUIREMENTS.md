@@ -36,6 +36,10 @@
 | V15-30 | 显式受管的临时真实 Codex 捕获无论成功，还是在选任务、等待稳定或截图前失败，都必须走同一清理路径：先验证 CDP browser PID、launcher 与唯一 disable request，再恢复原生 DOM、等待 watcher 确认、关闭该精确 browser，并证明 root/launcher/port 归零。失败不得制造 PNG；含临时 PID/端口的原始报告只本地保留 | 故意打开不存在任务的真实 renderer 超时回归、`capture-failed` 报告、无 PNG、原生恢复/watcher 确认、三项归零与生命周期定向合同 |
 | V15-31 | 当前安装包的 progress 底部渐隐绘制层即使 Tailwind 渐变、方向或颜色 token 漂移，也不得在 queue/goal 上方残留黑带。兼容识别只能命中 progress host 的直属、无子元素、无交互、底缘贴合 paint layer，不能误命中承载原生 pill 的交互 carrier；主题只撤下该层 paint，不改 DOM、几何或命中区 | 移除历史 token 后刷新运行时、唯一 fade 标记、pill carrier 排除、fade/host 相对 DOMRect 前后全等、透明 paint 与 focused joined-stack 回归 |
 | V15-32 | 用户已将两只 Hatch Pet 整体延期；当前交付不得继续修改其造型、动作、武器、图集、发布策略或本地安装状态，也不得用宠物未通过阻断其余非宠物主题与最终生命周期验收 | Git 精确路径审计、宠物目录与策略无本轮 diff、当前目标/分工/工作日志一致性 |
+| V15-33 | 正式受管启动链不得保留 PowerShell 进程或依赖固定周期 renderer target 轮询；必须使用官方包内 Node、append-only bridge 与事件驱动 host，并跟随官方 ChatGPT 根进程退出 | 快捷方式 target/arguments、bridge 源码、Target/Page/Runtime 事件合同、根进程退出、项目 host/端口归零 |
+| V15-34 | 移除保留式主题包或 package marker 后，受管 bridge 必须在下一次启动直接回退官方 `ChatGPT.exe`；恢复失败必须 fail closed，不得把残留主题写成成功 | 隔离 marker 移除/恢复、原生状态验证、无主题 DOM 标记、无残留 host/监听端口 |
+| V15-35 | 受管入口边界必须明示：安装器只接管其保存并重建的开始菜单入口；当前已打开的非受管窗口不强制重写，WindowsApps/AUMID/协议/第三方快捷方式可能绕过 | 适配器事件记录、双快捷方式一致性、便携说明与真实安装核验 |
+| V15-36 | 本轮最终发布门排除两个延期宠物与已取消葫芦；其余主题、资源、生命周期、文档与分段 push 完成后即可结束当前目标 | 宠物/葫芦路径零 diff、非宠物定向测试、真实单实例证据、最终 Git/远端一致性 |
 
 当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 合同、7 项原生表面测试和 Windows forced-colors 组合态测试；最新证据目录为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。Electron 原生下拉菜单本体不在 renderer DOM 中，当前验收范围只包含四个原生触发页签；不得把夹具中的页面元素当作下拉本体交付。
 
