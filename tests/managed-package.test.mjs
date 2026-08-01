@@ -19,6 +19,7 @@ test('minimal managed package imports independently and omits development surfac
   for (const required of [
     'runtime/forge-background-v13.css',
     'runtime/injection-plan-v13.mjs',
+    'runtime/host.mjs',
     'runtime/watch.mjs',
     'scripts/launch.ps1',
     'scripts/start.ps1',

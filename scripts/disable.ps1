@@ -24,8 +24,12 @@ if ([string]$themePackage.name -ne 'wukong-codex-forge') {
 }
 $stateRoot = if ($isPortable) { Join-Path $appRoot '.wukong-runtime' } else { $controlled }
 $injector = Join-Path $appRoot 'runtime\injector.mjs'
+$lifecycleHost = Join-Path $appRoot 'runtime\host.mjs'
 if (-not (Test-Path -LiteralPath $injector)) {
     throw "Managed injector is missing: $injector"
+}
+if (-not (Test-Path -LiteralPath $lifecycleHost)) {
+    throw "Managed lifecycle host is missing: $lifecycleHost"
 }
 
 $package = Get-AppxPackage -Name 'OpenAI.Codex' | Select-Object -First 1
@@ -55,18 +59,40 @@ foreach ($managedPath in @($appRoot, $stateRoot, $profilePath, $requestDirectory
     }
 }
 
-function Get-ManagedWatcherProcesses {
+function Get-ManagedLifecycleProcesses {
     return @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
         $_.Name -in @('node.exe', 'ChatGPT.exe') -and
         $_.CommandLine -and
-        [regex]::IsMatch($_.CommandLine, 'runtime[\\/]watch\.mjs', [Text.RegularExpressions.RegexOptions]::IgnoreCase) -and
-        $_.CommandLine.IndexOf($stateRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0
+        [regex]::IsMatch($_.CommandLine, 'runtime[\\/](?:host|watch)\.mjs', [Text.RegularExpressions.RegexOptions]::IgnoreCase) -and
+        $_.CommandLine.IndexOf($appRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0
     })
 }
 
 $requestPrefix = [IO.Path]::GetFullPath($requestDirectory).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
 $requests = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
-$watchers = Get-ManagedWatcherProcesses
+$watchers = Get-ManagedLifecycleProcesses
+$deferredNative = $false
+$eventHosts = @($watchers | Where-Object {
+    [regex]::IsMatch([string]$_.CommandLine, 'runtime[\\/]host\.mjs', [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+})
+if ($eventHosts.Count -gt 1) {
+    throw 'Multiple lifecycle hosts claim this retained release; refusing ambiguous disable.'
+}
+if ($eventHosts.Count -eq 1) {
+    $hostArguments = @($lifecycleHost, '--signal-disable', '--root', $appRoot)
+    if ($isPortable) { $hostArguments += '--portable' }
+    $hostOutput = @(& $node @hostArguments 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        throw "Event lifecycle host did not restore native state: $($hostOutput -join ' ')"
+    }
+    try {
+        $hostResponse = ($hostOutput[-1] | ConvertFrom-Json)
+        $deferredNative = [bool]$hostResponse.result.deferredNative
+    }
+    catch {
+        throw 'Event lifecycle host returned invalid disable evidence.'
+    }
+}
 
 $latestBySession = @{}
 if ($watchers.Count -gt 0 -and (Test-Path -LiteralPath $eventPath)) {
@@ -76,7 +102,7 @@ if ($watchers.Count -gt 0 -and (Test-Path -LiteralPath $eventPath)) {
         if ($event.session) { $latestBySession[[string]$event.session] = $event }
     }
     foreach ($event in $latestBySession.Values) {
-        if ($event.state -eq 'watching' -and $event.disableRequest) {
+        if ($event.state -in @('watching', 'watching-event-driven') -and $event.disableRequest) {
             try { $candidate = [IO.Path]::GetFullPath([string]$event.disableRequest) } catch { continue }
             if ($candidate.StartsWith($requestPrefix, [StringComparison]::OrdinalIgnoreCase)) {
                 [void]$requests.Add($candidate)
@@ -105,14 +131,13 @@ foreach ($requestPath in $requests) {
 }
 
 $watcherDeadline = [DateTime]::UtcNow.AddSeconds(8)
-while ((Get-ManagedWatcherProcesses).Count -gt 0 -and [DateTime]::UtcNow -lt $watcherDeadline) {
+while ((Get-ManagedLifecycleProcesses).Count -gt 0 -and [DateTime]::UtcNow -lt $watcherDeadline) {
     Start-Sleep -Milliseconds 250
 }
-if ((Get-ManagedWatcherProcesses).Count -gt 0) {
-    throw 'Managed watcher did not acknowledge the restore request; native state was not claimed.'
+if ((Get-ManagedLifecycleProcesses).Count -gt 0) {
+    throw 'Managed lifecycle host did not acknowledge the restore request; native state was not claimed.'
 }
 
-$deferredNative = $false
 foreach ($requestPath in $requests) {
     $confirmationPath = "$requestPath.confirmed.json"
     if (-not (Test-Path -LiteralPath $confirmationPath)) { continue }

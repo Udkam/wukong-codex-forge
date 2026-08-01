@@ -26,6 +26,7 @@ $profileRoot = Join-Path $target 'profile'
 foreach ($required in @(
     (Join-Path $source 'scripts\package-runtime.mjs'),
     (Join-Path $source 'scripts\native-theme.mjs'),
+    (Join-Path $source 'runtime\host.mjs'),
     (Join-Path $source 'scripts\launch.ps1'),
     (Join-Path $source 'scripts\install-native-pets.ps1'),
     (Join-Path $source 'scripts\install-chatgpt-hook.ps1'),
@@ -97,9 +98,9 @@ if (-not $priorRuntimeOnlyMigration -and (Test-Path -LiteralPath $legacyStatePat
 Write-Host "Installed retained Wukong release $releaseId at $releaseRoot."
 Write-Host 'No existing file or directory was deleted; prior releases, state, assets and research files remain in place.'
 Write-Host 'WindowsApps, app.asar and ChatGPT.exe were not modified.'
-Write-Host 'No external Node.js or npm installation is required; the launcher uses the runtime bundled with OpenAI.Codex.'
+Write-Host 'No external Node.js or npm installation is required; the event-driven lifecycle host uses the runtime bundled with OpenAI.Codex.'
 Write-Host "Start this release with: $appTarget\start-theme.cmd"
 if (-not $NoShortcut) {
-    Write-Host 'The user Start Menu ChatGPT shortcut now uses the retained launch adapter; its prior content was copied to append-only history first.'
+    Write-Host 'The user Start Menu ChatGPT shortcut now uses the non-PowerShell event-host adapter; its prior content was copied to append-only history first.'
     Write-Host 'If this release directory is absent, the adapter falls back to the current official ChatGPT.exe.'
 }

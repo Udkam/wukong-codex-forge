@@ -28,8 +28,8 @@ function Assert-DirectManagedPath([string]$Path, [string]$Label) {
 
 $rootPath = [IO.Path]::GetFullPath($Root)
 $packageDefinition = Join-Path $rootPath 'package.json'
-$launcherPath = Join-Path $rootPath 'scripts\launch.ps1'
-if (-not (Test-Path -LiteralPath $packageDefinition) -or -not (Test-Path -LiteralPath $launcherPath)) {
+$hostPath = Join-Path $rootPath 'runtime\host.mjs'
+if (-not (Test-Path -LiteralPath $packageDefinition) -or -not (Test-Path -LiteralPath $hostPath)) {
     throw 'Wukong theme package is incomplete; the ChatGPT launch adapter was not installed.'
 }
 $themePackage = Get-Content -LiteralPath $packageDefinition -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -40,7 +40,9 @@ if ([string]$themePackage.name -ne 'wukong-codex-forge') {
 $package = Get-AppxPackage -Name 'OpenAI.Codex' | Select-Object -First 1
 if (-not $package) { throw 'Official OpenAI.Codex Store package was not found.' }
 $chatGpt = Join-Path $package.InstallLocation 'app\ChatGPT.exe'
+$node = Join-Path $package.InstallLocation 'app\resources\cua_node\bin\node.exe'
 if (-not (Test-Path -LiteralPath $chatGpt)) { throw 'Official ChatGPT.exe was not found.' }
+if (-not (Test-Path -LiteralPath $node)) { throw 'The Node runtime bundled with OpenAI.Codex was not found.' }
 
 $programs = [Environment]::GetFolderPath('Programs')
 $shortcutPath = Join-Path $programs 'ChatGPT.lnk'
@@ -61,95 +63,33 @@ Assert-DirectManagedPath -Path $adapterRoot -Label 'launch adapter root'
 Assert-DirectManagedPath -Path $historyRoot -Label 'shortcut backup directory'
 Assert-DirectManagedPath -Path $bridgeRoot -Label 'launcher bridge directory'
 
-$escapedRoot = $rootPath.Replace("'", "''")
-$portableSwitch = if ($Portable) { ' -Portable' } else { '' }
-$managedProfile = if ($Portable) {
-    Join-Path $rootPath '.wukong-runtime\profile'
-} else {
-    [IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Codex\web\Codex'))
-}
-$escapedProfile = $managedProfile.Replace("'", "''")
-$portableLiteral = if ($Portable) { '$true' } else { '$false' }
-$managedPredicate = if ($Portable) {
-    "`$_.CommandLine.IndexOf(`$profile, [StringComparison]::OrdinalIgnoreCase) -ge 0"
-} else {
-    "`$_.CommandLine -notmatch '(?:^|\s)--user-data-dir(?:=|\s)'"
-}
+$rootLiteral = $rootPath | ConvertTo-Json -Compress
+$portableLiteral = if ($Portable) { 'true' } else { 'false' }
 $bridgeScript = @"
-`$ErrorActionPreference = 'Stop'
-`$themeRoot = '$escapedRoot'
-`$launcher = Join-Path `$themeRoot 'scripts\launch.ps1'
-`$marker = Join-Path `$themeRoot 'package.json'
-`$profile = '$escapedProfile'
-`$portable = $portableLiteral
-`$package = Get-AppxPackage -Name 'OpenAI.Codex' | Select-Object -First 1
-`$official = if (`$package) { Join-Path `$package.InstallLocation 'app\ChatGPT.exe' } else { `$null }
-function Invoke-OfficialManagedActivation {
-    if (`$portable) {
-        `$previousUserDataPath = `$env:CODEX_ELECTRON_USER_DATA_PATH
-        try {
-            `$env:CODEX_ELECTRON_USER_DATA_PATH = `$profile
-            Start-Process -FilePath `$official -ArgumentList @("--user-data-dir=```"`$profile```"", 'codex://launch') | Out-Null
-        }
-        finally {
-            if (`$null -eq `$previousUserDataPath) { [Environment]::SetEnvironmentVariable('CODEX_ELECTRON_USER_DATA_PATH', `$null, 'Process') }
-            else { `$env:CODEX_ELECTRON_USER_DATA_PATH = `$previousUserDataPath }
-        }
-    } else {
-        Start-Process -FilePath `$official -ArgumentList 'codex://launch' | Out-Null
-    }
-}
-function Wait-ForManagedMainWindow([int]`$ManagedProcessId, [int]`$Seconds) {
-    `$deadline = [DateTime]::UtcNow.AddSeconds(`$Seconds)
-    while ([DateTime]::UtcNow -lt `$deadline) {
-        `$managedProcess = Get-Process -Id `$ManagedProcessId -ErrorAction SilentlyContinue
-        if (`$managedProcess -and `$managedProcess.MainWindowHandle -ne 0) { return `$true }
-        Start-Sleep -Milliseconds 250
-    }
-    return `$false
-}
-`$managed = @(Get-CimInstance Win32_Process -Filter "Name='ChatGPT.exe'" -ErrorAction SilentlyContinue | Where-Object {
-    `$_.CommandLine -and
-    `$_.CommandLine -notmatch '(?:^|\s)--type=' -and
-    $managedPredicate
-})
-`$watching = @(Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue | Where-Object {
-    `$_.CommandLine -and `$_.CommandLine.IndexOf(`$themeRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and `$_.CommandLine -match 'runtime[\\/]watch\.mjs'
-})
-if (`$managed.Count -eq 1 -and `$watching.Count -ge 1 -and `$official -and (Test-Path -LiteralPath `$official)) {
-    Invoke-OfficialManagedActivation
-    if (Wait-ForManagedMainWindow -ManagedProcessId `$managed[0].ProcessId -Seconds 6) { exit 0 }
-    Invoke-OfficialManagedActivation
-    if (Wait-ForManagedMainWindow -ManagedProcessId `$managed[0].ProcessId -Seconds 6) { exit 0 }
-    exit 4
-}
-if ((Test-Path -LiteralPath `$launcher) -and (Test-Path -LiteralPath `$marker)) {
-    try {
-        & `$launcher -Root `$themeRoot$portableSwitch
-        exit 0
-    }
-    catch {
-        `$managed = @(Get-CimInstance Win32_Process -Filter "Name='ChatGPT.exe'" -ErrorAction SilentlyContinue | Where-Object {
-            `$_.CommandLine -and
-            `$_.CommandLine -notmatch '(?:^|\s)--type=' -and
-            $managedPredicate
-        })
-        if (`$managed.Count -gt 0 -and `$official -and (Test-Path -LiteralPath `$official)) {
-            Invoke-OfficialManagedActivation
-            exit 1
-        }
-    }
-}
-if (-not `$package) { exit 2 }
-if (-not (Test-Path -LiteralPath `$official)) { exit 3 }
-Start-Process -FilePath `$official | Out-Null
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
+
+const themeRoot = $rootLiteral;
+const portable = $portableLiteral;
+const marker = path.join(themeRoot, 'package.json');
+const host = path.join(themeRoot, 'runtime', 'host.mjs');
+const appRoot = path.resolve(path.dirname(process.execPath), '..', '..', '..');
+const official = path.join(appRoot, 'ChatGPT.exe');
+const themeAvailable = fs.existsSync(marker) && fs.existsSync(host);
+const target = themeAvailable ? process.execPath : official;
+const args = themeAvailable
+  ? [host, '--root', themeRoot, ...(portable ? ['--portable'] : [])]
+  : [];
+
+if (!fs.existsSync(target)) process.exit(3);
+const child = spawn(target, args, {
+  detached: true,
+  stdio: 'ignore',
+  windowsHide: themeAvailable
+});
+child.unref();
 "@
-$bridgeTokens = $null
-$bridgeErrors = $null
-[Management.Automation.Language.Parser]::ParseInput($bridgeScript, [ref]$bridgeTokens, [ref]$bridgeErrors) | Out-Null
-if ($bridgeErrors.Count -gt 0) {
-    throw "Generated ChatGPT launch bridge is invalid: $($bridgeErrors[0].Message)"
-}
 $bridgeBytes = [Text.Encoding]::UTF8.GetBytes($bridgeScript)
 $sha256 = [Security.Cryptography.SHA256]::Create()
 try {
@@ -158,22 +98,26 @@ try {
 finally {
     $sha256.Dispose()
 }
-$bridgePath = Join-Path $bridgeRoot "chatgpt-entry-$bridgeId.ps1"
+$bridgePath = Join-Path $bridgeRoot "chatgpt-entry-$bridgeId.mjs"
 if (Test-Path -LiteralPath $bridgePath) {
     $existingBridge = [IO.File]::ReadAllText($bridgePath, [Text.Encoding]::UTF8)
     if (-not [string]::Equals($existingBridge, $bridgeScript, [StringComparison]::Ordinal)) {
         do {
             $collisionStamp = (Get-Date).ToString('yyyyMMdd-HHmmss-fffffff')
-            $bridgePath = Join-Path $bridgeRoot "chatgpt-entry-$bridgeId-$collisionStamp.ps1"
+            $bridgePath = Join-Path $bridgeRoot "chatgpt-entry-$bridgeId-$collisionStamp.mjs"
         } while (Test-Path -LiteralPath $bridgePath)
     }
 }
 if (-not (Test-Path -LiteralPath $bridgePath)) {
-    [IO.File]::WriteAllText($bridgePath, $bridgeScript, [Text.UTF8Encoding]::new($true))
+    [IO.File]::WriteAllText($bridgePath, $bridgeScript, [Text.UTF8Encoding]::new($false))
+}
+& $node --check $bridgePath
+if ($LASTEXITCODE -ne 0) {
+    throw 'Generated ChatGPT Node launch bridge is invalid.'
 }
 
-$expectedTarget = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-$expectedArguments = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$bridgePath`""
+$expectedTarget = $node
+$expectedArguments = "`"$bridgePath`""
 if ($expectedArguments.Length -ge 900) {
     throw 'ChatGPT launch adapter arguments exceed the safe Windows shortcut limit.'
 }
@@ -230,6 +174,9 @@ $event = [ordered]@{
     portable = [bool]$Portable
     bridgePath = $bridgePath
     bridgeHash = Get-PortableSha256 $bridgePath
+    bridgeHost = 'CodexEmbeddedNode'
+    lifecycleHost = 'runtime\host.mjs'
+    eventDriven = $true
     shortcutArgumentsLength = $expectedArguments.Length
     changed = [bool]($defaultShortcut.changed -or $explicitShortcut.changed)
     defaultShortcutChanged = [bool]$defaultShortcut.changed

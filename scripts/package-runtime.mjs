@@ -11,6 +11,7 @@ const runtimeFiles = [
   'runtime/forge-background-v13.css',
   'runtime/injection-plan-v13.mjs',
   'runtime/injector.mjs',
+  'runtime/host.mjs',
   'runtime/watch.mjs',
   'shared/theme-model.mjs',
   'scripts/launch.ps1',
