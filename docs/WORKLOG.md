@@ -323,3 +323,10 @@
 - 捕获器只在显式传入 `--enqueue-native-message` 时使用 Windows `Control+Enter`；仍先证明目标任务 current/selected，随后要求原生编辑器清空和至少一个 `.forge-composer-queue-item`，任一不成立即失败且不截图。报告只保存布尔证明与快捷键名，不保存消息内容。
 - 环境 fixture 从 4 行扩展到 7 行后，旧背景回归仍硬编码 4 个主题行标记。本轮把断言改为注入前读取官方环境行数，并要求注入后逐行一一映射；生产映射未变。
 - 定向结果：原生表面/landing/background 25/25，event-host/lifecycle/restore/preserving/min-package 24/24，当前 ASAR 来源合同 1/1；捕获脚本改动后语法检查与生命周期 13/13 通过。资源连续采样仍在琥珀档，因此没有立即启动第二次窗口；唯一一次 `Ctrl+Enter` 联合重试等待连续绿色样本。
+
+### V43 `Ctrl+Enter` 联合门仍按失败闭合
+
+- 资源连续采样回到绿色（CPU `50.9% → 40.0%`、可用内存 `18.27 GB`、磁盘队列 `0`）后，只启动一个隔离临时 Codex 窗口；启动前确认没有本项目遗留 CDP、watcher 或便携 profile 进程。
+- 捕获器在侧栏精确选中 `codex主题替换` 后向真实编辑器写入仅用于验收的 follow-up，并发送来源已核对的 Windows `Control+Enter`。该 profile 仍未接受提交：`inputCleared=false`、`queueObserved=false`，因此没有生成 PNG，也没有用 fixture 或人工 DOM 冒充联合实机证据。
+- 失败报告保留在本机临时证据 JSON；不含消息正文。清理证明 `nativeRestoreObserved=true`、`watcherConfirmed=true`、`verifiedTreeFallback=true`、`rootReleased=true`、`ownerReleased=true`、`portReleased=true`，随机端口 `24750` 已不可访问，没有保留调试窗口。
+- 本检查点不重试第二个窗口，不修改宠物或葫芦，也不删除任何文件。最终非宠物生命周期完成审计仍以后续真实联合整页门通过为前置条件；当前只记录真实阻塞，不标记项目完成。
