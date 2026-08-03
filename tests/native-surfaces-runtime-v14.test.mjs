@@ -297,9 +297,9 @@ test('V20 maps the compact scroll material at the corrected native-state proport
     'all four native ASAR application-menu buttons must be mapped structurally'
   );
   assert.equal(await page.locator('.forge-sidebar-shell').count(), 1);
-  assert.equal(await page.locator('.forge-sidebar-action').count(), 5);
-  assert.equal(await page.locator('.forge-sidebar-level1').count(), 5);
-  assert.equal(await page.locator('.forge-sidebar-level2').count(), 2);
+  assert.equal(await page.locator('.forge-sidebar-action').count(), 0);
+  assert.equal(await page.locator('.forge-sidebar-level1').count(), 0);
+  assert.equal(await page.locator('.forge-sidebar-level2').count(), 0);
   assert.equal(await page.locator('.forge-sidebar-selected').count(), 1);
   assert.equal(
     await page.locator('[data-app-action-sidebar-project-row].forge-sidebar-selected').count(),
@@ -308,31 +308,31 @@ test('V20 maps the compact scroll material at the corrected native-state proport
   );
   assert.equal(
     await page.locator('[data-app-action-sidebar-project-row].forge-sidebar-level1').count(),
-    3,
-    'production project rows must map to level one'
+    0,
+    'unselected production project rows must not receive themed paint classes'
   );
   assert.equal(
     await page.locator(
       '[data-app-action-sidebar-section-heading="Tasks"] ' +
       '[data-app-action-sidebar-thread-row].forge-sidebar-level1'
     ).count(),
-    2,
-    'unprojected Tasks threads must map to level one'
+    0,
+    'unselected root threads must not receive themed paint classes'
   );
   assert.equal(
     await page.locator(
       '[data-app-action-sidebar-project-list-id] ' +
       '[data-app-action-sidebar-thread-row].forge-sidebar-level2'
     ).count(),
-    2,
-    'threads under a production project list must map to level two'
+    0,
+    'unselected project threads must not receive themed paint classes'
   );
   assert.equal(
     await page.locator(
       '[data-app-action-sidebar-project-row][aria-expanded="true"].forge-sidebar-level1'
     ).count(),
-    2,
-    'expanded production projects must retain level-one mapping'
+    0,
+    'expanded state alone must not add themed paint'
   );
   assert.equal(
     await page.locator(
@@ -340,8 +340,8 @@ test('V20 maps the compact scroll material at the corrected native-state proport
       '[data-app-action-sidebar-project-collapsed="true"]' +
       '[aria-expanded="false"].forge-sidebar-level1'
     ).count(),
-    1,
-    'collapsed production projects must retain level-one mapping'
+    0,
+    'collapsed state alone must not add themed paint'
   );
   assert.equal(
     await page.locator(
@@ -360,14 +360,14 @@ test('V20 maps the compact scroll material at the corrected native-state proport
     'the fixture must not depend on superseded fake sidebar attributes'
   );
   assert.equal(
-    await page.locator('[data-native-slot="new-task-row"].forge-sidebar-action').count(),
-    1,
-    'top native navigation must receive its own themed action-row mapping'
+    await page.locator('[data-native-slot="new-task-row"][data-forge-mark]').count(),
+    0,
+    'unselected top navigation must remain entirely native'
   );
   assert.equal(
-    await page.locator('[data-native-slot="plugins"].forge-sidebar-action').count(),
-    1,
-    'a top navigation action without project expansion semantics must retain action mapping'
+    await page.locator('[data-native-slot="plugins"][data-forge-mark]').count(),
+    0,
+    'unselected Plugins must remain entirely native'
   );
   assert.equal(
     await page.locator('[data-native-slot="plugins"][aria-expanded]').count(),
@@ -441,11 +441,11 @@ test('V20 maps the compact scroll material at the corrected native-state proport
       };
     })(),
     menu: getComputedStyle(document.querySelector('.forge-topbar-menu-item')).backgroundImage,
-    action: getComputedStyle(document.querySelector('.forge-sidebar-action')).backgroundImage,
-    level1: getComputedStyle(document.querySelector('.forge-sidebar-level1')).backgroundImage,
+    action: getComputedStyle(document.querySelector('[data-native-slot="pull-requests"]')).backgroundImage,
+    level1: getComputedStyle(document.querySelector('[data-app-action-sidebar-project-row]')).backgroundImage,
     selected: getComputedStyle(document.querySelector('.forge-sidebar-selected')).backgroundImage,
     level2: getComputedStyle(
-      document.querySelector('.forge-sidebar-level2:not(.forge-sidebar-selected)')
+      document.querySelector('[data-native-slot="project-temple-child"]')
     ).backgroundImage
   }));
   assert.equal(paint.composer.backgroundImage, 'none');
@@ -495,10 +495,10 @@ test('V20 maps the compact scroll material at the corrected native-state proport
     'the full-window background must show through the sidebar without a GPU blur'
   );
   assert.match(paint.menu, /data:image\/svg\+xml/);
-  assert.match(paint.action, /data:image\/svg\+xml/);
-  assert.match(paint.level1, /data:image\/svg\+xml/);
+  assert.equal(paint.action, 'none');
+  assert.equal(paint.level1, 'none');
   assert.match(paint.selected, /data:image\/svg\+xml/);
-  assert.match(paint.level2, /linear-gradient/);
+  assert.equal(paint.level2, 'none');
 
   for (const selector of hitSelectors) {
     assert.deepEqual(
@@ -642,9 +642,9 @@ test('V35 preserves native unselected sidebar paint and themes only the current 
   await page.evaluate(expression);
   await page.waitForFunction(() => (
     document.querySelectorAll('.forge-topbar-menu-item').length === 4 &&
-    document.querySelectorAll('.forge-sidebar-action').length === 5 &&
-    document.querySelector('[data-native-slot="new-task-row"]')
-      ?.classList.contains('forge-sidebar-action')
+    document.querySelectorAll('.forge-sidebar-selected').length === 1 &&
+    document.querySelector('[data-native-slot="project-active"]')
+      ?.classList.contains('forge-sidebar-selected')
   ));
 
   assert.equal(
@@ -655,10 +655,10 @@ test('V35 preserves native unselected sidebar paint and themes only the current 
         selectors.sites,
         selectors.scheduled,
         selectors.plugins
-      ].map(selector => `${selector}.forge-sidebar-action`).join(',')
+      ].map(selector => `${selector}[data-forge-mark]`).join(',')
     ).count(),
-    5,
-    'all five native sidebar entry surfaces must receive action-row paint'
+    0,
+    'all five unselected native sidebar entries must remain unmarked'
   );
 
   const menuFile = page.locator(selectors.menuFile);
@@ -1758,12 +1758,18 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       .map(child => getComputedStyle(child).color);
     return {
       backgroundImage: style.backgroundImage,
+      backgroundSize: style.backgroundSize,
       color: style.color,
       shadow: style.boxShadow,
       descendantColors
     };
   });
   assert.match(selectedProjectPaint.backgroundImage, /data:image\//);
+  assert.equal(
+    selectedProjectPaint.backgroundSize,
+    '100% 100%',
+    'selected paper must fit the exact live row box without a two-pixel inset'
+  );
   assert.equal(selectedProjectPaint.color, 'rgb(47, 40, 34)');
   assert.ok(
     selectedProjectPaint.descendantColors.every(color => color === 'rgb(47, 40, 34)'),
@@ -1788,7 +1794,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   ));
   assert.equal(
     await page.locator('[data-native-slot="new-task-row"].forge-sidebar-selected').count(),
-    0
+    1
   );
 
   const level2 = page.locator('[data-native-slot="project-temple-child"]');
@@ -2358,7 +2364,8 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
       ?.classList.contains('forge-right-card') &&
     document.querySelectorAll('.forge-right-row').length === 7 &&
     document.querySelectorAll('.forge-right-section').length === 3 &&
-    document.querySelectorAll('.forge-right-section-title').length === 3
+    document.querySelectorAll('.forge-right-section-title').length === 3 &&
+    document.querySelectorAll('.forge-right-title-surface').length === 1
   ));
 
   assert.deepEqual(
@@ -2374,6 +2381,7 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   assert.equal(await page.locator('.forge-right-panel').count(), 1);
   assert.equal(await page.locator('.forge-right-card').count(), 1);
   assert.equal(await page.locator('.forge-right-title').count(), 1);
+  assert.equal(await page.locator('.forge-right-title-surface').count(), 1);
   assert.equal(await page.locator('.forge-right-row').count(), 7);
   assert.equal(await page.locator('.forge-right-section').count(), 3);
   assert.equal(await page.locator('.forge-right-section-title').count(), 3);
@@ -2390,6 +2398,9 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
     const sectionStyle = getComputedStyle(section);
     const sectionSeparator = getComputedStyle(section, '::after');
     const sectionTitleStyle = getComputedStyle(sectionTitle);
+    const titleSurfaceStyle = getComputedStyle(
+      document.querySelector('.forge-right-title-surface')
+    );
     return {
       cardBackgroundColor: style.backgroundColor,
       cardBackgroundImage: style.backgroundImage,
@@ -2408,9 +2419,13 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
       sectionBackgroundImage: sectionStyle.backgroundImage,
       sectionSeparatorBackgroundImage: sectionSeparator.backgroundImage,
       sectionTitleBackgroundImage: sectionTitleStyle.backgroundImage,
+      sectionTitleBackgroundColor: sectionTitleStyle.backgroundColor,
       sectionTitleClipPath: sectionTitleStyle.clipPath,
       sectionTitleColor: sectionTitleStyle.color,
-      sectionTitleShadow: sectionTitleStyle.boxShadow
+      sectionTitleShadow: sectionTitleStyle.boxShadow,
+      titleSurfaceBackgroundImage: titleSurfaceStyle.backgroundImage,
+      titleSurfaceBackgroundColor: titleSurfaceStyle.backgroundColor,
+      titleSurfaceShadow: titleSurfaceStyle.boxShadow
     };
   });
   assert.equal(defaultPaint.cardBackgroundColor, 'rgba(0, 0, 0, 0)');
@@ -2422,17 +2437,20 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   assert.match(defaultPaint.paperBackgroundImage, /data:image\/svg\+xml/);
   assert.equal(defaultPaint.paperBackgroundSize, '100% 100%, 512px 220px');
   assert.match(defaultPaint.paperClipPath, /^polygon\(/);
-  assert.equal(defaultPaint.railContent, '""');
+  assert.equal(defaultPaint.railContent, 'none');
   assert.equal(defaultPaint.separatorContent, '""');
   assert.notEqual(defaultPaint.cardColor, 'rgba(0, 0, 0, 0)');
   assert.equal(defaultPaint.sectionBackgroundColor, 'rgba(0, 0, 0, 0)');
   assert.equal(defaultPaint.sectionBackgroundImage, 'none');
   assert.match(defaultPaint.sectionSeparatorBackgroundImage, /linear-gradient/);
-  assert.match(defaultPaint.sectionTitleBackgroundImage, /linear-gradient/);
-  assert.match(defaultPaint.sectionTitleBackgroundImage, /data:image\/svg\+xml/);
-  assert.match(defaultPaint.sectionTitleClipPath, /^polygon\(/);
+  assert.equal(defaultPaint.sectionTitleBackgroundImage, 'none');
+  assert.equal(defaultPaint.sectionTitleBackgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(defaultPaint.sectionTitleClipPath, 'none');
   assert.notEqual(defaultPaint.sectionTitleColor, 'rgba(0, 0, 0, 0)');
-  assert.notEqual(defaultPaint.sectionTitleShadow, 'none');
+  assert.equal(defaultPaint.sectionTitleShadow, 'none');
+  assert.equal(defaultPaint.titleSurfaceBackgroundImage, 'none');
+  assert.equal(defaultPaint.titleSurfaceBackgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(defaultPaint.titleSurfaceShadow, 'none');
 
   const firstRow = page.locator('.forge-right-row').first();
   await firstRow.hover();
@@ -2453,6 +2471,7 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
 
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('.forge-right-card').count(), 0);
+  assert.equal(await page.locator('.forge-right-title-surface').count(), 0);
   assert.equal(await page.locator('.forge-right-row').count(), 0);
   assert.equal(await page.locator('.forge-right-section').count(), 0);
   assert.equal(await page.locator('.forge-right-section-title').count(), 0);
@@ -2509,6 +2528,7 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
       '.forge-sidebar-selected',
       '.forge-right-card',
       '.forge-right-title',
+      '.forge-right-title-surface',
       '.forge-right-section',
       '.forge-right-section-title',
       '.forge-right-row'

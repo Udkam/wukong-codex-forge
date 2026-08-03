@@ -45,6 +45,7 @@ export const MARK_CLASSES = [
   'forge-right-panel',
   'forge-right-card',
   'forge-right-title',
+  'forge-right-title-surface',
   'forge-right-section',
   'forge-right-section-title',
   'forge-right-row',
@@ -1085,6 +1086,15 @@ function applyRuntime(payload) {
     if (!card) return [panel];
     mark(card, 'forge-right-card');
     if (title && card.contains(title)) mark(title, 'forge-right-title');
+    const titleSurface = title?.closest(
+      'header, h1, h2, h3, h4, h5, h6, [class*="bg-token-dropdown-background"]'
+    );
+    if (
+      titleSurface &&
+      titleSurface !== card &&
+      card.contains(titleSurface) &&
+      layoutPresent(titleSurface)
+    ) mark(titleSurface, 'forge-right-title-surface');
 
     const slottedRows = [...card.querySelectorAll(
       '[data-slot="thread-summary-panel-item"]'
@@ -1138,7 +1148,7 @@ function applyRuntime(payload) {
     ));
     sections.forEach(section => mark(section, 'forge-right-section'));
     sectionTitles.forEach(sectionTitle => mark(sectionTitle, 'forge-right-section-title'));
-    return [panel, card, title, ...sections, ...sectionTitles, ...rows];
+    return [panel, card, title, titleSurface, ...sections, ...sectionTitles, ...rows];
   };
   const firstTextLeft = element => {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
@@ -1329,17 +1339,9 @@ function applyRuntime(payload) {
     ));
     if (!rows.length) return [sidebar];
     for (const row of rows) {
-      const kind = row.kind;
-      if (kind === 'action') {
-        mark(row.surface, 'forge-sidebar-action');
-        if (row.selected) mark(row.surface, 'forge-sidebar-action-active');
-      } else mark(
-        row.surface,
-        kind === 'project-thread' ? 'forge-sidebar-level2' : 'forge-sidebar-level1'
-      );
-      if (row.selected && kind !== 'action') {
-        mark(row.surface, 'forge-sidebar-selected');
-      }
+      if (!row.selected) continue;
+      if (row.kind === 'action') mark(row.surface, 'forge-sidebar-action-active');
+      mark(row.surface, 'forge-sidebar-selected');
     }
     return [sidebar, scroll];
   };
@@ -1583,6 +1585,9 @@ function applyRuntime(payload) {
     '[data-composer-utility-bar-scroll-area]',
     '[data-composer-navigation-target]',
     '.order-2.flex.min-w-0.flex-col',
+    '.relative.min-w-0.overflow-clip.text-token-foreground',
+    '.vertical-scroll-fade-mask.hide-scrollbar.flex.max-h-\\[30dvh\\].flex-col.gap-px.overflow-x-hidden.overflow-y-auto.px-3.py-row-y',
+    '.relative.col-start-1.row-start-1.h-8.self-end',
     'button.size-token-button-composer'
   ].join(',');
   const nodeTouchesComposerSignal = node => (
