@@ -84,10 +84,13 @@ test('live capture closes only an explicitly owned transient debug session', () 
   assert.match(capture, /dismiss-full-access-warning/);
   assert.match(capture, /editorInitiallyEmpty/);
   assert.match(capture, /reusedExistingOwnedDraft/);
+  assert.match(capture, /editorFocused/);
   assert.match(capture, /inputPrepared/);
   assert.match(capture, /existingEditorText === nativeEnqueueMessage/);
+  assert.match(capture, /await editor\.focus\(\)/);
   assert.match(capture, /page\.keyboard\.insertText\(nativeEnqueueMessage\)/);
-  assert.match(capture, /page\.keyboard\.press\('Control\+Enter'\)/);
+  assert.match(capture, /await editor\.press\('Enter'\)/);
+  assert.doesNotMatch(capture, /page\.keyboard\.press\('Control\+Enter'\)/);
   assert.doesNotMatch(capture, /editor\.fill\(nativeEnqueueMessage\)/);
   assert.match(capture, /root\.dataset\.forgeSurface === 'thread'/);
   assert.match(capture, /root\.dataset\.forgeMode === 'scenery'/);

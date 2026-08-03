@@ -275,9 +275,10 @@ try {
   nativeEnqueueProof = {
     requested: Boolean(nativeEnqueueMessage),
     attempted: false,
-    submissionShortcut: nativeEnqueueMessage ? 'Control+Enter' : null,
+    submissionShortcut: nativeEnqueueMessage ? 'Enter' : null,
     editorInitiallyEmpty: false,
     reusedExistingOwnedDraft: false,
+    editorFocused: false,
     inputPrepared: false,
     inputCleared: false,
     queueObserved: false
@@ -402,8 +403,14 @@ try {
     }
 
     nativeEnqueueProof.attempted = true;
+    await editor.focus();
+    nativeEnqueueProof.editorFocused = await editor.evaluate(element => (
+      element === document.activeElement || element.contains(document.activeElement)
+    ));
+    if (!nativeEnqueueProof.editorFocused) {
+      throw Error('Native composer editor did not receive focus');
+    }
     if (nativeEnqueueProof.editorInitiallyEmpty) {
-      await editor.click();
       // ProseMirror owns its document state. Keyboard insertion exercises its
       // native beforeinput/input path; DOM-oriented fill() can paint text without
       // proving that the controller accepted it as a submit-ready prompt.
@@ -416,15 +423,16 @@ try {
       // A failed acceptance run can leave its own exact placeholder in the
       // isolated profile. Reuse only a byte-for-byte match with this run's
       // requested message; any other draft remains protected and fails closed.
-      await editor.click();
       nativeEnqueueProof.inputPrepared = true;
     }
     if (!nativeEnqueueProof.inputPrepared) {
       throw Error('Native composer controller did not accept the follow-up message');
     }
-    // The current native prompt editor always maps Mod+Enter to submit. Plain
-    // Enter can insert a newline when composerEnterBehavior is cmdAlways.
-    await page.keyboard.press('Control+Enter');
+    // The isolated acceptance profile has no composerEnterBehavior override,
+    // so the native default (`enter`) applies. In that mode plain Enter is the
+    // default follow-up submit action; Ctrl+Enter is intercepted as the one-shot
+    // opposite action and can steer instead of queueing.
+    await editor.press('Enter');
     nativeEnqueueProof.inputCleared = await waitUntil(async () => {
       if (!await editor.isVisible().catch(() => false)) return true;
       return String(await editor.textContent().catch(() => '')).trim() === '';

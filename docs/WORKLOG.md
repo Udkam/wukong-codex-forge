@@ -344,3 +344,9 @@
 - 失败报告位于本机临时目录，不保存草稿正文。清理证明 `nativeRestoreObserved=true`、`watcherConfirmed=true`、`verifiedTreeFallback=true`、`rootReleased=true`、`ownerReleased=true`、`portReleased=true`；专用端口 `55131` 已不可访问，安装 release 归属进程为 0。
 - 捕获器新增 `reusedExistingOwnedDraft` 布尔门：只有现有编辑器文本与本轮显式验收文本逐字一致，才将其作为已准备的本项目占位继续原生 `Control+Enter`；空编辑器仍使用 `insertText`，任意其他草稿继续失败闭合，不清空、不覆盖、不记录正文。
 - `node --check scripts/capture-live-playwright.mjs` 与生命周期定向合同 13/13 通过。测试后磁盘队列瞬时为 `6`，按红线约束不立即重开窗口；本检查点不改宠物或葫芦，不删除文件，也不把保护性失败写成联合视觉通过。
+
+### V46 原生默认 Enter 行为校正
+
+- 唯一一次单窗口重试复用了逐字一致的本项目验收草稿，报告证明 `reusedExistingOwnedDraft=true` 与 `inputPrepared=true`，但 `Control+Enter` 后仍为 `inputCleared=false`、`queueObserved=false`，没有生成 PNG。失败路径保持原生恢复、watcher、精确 PID 树、root/owner 与专用端口全部释放。
+- 只读解包当前 Store `app.asar` 的 prompt editor、composer adapter、service tier 与 setting storage 后重新校正结论：隔离 profile 的 Chromium `Preferences` 中没有 `composerEnterBehavior` 或 `followUpQueueMode` 覆盖，因此官方默认 `composerEnterBehavior=enter` 生效；此模式普通 `Enter` 是默认提交，运行中 `Ctrl+Enter` 则由额外拦截器翻转单次 follow-up 动作。
+- 捕获器新增 `editorFocused` 证明，先聚焦真实 ProseMirror，再由 locator 自身发送普通 `Enter`；仍要求输入清空且出现真实 `.forge-composer-queue-item` 才允许整页截图。资源采样处于琥珀/红线时不启动窗口，本修正不触碰宠物或葫芦、不删除文件，也不提前关闭联合实机门。
