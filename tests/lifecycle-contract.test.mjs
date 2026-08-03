@@ -89,11 +89,23 @@ test('live capture closes only an explicitly owned transient debug session', () 
   assert.match(capture, /taskSelectionProof/);
   assert.match(capture, /selectedTask/);
   assert.match(capture, /const waitForSelectedTask = async label/);
+  assert.match(capture, /const verifySelectedTaskState = async label/);
   assert.match(capture, /\.forge-sidebar-selected/);
+  assert.match(
+    capture,
+    /locator\('aside\.app-shell-left-panel'\)[\s\S]*getByText\(label, \{ exact: true \}\)/
+  );
   assert.ok(
     capture.indexOf('await waitForSelectedTask(label)') <
       capture.indexOf('await waitForRequestedTaskState()'),
     'capture must prove the requested task is current before accepting a stale thread state'
+  );
+  assert.ok(
+    capture.lastIndexOf('await verifySelectedTaskState(selectedTask)') <
+      capture.indexOf("await page.screenshot({ path: output, type: 'png' })") &&
+      capture.lastIndexOf('await verifySelectedTaskState(selectedTask)') >
+        capture.indexOf('report.selectedTask = selectedTask'),
+    'capture must re-prove the selected task and requested queue/goal state immediately before screenshot'
   );
   assert.match(capture, /composerAncestorChain[\s\S]*backdropFilter/);
   assert.match(

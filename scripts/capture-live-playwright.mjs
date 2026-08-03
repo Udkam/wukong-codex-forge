@@ -345,8 +345,16 @@ try {
       { timeout: Number(values['task-state-timeout-ms'] || 12000) }
     );
   };
+  const verifySelectedTaskState = async label => {
+    await waitForSelectedTask(label);
+    await waitForRequestedTaskState();
+    await waitForSelectedTask(label);
+  };
   const openTaskCandidate = async label => {
-    const task = page.getByText(label, { exact: true }).first();
+    const task = page
+      .locator('aside.app-shell-left-panel')
+      .getByText(label, { exact: true })
+      .first();
     if (!await task.isVisible().catch(() => false)) {
       taskSelectionProof.push({ label, visible: false, ready: false });
       return false;
@@ -356,9 +364,7 @@ try {
     ).click());
     await dismissFullAccessWarning();
     try {
-      await waitForSelectedTask(label);
-      await waitForRequestedTaskState();
-      await waitForSelectedTask(label);
+      await verifySelectedTaskState(label);
       taskSelectionProof.push({ label, visible: true, ready: true });
       selectedTask = label;
       return true;
@@ -396,7 +402,7 @@ try {
     ).click());
     await captureTransition();
   }
-  if (selectedTask) await waitForSelectedTask(selectedTask);
+  if (selectedTask) await verifySelectedTaskState(selectedTask);
   if (values['scroll-thread-top'] === 'true') {
     await page.evaluate(() => {
       const seed = document.querySelector(
@@ -582,6 +588,7 @@ try {
   report.transitionProof = transitionProof;
   report.taskSelectionProof = taskSelectionProof;
   report.selectedTask = selectedTask;
+  if (selectedTask) await verifySelectedTaskState(selectedTask);
   await page.screenshot({ path: output, type: 'png' });
 
   if (closeTransientDebug) {
