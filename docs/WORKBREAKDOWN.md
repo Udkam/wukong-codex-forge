@@ -207,3 +207,9 @@ V11 并行工作流已闭环：`bajie_v2_finish` 交付 INART 结构的小八戒
 - 来源定位域：指定任务文本只在原生 `aside.app-shell-left-panel` 中查找与点击，不再接受工作区中的同名文本。
 - 截图真实性域：点击后、滚动前以及最终截图前都使用同一组 current/selected + requested queue/goal 门，任一门漂移即失败并进入共享清理路径。
 - 资源域：本轮在 CPU 琥珀区只做脚本、合同与 Git 验证，不启动 Codex 临时实例、Playwright 或任何监听器。
+
+## 2026-08-03 V41 联合门轻量预检
+
+- Git 域：先恢复上轮未完成的 V40 推送，确认 `19069cd` 已进入 `origin/main`。
+- 安装域：对 retained release `0.13.0-20260803-143153` 运行只读 launch-adapter verifier，不重写快捷方式、bridge、marker 或事件记录。
+- 来源锁域：在琥珀资源约束下只比较 Store 版本、包目录与 ASAR 长度；完整 SHA-256 和真实整页捕获仍等待绿色窗口。

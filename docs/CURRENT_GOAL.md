@@ -149,3 +149,5 @@
 - V37 第一次真实联合门按合同拒绝：候选任务可见但未在时限内达到 queue/goal，未生成 PNG；失败路径确认原生恢复、watcher、root、launcher 与端口全部释放。随后完整页诊断发现捕获器在点击新任务后会被旧任务已经成立的 `thread` 状态抢跑。捕获器现必须先证明目标任务已成为原生 current/selected，再接受 surface/queue/goal，并在截图前复核一次；诊断 JSON同时记录 composer 祖先层的 computed paint，用于定位仍存黑色承载层。该工具修复不等于完成真实联合门。
 - V38 已把环境信息卡收敛为一张连续纸面：`环境信息` 主标题以及 `子智能体`、`后台进程`、`来源` 分区标题均不再绘制独立深色底条、阴影或额外圆角，行、分隔线、折叠与 300px 原生几何保持不变。输入区上方黑色承载层同时依据当前 `app.asar` 的 `data-thread-scroll-footer` 来源，仅清除其内层渐隐绘制，不移除 sticky footer、障碍层或命中区。四项定向回归通过；完整 `1600×900` 原生结构夹具证据位于 `artifacts/test-runs/v38-environment-unified-20260803-141204/`，明确不等同于真实 Codex 窗口验收。
 - V38 尝试真实单窗口联合取证时，便携 profile 自动恢复重任务并把整机 CPU 推至 100%；本轮立即完成原生恢复并精确释放所属 root、host 与专用端口，没有保留调试窗口。资源安全优先于重复实机捕获，因此最终真实窗口视觉门仍保持待验，不由夹具截图替代。
+- V40 将真实整页取证的任务 locator 限定在原生 `aside.app-shell-left-panel` 内，并在候选通过、滚动前与 `page.screenshot` 紧前重复证明 current/selected + thread/scenery/queue/goal 门；该取证脚本合同 1/1 通过，检查点 `19069cd` 已推送。
+- V41 只读预检再次证明两个开始菜单入口共用 Codex 内置 Node bridge，retained release `0.13.0-20260803-143153` 与 event-driven host 通过 verifier。当前 Store 包版本 `26.715.2305.0`、目录名和 `app.asar` 长度 `201143773` 字节与来源锁一致；完整 ASAR SHA-256 因 CPU `82.1%` 处于琥珀区而暂缓，不把轻量预检冒充最终验收。

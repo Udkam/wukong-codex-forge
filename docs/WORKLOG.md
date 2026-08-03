@@ -297,3 +297,9 @@
 - 资源复核为 CPU `72.0%`、可用内存 `19.02 GB`、磁盘队列 `0.0`，按琥珀区约束不启动实机窗口或浏览器。
 - 只读审计发现 `capture-live-playwright.mjs` 使用全页 `getByText(...).first()` 选任务，存在点中工作区同名标题的可能；滚动与报告采样后也缺少截图瞬间的最终状态复核。
 - 任务 locator 改为原生侧栏 scoped lookup；复用双重验证函数，在候选通过、滚动前和 `page.screenshot` 紧前重新证明指定任务与 queue/goal 状态。
+
+### V41 最终实机门轻量预检
+
+- 恢复 V40 远端记录：`19069cd` 已成功推送到 `origin/main`，上轮两次 HTTPS reset 未造成本地或远端历史分叉。
+- 以已安装 retained release 为 `verify-launch-adapter.ps1` 的正确根运行只读 verifier；两个开始菜单入口、Codex 内置 Node bridge、release marker、event-driven host 与最新 hook 事件全部通过。
+- Store 包版本、包目录和 `app.asar` 字节长度与 `docs/native-asar-provenance.json` 一致。当时 CPU `82.1%`处于琥珀区，因此不读取 192 MiB 完整哈希、不启动真实 Codex 或 Playwright；该预检不代替最终整页门。
