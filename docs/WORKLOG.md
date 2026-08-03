@@ -261,3 +261,11 @@
 - 根据 2026-08-03 实机截图撤销新建任务、拉取请求、站点、已安排、插件、置顶任务、项目条和项目内任务在未选中状态下的主题行背景；原生 hover、focus、expanded/collapsed、disabled 与 unread/running 状态继续由 Codex 自己绘制。
 - 仅原生 current/selected 外层行使用白纸黑字素材；背景按真实节点尺寸居中，并在四边各内缩 1 px，避免透明边缘与外层命中区错位。
 - 定向结果：`V35 preserves native unselected sidebar paint and themes only the current selection` 1/1；本检查点未启动 Codex 调试窗口、浏览器服务或常驻监听。
+
+### V36 目标首帧、黑边与环境分区
+
+- 定位进行中目标偶发漏替换的根因：当前 Codex 的 Framer Motion above-composer stack 会先以透明状态挂载；旧 `visible()` 在首次扫描时跳过它，而后续纯 style 动画不属于结构观察器事件。
+- composer 专属映射改用结构挂载门禁，并把搜索根提升到官方 composer root；仍只接收完整原生 class token，不扫描文案或任意可见卡片。
+- 输入器、上下文条、stack、goal panel 和 queue item 的原生边框、border-image、outline、模糊和阴影只做透明化，保留所有宽高与边框占位。
+- 按当前 `app.asar` 源码加入环境 Section 与直属 header 的生产签名；夹具同步增加子智能体、后台进程、来源三段真实层级，环境行由 4 行扩展为 7 行。
+- 定向测试：侧栏选中态 1/1、Motion 首帧目标 1/1、guided stack 1/1、环境信息分区 1/1、forced-colors 1/1。期间未启动 Codex 调试窗口、常驻服务或监听端口。

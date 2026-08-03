@@ -647,6 +647,38 @@ export const runtimeFixtureHtml = String.raw`
     }
     .summary-row:last-child { border: 0; }
     .summary-row .meta { margin-left: auto; color: #777b78; }
+    .summary-native-section {
+      position: relative;
+      z-index: 0;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 12px;
+    }
+    .summary-native-section:last-child { padding-bottom: 2px; }
+    .summary-native-section-title {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      width: 100%;
+      min-width: 0;
+      height: 28px;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px 2px 14px;
+      background: #373938;
+      color: #a1a4a0;
+      font-size: 14px;
+    }
+    .summary-native-section-title button {
+      min-width: 0;
+      padding: 2px 4px 2px 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+    }
+    .summary-native-section-body { position: relative; z-index: 0; margin-top: 2px; overflow: hidden; }
+    .summary-native-section-list { display: flex; flex-direction: column; gap: 2px; padding: 0 14px; }
 
     @media (max-width: 720px) {
       .app-shell-left-panel,
@@ -741,6 +773,30 @@ export const runtimeFixtureHtml = String.raw`
                         <div class="summary-row" data-slot="thread-summary-panel-item"><svg class="icon" viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="8" rx="1.5"/><path d="M5 13h6"/></svg><span>本地</span><svg class="icon meta" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></div>
                         <div class="summary-row" data-slot="thread-summary-panel-item"><svg class="icon" viewBox="0 0 16 16"><circle cx="4" cy="3.5" r="1.5"/><circle cx="4" cy="12.5" r="1.5"/><circle cx="12" cy="6" r="1.5"/><path d="M4 5v6M5.5 4.2C9 4.5 8 6 10.5 6"/></svg><b>main</b><svg class="icon meta" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></div>
                         <div class="summary-row" data-slot="thread-summary-panel-item"><svg class="icon" viewBox="0 0 16 16"><circle cx="5" cy="8" r="2"/><circle cx="11" cy="8" r="2"/><path d="M7 8h2"/></svg><span>比较分支</span><svg class="icon meta" viewBox="0 0 16 16"><path d="M5 11 11 5M7 5h4v4"/></svg></div>
+                        <section class="summary-native-section relative z-0 flex flex-col pb-3 after:absolute after:inset-x-3.5 after:bottom-0 after:h-[0.5px] after:bg-token-border-default after:content-[''] last:pb-0.5">
+                          <header class="summary-native-section-title sticky top-0 z-10 flex h-7 w-full min-w-0 items-center justify-start gap-2 bg-token-dropdown-background ps-3.5 pe-2.5 pb-0.5 text-base text-token-text-tertiary">
+                            <button type="button" aria-expanded="true"><span>子智能体</span></button><span style="margin-left:auto">1 运行中</span>
+                          </header>
+                          <div class="summary-native-section-body relative z-0 mt-0.5 overflow-hidden"><div class="summary-native-section-list flex flex-col gap-0.5 px-3.5">
+                            <div class="summary-row" data-slot="thread-summary-panel-item"><svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><circle cx="8" cy="8" r="2"/></svg><span>视觉审计</span><span class="meta">运行中</span></div>
+                          </div></div>
+                        </section>
+                        <section class="summary-native-section relative z-0 flex flex-col pb-3 after:absolute after:inset-x-3.5 after:bottom-0 after:h-[0.5px] after:bg-token-border-default after:content-[''] last:pb-0.5">
+                          <header class="summary-native-section-title sticky top-0 z-10 flex h-7 w-full min-w-0 items-center justify-start gap-2 bg-token-dropdown-background ps-3.5 pe-2.5 pb-0.5 text-base text-token-text-tertiary">
+                            <button type="button" aria-expanded="true"><span>后台进程</span></button>
+                          </header>
+                          <div class="summary-native-section-body relative z-0 mt-0.5 overflow-hidden"><div class="summary-native-section-list flex flex-col gap-0.5 px-3.5">
+                            <div class="summary-row" data-slot="thread-summary-panel-item"><svg class="icon" viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="9" rx="1.5"/></svg><span>rg 定向检查</span></div>
+                          </div></div>
+                        </section>
+                        <section class="summary-native-section relative z-0 flex flex-col pb-3 after:absolute after:inset-x-3.5 after:bottom-0 after:h-[0.5px] after:bg-token-border-default after:content-[''] last:pb-0.5">
+                          <header class="summary-native-section-title sticky top-0 z-10 flex h-7 w-full min-w-0 items-center justify-start gap-2 bg-token-dropdown-background ps-3.5 pe-2.5 pb-0.5 text-base text-token-text-tertiary">
+                            <button type="button" aria-expanded="true"><span>来源</span></button><button type="button" aria-label="添加来源" style="margin-left:auto">＋</button>
+                          </header>
+                          <div class="summary-native-section-body relative z-0 mt-0.5 overflow-hidden"><div class="summary-native-section-list flex flex-col gap-0.5 px-3.5">
+                            <div class="summary-row" data-slot="thread-summary-panel-item"><svg class="icon" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/></svg><span>参考截图</span></div>
+                          </div></div>
+                        </section>
                       </section>
                     </div>
                   </div>

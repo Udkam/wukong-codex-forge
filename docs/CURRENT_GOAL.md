@@ -1,6 +1,6 @@
 # 当前进行中目标
 
-更新时间：2026-08-01
+更新时间：2026-08-03
 
 本文件是本项目当前唯一执行基线。后续旧方案、旧截图和旧文档若与本文件冲突，以本文件为准。
 
@@ -142,3 +142,7 @@
 - V31 修复真实捕获在选任务超时后绕过关闭逻辑的资源缺口：成功与失败现在共用同一三重归属清理函数。真实 renderer 故意打开不存在任务触发 `TimeoutError` 后未生成 PNG，仍观察到原生恢复与 watcher 确认，唯一 root、launcher、端口和项目进程全部归零；去标识化证据位于 `artifacts/test-runs/v31-live-capture-failure-contract-20260801/acceptance.json`。当前便携 profile 未出现目标任务标题，因此真实 queue/goal 页面仍未通过，不能由 fixture 顶替。
 - V34 已完成非 PowerShell 正式随启随停实现与 `0.13.0-20260801-144611` 保留式安装；两个开始菜单入口均使用 Codex 内置 Node + append-only bridge，安装副本与仓库 `runtime/host.mjs` 哈希一致。生命周期/恢复合同 23/23、最小包 1/1 通过；剩余的是资源绿色窗口下的一次完整页真实 queue/goal 联合取证，不再包含宠物或葫芦。
 - V35 第一检查点已按最新审稿撤销所有未选中侧栏条目的主题行材质、颜色、焦点和状态指示覆盖；运行时仍保留原生语义标记用于 current 切换，只有真实 selected/current 外层节点绘制白纸黑字，并按节点实时尺寸四边内缩 1 px。定向侧栏合同已验证未选中八类条目的默认 paint 与原生逐项全等、选中态与所有 DOMRect 保持有效；目标稳定映射、输入区黑边和环境信息窗仍在下一检查点处理。
+- V36 修复进行中目标偶发不替换：当前 Codex 的 Framer Motion 宿主会先以 `opacity:0` 挂载，旧映射在首帧误判不存在，而后续纯 style 显现不会触发结构观察器。composer 专属映射现改为“已连接且非 hidden/inert/display:none/visibility:hidden”的结构门禁，首帧即可标记并在显现后保持。
+- V36 将输入器、queue 外层、每条 queue item 与 goal 外层的原生 border、border-image、outline、backdrop-filter 和 box-shadow 视觉中和，同时保留边框占位与所有 DOMRect；不使用 `border:0` 改变盒模型。
+- V36 只读解包 `thread-summary-panel-components` 后，为环境信息卡增加官方 Section/直属 header 的完整 class-token 映射：Section 根保持透明，标题换为暖墨纸签，官方分隔线换为赭色发丝线；动态分区、按钮、折叠语义、行序和 300px 卡片几何不变。
+- V36 定向结果：侧栏选中态 1/1、透明首帧目标 1/1、原生 queue/goal 堆叠与黑边中和 1/1、环境信息分区 1/1、forced-colors 1/1；本检查点仍不等同于真实 Codex 完整页视觉验收。

@@ -358,3 +358,10 @@ V10 的重点不是给原生界面统一蒙一层深色，而是让每张电影�
 恢复表达式会断开结构 `MutationObserver`，取消侧栏/提交复核定时器，移除 popstate、hashchange、resize、click、keydown listener、style、class、`data-forge-mark`、状态与三项碰撞属性，并清除葫芦定位变量。强制高对比模式下禁用所有图片伪元素，优先保证系统可访问性。
 
 便携启动器使用解压目录内 `.wukong-runtime` 的隔离 web profile 和随机回环端口，不写官方程序文件。0.8.0 使用 Codex 自带 `cua_node` 与仅依赖 `http`、`crypto`、`zlib` 的回环协议客户端，不携带 npm 依赖树。11 张背景在变量载荷中各编码一次，`--forge-art-*` 只引用对应 `--forge-bg-*`；当前变量载荷 3,654,150 字符，完整样式 3,670,925 字符。停用必须验证 V4–V9 style/class/mark/runtime 全部消失后才成功；磁盘文件由脚本原样保留。关闭主题窗口后，用户自行删除整个解压目录即可回到普通 Codex。已经运行且没有 CDP 端口的普通 Codex 无法从外部热注入，这是 Chromium 运行边界。
+
+## V36 原生首帧与环境分区设计
+
+- `visible()` 继续服务于一般可见表面；仅 composer 的官方 above-composer panel、queue list、queue item 和 goal 使用 `structurallyMounted()`。后者要求元素已连接，并沿祖先链排除 `hidden`、`inert`、`display:none` 与 `visibility:hidden`，但不以 `opacity` 或首帧 DOMRect 判死，从而兼容 Framer Motion 的先挂载后显现。
+- queue/goal 的宿主仍保留原生 border 宽度。主题只把四边颜色、`border-image`、outline、backdrop-filter 与阴影设为视觉透明；纸纹全部位于 `pointer-events:none` 的伪元素层。这样能消除截图中的黑边/黑带，又不会让输入区、目标行或按钮发生像素位移。
+- 环境信息分区不读取“子智能体 / 后台进程 / 来源”等本地化文字。生产 `Section` 的根签名是 `relative z-0 flex flex-col pb-3`，其直属 `header` 签名包含 `sticky top-0 z-10 h-7 w-full bg-token-dropdown-background ps-3.5 pe-2.5 text-token-text-tertiary`。只有同时满足两层合同的节点获得分区材质。
+- 分区根保持透明；官方 `::after` 分隔线改为低对比赭色渐变。标题使用深暖墨纸、骨白文字、4px 轻切角与内嵌发丝线，避免原生现代灰条和整卡纸面割裂。forced-colors 下这些图案、裁切和阴影全部交还系统。

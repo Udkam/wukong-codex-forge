@@ -322,7 +322,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   corner-shape: initial !important;
   clip-path: none !important;
   border-color: transparent !important;
+  border-image: none !important;
+  outline: 0 !important;
   backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
 }
 
@@ -395,7 +398,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   corner-shape: initial !important;
   clip-path: none !important;
   border-color: transparent !important;
+  border-image: none !important;
+  outline: 0 !important;
   backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
 }
 
@@ -473,6 +479,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   corner-shape: initial !important;
   clip-path: none !important;
   border-color: transparent !important;
+  border-image: none !important;
+  outline: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
 }
 
@@ -493,6 +503,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   corner-shape: initial !important;
   clip-path: none !important;
   border-color: transparent !important;
+  border-image: none !important;
+  outline: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
 }
 
@@ -670,6 +684,60 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 :root.forge-ink-mountain #root .forge-right-title {
   color: #f3e6cf !important;
   text-shadow: 0 1px 0 rgba(26, 17, 10, .52);
+}
+
+:root.forge-ink-mountain #root .forge-right-section {
+  position: relative !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+:root.forge-ink-mountain #root .forge-right-section::after {
+  background-image: linear-gradient(
+    90deg,
+    rgba(218, 193, 153, .04),
+    rgba(218, 193, 153, .22) 18%,
+    rgba(72, 49, 29, .52) 80%,
+    rgba(72, 49, 29, .04)
+  ) !important;
+}
+
+:root.forge-ink-mountain #root .forge-right-section-title {
+  --color-token-foreground: #efe2cc;
+  --color-token-text-primary: #efe2cc;
+  --color-token-text-secondary: #d2c3ac;
+  --color-token-text-tertiary: #cbbca5;
+  --color-token-icon-foreground: #eadcc5;
+  color: #eadcc5 !important;
+  background-color: #302a22 !important;
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(15, 13, 10, .58),
+      rgba(57, 47, 36, .82) 18%,
+      rgba(45, 38, 30, .9) 76%,
+      rgba(18, 15, 12, .66)
+    ),
+    var(--forge-ui-paper-tile) !important;
+  background-position: center, center !important;
+  background-repeat: no-repeat, repeat !important;
+  background-size: 100% 100%, 512px 220px !important;
+  background-blend-mode: normal, soft-light;
+  border-radius: 0 !important;
+  clip-path: polygon(
+    4px 0,
+    calc(100% - 4px) 0,
+    100% 4px,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    4px 100%,
+    0 calc(100% - 4px),
+    0 4px
+  );
+  box-shadow:
+    0 1px 0 rgba(225, 204, 169, .12) inset,
+    0 -1px 0 rgba(13, 10, 7, .66) inset !important;
+  text-shadow: 0 1px 0 rgba(13, 9, 6, .62);
 }
 
 :root.forge-ink-mountain #root .forge-right-row {
@@ -884,6 +952,8 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :root.forge-ink-mountain #root .forge-sidebar-selected,
   :root.forge-ink-mountain #root .forge-right-card,
   :root.forge-ink-mountain #root .forge-right-title,
+  :root.forge-ink-mountain #root .forge-right-section,
+  :root.forge-ink-mountain #root .forge-right-section-title,
   :root.forge-ink-mountain #root .forge-right-row {
     --color-token-foreground: CanvasText;
     --color-token-text-primary: CanvasText;
@@ -920,6 +990,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :root.forge-ink-mountain #root .forge-composer-queue-item::after,
   :root.forge-ink-mountain #root .forge-right-card::before,
   :root.forge-ink-mountain #root .forge-right-card::after,
+  :root.forge-ink-mountain #root .forge-right-section::after,
   :root.forge-ink-mountain #root .forge-right-row::after {
     content: none !important;
   }

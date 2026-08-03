@@ -1120,6 +1120,13 @@ test('V16 maps the native guided stack once and remaps context without a resize 
           panelClipPath: panelStyle.clipPath,
           panelBackgroundImage: panelStyle.backgroundImage,
           panelBorderRadius: panelStyle.borderRadius,
+          panelBorderColors: [
+            panelStyle.borderTopColor,
+            panelStyle.borderRightColor,
+            panelStyle.borderBottomColor,
+            panelStyle.borderLeftColor
+          ],
+          panelBackdropFilter: panelStyle.backdropFilter,
           paintContent: paintStyle.content,
           paintClipPath: paintStyle.clipPath,
           paintBackgroundSize: paintStyle.backgroundSize,
@@ -1140,6 +1147,13 @@ test('V16 maps the native guided stack once and remaps context without a resize 
           itemClipPath: itemStyle.clipPath,
           itemBackgroundImage: itemStyle.backgroundImage,
           itemBorderRadius: itemStyle.borderRadius,
+          itemBorderColors: [
+            itemStyle.borderTopColor,
+            itemStyle.borderRightColor,
+            itemStyle.borderBottomColor,
+            itemStyle.borderLeftColor
+          ],
+          itemBackdropFilter: itemStyle.backdropFilter,
           paintContent: paintStyle.content,
           paintClipPath: paintStyle.clipPath,
           paintBackgroundImage: paintStyle.backgroundImage,
@@ -1159,6 +1173,13 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     return {
       stackClipPath: stackStyle.clipPath,
       stackBackgroundImage: stackStyle.backgroundImage,
+      stackBorderColors: [
+        stackStyle.borderTopColor,
+        stackStyle.borderRightColor,
+        stackStyle.borderBottomColor,
+        stackStyle.borderLeftColor
+      ],
+      stackBackdropFilter: stackStyle.backdropFilter,
       stackPaintContent: stackPaintStyle.content,
       stackBorderRadius: stackStyle.borderRadius,
       panelPaint,
@@ -1183,6 +1204,12 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     'the live joined queue/goal host must retain its rectangular native hit area'
   );
   assert.equal(guidedPaint.stackBackgroundImage, 'none');
+  assert.deepEqual(
+    guidedPaint.stackBorderColors,
+    Array(4).fill('rgba(0, 0, 0, 0)'),
+    'the native stack border must be visually transparent without changing its box'
+  );
+  assert.equal(guidedPaint.stackBackdropFilter, 'none');
   assert.equal(
     guidedPaint.stackPaintContent,
     'none',
@@ -1194,6 +1221,8 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     assert.equal(row.panelClipPath, 'none');
     assert.equal(row.panelBackgroundImage, 'none');
     assert.equal(row.panelBorderRadius, '0px');
+    assert.deepEqual(row.panelBorderColors, Array(4).fill('rgba(0, 0, 0, 0)'));
+    assert.equal(row.panelBackdropFilter, 'none');
     assert.equal(row.paintContent, '""');
     assert.equal(
       row.paintClipPath,
@@ -1233,6 +1262,8 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     assert.equal(item.itemClipPath, 'none');
     assert.equal(item.itemBackgroundImage, 'none');
     assert.equal(item.itemBorderRadius, '0px');
+    assert.deepEqual(item.itemBorderColors, Array(4).fill('rgba(0, 0, 0, 0)'));
+    assert.equal(item.itemBackdropFilter, 'none');
     assert.equal(item.paintContent, '""');
     assert.equal(item.paintClipPath, 'none');
     assert.notEqual(item.paintBackgroundImage, 'none');
@@ -1762,10 +1793,13 @@ test('V16 maps the native guided stack once and remaps context without a resize 
 
   const level2 = page.locator('[data-native-slot="project-temple-child"]');
   const defaultImage = await level2.evaluate(element => getComputedStyle(element).backgroundImage);
-  assert.match(defaultImage, /linear-gradient/);
   await level2.hover();
   const hoverImage = await level2.evaluate(element => getComputedStyle(element).backgroundImage);
-  assert.match(hoverImage, /data:image\/svg\+xml/);
+  assert.equal(
+    hoverImage,
+    defaultImage,
+    'an unselected thread hover must keep its native background-image contract'
+  );
 
   await page.evaluate(() => {
     const current = document.querySelector(
@@ -1788,6 +1822,83 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       'button[aria-haspopup="menu"][aria-expanded].forge-topbar-menu-item'
     ).length === 4
   ));
+
+  await page.evaluate(RESTORE_EXPRESSION);
+  assert.equal(await page.locator('[data-forge-mark]').count(), 0);
+  await page.close();
+});
+
+test('V35 maps a motion-mounted active goal before its first visible frame', async () => {
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 820 },
+    deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
+  });
+  await page.route('http://wukong-v35-motion-goal.test/**', route => route.fulfill({
+    body: runtimeFixtureHtml,
+    contentType: 'text/html; charset=utf-8'
+  }));
+  await page.goto('http://wukong-v35-motion-goal.test/');
+  await installComposerState(page, 'guided');
+
+  const before = await page.evaluate(() => {
+    const stack = document.querySelector('[data-fixture-surface="composer-stack"]');
+    const goal = document.querySelector('[data-fixture-surface="goal-panel"]');
+    stack.style.opacity = '0';
+    const stackRect = stack.getBoundingClientRect();
+    const goalRect = goal.getBoundingClientRect();
+    return [
+      goalRect.x - stackRect.x,
+      goalRect.y - stackRect.y,
+      goalRect.width,
+      goalRect.height
+    ];
+  });
+
+  await page.evaluate(expression);
+  await page.waitForFunction(() => (
+    document.querySelector('[data-fixture-surface="composer-stack"]')
+      ?.classList.contains('forge-composer-panel-stack') &&
+    document.querySelector('[data-fixture-surface="goal-panel"]')
+      ?.classList.contains('forge-composer-panel')
+  ));
+
+  const firstFrame = await page.evaluate(() => {
+    const stack = document.querySelector('[data-fixture-surface="composer-stack"]');
+    const goal = document.querySelector('[data-fixture-surface="goal-panel"]');
+    const style = getComputedStyle(goal);
+    const paint = getComputedStyle(goal, '::before');
+    const stackRect = stack.getBoundingClientRect();
+    const goalRect = goal.getBoundingClientRect();
+    stack.style.opacity = '1';
+    return {
+      rect: [
+        goalRect.x - stackRect.x,
+        goalRect.y - stackRect.y,
+        goalRect.width,
+        goalRect.height
+      ],
+      backgroundImage: style.backgroundImage,
+      borderColors: [
+        style.borderTopColor,
+        style.borderRightColor,
+        style.borderBottomColor,
+        style.borderLeftColor
+      ],
+      backdropFilter: style.backdropFilter,
+      paintContent: paint.content
+    };
+  });
+  assert.deepEqual(firstFrame.rect, before);
+  assert.equal(firstFrame.backgroundImage, 'none');
+  assert.deepEqual(firstFrame.borderColors, Array(4).fill('rgba(0, 0, 0, 0)'));
+  assert.equal(firstFrame.backdropFilter, 'none');
+  assert.equal(firstFrame.paintContent, '""');
+  await page.waitForTimeout(80);
+  assert.equal(
+    await page.locator('[data-fixture-surface="goal-panel"].forge-composer-panel').count(),
+    1,
+    'the goal must stay themed when its motion wrapper becomes visible without a style observer'
+  );
 
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('[data-forge-mark]').count(), 0);
@@ -2209,6 +2320,8 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
     const title = card.querySelector('.summary-heading');
     const add = card.querySelector('[data-native-slot="right-add"]');
     const rows = [...card.querySelectorAll('[data-slot="thread-summary-panel-item"]')];
+    const sections = [...card.querySelectorAll('.summary-native-section')];
+    const sectionTitles = [...card.querySelectorAll('.summary-native-section-title')];
     return {
       panel: rectOf(document.querySelector('[data-pip-obstacle="thread-summary-panel"]')),
       card: rectOf(card),
@@ -2216,6 +2329,11 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
       add: rectOf(add),
       rows: rows.map(rectOf),
       rowText: rows.map(row => row.textContent.replace(/\s+/g, ' ').trim()),
+      sections: sections.map(rectOf),
+      sectionTitles: sectionTitles.map(rectOf),
+      sectionTitleText: sectionTitles.map(section => (
+        section.textContent.replace(/\s+/g, ' ').trim()
+      )),
       addSemantics: {
         ariaLabel: add.getAttribute('aria-label'),
         role: add.getAttribute('role'),
@@ -2227,7 +2345,9 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   });
   const before = await readContract();
   assert.equal(before.card[2], 300, 'fixture must retain the official 300px card width');
-  assert.equal(before.rows.length, 4);
+  assert.equal(before.rows.length, 7);
+  assert.equal(before.sections.length, 3);
+  assert.equal(before.sectionTitles.length, 3);
   const beforeAddHits = await nativeHitPattern(page, selectors.rightAdd);
 
   await page.evaluate(expression);
@@ -2236,7 +2356,9 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
       ?.classList.contains('forge-right-panel') &&
     document.querySelector('[data-native-slot="right-card"]')
       ?.classList.contains('forge-right-card') &&
-    document.querySelectorAll('.forge-right-row').length === 4
+    document.querySelectorAll('.forge-right-row').length === 7 &&
+    document.querySelectorAll('.forge-right-section').length === 3 &&
+    document.querySelectorAll('.forge-right-section-title').length === 3
   ));
 
   assert.deepEqual(
@@ -2252,7 +2374,9 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   assert.equal(await page.locator('.forge-right-panel').count(), 1);
   assert.equal(await page.locator('.forge-right-card').count(), 1);
   assert.equal(await page.locator('.forge-right-title').count(), 1);
-  assert.equal(await page.locator('.forge-right-row').count(), 4);
+  assert.equal(await page.locator('.forge-right-row').count(), 7);
+  assert.equal(await page.locator('.forge-right-section').count(), 3);
+  assert.equal(await page.locator('.forge-right-section-title').count(), 3);
 
   const defaultPaint = await page.evaluate(() => {
     const card = document.querySelector('.forge-right-card');
@@ -2261,6 +2385,11 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
     const paper = getComputedStyle(card, '::before');
     const rail = getComputedStyle(card, '::after');
     const separator = getComputedStyle(row, '::after');
+    const section = document.querySelector('.forge-right-section');
+    const sectionTitle = document.querySelector('.forge-right-section-title');
+    const sectionStyle = getComputedStyle(section);
+    const sectionSeparator = getComputedStyle(section, '::after');
+    const sectionTitleStyle = getComputedStyle(sectionTitle);
     return {
       cardBackgroundColor: style.backgroundColor,
       cardBackgroundImage: style.backgroundImage,
@@ -2274,7 +2403,14 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
       paperClipPath: paper.clipPath,
       railContent: rail.content,
       separatorContent: separator.content,
-      rowBackgroundColor: getComputedStyle(row).backgroundColor
+      rowBackgroundColor: getComputedStyle(row).backgroundColor,
+      sectionBackgroundColor: sectionStyle.backgroundColor,
+      sectionBackgroundImage: sectionStyle.backgroundImage,
+      sectionSeparatorBackgroundImage: sectionSeparator.backgroundImage,
+      sectionTitleBackgroundImage: sectionTitleStyle.backgroundImage,
+      sectionTitleClipPath: sectionTitleStyle.clipPath,
+      sectionTitleColor: sectionTitleStyle.color,
+      sectionTitleShadow: sectionTitleStyle.boxShadow
     };
   });
   assert.equal(defaultPaint.cardBackgroundColor, 'rgba(0, 0, 0, 0)');
@@ -2289,6 +2425,14 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   assert.equal(defaultPaint.railContent, '""');
   assert.equal(defaultPaint.separatorContent, '""');
   assert.notEqual(defaultPaint.cardColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(defaultPaint.sectionBackgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(defaultPaint.sectionBackgroundImage, 'none');
+  assert.match(defaultPaint.sectionSeparatorBackgroundImage, /linear-gradient/);
+  assert.match(defaultPaint.sectionTitleBackgroundImage, /linear-gradient/);
+  assert.match(defaultPaint.sectionTitleBackgroundImage, /data:image\/svg\+xml/);
+  assert.match(defaultPaint.sectionTitleClipPath, /^polygon\(/);
+  assert.notEqual(defaultPaint.sectionTitleColor, 'rgba(0, 0, 0, 0)');
+  assert.notEqual(defaultPaint.sectionTitleShadow, 'none');
 
   const firstRow = page.locator('.forge-right-row').first();
   await firstRow.hover();
@@ -2310,6 +2454,8 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('.forge-right-card').count(), 0);
   assert.equal(await page.locator('.forge-right-row').count(), 0);
+  assert.equal(await page.locator('.forge-right-section').count(), 0);
+  assert.equal(await page.locator('.forge-right-section-title').count(), 0);
   assert.deepEqual(await readContract(), before);
   await page.close();
 });
@@ -2363,6 +2509,8 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
       '.forge-sidebar-selected',
       '.forge-right-card',
       '.forge-right-title',
+      '.forge-right-section',
+      '.forge-right-section-title',
       '.forge-right-row'
     ].join(',');
     return [...new Set(document.querySelectorAll(selector))].map((element, index) => {

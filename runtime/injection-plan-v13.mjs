@@ -45,6 +45,8 @@ export const MARK_CLASSES = [
   'forge-right-panel',
   'forge-right-card',
   'forge-right-title',
+  'forge-right-section',
+  'forge-right-section-title',
   'forge-right-row',
   'forge-menu',
   'forge-dialog',
@@ -162,6 +164,19 @@ function applyRuntime(payload) {
     if (!(element instanceof Element)) return false;
     const rect = element.getBoundingClientRect();
     if (rect.width <= 1 || rect.height <= 1) return false;
+    for (let cursor = element; cursor && cursor !== document.documentElement; cursor = cursor.parentElement) {
+      const computed = getComputedStyle(cursor);
+      if (
+        cursor.hidden ||
+        cursor.hasAttribute('inert') ||
+        computed.display === 'none' ||
+        computed.visibility === 'hidden'
+      ) return false;
+    }
+    return true;
+  };
+  const structurallyMounted = element => {
+    if (!(element instanceof Element) || !element.isConnected) return false;
     for (let cursor = element; cursor && cursor !== document.documentElement; cursor = cursor.parentElement) {
       const computed = getComputedStyle(cursor);
       if (
@@ -775,7 +790,7 @@ function applyRuntime(payload) {
       ? [aboveComposerPortal]
       : [];
     const nativePanelRow = panel => (
-      visible(panel) &&
+      structurallyMounted(panel) &&
       hasClassTokens(panel, [
         'relative',
         'min-w-0',
@@ -784,11 +799,11 @@ function applyRuntime(payload) {
       ])
     );
     const panelStacks = [
-      ...(composerComponent?.querySelectorAll(
+      ...(composerRoot.querySelectorAll(
         '.order-2.flex.min-w-0.flex-col'
       ) || [])
     ].filter(stack => (
-      visible(stack) &&
+      structurallyMounted(stack) &&
       !aboveComposerPortal?.contains(stack) &&
       [...stack.children].some(nativePanelRow)
     ));
@@ -821,16 +836,16 @@ function applyRuntime(payload) {
     ];
     const queuedLists = panelCandidates.flatMap(panel => (
       [...panel.querySelectorAll('div')].filter(element => (
-        visible(element) &&
+        structurallyMounted(element) &&
         hasClassTokens(element, queuedListTokens)
       ))
     ));
     const queuedItems = queuedLists.flatMap(list => (
       [...list.children].filter(item => (
-        visible(item) &&
+        structurallyMounted(item) &&
         item.classList.contains('overflow-visible') &&
         [...item.querySelectorAll('div')].some(row => (
-          visible(row) &&
+          structurallyMounted(row) &&
           hasClassTokens(row, queuedMessageRowTokens)
         ))
       ))
@@ -1079,7 +1094,51 @@ function applyRuntime(payload) {
       : [...card.querySelectorAll('.summary-row')].filter(layoutPresent);
     const rows = [...new Set([...slottedRows, ...fixtureRows])];
     rows.forEach(row => mark(row, 'forge-right-row'));
-    return [panel, card, title, ...rows];
+
+    /*
+     * The packaged Section component intentionally has no data-slot. Its
+     * source contract is nevertheless stable: a direct section root owns a
+     * sticky h-7 dropdown-background header. Map that exact native topology
+     * instead of guessing from localized labels or the current gray paint.
+     */
+    const sectionTokens = [
+      'relative',
+      'z-0',
+      'flex',
+      'flex-col',
+      'pb-3'
+    ];
+    const sectionTitleTokens = [
+      'sticky',
+      'top-0',
+      'z-10',
+      'flex',
+      'h-7',
+      'w-full',
+      'bg-token-dropdown-background',
+      'ps-3.5',
+      'pe-2.5',
+      'text-token-text-tertiary'
+    ];
+    const sections = [...card.querySelectorAll('section')].filter(section => (
+      layoutPresent(section) &&
+      hasClassTokens(section, sectionTokens) &&
+      [...section.children].some(child => (
+        child.tagName === 'HEADER' &&
+        layoutPresent(child) &&
+        hasClassTokens(child, sectionTitleTokens)
+      ))
+    ));
+    const sectionTitles = sections.flatMap(section => (
+      [...section.children].filter(child => (
+        child.tagName === 'HEADER' &&
+        layoutPresent(child) &&
+        hasClassTokens(child, sectionTitleTokens)
+      ))
+    ));
+    sections.forEach(section => mark(section, 'forge-right-section'));
+    sectionTitles.forEach(sectionTitle => mark(sectionTitle, 'forge-right-section-title'));
+    return [panel, card, title, ...sections, ...sectionTitles, ...rows];
   };
   const firstTextLeft = element => {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
