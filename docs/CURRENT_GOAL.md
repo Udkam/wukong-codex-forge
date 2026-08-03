@@ -146,3 +146,4 @@
 - V36 将输入器、queue 外层、每条 queue item 与 goal 外层的原生 border、border-image、outline、backdrop-filter 和 box-shadow 视觉中和，同时保留边框占位与所有 DOMRect；不使用 `border:0` 改变盒模型。
 - V36 只读解包 `thread-summary-panel-components` 后，为环境信息卡增加官方 Section/直属 header 的完整 class-token 映射：Section 根保持透明，标题换为暖墨纸签，官方分隔线换为赭色发丝线；动态分区、按钮、折叠语义、行序和 300px 卡片几何不变。
 - V36 定向结果：侧栏选中态 1/1、透明首帧目标 1/1、原生 queue/goal 堆叠与黑边中和 1/1、环境信息分区 1/1、forced-colors 1/1；本检查点仍不等同于真实 Codex 完整页视觉验收。
+- V37 第一次真实联合门按合同拒绝：候选任务可见但未在时限内达到 queue/goal，未生成 PNG；失败路径确认原生恢复、watcher、root、launcher 与端口全部释放。随后完整页诊断发现捕获器在点击新任务后会被旧任务已经成立的 `thread` 状态抢跑。捕获器现必须先证明目标任务已成为原生 current/selected，再接受 surface/queue/goal，并在截图前复核一次；诊断 JSON同时记录 composer 祖先层的 computed paint，用于定位仍存黑色承载层。该工具修复不等于完成真实联合门。

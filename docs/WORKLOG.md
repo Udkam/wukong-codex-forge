@@ -269,3 +269,10 @@
 - 输入器、上下文条、stack、goal panel 和 queue item 的原生边框、border-image、outline、模糊和阴影只做透明化，保留所有宽高与边框占位。
 - 按当前 `app.asar` 源码加入环境 Section 与直属 header 的生产签名；夹具同步增加子智能体、后台进程、来源三段真实层级，环境行由 4 行扩展为 7 行。
 - 定向测试：侧栏选中态 1/1、Motion 首帧目标 1/1、guided stack 1/1、环境信息分区 1/1、forced-colors 1/1。期间未启动 Codex 调试窗口、常驻服务或监听端口。
+
+### V37 实机任务选择门禁
+
+- `codex主题替换` 与长标题候选均未在 20 秒内达到真实 queue/goal，捕获器未制造 PNG，并在失败路径完成 native restore、watcher 确认、精确 root tree、launcher 与端口释放。
+- 后续不带 queue/goal 前提的完整页诊断暴露任务选择竞态：旧任务已经满足 `thread`，导致点击后的导航尚未落定就被判为 ready。截图实际仍是 `Temple 总控`，因此明确不作为目标任务视觉证据。
+- 捕获器新增 current/selected 任务标题双重等待，并在状态等待后及截图前复核；composer 祖先链同步记录背景、边框、阴影、backdrop 与伪元素绘制，供下一次真实页面精确消除外层黑带。
+- 定向验证：`node --check scripts/capture-live-playwright.mjs` 通过；生命周期捕获合同 1/1 通过。两个临时窗口均已关闭，第二次成功捕获也确认 root、launcher 与端口归零。

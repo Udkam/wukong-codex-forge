@@ -88,6 +88,14 @@ test('live capture closes only an explicitly owned transient debug session', () 
   assert.match(capture, /querySelectorAll\('\.forge-composer-queue-item'\)\.length >= 1/);
   assert.match(capture, /taskSelectionProof/);
   assert.match(capture, /selectedTask/);
+  assert.match(capture, /const waitForSelectedTask = async label/);
+  assert.match(capture, /\.forge-sidebar-selected/);
+  assert.ok(
+    capture.indexOf('await waitForSelectedTask(label)') <
+      capture.indexOf('await waitForRequestedTaskState()'),
+    'capture must prove the requested task is current before accepting a stale thread state'
+  );
+  assert.match(capture, /composerAncestorChain[\s\S]*backdropFilter/);
   assert.match(
     capture,
     /catch \(error\) \{[\s\S]*cleanupTransientDebug\('capture-failed'\)/

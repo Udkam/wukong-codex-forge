@@ -326,6 +326,25 @@ try {
       { timeout: Number(values['task-state-timeout-ms'] || 12000) }
     );
   };
+  const waitForSelectedTask = async label => {
+    await page.waitForFunction(
+      expectedLabel => {
+        const normalize = value => String(value || '').replace(/\s+/g, ' ').trim();
+        const expected = normalize(expectedLabel);
+        const ownsExpectedLabel = element => normalize(element?.textContent) === expected;
+        const themedCurrent = [...document.querySelectorAll('.forge-sidebar-selected')]
+          .some(ownsExpectedLabel);
+        if (themedCurrent) return true;
+        return [...document.querySelectorAll([
+          '[aria-current="page"]',
+          '[aria-selected="true"]',
+          '[data-state="active"]'
+        ].join(','))].some(ownsExpectedLabel);
+      },
+      label,
+      { timeout: Number(values['task-state-timeout-ms'] || 12000) }
+    );
+  };
   const openTaskCandidate = async label => {
     const task = page.getByText(label, { exact: true }).first();
     if (!await task.isVisible().catch(() => false)) {
@@ -337,7 +356,9 @@ try {
     ).click());
     await dismissFullAccessWarning();
     try {
+      await waitForSelectedTask(label);
       await waitForRequestedTaskState();
+      await waitForSelectedTask(label);
       taskSelectionProof.push({ label, visible: true, ready: true });
       selectedTask = label;
       return true;
@@ -375,6 +396,7 @@ try {
     ).click());
     await captureTransition();
   }
+  if (selectedTask) await waitForSelectedTask(selectedTask);
   if (values['scroll-thread-top'] === 'true') {
     await page.evaluate(() => {
       const seed = document.querySelector(
@@ -428,6 +450,9 @@ try {
       element = element.parentElement
     ) {
       const box = element.getBoundingClientRect();
+      const computed = getComputedStyle(element);
+      const before = getComputedStyle(element, '::before');
+      const after = getComputedStyle(element, '::after');
       composerAncestorChain.push({
         tag: element.tagName,
         id: element.id || null,
@@ -440,7 +465,29 @@ try {
           utilityScrollArea: element.getAttribute('data-composer-utility-bar-scroll-area')
         },
         rect: { x: box.x, y: box.y, width: box.width, height: box.height },
-        directChildCount: element.children.length
+        directChildCount: element.children.length,
+        paint: {
+          backgroundColor: computed.backgroundColor,
+          backgroundImage: computed.backgroundImage,
+          borderColor: computed.borderColor,
+          borderRadius: computed.borderRadius,
+          boxShadow: computed.boxShadow,
+          backdropFilter: computed.backdropFilter,
+          filter: computed.filter,
+          overflow: computed.overflow,
+          before: {
+            content: before.content,
+            backgroundColor: before.backgroundColor,
+            backgroundImage: before.backgroundImage,
+            boxShadow: before.boxShadow
+          },
+          after: {
+            content: after.content,
+            backgroundColor: after.backgroundColor,
+            backgroundImage: after.backgroundImage,
+            boxShadow: after.boxShadow
+          }
+        }
       });
     }
     const assistant = document.querySelector('.forge-assistant-turn, [data-local-conversation-final-assistant]');
