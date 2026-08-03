@@ -1,5 +1,13 @@
 # 大圣归来 · 潇湘双境 — 设计与实现
 
+## V42 环境卡单一纸面补强
+
+V42 不给 `环境信息`、`子智能体`、`后台进程`、`来源` 添加题签、深条或独立卡片。唯一可见材质来自官方 300px 外卡上的连续纸面，标题、分区、行与分隔继续位于同一原生容器内。
+
+当前打包 UI 的主标题文字可能嵌在另一个带 `bg-token-dropdown-background` 的绘制承载层中。旧 `closest()` 在标题本体提前停止，导致真实窗口仍露出深色条；V42 改为从已定位标题向外卡逐级上行，只标记标题/header 与显式 dropdown-background 承载层。同时，三个分区只接受当前 ASAR 的 `Section -> 直属 header` 双层 class-token 签名，避免按中文标题或宽泛容器猜测。
+
+这些标记的基础背景、背景图、边框色、阴影、backdrop 以及 `::before` / `::after` paint 全部透明；不删除伪元素、不改 `content`，也不改外卡、Section、标题、行、按钮的 display、position、width、height、padding、gap、overflow、z-index、DOM 顺序或事件属性。分隔线仍由官方 Section 层承担，forced-colors 继续交还系统。
+
 ## V34 事件驱动正式生命周期与范围冻结
 
 V34 不再把开发期 `PowerShell -> watcher` 路径包装成正式交付。保留式安装器一次性生成并保存开始菜单适配器；快捷方式目标为当前官方 Codex 包内置 Node，参数只包含一个 append-only `.mjs` bridge。bridge 检查 retained package marker：存在时启动 `runtime/host.mjs`，不存在时直接启动官方 `ChatGPT.exe`。
@@ -363,5 +371,5 @@ V10 的重点不是给原生界面统一蒙一层深色，而是让每张电影�
 
 - `visible()` 继续服务于一般可见表面；仅 composer 的官方 above-composer panel、queue list、queue item 和 goal 使用 `structurallyMounted()`。后者要求元素已连接，并沿祖先链排除 `hidden`、`inert`、`display:none` 与 `visibility:hidden`，但不以 `opacity` 或首帧 DOMRect 判死，从而兼容 Framer Motion 的先挂载后显现。
 - queue/goal 的宿主仍保留原生 border 宽度。主题只把四边颜色、`border-image`、outline、backdrop-filter 与阴影设为视觉透明；纸纹全部位于 `pointer-events:none` 的伪元素层。这样能消除截图中的黑边/黑带，又不会让输入区、目标行或按钮发生像素位移。
-- 环境信息分区不读取“子智能体 / 后台进程 / 来源”等本地化文字。生产 `Section` 的根签名是 `relative z-0 flex flex-col pb-3`，其直属 `header` 签名包含 `sticky top-0 z-10 h-7 w-full bg-token-dropdown-background ps-3.5 pe-2.5 text-token-text-tertiary`。只有同时满足两层合同的节点获得分区材质。
-- 分区根保持透明；官方 `::after` 分隔线改为低对比赭色渐变。标题使用深暖墨纸、骨白文字、4px 轻切角与内嵌发丝线，避免原生现代灰条和整卡纸面割裂。forced-colors 下这些图案、裁切和阴影全部交还系统。
+- 环境信息分区不读取“子智能体 / 后台进程 / 来源”等本地化文字。生产 `Section` 的根签名是 `relative z-0 flex flex-col pb-3`，其直属 `header` 签名包含 `sticky top-0 z-10 h-7 w-full bg-token-dropdown-background ps-3.5 pe-2.5 text-token-text-tertiary`。只有同时满足两层合同的节点获得透明标题标记。
+- 分区根与标题保持透明，官方 `::after` 分隔线改为低对比赭色渐变；标题直接显露外卡连续纸面，不再使用深暖墨纸、切角、独立圆角或内嵌阴影。forced-colors 下图案与绘制覆盖全部交还系统。

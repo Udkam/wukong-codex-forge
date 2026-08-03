@@ -635,6 +635,15 @@ export const runtimeFixtureHtml = String.raw`
       background: var(--color-token-dropdown-background);
       box-shadow: 0 12px 30px rgba(0, 0, 0, .22), 0 0 0 .5px rgba(255, 255, 255, .075);
     }
+    .summary-heading-surface {
+      position: relative;
+      background: #373938;
+    }
+    .summary-heading-surface::before,
+    .summary-native-section-title::before {
+      content: "";
+      background: #252725;
+    }
     .summary-heading { display: flex; align-items: center; margin: 0 0 5px; color: #969894; font-size: 14px; font-weight: 550; }
     .summary-heading button { margin-left: auto; color: #858985; }
     .summary-row {
@@ -768,7 +777,9 @@ export const runtimeFixtureHtml = String.raw`
                   <div class="thread-summary-layer" data-native-slot="right-panel">
                     <div data-pip-obstacle="thread-summary-panel">
                       <section class="summary-panel-card" data-native-slot="right-card">
-                        <h2 class="summary-heading">环境信息<button aria-label="添加" data-native-slot="right-add" data-slot="thread-summary-panel-icon-button"><svg class="icon" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button></h2>
+                        <div class="summary-heading-surface bg-token-dropdown-background">
+                          <h2 class="summary-heading">环境信息<button aria-label="添加" data-native-slot="right-add" data-slot="thread-summary-panel-icon-button"><svg class="icon" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button></h2>
+                        </div>
                         <div class="summary-row" data-slot="thread-summary-panel-item"><svg class="icon" viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="11" rx="1.5"/><path d="M6 6h4M6 9h4"/></svg><span>变更</span><span class="meta">+0 -0</span></div>
                         <div class="summary-row" data-slot="thread-summary-panel-item"><svg class="icon" viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="8" rx="1.5"/><path d="M5 13h6"/></svg><span>本地</span><svg class="icon meta" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></div>
                         <div class="summary-row" data-slot="thread-summary-panel-item"><svg class="icon" viewBox="0 0 16 16"><circle cx="4" cy="3.5" r="1.5"/><circle cx="4" cy="12.5" r="1.5"/><circle cx="12" cy="6" r="1.5"/><path d="M4 5v6M5.5 4.2C9 4.5 8 6 10.5 6"/></svg><b>main</b><svg class="icon meta" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></div>

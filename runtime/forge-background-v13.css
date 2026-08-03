@@ -703,6 +703,21 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   backdrop-filter: none !important;
 }
 
+:root.forge-ink-mountain #root :is(
+  .forge-right-title-surface,
+  .forge-right-section-title
+)::before,
+:root.forge-ink-mountain #root :is(
+  .forge-right-title-surface,
+  .forge-right-section-title
+)::after {
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
 :root.forge-ink-mountain #root .forge-right-section {
   position: relative !important;
   background-color: transparent !important;

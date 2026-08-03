@@ -2428,6 +2428,7 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
       return [rect.x, rect.y, rect.width, rect.height];
     };
     const card = document.querySelector('[data-native-slot="right-card"]');
+    const titleSurface = card.querySelector('.summary-heading-surface');
     const title = card.querySelector('.summary-heading');
     const add = card.querySelector('[data-native-slot="right-add"]');
     const rows = [...card.querySelectorAll('[data-slot="thread-summary-panel-item"]')];
@@ -2436,6 +2437,7 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
     return {
       panel: rectOf(document.querySelector('[data-pip-obstacle="thread-summary-panel"]')),
       card: rectOf(card),
+      titleSurface: rectOf(titleSurface),
       title: rectOf(title),
       add: rectOf(add),
       rows: rows.map(rectOf),
@@ -2459,6 +2461,23 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   assert.equal(before.rows.length, 7);
   assert.equal(before.sections.length, 3);
   assert.equal(before.sectionTitles.length, 3);
+  const fixtureTitlePaint = await page.evaluate(() => {
+    const titleSurface = document.querySelector('.summary-heading-surface');
+    const sectionTitle = document.querySelector('.summary-native-section-title');
+    return {
+      titleBase: getComputedStyle(titleSurface).backgroundColor,
+      titleBefore: getComputedStyle(titleSurface, '::before').backgroundColor,
+      sectionBase: getComputedStyle(sectionTitle).backgroundColor,
+      sectionBefore: getComputedStyle(sectionTitle, '::before').backgroundColor
+    };
+  });
+  for (const [layer, color] of Object.entries(fixtureTitlePaint)) {
+    assert.notEqual(
+      color,
+      'rgba(0, 0, 0, 0)',
+      `fixture must exercise the native dark ${layer} paint before injection`
+    );
+  }
   const beforeAddHits = await nativeHitPattern(page, selectors.rightAdd);
 
   await page.evaluate(expression);
@@ -2470,7 +2489,7 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
     document.querySelectorAll('.forge-right-row').length === 7 &&
     document.querySelectorAll('.forge-right-section').length === 3 &&
     document.querySelectorAll('.forge-right-section-title').length === 3 &&
-    document.querySelectorAll('.forge-right-title-surface').length === 1
+    document.querySelectorAll('.forge-right-title-surface').length === 2
   ));
 
   assert.deepEqual(
@@ -2486,7 +2505,7 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   assert.equal(await page.locator('.forge-right-panel').count(), 1);
   assert.equal(await page.locator('.forge-right-card').count(), 1);
   assert.equal(await page.locator('.forge-right-title').count(), 1);
-  assert.equal(await page.locator('.forge-right-title-surface').count(), 1);
+  assert.equal(await page.locator('.forge-right-title-surface').count(), 2);
   assert.equal(await page.locator('.forge-right-row').count(), 7);
   assert.equal(await page.locator('.forge-right-section').count(), 3);
   assert.equal(await page.locator('.forge-right-section-title').count(), 3);
@@ -2503,9 +2522,15 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
     const sectionStyle = getComputedStyle(section);
     const sectionSeparator = getComputedStyle(section, '::after');
     const sectionTitleStyle = getComputedStyle(sectionTitle);
-    const titleSurfaceStyle = getComputedStyle(
-      document.querySelector('.forge-right-title-surface')
-    );
+    const sectionTitleBefore = getComputedStyle(sectionTitle, '::before');
+    const sectionTitleAfter = getComputedStyle(sectionTitle, '::after');
+    const titleSurfaceStyles = [...document.querySelectorAll(
+      '.forge-right-title-surface'
+    )].map(surface => ({
+      base: getComputedStyle(surface),
+      before: getComputedStyle(surface, '::before'),
+      after: getComputedStyle(surface, '::after')
+    }));
     return {
       cardBackgroundColor: style.backgroundColor,
       cardBackgroundImage: style.backgroundImage,
@@ -2528,9 +2553,23 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
       sectionTitleClipPath: sectionTitleStyle.clipPath,
       sectionTitleColor: sectionTitleStyle.color,
       sectionTitleShadow: sectionTitleStyle.boxShadow,
-      titleSurfaceBackgroundImage: titleSurfaceStyle.backgroundImage,
-      titleSurfaceBackgroundColor: titleSurfaceStyle.backgroundColor,
-      titleSurfaceShadow: titleSurfaceStyle.boxShadow
+      sectionTitleBeforeBackgroundImage: sectionTitleBefore.backgroundImage,
+      sectionTitleBeforeBackgroundColor: sectionTitleBefore.backgroundColor,
+      sectionTitleBeforeShadow: sectionTitleBefore.boxShadow,
+      sectionTitleAfterBackgroundImage: sectionTitleAfter.backgroundImage,
+      sectionTitleAfterBackgroundColor: sectionTitleAfter.backgroundColor,
+      sectionTitleAfterShadow: sectionTitleAfter.boxShadow,
+      titleSurfaces: titleSurfaceStyles.map(({ base, before, after }) => ({
+        backgroundImage: base.backgroundImage,
+        backgroundColor: base.backgroundColor,
+        shadow: base.boxShadow,
+        beforeBackgroundImage: before.backgroundImage,
+        beforeBackgroundColor: before.backgroundColor,
+        beforeShadow: before.boxShadow,
+        afterBackgroundImage: after.backgroundImage,
+        afterBackgroundColor: after.backgroundColor,
+        afterShadow: after.boxShadow
+      }))
     };
   });
   assert.equal(defaultPaint.cardBackgroundColor, 'rgba(0, 0, 0, 0)');
@@ -2553,9 +2592,24 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   assert.equal(defaultPaint.sectionTitleClipPath, 'none');
   assert.notEqual(defaultPaint.sectionTitleColor, 'rgba(0, 0, 0, 0)');
   assert.equal(defaultPaint.sectionTitleShadow, 'none');
-  assert.equal(defaultPaint.titleSurfaceBackgroundImage, 'none');
-  assert.equal(defaultPaint.titleSurfaceBackgroundColor, 'rgba(0, 0, 0, 0)');
-  assert.equal(defaultPaint.titleSurfaceShadow, 'none');
+  assert.equal(defaultPaint.sectionTitleBeforeBackgroundImage, 'none');
+  assert.equal(defaultPaint.sectionTitleBeforeBackgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(defaultPaint.sectionTitleBeforeShadow, 'none');
+  assert.equal(defaultPaint.sectionTitleAfterBackgroundImage, 'none');
+  assert.equal(defaultPaint.sectionTitleAfterBackgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(defaultPaint.sectionTitleAfterShadow, 'none');
+  assert.equal(defaultPaint.titleSurfaces.length, 2);
+  for (const titleSurface of defaultPaint.titleSurfaces) {
+    assert.equal(titleSurface.backgroundImage, 'none');
+    assert.equal(titleSurface.backgroundColor, 'rgba(0, 0, 0, 0)');
+    assert.equal(titleSurface.shadow, 'none');
+    assert.equal(titleSurface.beforeBackgroundImage, 'none');
+    assert.equal(titleSurface.beforeBackgroundColor, 'rgba(0, 0, 0, 0)');
+    assert.equal(titleSurface.beforeShadow, 'none');
+    assert.equal(titleSurface.afterBackgroundImage, 'none');
+    assert.equal(titleSurface.afterBackgroundColor, 'rgba(0, 0, 0, 0)');
+    assert.equal(titleSurface.afterShadow, 'none');
+  }
 
   const firstRow = page.locator('.forge-right-row').first();
   await firstRow.hover();

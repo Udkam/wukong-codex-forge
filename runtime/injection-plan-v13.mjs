@@ -1137,15 +1137,30 @@ function applyRuntime(payload) {
     if (!card) return [panel];
     mark(card, 'forge-right-card');
     if (title && card.contains(title)) mark(title, 'forge-right-title');
-    const titleSurface = title?.closest(
-      'header, h1, h2, h3, h4, h5, h6, [class*="bg-token-dropdown-background"]'
-    );
-    if (
-      titleSurface &&
-      titleSurface !== card &&
-      card.contains(titleSurface) &&
-      layoutPresent(titleSurface)
-    ) mark(titleSurface, 'forge-right-title-surface');
+    /*
+     * The current packaged title can own its paint directly or sit inside a
+     * dropdown-background carrier. `closest()` stopped at the heading itself,
+     * which left that carrier's native dark strip visible. Walk only the
+     * source-backed title branch and clear every heading/header or explicit
+     * dropdown surface on it; never widen the match to unrelated card nodes.
+     */
+    const titleSurfaces = [];
+    for (
+      let element = title;
+      element && element !== card;
+      element = element.parentElement
+    ) {
+      const isTitleElement = /^(?:HEADER|H[1-6])$/.test(element.tagName);
+      const isDropdownSurface = [...element.classList]
+        .some(token => token.includes('bg-token-dropdown-background'));
+      if (
+        layoutPresent(element) &&
+        card.contains(element) &&
+        (isTitleElement || isDropdownSurface)
+      ) titleSurfaces.push(element);
+    }
+    [...new Set(titleSurfaces)]
+      .forEach(surface => mark(surface, 'forge-right-title-surface'));
 
     const slottedRows = [...card.querySelectorAll(
       '[data-slot="thread-summary-panel-item"]'
@@ -1181,25 +1196,17 @@ function applyRuntime(payload) {
       'pe-2.5',
       'text-token-text-tertiary'
     ];
-    const sections = [...card.querySelectorAll('section')].filter(section => (
-      layoutPresent(section) &&
-      hasClassTokens(section, sectionTokens) &&
-      [...section.children].some(child => (
-        child.tagName === 'HEADER' &&
-        layoutPresent(child) &&
-        hasClassTokens(child, sectionTitleTokens)
-      ))
+    const sectionTitles = [...card.querySelectorAll('header')].filter(header => (
+      layoutPresent(header) &&
+      hasClassTokens(header, sectionTitleTokens) &&
+      header.parentElement?.tagName === 'SECTION' &&
+      layoutPresent(header.parentElement) &&
+      hasClassTokens(header.parentElement, sectionTokens)
     ));
-    const sectionTitles = sections.flatMap(section => (
-      [...section.children].filter(child => (
-        child.tagName === 'HEADER' &&
-        layoutPresent(child) &&
-        hasClassTokens(child, sectionTitleTokens)
-      ))
-    ));
+    const sections = [...new Set(sectionTitles.map(header => header.parentElement))];
     sections.forEach(section => mark(section, 'forge-right-section'));
     sectionTitles.forEach(sectionTitle => mark(sectionTitle, 'forge-right-section-title'));
-    return [panel, card, title, titleSurface, ...sections, ...sectionTitles, ...rows];
+    return [panel, card, title, ...titleSurfaces, ...sections, ...sectionTitles, ...rows];
   };
   const firstTextLeft = element => {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);

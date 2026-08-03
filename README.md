@@ -1,8 +1,8 @@
 # Wukong Codex Forge
 
-> 当前开发线为 **0.13.0 / V38 verification candidate**。V37 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V38 合同为准。
+> 当前开发线为 **0.13.0 / V42 verification candidate**。V41 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V42 合同为准。
 
-## V38 当前交付边界
+## V42 当前交付边界
 
 - **宠物整体延期**：本轮不修改、准备、打包、安装或验收小天命人和小八戒；`releasedPetIds` 保持为空，现有宠物目录、选择、payload 与元数据原样保留。宠物未通过不再阻塞本轮完成。
 - **葫芦已取消**：活动主题、注入器与最小包均不包含葫芦；历史素材只保留，不进入运行链。
@@ -10,7 +10,7 @@
 - **移除即回原生**：保留式主题目录或 marker 不存在时，同一 bridge 在下一次受管启动中直接运行官方 `ChatGPT.exe`。不会修改 `ChatGPT.exe`、`app.asar`、WindowsApps 或官方配置；不会强制改写当前已打开的非受管窗口。
 - **适用入口有明确边界**：安装器管理的开始菜单 `ChatGPT` 与 `ChatGPT - Wukong Theme` 进入上述链路；直接运行 WindowsApps、AUMID、协议链接或第三方快捷方式可能绕过它。Store 包升级后需重新运行适配器验证，以刷新版本化的内置 Node 路径。
 - **正式安装与生命周期已落地**：append-only release `0.13.0-20260803-143153` 已安装；两个开始菜单入口均使用 Codex 内置 Node + 同一 bridge，仓库与安装副本的 event host 哈希一致。生命周期/恢复合同 23/23、最小包 1/1 通过。
-- **当前唯一剩余发布门**：在绿色资源窗口用一个临时受管实例取得含 queue/goal 的完整页非宠物视觉证据，并在截图后证明 root、host、子进程和端口归零。无头 fixture 不能代替真实 Codex 验收；宠物与葫芦均不在本轮门内。
+- **当前剩余发布门**：先通过 V42 环境卡标题承载层定向回归并安装新的 append-only release；再在绿色资源窗口用一个临时受管实例取得含 queue/goal 与环境卡的完整页非宠物视觉证据，并在截图后证明 root、host、子进程和端口归零。无头 fixture 不能代替真实 Codex 验收；宠物与葫芦均不在本轮门内。
 
 ## V15–V38 实现与审计演进
 
@@ -22,7 +22,7 @@
 - **56×56 图案已转为三倍官方字标**：撤销所有卡通短棍和微缩器物方案；深/浅“悟空”书法按场景切换，以 336×336 双倍源绘制 168×168 视觉层，可见约 141×96 px；原生 56×56 图案占位、布局和热区均不变。
 - **输入框已进入 V22 原生内层消息连续纸面验收**：主纸面按 `184:25` 比例钳制在 `96–120px`，最大原生列宽 `736px` 时约为 `736×100px`。只读解包当前 Codex 后，排队区按“一个外层 queue panel 内含 N 个 internal queue item，再接一个目标 panel”的真实拓扑绘制：只有整组首个外层面板拥有外部上角和固定高度顶饰，每条内部消息各有独立纸纹与原生 `gap-px` 接缝，后续目标面板以直边连续承接；不会再把每条消息伪装成独立四角卡片，也不会拉长一张总背景。独立 progress pill 才是全圆。原生文字、按钮、ARIA、底部锚点和命中区保持不变，技术门禁通过不等于用户视觉验收完成。
 - **队列上方黑带已按原生结构消除**：V38 依据当前 ASAR 的 `data-thread-scroll-footer`，只撤下其内层、无交互 `bg-gradient-to-t` 绘制，保留 sticky footer、滚动障碍、DOM、宿主、相对位置、尺寸与命中区。修复后的完整页证据同时保留进度 pill、两条排队消息、进行中目标、短卷输入器与工作区背景，不把组件局部截图冒充整页验收。
-- **环境信息卡只做一体式 paint 替换**：V38 使用当前 ASAR 的 `data-pip-obstacle="thread-summary-panel"`、Section 与直属 header 结构映射官方 `300px` 卡片。最外层唯一纸面连续贯穿 `环境信息`、`子智能体`、`后台进程`、`来源` 与 7 行内容；四个标题不再另画深色底条、阴影或圆角。按钮、折叠、链接、滚动、ARIA 和全部几何保持原生。
+- **环境信息卡只做一体式 paint 替换**：V42 使用当前 ASAR 的 `data-pip-obstacle="thread-summary-panel"`、Section 与直属 header 结构映射官方 `300px` 卡片。最外层唯一纸面连续贯穿 `环境信息`、`子智能体`、`后台进程`、`来源` 与 7 行内容；主标题祖先链上的真实 `bg-token-dropdown-background` 承载层、四个标题本体及其伪元素都必须透明，不再另画深色底条、阴影或圆角。按钮、折叠、链接、滚动、ARIA 和全部几何保持原生。
 - **背景过渡已有同页四阶段证据**：V24 连续记录新建页战斗稳态、进入对话交叉淡化、对话风景稳态和返回新建页战斗稳态；四层均逐边覆盖视口，纹理持有量为 `1 → 2 → 1 → 1`，不预取、不常驻 filter / `will-change`，返回新建页后字标与题字无需 resize 即出现。
 - **原生 ASAR 基线失效即停**：V28 锁定当前 Codex `26.715.2305.0` 的包目录、`app.asar` 字节数与 SHA-256；任一漂移都要求重新只读审计，避免应用升级后继续套用旧选择器或旧几何。
 - **真实整页证据等待原生 UI**：V29 修复一次性验收脚本过早截到 Codex 启动 Logo 的问题；截图前必须同时出现原生 app shell 与 landing/composer，并确认 V13 背景层 ready，截图后仍按精确 PID/端口证明释放。
@@ -41,7 +41,7 @@
 
 - [V23 环境信息卡与完整 guided 页面](artifacts/test-runs/v23-environment-panel-2026-07-31T23-14-14-461Z/01-full-multi-guided.png)及其[几何/绘制记录](artifacts/test-runs/v23-environment-panel-2026-07-31T23-14-14-461Z/capture.json)
 - [V24 新建页战斗稳态](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/01-full-landing-stable.png)、[进入对话过渡](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/02-full-transition-to-thread.png)、[对话风景稳态](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/03-full-thread-stable.png)、[返回新建页](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/04-full-landing-returned.png)及其[状态机记录](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/capture.json)
-- [V38 环境卡一体纸面、queue/goal 与完整页面](artifacts/test-runs/v38-environment-unified-20260803-141204/01-full-multi-guided.png)及其[7 行/3 分区/透明标题绘制记录](artifacts/test-runs/v38-environment-unified-20260803-141204/capture.json)
+- [V38 环境卡一体纸面、queue/goal 与完整页面](artifacts/test-runs/v38-environment-unified-20260803-141204/01-full-multi-guided.png)及其[7 行/3 分区/透明标题绘制记录](artifacts/test-runs/v38-environment-unified-20260803-141204/capture.json)仅保留为历史 fixture 证据；它没有模拟真实标题外层与伪元素的独立深色 paint，不能证明 V42 实机效果。
 
 > 以下是 **0.10.0 / V11 历史记录**，不代表当前运行包；其中宠物与葫芦方案已被顶部 V38 合同取代。
 
