@@ -115,6 +115,7 @@ let nativeEnqueueProof = {
   attempted: false,
   submissionShortcut: null,
   editorInitiallyEmpty: false,
+  reusedExistingOwnedDraft: false,
   inputPrepared: false,
   inputCleared: false,
   queueObserved: false
@@ -276,6 +277,7 @@ try {
     attempted: false,
     submissionShortcut: nativeEnqueueMessage ? 'Control+Enter' : null,
     editorInitiallyEmpty: false,
+    reusedExistingOwnedDraft: false,
     inputPrepared: false,
     inputCleared: false,
     queueObserved: false
@@ -386,21 +388,37 @@ try {
     const readEditorText = async () => String(
       await editor.innerText().catch(() => editor.textContent().catch(() => ''))
     ).replace(/\s+/g, ' ').trim();
-    nativeEnqueueProof.editorInitiallyEmpty = await readEditorText() === '';
-    if (!nativeEnqueueProof.editorInitiallyEmpty) {
+    const existingEditorText = await readEditorText();
+    nativeEnqueueProof.editorInitiallyEmpty = existingEditorText === '';
+    nativeEnqueueProof.reusedExistingOwnedDraft = (
+      !nativeEnqueueProof.editorInitiallyEmpty &&
+      existingEditorText === nativeEnqueueMessage
+    );
+    if (
+      !nativeEnqueueProof.editorInitiallyEmpty &&
+      !nativeEnqueueProof.reusedExistingOwnedDraft
+    ) {
       throw Error('Refusing to overwrite an existing native composer draft');
     }
 
     nativeEnqueueProof.attempted = true;
-    await editor.click();
-    // ProseMirror owns its document state. Keyboard insertion exercises its
-    // native beforeinput/input path; DOM-oriented fill() can paint text without
-    // proving that the controller accepted it as a submit-ready prompt.
-    await page.keyboard.insertText(nativeEnqueueMessage);
-    nativeEnqueueProof.inputPrepared = await waitUntil(
-      async () => await readEditorText() === nativeEnqueueMessage,
-      5000
-    );
+    if (nativeEnqueueProof.editorInitiallyEmpty) {
+      await editor.click();
+      // ProseMirror owns its document state. Keyboard insertion exercises its
+      // native beforeinput/input path; DOM-oriented fill() can paint text without
+      // proving that the controller accepted it as a submit-ready prompt.
+      await page.keyboard.insertText(nativeEnqueueMessage);
+      nativeEnqueueProof.inputPrepared = await waitUntil(
+        async () => await readEditorText() === nativeEnqueueMessage,
+        5000
+      );
+    } else {
+      // A failed acceptance run can leave its own exact placeholder in the
+      // isolated profile. Reuse only a byte-for-byte match with this run's
+      // requested message; any other draft remains protected and fails closed.
+      await editor.click();
+      nativeEnqueueProof.inputPrepared = true;
+    }
     if (!nativeEnqueueProof.inputPrepared) {
       throw Error('Native composer controller did not accept the follow-up message');
     }

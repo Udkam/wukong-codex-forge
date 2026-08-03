@@ -337,3 +337,10 @@
 - 新路径在任何写入前读取真实编辑器；只要已有草稿就 fail closed，绝不覆盖用户内容。空编辑器先获得真实焦点，再由 `page.keyboard.insertText` 触发原生 `beforeinput/input`，并等待文本原样回读后把 `inputPrepared` 置为真；随后才允许 `Control+Enter`。
 - 失败报告仍只保存 `editorInitiallyEmpty`、`inputPrepared`、`inputCleared`、`queueObserved` 与快捷键名，不保存消息正文。定向语法检查与生命周期合同 13/13 通过；结束时项目调试进程为 0。
 - 本检查点没有启动新的 Codex 窗口，不触碰宠物或葫芦，不删除文件，也不越过仍待完成的真实联合整页门。
+
+### V45 隔离 profile 自有草稿复用门
+
+- 连续三次绿色 CPU 样本（`64.4% / 65.4% / 68.3%`）、可用内存 `18.18 GB`、磁盘队列 `0` 后，只启动一个隔离临时 Codex 窗口。指定任务仍未进入提交步骤：`editorInitiallyEmpty=false` 且 `attempted=false`，说明 V44 的草稿保护门发现上一轮失败留下的验收占位文本并拒绝覆盖；没有生成 PNG。
+- 失败报告位于本机临时目录，不保存草稿正文。清理证明 `nativeRestoreObserved=true`、`watcherConfirmed=true`、`verifiedTreeFallback=true`、`rootReleased=true`、`ownerReleased=true`、`portReleased=true`；专用端口 `55131` 已不可访问，安装 release 归属进程为 0。
+- 捕获器新增 `reusedExistingOwnedDraft` 布尔门：只有现有编辑器文本与本轮显式验收文本逐字一致，才将其作为已准备的本项目占位继续原生 `Control+Enter`；空编辑器仍使用 `insertText`，任意其他草稿继续失败闭合，不清空、不覆盖、不记录正文。
+- `node --check scripts/capture-live-playwright.mjs` 与生命周期定向合同 13/13 通过。测试后磁盘队列瞬时为 `6`，按红线约束不立即重开窗口；本检查点不改宠物或葫芦，不删除文件，也不把保护性失败写成联合视觉通过。
