@@ -9,8 +9,9 @@
 - **正式生命周期不再依赖常驻 PowerShell**：普通受管入口使用 Codex 自带 Node，经过 append-only `.mjs` bridge 启动 `runtime/host.mjs`，再启动官方 `ChatGPT.exe`。host 通过浏览器 Target/Page/Runtime 事件与文件系统 marker 事件工作，不做 1700ms target 轮询，并跟随官方根进程退出。
 - **移除即回原生**：保留式主题目录或 marker 不存在时，同一 bridge 在下一次受管启动中直接运行官方 `ChatGPT.exe`。不会修改 `ChatGPT.exe`、`app.asar`、WindowsApps 或官方配置；不会强制改写当前已打开的非受管窗口。
 - **适用入口有明确边界**：安装器管理的开始菜单 `ChatGPT` 与 `ChatGPT - Wukong Theme` 进入上述链路；直接运行 WindowsApps、AUMID、协议链接或第三方快捷方式可能绕过它。Store 包升级后需重新运行适配器验证，以刷新版本化的内置 Node 路径。
-- **正式安装与生命周期已落地**：append-only release `0.13.0-20260803-143153` 已安装；两个开始菜单入口均使用 Codex 内置 Node + 同一 bridge，仓库与安装副本的 event host 哈希一致。生命周期/恢复合同 23/23、最小包 1/1 通过。
-- **当前剩余发布门**：先通过 V42 环境卡标题承载层定向回归并安装新的 append-only release；再在绿色资源窗口用一个临时受管实例取得含 queue/goal 与环境卡的完整页非宠物视觉证据，并在截图后证明 root、host、子进程和端口归零。无头 fixture 不能代替真实 Codex 验收；宠物与葫芦均不在本轮门内。
+- **正式安装与生命周期已落地**：append-only release `0.13.0-20260803-191843` 已安装；两个开始菜单入口均使用 Codex 内置 Node + 同一 bridge，仓库与安装副本的 CSS、注入计划和 event host 哈希一致。生命周期/恢复合同 23/23、最小包 1/1 通过。
+- **环境卡实机整页门已通过**：V42 定向环境卡回归 1/1、最小包 1/1 通过；单个临时受管实例的完整页截图确认 `环境信息`、`子智能体`、`后台进程`、`来源` 四个标题直接显露同一外层纸面，没有独立深条，300px 卡片及原生分隔仍保留。截图后 root、launcher、项目 Node 与随机回环端口全部归零。
+- **当前剩余发布门**：仍需在同一个真实任务状态中取得同时包含 queue/goal 与环境卡的完整页非宠物联合证据。首轮候选任务未在时限内同时达到 current/selected 与 queue/goal，捕获器按合同未生成伪截图并完成资源归零。无头 fixture 或本次环境卡专项截图都不能替代该联合门；宠物与葫芦均不在本轮门内。
 
 ## V15–V38 实现与审计演进
 

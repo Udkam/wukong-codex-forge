@@ -310,3 +310,7 @@
 - 运行时从已定位主标题向官方卡片上行，只标记标题/header 与显式 `bg-token-dropdown-background` 承载层；三个分区改为先锁定当前 ASAR 的直属 header，再反推唯一 Section。未扩大到其他卡内节点。
 - CSS 同时清除上述标题层的基础背景、背景图、边框色、阴影、backdrop 与 `::before` / `::after` paint；不删除伪元素或修改几何、分隔、按钮、滚动和命中。
 - 回归夹具新增独立深色主标题承载层与主标题/分区标题伪元素，并增加注入前非透明先验以及注入后基础层、双伪元素透明断言。语法检查已通过；采样 CPU `71.1%` 处于琥珀线，Playwright、正式安装和实机完整页取证暂缓，不把静态检查写成视觉通过。
+- 资源回落到绿色后只运行 `V23 maps the official 300px environment panel` 定向项并通过 1/1；最小发布包合同另行通过 1/1。没有运行全量套件。
+- 保留式安装生成 append-only release `0.13.0-20260803-191843`；安装器明确不删除文件、不触碰 WindowsApps、`app.asar`、`ChatGPT.exe` 或官方配置，仓库与安装副本的 CSS、注入计划及 host 哈希一致。
+- 最终联合捕获首次因候选任务未在时限内同时满足 current/selected 与 queue/goal 而 fail closed，没有生成伪 PNG；root、launcher、项目 Node、随机回环端口与 watcher 状态均已归零。
+- 随后只启动一个新的临时受管实例做环境卡专项完整页复验：真实窗口中的 `环境信息`、`子智能体`、`后台进程`、`来源` 四个标题均直接显露同一张外层纸面，不再有独立深色标题条；卡宽记录为 300px。截图完成后该实例立即关闭，root、launcher、项目 Node 和端口均确认释放。该专项门通过，但不替代仍待完成的 queue/goal + 环境卡联合完整页门。

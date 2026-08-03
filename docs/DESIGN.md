@@ -16,7 +16,7 @@ host 只使用 Node 内建 WebSocket、浏览器 Target/Page/Runtime 事件和 m
 
 两个 Hatch Pet 与葫芦都不属于 V34 发布门。`releasedPetIds` 为空，打包/安装链对宠物 no-op；所有现有宠物文件、选择和历史资产保持原样。V34 的视觉边界仅是已实现的背景、landing、sidebar/topbar、composer/queue/goal、progress pill 与环境卡 paint 替换。
 
-本机保留式安装已落到 append-only release `0.13.0-20260803-143153`。普通与主题两个开始菜单入口均以当前 Codex 包内置 Node 启动同一 bridge；安装副本与仓库 `runtime/host.mjs` 的 SHA-256 一致。该事实关闭“正式链只存在于源码”的门，但不代替最终完整页视觉取证；后者仍必须由一个临时受管实例完成并在截图后精确归零。
+本机保留式安装已落到 append-only release `0.13.0-20260803-191843`。普通与主题两个开始菜单入口均以当前 Codex 包内置 Node 启动同一 bridge；安装副本与仓库的 CSS、注入计划和 `runtime/host.mjs` SHA-256 一致。环境卡专项完整页已经证明四个标题与唯一外层纸面一体，且截图后受管进程和端口归零；最终 queue/goal + 环境卡同态完整页仍需单独取证。
 
 > **V15 现行设计。** V13.3 及更早章节保留为演变记录；冲突处以 `CURRENT_GOAL.md` 和本节为准。
 
