@@ -4,12 +4,12 @@
 
 本文件是本项目当前唯一执行基线。后续旧方案、旧截图和旧文档若与本文件冲突，以本文件为准。
 
-## V34 范围冻结（2026-08-01）
+## V38 范围冻结（2026-08-03）
 
 - 本轮完成标准只包含非宠物主题、背景/过渡/覆盖、输入区与相邻原生状态、侧栏/顶部/环境卡、资源预算、正式生命周期、定向测试、文档与分段推送。
 - 小天命人和小八戒整体延期：不修改造型、动作、武器、图集、发布策略或本地安装状态，也不再阻塞本轮完成。
 - 葫芦保持取消，不进入活动主题、运行包或验收。
-- 正式生命周期已经实现为 `Codex embedded Node -> append-only bridge -> runtime/host.mjs -> official ChatGPT.exe`，并完成保留式安装：当前 append-only release 为 `0.13.0-20260801-144611`，两个开始菜单入口均指向 Codex 内置 Node 与同一 bridge；仓库和安装副本的 `runtime/host.mjs` SHA-256 一致。
+- 正式生命周期已经实现为 `Codex embedded Node -> append-only bridge -> runtime/host.mjs -> official ChatGPT.exe`，并完成保留式安装：当前 append-only release 为 `0.13.0-20260803-143153`，两个开始菜单入口均指向 Codex 内置 Node 与同一 bridge；仓库和安装副本的 `runtime/host.mjs` SHA-256 一致。
 - 当前生命周期与恢复定向合同为 23/23、最小发布包合同为 1/1，`releasedPetIds` 为空且安装阶段对宠物无操作。当前唯一剩余联合门是：在绿色资源窗口用一个临时受管实例取得含侧栏、顶部栏、工作区、queue/goal、短卷输入器与环境卡的完整页实机证据，并在截图后证明 root、host、子进程与端口全部归零。
 - 2026-08-01 后续两次单实例尝试均按 fail-closed 处理：一次在 renderer 刚就绪时撞到外层时限，另一次在整机 CPU 越过 90% 红线时主动中止；两次均得到 `disabled-verified` 且精确 root、host 与专用端口归零，没有生成 PNG，也不冒充最终视觉验收。
 - 当前已打开的非受管 Codex 窗口不被强制关闭或改写；受管开始菜单入口在下一次完整启动生效。直接 WindowsApps/AUMID/协议/第三方入口可能绕过受管链，必须如实披露。

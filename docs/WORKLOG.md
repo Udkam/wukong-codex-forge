@@ -281,6 +281,13 @@
 
 - 取消环境信息主标题及 `子智能体`、`后台进程`、`来源` 三个分区标题的独立背景、背景图、阴影、圆角裁切与模糊；整张卡片只由外层静态纸面负责绘制，原生行、分隔线、折叠和 300px 几何不变。
 - 只读定位当前 `app.asar` 的 `data-thread-scroll-footer` 后，仅标记并透明化其内层 `bg-gradient-to-t` 绘制层；sticky footer、滚动障碍、输入器、queue/goal 拓扑和全部命中区继续保留。
-- 定向结果：侧栏仅选中态、Motion 首帧目标、环境卡一体纸面与来源锁定的 footer fade 共 4/4 通过；`scripts/capture-environment-panel-v23.mjs` 同步锁定 7 行、3 分区、3 标题透明绘制和前后几何全等。
+- 定向结果：侧栏仅选中态、Motion 首帧目标、环境卡一体纸面与来源锁定的 footer fade 共 4/4 通过；`scripts/capture-environment-panel-v23.mjs` 同步锁定 7 行、3 分区、主标题 + 3 分区标题透明绘制和前后几何全等。
 - 完整页夹具证据位于 `artifacts/test-runs/v38-environment-unified-20260803-141204/01-full-multi-guided.png`。它覆盖顶部栏、侧栏、工作区、queue/goal、输入器和环境卡，但仍是原生结构 fixture，不冒充真实 Codex 视觉验收。
 - 一次真实单窗口尝试因便携 profile 恢复重任务把 CPU 推至 100% 而立即中止；原生恢复已确认，所属 root、host 与专用端口已精确释放，未保留调试窗口。
+
+### V39 文档真值与安装证据收口
+
+- 顶层 README 从 V34 更新到 V38 verification candidate；当前 retained release 更新为 `0.13.0-20260803-143153`，并补入环境卡一体纸面与 V38 整页 fixture 证据。
+- 把 README 的 V11 段明确标记为历史实现，避免“只保留湘妃葫芦”与现行“葫芦取消、宠物延期”同时被误读为当前功能。
+- 需求新增 V15-37：环境卡四个标题不得另画底条，`data-thread-scroll-footer` 只清除内层 fade paint；设计同步记录 7 行、3 分区、主标题 + 3 分区标题的透明绘制与唯一外层纸面。
+- 本检查点不改运行时、宠物、葫芦、安装脚本或已安装 release；只做 Markdown 真值、路径和 Git 范围验证。

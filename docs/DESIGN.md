@@ -8,7 +8,7 @@ host 只使用 Node 内建 WebSocket、浏览器 Target/Page/Runtime 事件和 m
 
 两个 Hatch Pet 与葫芦都不属于 V34 发布门。`releasedPetIds` 为空，打包/安装链对宠物 no-op；所有现有宠物文件、选择和历史资产保持原样。V34 的视觉边界仅是已实现的背景、landing、sidebar/topbar、composer/queue/goal、progress pill 与环境卡 paint 替换。
 
-本机保留式安装已落到 append-only release `0.13.0-20260801-144611`。普通与主题两个开始菜单入口均以当前 Codex 包内置 Node 启动同一 bridge；安装副本与仓库 `runtime/host.mjs` 的 SHA-256 一致。该事实关闭“正式链只存在于源码”的门，但不代替最终完整页视觉取证；后者仍必须由一个临时受管实例完成并在截图后精确归零。
+本机保留式安装已落到 append-only release `0.13.0-20260803-143153`。普通与主题两个开始菜单入口均以当前 Codex 包内置 Node 启动同一 bridge；安装副本与仓库 `runtime/host.mjs` 的 SHA-256 一致。该事实关闭“正式链只存在于源码”的门，但不代替最终完整页视觉取证；后者仍必须由一个临时受管实例完成并在截图后精确归零。
 
 > **V15 现行设计。** V13.3 及更早章节保留为演变记录；冲突处以 `CURRENT_GOAL.md` 和本节为准。
 
@@ -70,9 +70,9 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 
 右侧环境信息窗口不使用截图尺寸、文本猜测或自建面板。当前 `OpenAI.Codex 26.715.2305.0` 的 `thread-summary-panel-components-t019TZYb.js` 是唯一结构真值：外层以 `data-pip-obstacle="thread-summary-panel"` 标识，卡片固定宽度为 `300px`，内容宿主保留官方 `rounded-3xl`、滚动与最大高度结构；标题、行、操作按钮继续使用 `thread-summary-panel-*` 的原生 `data-slot`。
 
-运行时只在上述官方节点上增加 `forge-right-panel`、`forge-right-card`、`forge-right-title` 与 `forge-right-row` 标记。卡片宿主本身保持透明、`clip-path:none` 和原生矩形命中区；暖褐纸纤维、8px 角饰、双层内沿及标题压纹全部画在 `pointer-events:none` 的静态伪元素上。行高、分隔位置、加号按钮、折叠箭头、链接、键盘焦点、ARIA、滚动和 300px 宽度均不改写。hover/focus 只改变墨色明暗，forced-colors 隐藏位图和伪元素并交回系统色。
+运行时只在上述官方节点上增加 `forge-right-panel`、`forge-right-card`、`forge-right-title`、`forge-right-section`、`forge-right-section-title` 与 `forge-right-row` 标记。卡片宿主本身保持透明、`clip-path:none` 和原生矩形命中区；暖褐纸纤维、8px 角饰与双层内沿只由卡片的 `pointer-events:none` 静态伪元素绘制。`环境信息` 主标题以及 `子智能体`、`后台进程`、`来源` 三个分区标题的背景、背景图、阴影、圆角裁切和模糊全部透明，让唯一纸面连续贯穿 7 行内容。行高、分隔位置、加号按钮、折叠箭头、链接、键盘焦点、ARIA、滚动和 300px 宽度均不改写；forced-colors 隐藏位图和伪元素并交回系统色。
 
-`tests/native-asar-ui-contract.test.mjs` 直接锁定本机 300px、宿主 class token 与稳定 slot；`tests/native-surfaces-runtime-v14.test.mjs` 则逐项比较主题前后的面板、卡片、标题、四行和加号九点命中几何。完整无头证据位于 `artifacts/test-runs/v23-environment-panel-2026-07-31T23-14-14-461Z/01-full-multi-guided.png`，其中排队、目标、主输入器、侧栏、顶部栏和环境卡同屏；该证据仍不等于真实 Codex 用户验收。
+`tests/native-asar-ui-contract.test.mjs` 直接锁定本机 300px、宿主 class token 与稳定 slot；`tests/native-surfaces-runtime-v14.test.mjs` 则逐项比较主题前后的面板、卡片、标题、7 行、3 分区和加号九点命中几何。V38 完整无头证据位于 `artifacts/test-runs/v38-environment-unified-20260803-141204/01-full-multi-guided.png`，其中排队、目标、主输入器、侧栏、顶部栏和一体环境卡同屏；该证据仍不等于真实 Codex 用户验收。
 
 ### V24 背景四阶段覆盖与纹理生命周期
 

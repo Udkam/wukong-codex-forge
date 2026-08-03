@@ -1,18 +1,18 @@
 # Wukong Codex Forge
 
-> 当前开发线为 **0.13.0 / V34 release candidate**。V33 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V34 合同为准。
+> 当前开发线为 **0.13.0 / V38 verification candidate**。V37 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V38 合同为准。
 
-## V34 当前交付边界
+## V38 当前交付边界
 
 - **宠物整体延期**：本轮不修改、准备、打包、安装或验收小天命人和小八戒；`releasedPetIds` 保持为空，现有宠物目录、选择、payload 与元数据原样保留。宠物未通过不再阻塞本轮完成。
 - **葫芦已取消**：活动主题、注入器与最小包均不包含葫芦；历史素材只保留，不进入运行链。
 - **正式生命周期不再依赖常驻 PowerShell**：普通受管入口使用 Codex 自带 Node，经过 append-only `.mjs` bridge 启动 `runtime/host.mjs`，再启动官方 `ChatGPT.exe`。host 通过浏览器 Target/Page/Runtime 事件与文件系统 marker 事件工作，不做 1700ms target 轮询，并跟随官方根进程退出。
 - **移除即回原生**：保留式主题目录或 marker 不存在时，同一 bridge 在下一次受管启动中直接运行官方 `ChatGPT.exe`。不会修改 `ChatGPT.exe`、`app.asar`、WindowsApps 或官方配置；不会强制改写当前已打开的非受管窗口。
 - **适用入口有明确边界**：安装器管理的开始菜单 `ChatGPT` 与 `ChatGPT - Wukong Theme` 进入上述链路；直接运行 WindowsApps、AUMID、协议链接或第三方快捷方式可能绕过它。Store 包升级后需重新运行适配器验证，以刷新版本化的内置 Node 路径。
-- **正式安装与生命周期已落地**：append-only release `0.13.0-20260801-144611` 已安装；两个开始菜单入口均使用 Codex 内置 Node + 同一 bridge，仓库与安装副本的 event host 哈希一致。生命周期/恢复合同 23/23、最小包 1/1 通过。
+- **正式安装与生命周期已落地**：append-only release `0.13.0-20260803-143153` 已安装；两个开始菜单入口均使用 Codex 内置 Node + 同一 bridge，仓库与安装副本的 event host 哈希一致。生命周期/恢复合同 23/23、最小包 1/1 通过。
 - **当前唯一剩余发布门**：在绿色资源窗口用一个临时受管实例取得含 queue/goal 的完整页非宠物视觉证据，并在截图后证明 root、host、子进程和端口归零。无头 fixture 不能代替真实 Codex 验收；宠物与葫芦均不在本轮门内。
 
-## V15–V33 实现与审计历史
+## V15–V38 实现与审计演进
 
 - **活动范围是全窗背景 + 原生表面 paint 替换**：当前 landing 以原 56×56 图标位为锚点，在不改变其 DOMRect 与热区的前提下绘制三倍大小的官方“悟空”书法与朱印，并在原题字位显示“此去，欲破何局？”。原生“新建任务”和描述说明仅视觉透明，DOM、文本、布局与停用恢复保留；不新增卡片、栏位、按钮或 emoji。
 - **不完全覆盖已按官方 UI 源修复**：只读审计 `OpenAI.Codex 26.715.2305.0` 的 `app.asar`，确认中间黑块来自 `<main class="main-surface">` 的实体底色，顶部另有 `[data-app-shell-main-content-top-fade]`。V13.1 只清除二者的背景绘制，保留原生圆角、阴影、裁切、尺寸与命中区。
@@ -21,8 +21,8 @@
 - **新建任务首帧不再依赖缩放修复**：renderer 运行时识别官方 280 ms 淡入中的稳定标题节点，并监听标题/图案的延迟挂载；两次有界启动探测在 420 ms 内结束，不形成页面轮询。原项目名虚线装饰在主题激活期间透明化，避免题字下出现横线。开发期 watcher 仍以 1700 ms 低频探测 renderer 生命周期，它不是最终随启随停方案，后续不得把它包装成正式交付。
 - **56×56 图案已转为三倍官方字标**：撤销所有卡通短棍和微缩器物方案；深/浅“悟空”书法按场景切换，以 336×336 双倍源绘制 168×168 视觉层，可见约 141×96 px；原生 56×56 图案占位、布局和热区均不变。
 - **输入框已进入 V22 原生内层消息连续纸面验收**：主纸面按 `184:25` 比例钳制在 `96–120px`，最大原生列宽 `736px` 时约为 `736×100px`。只读解包当前 Codex 后，排队区按“一个外层 queue panel 内含 N 个 internal queue item，再接一个目标 panel”的真实拓扑绘制：只有整组首个外层面板拥有外部上角和固定高度顶饰，每条内部消息各有独立纸纹与原生 `gap-px` 接缝，后续目标面板以直边连续承接；不会再把每条消息伪装成独立四角卡片，也不会拉长一张总背景。独立 progress pill 才是全圆。原生文字、按钮、ARIA、底部锚点和命中区保持不变，技术门禁通过不等于用户视觉验收完成。
-- **队列上方黑带已按原生结构消除**：只针对当前 ASAR 的进度渐隐层撤下 `from-token-main-surface-primary → transparent` 绘制，保留其 DOM、宿主、相对位置和高度。修复后的完整页证据同时保留进度 pill、两条排队消息、进行中目标、短卷输入器与工作区背景，不把组件局部截图冒充整页验收。
-- **环境信息卡只做 paint 替换**：V23 使用当前 ASAR 的 `data-pip-obstacle="thread-summary-panel"` 与稳定 slot 映射官方 `300px` 卡片；纸面和角饰只存在于 `pointer-events:none` 绘制层，标题、四行、按钮、折叠、链接、滚动、ARIA 和几何保持原生。
+- **队列上方黑带已按原生结构消除**：V38 依据当前 ASAR 的 `data-thread-scroll-footer`，只撤下其内层、无交互 `bg-gradient-to-t` 绘制，保留 sticky footer、滚动障碍、DOM、宿主、相对位置、尺寸与命中区。修复后的完整页证据同时保留进度 pill、两条排队消息、进行中目标、短卷输入器与工作区背景，不把组件局部截图冒充整页验收。
+- **环境信息卡只做一体式 paint 替换**：V38 使用当前 ASAR 的 `data-pip-obstacle="thread-summary-panel"`、Section 与直属 header 结构映射官方 `300px` 卡片。最外层唯一纸面连续贯穿 `环境信息`、`子智能体`、`后台进程`、`来源` 与 7 行内容；四个标题不再另画深色底条、阴影或圆角。按钮、折叠、链接、滚动、ARIA 和全部几何保持原生。
 - **背景过渡已有同页四阶段证据**：V24 连续记录新建页战斗稳态、进入对话交叉淡化、对话风景稳态和返回新建页战斗稳态；四层均逐边覆盖视口，纹理持有量为 `1 → 2 → 1 → 1`，不预取、不常驻 filter / `will-change`，返回新建页后字标与题字无需 resize 即出现。
 - **原生 ASAR 基线失效即停**：V28 锁定当前 Codex `26.715.2305.0` 的包目录、`app.asar` 字节数与 SHA-256；任一漂移都要求重新只读审计，避免应用升级后继续套用旧选择器或旧几何。
 - **真实整页证据等待原生 UI**：V29 修复一次性验收脚本过早截到 Codex 启动 Logo 的问题；截图前必须同时出现原生 app shell 与 landing/composer，并确认 V13 背景层 ready，截图后仍按精确 PID/端口证明释放。
@@ -32,7 +32,7 @@
 - **Hatch Pet 分开验收**：当前重新建立 `little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725` 与 `little-bajie-v4-inart-game-motion` 两条 run；待审批 id 分别为 `little-wukong-v5-yaksha-shenfeng` 与 `little-bajie-v4-inart-game-motion`。基础候选已通过完整神锋/双足和成年猪妖/完整九齿钉耙的本地门，仍须先由用户分别审定母版，未通过前不扩展动作。
 - **宠物发布三态受单一策略保护**：`releasedPetIds` 当前为空；两个新候选只在 `pendingPetIds`，两个被否决旧包只在 `frozenPetIds`，三集合强制两两互斥。仓库旧文件、用户 discovery 目录与当前宠物选择均保留；准备、打包和安装不读取、不复制、不迁移或升级待审批/冻结包。
 - **最小包只携带现行定义**：`themes/active.json` 是页面 payload 的唯一活动清单，`themes/native-wukong.json` 只承担原生外观预览；含退役葫芦与旧宠物引用的 `themes/ink-mountain.json` 原位保留为历史文件，但不会进入正式运行包。
-- **最终随 Codex 启动集成（已由 V34 取代）**：本条记录的是旧暂缓状态；现行正式候选链以本页 V34 小节为准。
+- **最终随 Codex 启动集成（已由 V34 完成生命周期基础，V38 继续验证）**：本条记录的是旧暂缓状态；现行正式候选链以本页顶部 V38 合同为准。
 - **本地素材只读**：`E:\GameRecord\Black Myth Wukong` 与 `D:\SteamLibrary\steamapps\common\BlackMythWukong` 可用于索引、比对和复制式抽帧；项目不得删除、移动或覆盖其中任何原文件。
 
 当前定向合同覆盖 `cover` 全窗、首帧解码门控、主表面透明、DOMRect 约束、稳态单纹理、单请求解码、9 图像素预算、当前定义与最小包排除门禁。真实 Codex 独立调试包仍只在截图和资源采样期间临时启动，取证后立即关闭；输入框/queue/goal 的最终完整页仍需实机视觉证据，延期宠物不再是本轮发布门槛。
@@ -41,10 +41,11 @@
 
 - [V23 环境信息卡与完整 guided 页面](artifacts/test-runs/v23-environment-panel-2026-07-31T23-14-14-461Z/01-full-multi-guided.png)及其[几何/绘制记录](artifacts/test-runs/v23-environment-panel-2026-07-31T23-14-14-461Z/capture.json)
 - [V24 新建页战斗稳态](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/01-full-landing-stable.png)、[进入对话过渡](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/02-full-transition-to-thread.png)、[对话风景稳态](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/03-full-thread-stable.png)、[返回新建页](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/04-full-landing-returned.png)及其[状态机记录](artifacts/test-runs/v24-background-transition-2026-07-31T23-55-59-699Z/capture.json)
+- [V38 环境卡一体纸面、queue/goal 与完整页面](artifacts/test-runs/v38-environment-unified-20260803-141204/01-full-multi-guided.png)及其[7 行/3 分区/透明标题绘制记录](artifacts/test-runs/v38-environment-unified-20260803-141204/capture.json)
 
-> 当前开发线为 **0.10.0 / V11**。V10、V9 的文字与证据继续保留为历史；与现行行为冲突时，以本节和 `docs/` 顶部的 V11 合同为准。
+> 以下是 **0.10.0 / V11 历史记录**，不代表当前运行包；其中宠物与葫芦方案已被顶部 V38 合同取代。
 
-## V11 当前实现
+## 0.10.0 / V11 历史实现（保留）
 
 - **仍是原生 Codex 页面**：顶部栏、侧栏、工作区、输入器、环境信息卡、原有图标、文案和事件全部保留；不增加主题侧栏、底栏、开关、状态卡或 emoji。
 - **替换样式而非只换颜色**：侧栏操作项采用窄边经匣切角与朱砂签，输入器采用同宽同高的短轨经匣轮廓，发送键采用同尺寸八角朱砂印，环境卡采用同尺寸典籍匣角与行分隔。改变的是轮廓、材质和局部构造，不改变原生槽位坐标、宽高、内边距或文字。
