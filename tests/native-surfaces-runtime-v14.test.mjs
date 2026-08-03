@@ -575,7 +575,7 @@ test('V20 maps the compact scroll material at the corrected native-state proport
   await page.close();
 });
 
-test('V15 preserves native topbar and sidebar state semantics while painting the full state matrix', async () => {
+test('V35 preserves native unselected sidebar paint and themes only the current selection', async () => {
   const page = await browser.newPage({
     viewport: { width: 1280, height: 820 },
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
@@ -609,6 +609,35 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
     })
   ), rectTargets);
   const beforeRects = await readRects();
+  const nativeUnselectedPaint = await page.evaluate(targets => Object.fromEntries(
+    Object.entries(targets).map(([name, selector]) => {
+      const element = document.querySelector(selector);
+      const style = getComputedStyle(element);
+      return [name, {
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        backgroundPosition: style.backgroundPosition,
+        backgroundSize: style.backgroundSize,
+        borderColor: style.borderColor,
+        boxShadow: style.boxShadow,
+        color: style.color,
+        opacity: style.opacity,
+        outlineStyle: style.outlineStyle
+      }];
+    })
+  ), {
+    newTask: selectors.newTaskRow,
+    pullRequests: selectors.pullRequests,
+    sites: selectors.sites,
+    scheduled: selectors.scheduled,
+    plugins: selectors.plugins,
+    rootThread: selectors.rootThread,
+    project: selectors.project,
+    projectChild: '[data-native-slot="project-temple-child"]'
+  });
+  const nativeUnreadColor = await page.locator(
+    '[data-native-status="unread"] span span'
+  ).evaluate(element => getComputedStyle(element).backgroundColor);
 
   await page.evaluate(expression);
   await page.waitForFunction(() => (
@@ -700,55 +729,58 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
   assert.equal(await page.evaluate(() => window.__disabledMenuClicks), 0);
   await menuFile.evaluate(element => { element.disabled = false; });
 
+  const themedUnselectedPaint = await page.evaluate(targets => Object.fromEntries(
+    Object.entries(targets).map(([name, selector]) => {
+      const element = document.querySelector(selector);
+      const style = getComputedStyle(element);
+      return [name, {
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        backgroundPosition: style.backgroundPosition,
+        backgroundSize: style.backgroundSize,
+        borderColor: style.borderColor,
+        boxShadow: style.boxShadow,
+        color: style.color,
+        opacity: style.opacity,
+        outlineStyle: style.outlineStyle
+      }];
+    })
+  ), {
+    newTask: selectors.newTaskRow,
+    pullRequests: selectors.pullRequests,
+    sites: selectors.sites,
+    scheduled: selectors.scheduled,
+    plugins: selectors.plugins,
+    rootThread: selectors.rootThread,
+    project: selectors.project,
+    projectChild: '[data-native-slot="project-temple-child"]'
+  });
+  assert.deepEqual(
+    themedUnselectedPaint,
+    nativeUnselectedPaint,
+    'unselected sidebar rows must retain their exact native paint'
+  );
+
   const newTaskRow = page.locator(selectors.newTaskRow);
   const newTask = page.locator(selectors.newTask);
   const newTaskMenu = page.locator(selectors.newTaskMenu);
-  const actionDefault = await newTaskRow.evaluate(element => ({
-    image: getComputedStyle(element).backgroundImage,
-    shadow: getComputedStyle(element).boxShadow
-  }));
-
+  const actionDefault = nativeUnselectedPaint.newTask;
   await newTaskRow.hover();
   assert.notEqual(
-    await newTaskRow.evaluate(element => getComputedStyle(element).backgroundImage),
-    actionDefault.image
+    await newTaskRow.evaluate(element => getComputedStyle(element).backgroundColor),
+    actionDefault.backgroundColor,
+    'native action hover must remain available'
   );
   await page.mouse.move(900, 450);
   await newTask.focus();
   assert.equal(await newTask.evaluate(element => element.matches(':focus-visible')), true);
-  assert.notEqual(
-    await newTaskRow.evaluate(element => getComputedStyle(element).backgroundImage),
-    actionDefault.image
-  );
-  assert.equal(
-    await newTaskRow.evaluate(element => getComputedStyle(element).boxShadow),
-    'none',
-    'action focus must use ink-material contrast instead of a modern control outline'
-  );
-
   await newTaskMenu.evaluate(element => element.dataset.state = 'open');
-  assert.notEqual(
+  assert.equal(
     await newTaskRow.evaluate(element => getComputedStyle(element).backgroundImage),
-    actionDefault.image,
-    'a native trailing menu must open the paint state on its existing outer row'
+    actionDefault.backgroundImage,
+    'opening an unselected trailing menu must not add themed paper'
   );
   await newTaskMenu.evaluate(element => element.dataset.state = 'closed');
-
-  await newTaskMenu.evaluate(element => { element.disabled = true; });
-  assert.equal(
-    await newTaskRow.evaluate(element => getComputedStyle(element).opacity),
-    '1',
-    'disabling only the native trailing menu must not disable the whole action row'
-  );
-  await newTaskMenu.evaluate(element => { element.disabled = false; });
-
-  await newTask.evaluate(element => { element.disabled = true; });
-  assert.equal(
-    await newTaskRow.evaluate(element => getComputedStyle(element).opacity),
-    '0.46',
-    'disabling the direct native main action must expose the disabled row state'
-  );
-  await newTask.evaluate(element => { element.disabled = false; });
 
   await page.locator(selectors.pullRequests).evaluate(element => {
     element.setAttribute('aria-current', 'page');
@@ -761,7 +793,7 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
     await page.locator(selectors.pullRequests).evaluate(
       element => getComputedStyle(element).backgroundImage
     ),
-    actionDefault.image
+    actionDefault.backgroundImage
   );
   const activeActionPaint = await page.locator(selectors.pullRequests).evaluate(element => ({
     backgroundImage: getComputedStyle(element).backgroundImage,
@@ -803,110 +835,6 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
     delete element.dataset.state;
   });
 
-  await page.evaluate(() => {
-    window.__disabledSidebarClicks = 0;
-    const action = document.querySelector('[data-native-slot="plugins"]');
-    action.addEventListener('click', () => { window.__disabledSidebarClicks += 1; });
-    action.disabled = true;
-  });
-  const plugins = page.locator(selectors.plugins);
-  await plugins.hover();
-  const disabledAction = await plugins.evaluate(element => ({
-    image: getComputedStyle(element).backgroundImage,
-    shadow: getComputedStyle(element).boxShadow,
-    opacity: getComputedStyle(element).opacity
-  }));
-  assert.equal(disabledAction.image, actionDefault.image);
-  assert.equal(disabledAction.shadow, 'none');
-  assert.equal(disabledAction.opacity, '0.46');
-  await plugins.evaluate(element => element.click());
-  assert.equal(await page.evaluate(() => window.__disabledSidebarClicks), 0);
-  await plugins.evaluate(element => { element.disabled = false; });
-
-  const projectRows = page.locator(
-    '[data-app-action-sidebar-project-row].forge-sidebar-level1'
-  );
-  const expandedProjectImage = await projectRows.nth(0).evaluate(
-    element => getComputedStyle(element).backgroundImage
-  );
-  const collapsedProjectImage = await projectRows.nth(2).evaluate(
-    element => getComputedStyle(element).backgroundImage
-  );
-  assert.notEqual(
-    expandedProjectImage,
-    collapsedProjectImage,
-    'expanded and collapsed project rows need distinguishable native directory states'
-  );
-  await projectRows.nth(2).hover();
-  assert.notEqual(
-    await projectRows.nth(2).evaluate(element => getComputedStyle(element).backgroundImage),
-    collapsedProjectImage,
-    'collapsed project rows must retain a visible hover state'
-  );
-  await page.mouse.move(900, 450);
-  await projectRows.nth(2).focus();
-  assert.equal(
-    await projectRows.nth(2).evaluate(element => element.matches(':focus-visible')),
-    true
-  );
-  assert.notEqual(
-    await projectRows.nth(2).evaluate(element => getComputedStyle(element).backgroundImage),
-    collapsedProjectImage,
-    'collapsed project focus must remain visible through the ink material'
-  );
-  assert.equal(
-    await projectRows.nth(2).evaluate(element => getComputedStyle(element).boxShadow),
-    'none',
-    'project focus must not add a modern rounded control outline'
-  );
-  assert.equal(
-    await projectRows.nth(2).evaluate(element => getComputedStyle(element).outlineStyle),
-    'none',
-    'project focus must not leak the browser default rectangular ring'
-  );
-
-  const level2 = page.locator('[data-native-slot="project-temple-child"]');
-  const level2Default = await level2.evaluate(element => ({
-    image: getComputedStyle(element).backgroundImage,
-    shadow: getComputedStyle(element).boxShadow
-  }));
-  await level2.hover();
-  assert.notEqual(
-    await level2.evaluate(element => getComputedStyle(element).backgroundImage),
-    level2Default.image
-  );
-  await page.mouse.move(900, 450);
-  await level2.focus();
-  assert.equal(await level2.evaluate(element => element.matches(':focus-visible')), true);
-  assert.notEqual(
-    await level2.evaluate(element => getComputedStyle(element).backgroundImage),
-    level2Default.image
-  );
-  assert.equal(
-    await level2.evaluate(element => getComputedStyle(element).boxShadow),
-    'none',
-    'level-two focus must use the ink strip rather than a rounded control outline'
-  );
-
-  const sidebarPaintStates = await page.evaluate(() => (
-    [...document.querySelectorAll(
-      '.forge-sidebar-action, .forge-sidebar-level1, ' +
-      '.forge-sidebar-level2, .forge-sidebar-selected'
-    )].map(element => {
-      const style = getComputedStyle(element);
-      return {
-        slot: element.dataset.nativeSlot || element.textContent.trim().slice(0, 32),
-        paint: `${style.backgroundImage} ${style.boxShadow}`
-      };
-    })
-  ));
-  for (const state of sidebarPaintStates) {
-    assert.doesNotMatch(
-      state.paint,
-      /(?:157,\s*63,\s*38|133,\s*56,\s*35)/,
-      `${state.slot} retained the rejected lacquer-red left edge`
-    );
-  }
   assert.equal(
     await page.locator('[data-native-slot="project-active"] [data-thread-title]').evaluate(
       element => getComputedStyle(element).color
@@ -926,8 +854,8 @@ test('V15 preserves native topbar and sidebar state semantics while painting the
       spinnerAnimationDuration: spinnerStyle.animationDuration
     };
   });
-  assert.equal(nativeIndicators.unreadColor, 'rgb(167, 75, 48)');
-  assert.equal(nativeIndicators.spinnerColor, 'rgb(179, 84, 55)');
+  assert.equal(nativeIndicators.unreadColor, nativeUnreadColor);
+  assert.equal(nativeIndicators.spinnerColor, 'rgb(47, 40, 34)');
   assert.equal(nativeIndicators.spinnerAnimationName, 'fixture-spin');
   assert.equal(nativeIndicators.spinnerAnimationDuration, '2s');
   assert.equal(

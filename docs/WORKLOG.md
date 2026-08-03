@@ -255,3 +255,9 @@
 - 每次新的路由/提交复核先取消上一组 route timer，再登记最新 3 个有界探针。
 - 100 次连续 history 变化时 `routeTimers.size <= 3`，最后一组期限结束后回到 0。
 - 定向结果：快速导航与刷新合同 2/2；无窗口、服务或端口残留。
+
+### V35 侧栏仅选中态
+
+- 根据 2026-08-03 实机截图撤销新建任务、拉取请求、站点、已安排、插件、置顶任务、项目条和项目内任务在未选中状态下的主题行背景；原生 hover、focus、expanded/collapsed、disabled 与 unread/running 状态继续由 Codex 自己绘制。
+- 仅原生 current/selected 外层行使用白纸黑字素材；背景按真实节点尺寸居中，并在四边各内缩 1 px，避免透明边缘与外层命中区错位。
+- 定向结果：`V35 preserves native unselected sidebar paint and themes only the current selection` 1/1；本检查点未启动 Codex 调试窗口、浏览器服务或常驻监听。

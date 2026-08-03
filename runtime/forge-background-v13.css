@@ -712,12 +712,9 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 /*
- * Journal-directory sidebar mapping:
- *   level 1 default/hover  -> thick dark ink paper
- *   level 2 default        -> transparent with broken ink trace
- *   level 2 hover          -> thin black brush stroke
- *   current conversation   -> pale torn paper, regardless of hierarchy
- * Project parents never receive the pale selected material.
+ * Keep every unselected native sidebar row entirely native. The only themed
+ * row state is the source-backed current selection, matching Codex's own
+ * state model instead of turning the directory into a stack of cards.
  */
 :root.forge-ink-mountain .forge-sidebar-shell {
   --color-token-side-bar-background: rgba(9, 8, 6, .66);
@@ -734,72 +731,6 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   background-repeat: no-repeat !important;
   background-size: 100% 100% !important;
   backdrop-filter: none !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-level1,
-:root.forge-ink-mountain .forge-sidebar-level2,
-:root.forge-ink-mountain .forge-sidebar-action,
-:root.forge-ink-mountain .forge-sidebar-selected {
-  --vscode-textLink-foreground: #a74b30;
-  --forge-sidebar-row-material: var(--forge-ui-sidebar-level1);
-  border-color: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-:root.forge-ink-mountain :is(
-  .forge-sidebar-action,
-  .forge-sidebar-level1,
-  .forge-sidebar-level2,
-  .forge-sidebar-selected
-) :focus-visible {
-  outline: none !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-action {
-  --color-token-foreground: #d8d3cb;
-  --color-token-text-primary: #d8d3cb;
-  --color-token-text-secondary: #bbb5ad;
-  --color-token-description-foreground: #969087;
-  --color-token-icon-foreground: #d1cbc2;
-  color: #d8d3cb !important;
-  background-color: transparent !important;
-  background-image: var(--forge-ui-sidebar-level1) !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: 100% 100% !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-action:hover {
-  color: #eee8de !important;
-  background-image:
-    linear-gradient(rgba(255, 245, 228, .035), rgba(255, 245, 228, .035)),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-action:is(
-  :focus-visible,
-  :has(:focus-visible)
-) {
-  color: #f2ece2 !important;
-  background-image:
-    linear-gradient(rgba(255, 245, 228, .065), rgba(255, 245, 228, .065)),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-action:is(
-  [aria-expanded="true"],
-  [data-state="open"],
-  :has([aria-expanded="true"]),
-  :has([data-state="open"])
-) {
-  color: #f0e9df !important;
-  background-image:
-    linear-gradient(rgba(255, 245, 228, .045), rgba(255, 245, 228, .045)),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-action-active,
@@ -820,10 +751,12 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   --color-token-description-foreground: #655a50;
   --color-token-icon-foreground: #3f352d;
   color: #2f2822 !important;
+  background-color: transparent !important;
   background-image: var(--forge-ui-sidebar-selected) !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
-  background-size: 100% 100% !important;
+  background-size: calc(100% - 2px) calc(100% - 2px) !important;
+  border-color: transparent !important;
   box-shadow: none !important;
 }
 
@@ -831,164 +764,6 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :is(.forge-sidebar-action-active, .forge-sidebar-selected)
   :where(*):not([data-native-status], [data-native-status] *) {
   color: #2f2822 !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-level1 {
-  --color-token-foreground: #d8d3cb;
-  --color-token-text-primary: #d8d3cb;
-  --color-token-text-secondary: #bbb5ad;
-  --color-token-description-foreground: #969087;
-  --color-token-icon-foreground: #d1cbc2;
-  color: #d8d3cb !important;
-  background-color: transparent !important;
-  background-image: var(--forge-ui-sidebar-level1) !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: 100% 100% !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-level1:hover {
-  color: #eee8de !important;
-  background-image:
-    linear-gradient(rgba(255, 245, 228, .035), rgba(255, 245, 228, .035)),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-level1:is(
-  :focus-visible,
-  :has(:focus-visible)
-) {
-  color: #f2ece2 !important;
-  background-image:
-    linear-gradient(rgba(255, 245, 228, .065), rgba(255, 245, 228, .065)),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
-}
-
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="true"] {
-  color: #e3ddd4 !important;
-  background-image: var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
-}
-
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="true"]:hover {
-  color: #f0e9df !important;
-  background-image:
-    linear-gradient(rgba(255, 245, 228, .04), rgba(255, 245, 228, .04)),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
-}
-
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="false"],
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][data-app-action-sidebar-project-collapsed="true"] {
-  color: #b8b2aa !important;
-  background-image:
-    linear-gradient(rgba(0, 0, 0, .09), rgba(0, 0, 0, .09)),
-    var(--forge-ui-sidebar-level1) !important;
-}
-
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="false"]:hover,
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][data-app-action-sidebar-project-collapsed="true"]:hover {
-  color: #ddd7cf !important;
-  background-image:
-    linear-gradient(rgba(255, 245, 228, .025), rgba(255, 245, 228, .025)),
-    linear-gradient(rgba(0, 0, 0, .09), rgba(0, 0, 0, .09)),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
-}
-
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="true"]:is(
-    :focus-visible,
-    :has(:focus-visible)
-  ),
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="false"]:is(
-    :focus-visible,
-    :has(:focus-visible)
-  ),
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][data-app-action-sidebar-project-collapsed="true"]:is(
-    :focus-visible,
-    :has(:focus-visible)
-  ) {
-  color: #f2ece2 !important;
-  background-image:
-    linear-gradient(rgba(255, 245, 228, .065), rgba(255, 245, 228, .065)),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
-}
-
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="true"]:active,
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][aria-expanded="false"]:active,
-:root.forge-ink-mountain
-  .forge-sidebar-level1[data-app-action-sidebar-project-row][data-app-action-sidebar-project-collapsed="true"]:active {
-  background-image:
-    linear-gradient(rgba(0, 0, 0, .12), rgba(0, 0, 0, .12)),
-    var(--forge-ui-sidebar-level1) !important;
-  box-shadow: 0 1px 4px rgba(15, 10, 7, .32) inset !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-level1:active {
-  background-image:
-    linear-gradient(rgba(0, 0, 0, .08), rgba(0, 0, 0, .08)),
-    var(--forge-ui-sidebar-level1) !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-level2 {
-  --forge-sidebar-row-material:
-    linear-gradient(
-      90deg,
-      transparent 0 4%,
-      rgba(72, 66, 56, .22) 4% 22%,
-      transparent 22% 28%,
-      rgba(72, 66, 56, .16) 28% 61%,
-      transparent 61% 69%,
-      rgba(72, 66, 56, .12) 69% 92%,
-      transparent 92% 100%
-    );
-  --color-token-foreground: #c4beb7;
-  --color-token-text-primary: #c4beb7;
-  --color-token-text-secondary: #a9a39c;
-  --color-token-description-foreground: #858078;
-  --color-token-icon-foreground: #bdb7af;
-  color: #c4beb7 !important;
-  background-color: transparent !important;
-  background-image: var(--forge-sidebar-row-material) !important;
-  background-position: left calc(100% - 2px) !important;
-  background-repeat: no-repeat !important;
-  background-size: 100% 1px !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-level2:hover,
-:root.forge-ink-mountain .forge-sidebar-level2:is(
-  :focus-visible,
-  :has(:focus-visible)
-) {
-  --color-token-foreground: #d8d2ca;
-  --color-token-text-primary: #d8d2ca;
-  --color-token-text-secondary: #bbb5ad;
-  color: #d8d2ca !important;
-  background-image: var(--forge-ui-sidebar-level2-hover) !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: 100% 100% !important;
-}
-
-:root.forge-ink-mountain .forge-sidebar-level2:is(
-  :focus-visible,
-  :has(:focus-visible)
-) {
-  box-shadow: none !important;
 }
 
 :root.forge-ink-mountain .forge-sidebar-selected,
@@ -1009,7 +784,8 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   background-image: var(--forge-ui-sidebar-selected) !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
-  background-size: 100% 100% !important;
+  background-size: calc(100% - 2px) calc(100% - 2px) !important;
+  border-color: transparent !important;
   box-shadow: none !important;
 }
 
@@ -1053,67 +829,8 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   background-image: var(--forge-ui-sidebar-selected) !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
-  background-size: 100% 100% !important;
-  box-shadow: none !important;
-}
-
-/*
- * The current ASAR renders task state in its own trailing indicator:
- * unread uses --vscode-textLink-foreground and running uses the native
- * 24×24 spinner. Tint those real indicators only; do not invent row badges.
- */
-:root.forge-ink-mountain :is(
-  .forge-sidebar-action,
-  .forge-sidebar-level1,
-  .forge-sidebar-level2,
-  .forge-sidebar-selected
-) .animate-spin:has(> svg[viewBox="0 0 24 24"]) {
-  color: #b35437 !important;
-}
-
-:root.forge-ink-mountain :is(
-  .forge-sidebar-action,
-  .forge-sidebar-level1,
-  .forge-sidebar-level2,
-  .forge-sidebar-selected
-):is(
-  :disabled,
-  [aria-disabled="true"],
-  [data-disabled]:not([data-disabled="false"]),
-  [data-disabled="true"],
-  :has(> button:not([aria-haspopup="menu"]):disabled),
-  :has(> button:not([aria-haspopup="menu"])[aria-disabled="true"]),
-  :has(> button:not([aria-haspopup="menu"])[data-disabled]:not([data-disabled="false"])),
-  :has(> button:not([aria-haspopup="menu"])[data-disabled="true"])
-),
-:root.forge-ink-mountain :is(
-  .forge-sidebar-action,
-  .forge-sidebar-level1,
-  .forge-sidebar-level2,
-  .forge-sidebar-selected
-):is(
-  :disabled,
-  [aria-disabled="true"],
-  [data-disabled]:not([data-disabled="false"]),
-  [data-disabled="true"],
-  :has(> button:not([aria-haspopup="menu"]):disabled),
-  :has(> button:not([aria-haspopup="menu"])[aria-disabled="true"]),
-  :has(> button:not([aria-haspopup="menu"])[data-disabled]:not([data-disabled="false"])),
-  :has(> button:not([aria-haspopup="menu"])[data-disabled="true"])
-):is(
-  :hover,
-  :focus-visible,
-  :has(:focus-visible),
-  [aria-expanded="true"],
-  [data-state="open"],
-  :has([aria-expanded="true"]),
-  :has([data-state="open"])
-) {
-  --vscode-textLink-foreground: #74665a;
-  color: #777169 !important;
-  cursor: not-allowed !important;
-  opacity: .46;
-  background-image: var(--forge-sidebar-row-material) !important;
+  background-size: calc(100% - 2px) calc(100% - 2px) !important;
+  border-color: transparent !important;
   box-shadow: none !important;
 }
 

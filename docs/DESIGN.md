@@ -345,6 +345,7 @@ V10 的重点不是给原生界面统一蒙一层深色，而是让每张电影�
 
 ## 原生几何和内容契约
 
+- 侧栏标记只用于定位原生语义，未选中 action/project/thread 即使带有 `forge-sidebar-*` 标记也不获得任何主题颜色、背景、边框、阴影或状态指示覆盖；仅原生 `aria-current`、`aria-selected` 或 `data-app-action-sidebar-thread-active` 对应的真实外层行绘制选中纸面。选中材质以节点实时宽高为基准，四边各留 1 px 安全内缩，避免纹理透明缘越过原生命中区。
 - 不对顶部栏、侧栏、项目树、环境行、消息和输入槽位设置 `width`、`height`、`margin`、`padding`、`gap` 或 `transform`；只有 composer 保留 `position:relative` 作为同行者伪元素坐标系，DOMRect 必须保持一致。
 - composer 只在实际组合框宽 360–960 px、高 58 px 至 `min(480 px, 48vh)` 且位于页面底部时标记；外层过宽 `form` 不再降级命中，长输入也不会突然失去样式。
 - 环境栏只标记面积最大的一个候选容器，防止多层嵌套同时变成卡片。
