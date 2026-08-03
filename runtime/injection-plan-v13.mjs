@@ -26,6 +26,7 @@ export const MARK_CLASSES = [
   'forge-composer-panel-stack',
   'forge-composer-panel',
   'forge-composer-queue-item',
+  'forge-composer-thread-fade',
   'forge-composer-progress-fade',
   'forge-composer-progress-pill',
   'forge-plan-pill',
@@ -853,6 +854,55 @@ function applyRuntime(payload) {
     ));
     queuedItems.forEach(item => mark(item, 'forge-composer-queue-item'));
 
+    /*
+     * ChatGPT.exe 26.715.2305.0 mounts the composer beneath an official
+     * data-thread-scroll-footer. Its first child is a pointer-transparent,
+     * full-footer gradient whose only job is to blend the native solid main
+     * surface into the thread. Once the thread background is photographic,
+     * that paint-only child becomes the unrelated black carrier visible
+     * around the paper stack. Clear the inner gradient only: the sticky
+     * footer, its obstacle layer and every native hit box stay untouched.
+     */
+    const threadScrollFooter = composerRoot.closest(
+      '[data-thread-scroll-footer="true"]'
+    );
+    const threadFadeHost = threadScrollFooter
+      ? [...threadScrollFooter.children].find(child => (
+          layoutPresent(child) &&
+          hasClassTokens(child, [
+            'pointer-events-none',
+            'absolute',
+            'inset-x-0',
+            'bottom-0',
+            'z-0',
+            'flex',
+            'h-full',
+            'w-full',
+            'justify-center',
+            'pt-4'
+          ]) &&
+          child.childElementCount === 1
+        )) || null
+      : null;
+    const threadFadePaint = threadFadeHost?.firstElementChild || null;
+    const nativeThreadFadePaint = (
+      threadFadePaint &&
+      hasClassTokens(threadFadePaint, [
+        'z-0',
+        'h-full',
+        'bg-gradient-to-t'
+      ]) &&
+      [...threadFadePaint.classList].some(token => (
+        token === 'from-token-main-surface-primary' ||
+        token === 'extension:from-token-bg-primary'
+      ))
+        ? threadFadePaint
+        : null
+    );
+    if (nativeThreadFadePaint) {
+      mark(nativeThreadFadePaint, 'forge-composer-thread-fade');
+    }
+
     const planPattern = /(?:第\s*\d+\s*\/\s*\d+\s*步|step\s*\d+\s*\/\s*\d+)/i;
     const diffPattern = /(?:\d+\s*个文件(?:已)?(?:更改|修改)|\d+\s*files?\s+changed)/i;
     const progressHosts = aboveComposerPortals.flatMap(portal => (
@@ -1025,6 +1075,7 @@ function applyRuntime(payload) {
       context,
       ...panelStacks,
       ...panelCandidates,
+      nativeThreadFadePaint,
       ...progressFades,
       ...progressPills,
       submit
@@ -1538,6 +1589,7 @@ function applyRuntime(payload) {
     '[class~="group/application-menu-top-bar"] button[aria-haspopup="menu"][aria-expanded]',
     '.application-menu',
     '[data-thread-find-composer]',
+    '[data-thread-scroll-footer="true"]',
     '[data-codex-composer-root]',
     '[data-above-composer-portal]',
     '.composer-surface-chrome',
@@ -1575,11 +1627,13 @@ function applyRuntime(payload) {
   const composerBoundarySelector = [
     '[data-codex-composer-root]',
     '[data-thread-find-composer="true"]',
+    '[data-thread-scroll-footer="true"]',
     '.composer-surface-chrome',
     '[data-above-composer-portal]'
   ].join(',');
   const composerSignalSelector = [
     '[data-codex-composer-root]',
+    '[data-thread-scroll-footer="true"]',
     '.composer-surface-chrome',
     '[data-above-composer-portal]',
     '[data-composer-utility-bar-scroll-area]',

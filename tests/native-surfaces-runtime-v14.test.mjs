@@ -1834,6 +1834,111 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   await page.close();
 });
 
+test('V38 clears only the source-backed thread footer fade without changing native geometry', async () => {
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 820 },
+    deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
+  });
+  await page.route('http://wukong-v38-footer.test/**', route => route.fulfill({
+    body: runtimeFixtureHtml,
+    contentType: 'text/html; charset=utf-8'
+  }));
+  await page.goto('http://wukong-v38-footer.test/');
+  await installComposerState(page, 'guided');
+
+  const before = await page.evaluate(() => {
+    const composerArea = document.querySelector('.composer-area');
+    const threadFooter = document.createElement('div');
+    threadFooter.dataset.threadScrollFooter = 'true';
+    threadFooter.style.cssText = 'position:relative;width:100%;';
+
+    const fadeHost = document.createElement('div');
+    fadeHost.className =
+      'pointer-events-none absolute inset-x-0 bottom-0 z-0 flex h-full w-full justify-center pt-4';
+    fadeHost.style.cssText =
+      'position:absolute;inset-inline:0;bottom:0;z-index:0;display:flex;' +
+      'width:100%;height:180px;justify-content:center;padding-top:16px;pointer-events:none;';
+
+    const fadePaint = document.createElement('div');
+    fadePaint.className =
+      'z-0 h-full bg-gradient-to-t from-token-main-surface-primary ' +
+      'via-token-main-surface-primary extension:from-token-bg-primary ' +
+      'extension:via-token-bg-primary native-thread-footer-gradient';
+    fadePaint.style.cssText =
+      'z-index:0;width:100%;height:100%;background-color:rgb(31,31,31);' +
+      'background-image:linear-gradient(to top,rgb(31,31,31),rgb(31,31,31),transparent);';
+    fadeHost.append(fadePaint);
+
+    const obstacle = document.createElement('div');
+    obstacle.dataset.pipObstacle = 'thread-footer';
+    obstacle.className = 'relative z-10 flex flex-col';
+    obstacle.style.cssText = 'position:relative;z-index:10;display:flex;flex-direction:column;';
+
+    composerArea.before(threadFooter);
+    obstacle.append(composerArea);
+    threadFooter.append(fadeHost, obstacle);
+
+    const read = () => {
+      const hostRect = fadeHost.getBoundingClientRect();
+      const paintRect = fadePaint.getBoundingClientRect();
+      const composerRect = document
+        .querySelector('[data-codex-composer-root]')
+        .getBoundingClientRect();
+      const style = getComputedStyle(fadePaint);
+      return {
+        relativeRect: [
+          paintRect.x - hostRect.x,
+          paintRect.y - hostRect.y,
+          paintRect.width,
+          paintRect.height
+        ],
+        composerWidth: composerRect.width,
+        pointerEvents: style.pointerEvents,
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        opacity: style.opacity
+      };
+    };
+    window.__readNativeThreadFade = read;
+    return read();
+  });
+
+  assert.equal(before.pointerEvents, 'none');
+  assert.equal(before.backgroundColor, 'rgb(31, 31, 31)');
+  assert.notEqual(before.backgroundImage, 'none');
+  assert.equal(before.opacity, '1');
+
+  await page.evaluate(expression);
+  await page.waitForFunction(() => (
+    document.querySelector('.native-thread-footer-gradient')
+      ?.classList.contains('forge-composer-thread-fade')
+  ));
+
+  assert.equal(await page.locator('.forge-composer-thread-fade').count(), 1);
+  const after = await page.evaluate(() => window.__readNativeThreadFade());
+  assert.deepEqual(
+    after.relativeRect,
+    before.relativeRect,
+    'clearing the paint-only fade must preserve its native footer geometry'
+  );
+  assert.ok(
+    Math.abs(after.composerWidth - before.composerWidth) <= .25,
+    'clearing the fade must preserve the native composer width'
+  );
+  assert.equal(after.pointerEvents, 'none');
+  assert.equal(after.backgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(after.backgroundImage, 'none');
+  assert.equal(after.opacity, '0');
+  assert.equal(
+    await page.locator('[data-native-slot="composer-submit"]').getAttribute('aria-label'),
+    '停止'
+  );
+
+  await page.evaluate(RESTORE_EXPRESSION);
+  assert.equal(await page.locator('.forge-composer-thread-fade').count(), 0);
+  await page.close();
+});
+
 test('V35 maps a motion-mounted active goal before its first visible frame', async () => {
   const page = await browser.newPage({
     viewport: { width: 1280, height: 820 },

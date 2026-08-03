@@ -556,6 +556,21 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   opacity: 0 !important;
 }
 
+/*
+ * Native thread-scroll-layout adds a full-height solid-surface gradient
+ * behind the entire footer. It is paint-only and pointer transparent. The
+ * Wukong scene already owns that blend, so retain the native node geometry
+ * while suppressing only its obsolete solid-surface paint.
+ */
+:root.forge-ink-mountain .forge-composer-thread-fade {
+  background: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 0 !important;
+}
+
 :root.forge-ink-mountain .forge-composer-progress-pill,
 :root.forge-ink-mountain .forge-plan-pill,
 :root.forge-ink-mountain .forge-diff-summary {
@@ -914,6 +929,7 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :root.forge-ink-mountain #root .forge-composer-panel-stack,
   :root.forge-ink-mountain #root .forge-composer-panel,
   :root.forge-ink-mountain #root .forge-composer-queue-item,
+  :root.forge-ink-mountain #root .forge-composer-thread-fade,
   :root.forge-ink-mountain #root .forge-composer-progress-pill,
   :root.forge-ink-mountain #root .forge-plan-pill,
   :root.forge-ink-mountain #root .forge-diff-summary,
@@ -949,7 +965,8 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     outline: revert !important;
   }
 
-  :root.forge-ink-mountain #root .forge-composer-progress-fade {
+  :root.forge-ink-mountain #root .forge-composer-progress-fade,
+  :root.forge-ink-mountain #root .forge-composer-thread-fade {
     background: none !important;
     opacity: 0 !important;
     forced-color-adjust: none;
