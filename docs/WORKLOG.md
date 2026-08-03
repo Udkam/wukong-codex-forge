@@ -330,3 +330,10 @@
 - 捕获器在侧栏精确选中 `codex主题替换` 后向真实编辑器写入仅用于验收的 follow-up，并发送来源已核对的 Windows `Control+Enter`。该 profile 仍未接受提交：`inputCleared=false`、`queueObserved=false`，因此没有生成 PNG，也没有用 fixture 或人工 DOM 冒充联合实机证据。
 - 失败报告保留在本机临时证据 JSON；不含消息正文。清理证明 `nativeRestoreObserved=true`、`watcherConfirmed=true`、`verifiedTreeFallback=true`、`rootReleased=true`、`ownerReleased=true`、`portReleased=true`，随机端口 `24750` 已不可访问，没有保留调试窗口。
 - 本检查点不重试第二个窗口，不修改宠物或葫芦，也不删除任何文件。最终非宠物生命周期完成审计仍以后续真实联合整页门通过为前置条件；当前只记录真实阻塞，不标记项目完成。
+
+### V44 原生编辑器状态准备合同
+
+- 失败证据表明快捷键已经发送，但旧捕获器只证明 contenteditable 表面出现了文本，没有证明 ProseMirror 控制器把该文本纳入可提交文档。`fill()` 因此从验收路径撤下。
+- 新路径在任何写入前读取真实编辑器；只要已有草稿就 fail closed，绝不覆盖用户内容。空编辑器先获得真实焦点，再由 `page.keyboard.insertText` 触发原生 `beforeinput/input`，并等待文本原样回读后把 `inputPrepared` 置为真；随后才允许 `Control+Enter`。
+- 失败报告仍只保存 `editorInitiallyEmpty`、`inputPrepared`、`inputCleared`、`queueObserved` 与快捷键名，不保存消息正文。定向语法检查与生命周期合同 13/13 通过；结束时项目调试进程为 0。
+- 本检查点没有启动新的 Codex 窗口，不触碰宠物或葫芦，不删除文件，也不越过仍待完成的真实联合整页门。

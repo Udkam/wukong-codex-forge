@@ -82,6 +82,11 @@ test('live capture closes only an explicitly owned transient debug session', () 
   assert.match(capture, /open-task-candidates/);
   assert.match(capture, /require-queue-goal/);
   assert.match(capture, /dismiss-full-access-warning/);
+  assert.match(capture, /editorInitiallyEmpty/);
+  assert.match(capture, /inputPrepared/);
+  assert.match(capture, /page\.keyboard\.insertText\(nativeEnqueueMessage\)/);
+  assert.match(capture, /page\.keyboard\.press\('Control\+Enter'\)/);
+  assert.doesNotMatch(capture, /editor\.fill\(nativeEnqueueMessage\)/);
   assert.match(capture, /root\.dataset\.forgeSurface === 'thread'/);
   assert.match(capture, /root\.dataset\.forgeMode === 'scenery'/);
   assert.match(capture, /querySelectorAll\('\.forge-composer-panel'\)\.length >= 2/);

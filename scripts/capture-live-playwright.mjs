@@ -114,6 +114,8 @@ let nativeEnqueueProof = {
   requested: false,
   attempted: false,
   submissionShortcut: null,
+  editorInitiallyEmpty: false,
+  inputPrepared: false,
   inputCleared: false,
   queueObserved: false
 };
@@ -273,6 +275,8 @@ try {
     requested: Boolean(nativeEnqueueMessage),
     attempted: false,
     submissionShortcut: nativeEnqueueMessage ? 'Control+Enter' : null,
+    editorInitiallyEmpty: false,
+    inputPrepared: false,
     inputCleared: false,
     queueObserved: false
   };
@@ -379,11 +383,30 @@ try {
     }
     if (!editor) throw Error('Selected task has no visible editable native composer');
 
+    const readEditorText = async () => String(
+      await editor.innerText().catch(() => editor.textContent().catch(() => ''))
+    ).replace(/\s+/g, ' ').trim();
+    nativeEnqueueProof.editorInitiallyEmpty = await readEditorText() === '';
+    if (!nativeEnqueueProof.editorInitiallyEmpty) {
+      throw Error('Refusing to overwrite an existing native composer draft');
+    }
+
     nativeEnqueueProof.attempted = true;
-    await editor.fill(nativeEnqueueMessage);
+    await editor.click();
+    // ProseMirror owns its document state. Keyboard insertion exercises its
+    // native beforeinput/input path; DOM-oriented fill() can paint text without
+    // proving that the controller accepted it as a submit-ready prompt.
+    await page.keyboard.insertText(nativeEnqueueMessage);
+    nativeEnqueueProof.inputPrepared = await waitUntil(
+      async () => await readEditorText() === nativeEnqueueMessage,
+      5000
+    );
+    if (!nativeEnqueueProof.inputPrepared) {
+      throw Error('Native composer controller did not accept the follow-up message');
+    }
     // The current native prompt editor always maps Mod+Enter to submit. Plain
     // Enter can insert a newline when composerEnterBehavior is cmdAlways.
-    await editor.press('Control+Enter');
+    await page.keyboard.press('Control+Enter');
     nativeEnqueueProof.inputCleared = await waitUntil(async () => {
       if (!await editor.isVisible().catch(() => false)) return true;
       return String(await editor.textContent().catch(() => '')).trim() === '';
