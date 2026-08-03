@@ -185,6 +185,10 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   const beforeStyle = await nativeLayoutStyle(page);
   const beforeText = await page.locator('body').innerText();
   const beforeBodyChildren = await page.locator('body > *').count();
+  const beforeRightRowCount = await page.locator(
+    '[data-native-slot="right-card"] [data-slot="thread-summary-panel-item"]'
+  ).count();
+  assert.ok(beforeRightRowCount > 0, 'fixture must expose native environment rows');
   const beforeLandingGeometry = await page.evaluate(() => {
     const read = selector => {
       const { x, y, width, height } = document.querySelector(selector).getBoundingClientRect();
@@ -240,7 +244,11 @@ test('V13 keeps native UI intact, crossfades decoded scenes, repairs its overlay
   assert.equal(await page.locator('.forge-right-panel').count(), 1);
   assert.equal(await page.locator('.forge-right-card').count(), 1);
   assert.equal(await page.locator('.forge-right-title').count(), 1);
-  assert.equal(await page.locator('.forge-right-row').count(), 4);
+  assert.equal(
+    await page.locator('.forge-right-row').count(),
+    beforeRightRowCount,
+    'every native environment row must receive exactly one theme marker'
+  );
 
   const background = await page.evaluate(() => {
     const overlay = document.getElementById('wukong-forge-background');

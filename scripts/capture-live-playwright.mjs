@@ -110,6 +110,13 @@ const terminateVerifiedDebugTree = async pid => {
 const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
 let page = null;
 let report = null;
+let nativeEnqueueProof = {
+  requested: false,
+  attempted: false,
+  submissionShortcut: null,
+  inputCleared: false,
+  queueObserved: false
+};
 let transientCleanupStarted = false;
 let transientCleanupCompleted = false;
 
@@ -261,6 +268,14 @@ try {
   let transitionProof = null;
   let selectedTask = null;
   const taskSelectionProof = [];
+  const nativeEnqueueMessage = String(values['enqueue-native-message'] || '').trim();
+  nativeEnqueueProof = {
+    requested: Boolean(nativeEnqueueMessage),
+    attempted: false,
+    submissionShortcut: nativeEnqueueMessage ? 'Control+Enter' : null,
+    inputCleared: false,
+    queueObserved: false
+  };
   const captureTransition = async () => {
     if (values['sample-transition'] !== 'true') {
       await page.waitForTimeout(1800);
@@ -345,8 +360,44 @@ try {
       { timeout: Number(values['task-state-timeout-ms'] || 12000) }
     );
   };
+  const enqueueNativeFollowUp = async () => {
+    if (!nativeEnqueueMessage || nativeEnqueueProof.attempted) return;
+    const surfaces = page.locator('.composer-surface-chrome');
+    let editor = null;
+    for (let index = 0; index < await surfaces.count(); index += 1) {
+      const surface = surfaces.nth(index);
+      if (!await surface.isVisible().catch(() => false)) continue;
+      const candidate = surface.locator([
+        '[contenteditable="true"][role="textbox"]',
+        '.ProseMirror[contenteditable="true"]',
+        '[contenteditable="true"]'
+      ].join(', ')).first();
+      if (await candidate.isVisible().catch(() => false)) {
+        editor = candidate;
+        break;
+      }
+    }
+    if (!editor) throw Error('Selected task has no visible editable native composer');
+
+    nativeEnqueueProof.attempted = true;
+    await editor.fill(nativeEnqueueMessage);
+    // The current native prompt editor always maps Mod+Enter to submit. Plain
+    // Enter can insert a newline when composerEnterBehavior is cmdAlways.
+    await editor.press('Control+Enter');
+    nativeEnqueueProof.inputCleared = await waitUntil(async () => {
+      if (!await editor.isVisible().catch(() => false)) return true;
+      return String(await editor.textContent().catch(() => '')).trim() === '';
+    }, 5000);
+    if (!nativeEnqueueProof.inputCleared) {
+      throw Error('Native composer did not accept the follow-up message');
+    }
+    nativeEnqueueProof.queueObserved = await waitUntil(async () => (
+      await page.locator('.forge-composer-queue-item').count() >= 1
+    ), 5000);
+  };
   const verifySelectedTaskState = async label => {
     await waitForSelectedTask(label);
+    await enqueueNativeFollowUp();
     await waitForRequestedTaskState();
     await waitForSelectedTask(label);
   };
@@ -588,6 +639,7 @@ try {
   report.transitionProof = transitionProof;
   report.taskSelectionProof = taskSelectionProof;
   report.selectedTask = selectedTask;
+  report.nativeEnqueueProof = nativeEnqueueProof;
   if (selectedTask) await verifySelectedTaskState(selectedTask);
   await page.screenshot({ path: output, type: 'png' });
 
@@ -602,6 +654,7 @@ try {
 } catch (error) {
   if (closeTransientDebug) {
     report ||= {};
+    report.nativeEnqueueProof = nativeEnqueueProof;
     report.captureError = {
       name: String(error?.name || 'Error'),
       message: String(error?.message || error)

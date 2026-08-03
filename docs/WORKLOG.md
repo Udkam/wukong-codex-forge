@@ -314,3 +314,12 @@
 - 保留式安装生成 append-only release `0.13.0-20260803-191843`；安装器明确不删除文件、不触碰 WindowsApps、`app.asar`、`ChatGPT.exe` 或官方配置，仓库与安装副本的 CSS、注入计划及 host 哈希一致。
 - 最终联合捕获首次因候选任务未在时限内同时满足 current/selected 与 queue/goal 而 fail closed，没有生成伪 PNG；root、launcher、项目 Node、随机回环端口与 watcher 状态均已归零。
 - 随后只启动一个新的临时受管实例做环境卡专项完整页复验：真实窗口中的 `环境信息`、`子智能体`、`后台进程`、`来源` 四个标题均直接显露同一张外层纸面，不再有独立深色标题条；卡宽记录为 300px。截图完成后该实例立即关闭，root、launcher、项目 Node 和端口均确认释放。该专项门通过，但不替代仍待完成的 queue/goal + 环境卡联合完整页门。
+
+### V43 原生排队提交键与捕获器失败即停
+
+- 最终联合门第一次尝试向真实 Codex contenteditable 写入一条仅用于验收的 follow-up；普通 `Enter` 没有清空输入，也没有产生原生 queue，因此捕获器拒绝生成 PNG。失败 JSON记录 `requested=true`、`attempted=true`、`inputCleared=false`、`queueObserved=false`，没有保存消息正文。
+- 失败路径完成原生恢复与精确清理：唯一受管 root、owner、专用调试端口和项目 Node 均释放，没有保留第二个 Codex 窗口。
+- 从当前 `ChatGPT.exe 26.715.2305.0` 的 `app.asar` 定点读取 `prompt-editor-7-z62JTc.js`、`service-tier-icons-BtUdgxQi.js` 与 `codex-composer-adapter-DId2iEtu.js`。源码证明 `Mod+Enter` 恒发出原生 `submit`；普通 `Enter` 在 `cmdAlways` 下只换行。运行中默认 follow-up 为 `queue` 时，另一个由 enter 配置决定的组合键才会反转为 `steer`。
+- 捕获器只在显式传入 `--enqueue-native-message` 时使用 Windows `Control+Enter`；仍先证明目标任务 current/selected，随后要求原生编辑器清空和至少一个 `.forge-composer-queue-item`，任一不成立即失败且不截图。报告只保存布尔证明与快捷键名，不保存消息内容。
+- 环境 fixture 从 4 行扩展到 7 行后，旧背景回归仍硬编码 4 个主题行标记。本轮把断言改为注入前读取官方环境行数，并要求注入后逐行一一映射；生产映射未变。
+- 定向结果：原生表面/landing/background 25/25，event-host/lifecycle/restore/preserving/min-package 24/24，当前 ASAR 来源合同 1/1；捕获脚本改动后语法检查与生命周期 13/13 通过。资源连续采样仍在琥珀档，因此没有立即启动第二次窗口；唯一一次 `Ctrl+Enter` 联合重试等待连续绿色样本。
