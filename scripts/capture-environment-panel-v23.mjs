@@ -49,6 +49,10 @@ const readGeometry = page => page.evaluate(() => {
     title: rectOf(card?.querySelector('.summary-heading')),
     rows: [...(card?.querySelectorAll('[data-slot="thread-summary-panel-item"]') || [])]
       .map(rectOf),
+    sections: [...(card?.querySelectorAll('.summary-native-section') || [])]
+      .map(rectOf),
+    sectionTitles: [...(card?.querySelectorAll('.summary-native-section-title') || [])]
+      .map(rectOf),
     composer: rectOf(document.querySelector('.composer-surface-chrome')),
     queue: rectOf(document.querySelector('[data-fixture-surface="queued-panel"]')),
     goal: rectOf(document.querySelector('[data-fixture-surface="goal-panel"]'))
@@ -72,13 +76,18 @@ try {
   await installComposerState(page, 'multi-guided');
   const before = await readGeometry(page);
   assert.equal(before.card?.[2], 300, 'native environment card width changed');
-  assert.equal(before.rows.length, 4, 'native environment row count changed');
+  assert.equal(before.rows.length, 7, 'native environment row count changed');
+  assert.equal(before.sections.length, 3, 'native environment section count changed');
+  assert.equal(before.sectionTitles.length, 3, 'native environment section-title count changed');
 
   await page.evaluate(expression);
   await page.waitForFunction(() => (
     document.querySelector('[data-native-slot="right-card"]')
       ?.classList.contains('forge-right-card') &&
-    document.querySelectorAll('.forge-right-row').length === 4 &&
+    document.querySelectorAll('.forge-right-row').length === 7 &&
+    document.querySelectorAll('.forge-right-section').length === 3 &&
+    document.querySelectorAll('.forge-right-section-title').length === 3 &&
+    document.querySelectorAll('.forge-right-title-surface').length === 1 &&
     document.querySelectorAll('.forge-composer-queue-item').length === 2 &&
     document.documentElement.dataset.forgeBackgroundReady === 'true'
   ));
@@ -88,13 +97,17 @@ try {
       panel: after.panel,
       card: after.card,
       title: after.title,
-      rows: after.rows
+      rows: after.rows,
+      sections: after.sections,
+      sectionTitles: after.sectionTitles
     },
     {
       panel: before.panel,
       card: before.card,
       title: before.title,
-      rows: before.rows
+      rows: before.rows,
+      sections: before.sections,
+      sectionTitles: before.sectionTitles
     },
     'paint changed native environment-panel geometry'
   );
@@ -127,6 +140,16 @@ try {
   const paint = await page.evaluate(() => {
     const card = document.querySelector('.forge-right-card');
     const paper = getComputedStyle(card, '::before');
+    const titleSurface = getComputedStyle(document.querySelector('.forge-right-title-surface'));
+    const sectionTitles = [...document.querySelectorAll('.forge-right-section-title')]
+      .map(element => {
+        const style = getComputedStyle(element);
+        return {
+          backgroundColor: style.backgroundColor,
+          backgroundImage: style.backgroundImage,
+          boxShadow: style.boxShadow
+        };
+      });
     return {
       markedRows: document.querySelectorAll('.forge-right-row').length,
       cardBackground: getComputedStyle(card).backgroundImage,
@@ -134,17 +157,36 @@ try {
       paperBackground: paper.backgroundImage,
       paperClipPath: paper.clipPath,
       paperPointerEvents: paper.pointerEvents,
+      titleSurface: {
+        backgroundColor: titleSurface.backgroundColor,
+        backgroundImage: titleSurface.backgroundImage,
+        boxShadow: titleSurface.boxShadow
+      },
+      sectionTitles,
       progressFadeOpacity: getComputedStyle(
         document.querySelector('.forge-composer-progress-fade')
       ).opacity
     };
   });
-  assert.equal(paint.markedRows, 4);
+  assert.equal(paint.markedRows, 7);
   assert.equal(paint.cardBackground, 'none');
   assert.equal(paint.cardClipPath, 'none');
   assert.match(paint.paperBackground, /paper|data:image|url\(/i);
   assert.match(paint.paperClipPath, /^polygon\(/);
   assert.equal(paint.paperPointerEvents, 'none');
+  assert.deepEqual(paint.titleSurface, {
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    backgroundImage: 'none',
+    boxShadow: 'none'
+  });
+  assert.equal(paint.sectionTitles.length, 3);
+  for (const titlePaint of paint.sectionTitles) {
+    assert.deepEqual(titlePaint, {
+      backgroundColor: 'rgba(0, 0, 0, 0)',
+      backgroundImage: 'none',
+      boxShadow: 'none'
+    });
+  }
   assert.equal(paint.progressFadeOpacity, '0');
 
   const screenshot = path.join(outputDirectory, '01-full-multi-guided.png');

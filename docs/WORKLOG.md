@@ -276,3 +276,11 @@
 - 后续不带 queue/goal 前提的完整页诊断暴露任务选择竞态：旧任务已经满足 `thread`，导致点击后的导航尚未落定就被判为 ready。截图实际仍是 `Temple 总控`，因此明确不作为目标任务视觉证据。
 - 捕获器新增 current/selected 任务标题双重等待，并在状态等待后及截图前复核；composer 祖先链同步记录背景、边框、阴影、backdrop 与伪元素绘制，供下一次真实页面精确消除外层黑带。
 - 定向验证：`node --check scripts/capture-live-playwright.mjs` 通过；生命周期捕获合同 1/1 通过。两个临时窗口均已关闭，第二次成功捕获也确认 root、launcher 与端口归零。
+
+### V38 环境卡一体纸面与原生 footer 渐隐清理
+
+- 取消环境信息主标题及 `子智能体`、`后台进程`、`来源` 三个分区标题的独立背景、背景图、阴影、圆角裁切与模糊；整张卡片只由外层静态纸面负责绘制，原生行、分隔线、折叠和 300px 几何不变。
+- 只读定位当前 `app.asar` 的 `data-thread-scroll-footer` 后，仅标记并透明化其内层 `bg-gradient-to-t` 绘制层；sticky footer、滚动障碍、输入器、queue/goal 拓扑和全部命中区继续保留。
+- 定向结果：侧栏仅选中态、Motion 首帧目标、环境卡一体纸面与来源锁定的 footer fade 共 4/4 通过；`scripts/capture-environment-panel-v23.mjs` 同步锁定 7 行、3 分区、3 标题透明绘制和前后几何全等。
+- 完整页夹具证据位于 `artifacts/test-runs/v38-environment-unified-20260803-141204/01-full-multi-guided.png`。它覆盖顶部栏、侧栏、工作区、queue/goal、输入器和环境卡，但仍是原生结构 fixture，不冒充真实 Codex 视觉验收。
+- 一次真实单窗口尝试因便携 profile 恢复重任务把 CPU 推至 100% 而立即中止；原生恢复已确认，所属 root、host 与专用端口已精确释放，未保留调试窗口。
