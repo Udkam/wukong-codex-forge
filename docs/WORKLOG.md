@@ -350,3 +350,4 @@
 - 唯一一次单窗口重试复用了逐字一致的本项目验收草稿，报告证明 `reusedExistingOwnedDraft=true` 与 `inputPrepared=true`，但 `Control+Enter` 后仍为 `inputCleared=false`、`queueObserved=false`，没有生成 PNG。失败路径保持原生恢复、watcher、精确 PID 树、root/owner 与专用端口全部释放。
 - 只读解包当前 Store `app.asar` 的 prompt editor、composer adapter、service tier 与 setting storage 后重新校正结论：隔离 profile 的 Chromium `Preferences` 中没有 `composerEnterBehavior` 或 `followUpQueueMode` 覆盖，因此官方默认 `composerEnterBehavior=enter` 生效；此模式普通 `Enter` 是默认提交，运行中 `Ctrl+Enter` 则由额外拦截器翻转单次 follow-up 动作。
 - 捕获器新增 `editorFocused` 证明，先聚焦真实 ProseMirror，再由 locator 自身发送普通 `Enter`；仍要求输入清空且出现真实 `.forge-composer-queue-item` 才允许整页截图。资源采样处于琥珀/红线时不启动窗口，本修正不触碰宠物或葫芦、不删除文件，也不提前关闭联合实机门。
+- 修正后的语法检查、生命周期定向合同 13/13 与 diff 检查通过，检查点 `0533a78` 已推送。随后多轮资源采样持续在 CPU `73.5%–100%`、可用内存 `11.87–14.43 GB` 间波动；项目遗留捕获器、CDP 端口与调试窗口均为 0，因此没有绕过绿色资源门启动新的 Codex 实例。

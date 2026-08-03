@@ -116,6 +116,7 @@ let nativeEnqueueProof = {
   submissionShortcut: null,
   editorInitiallyEmpty: false,
   reusedExistingOwnedDraft: false,
+  editorFocused: false,
   inputPrepared: false,
   inputCleared: false,
   queueObserved: false
