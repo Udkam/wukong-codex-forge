@@ -1,5 +1,15 @@
 # 工作日志
 
+## 2026-08-08
+
+### V47 暂停恢复与联合整页门资源闸口
+
+- 用户明确恢复工作后，重新核对 `main`、`origin/main`、当前 Store 包和来源锁：HEAD 仍为 `bc66ebb`，`OpenAI.Codex 26.715.2305.0` 与 `201143773` 字节 ASAR 基线一致；项目归属的临时 Codex、Node、watcher 和监听端口均为 `0`。
+- 捕获器继续使用真实 ProseMirror 焦点、原生键盘写入和普通 `Enter`；只有输入清空并出现真实 `.forge-composer-queue-item` 才允许生成整页截图。`node --check scripts/capture-live-playwright.mjs` 与生命周期定向合同 13/13 再次通过，未运行全量测试。
+- 两轮资源样本均未达到绿色。首轮 CPU `89.8%–93.3%`、可用内存约 `18.8 GB`、磁盘队列最高 `2.0`；第二轮 CPU `86.9%–95.6%`、可用内存约 `12.3 GB`、磁盘队列最高 `10.0`。因此未启动 Codex、Playwright、浏览器或服务器，也没有制造 fixture 代替真实验收。
+- 新增 `docs/agent-runs/wukong-final-acceptance/STATE.md`，锁定非宠物范围、当前证据、唯一剩余联合完整页门和下一次绿色资源批次。宠物继续延期、葫芦继续取消，未删除或改动任何相关文件。
+- 下一步仍是连续绿色资源下只启动一个 retained-release 便携窗口，取得同页包含顶部栏、侧栏、工作区、真实 queue/goal、短卷输入器和 300px 环境卡的完整截图；成功或失败后都必须立即恢复原生并证明 root、owner 与随机回环端口释放。
+
 ## 2026-08-01
 
 ### V34 事件驱动生命周期候选与最终范围收口
