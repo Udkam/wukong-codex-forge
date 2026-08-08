@@ -2,6 +2,14 @@
 
 ## 2026-08-08
 
+### V48 正式生命周期只读复核与上游同步
+
+- 从 V47 检查点继续后，先核对目标、Git、正式候选和资源归属。`54aefc4` 已成功推送到 `origin/main`，此前本地领先 1 个提交的问题已消除；工作区受跟踪文件保持干净，未碰触用户既有未跟踪素材。
+- `scripts/verify-launch-adapter.ps1` 对 retained release `0.13.0-20260803-191843` 只读复核通过：普通 `ChatGPT` 与 `ChatGPT - Wukong Theme` 两个开始菜单入口指向同一 Codex 内置 Node bridge；bridge 不包含 PowerShell/旧 launcher 路径，使用 `runtime/host.mjs` 事件宿主，并保留 release 缺失时回退官方 `ChatGPT.exe` 的路径。
+- 仓库与安装副本的 `runtime/host.mjs`、`runtime/injection-plan-v13.mjs`、`runtime/forge-background-v13.css`、`themes/active.json`、`themes/native-wukong.json` 和 `pets/release-policy.json` SHA-256 分别一致；release marker 的 app/source 路径与当前候选、当前仓库对应。
+- 资源仍未转绿：两次轻量样本 CPU 为 `95.0%` / `95.3%`，可用内存为 `15.58 GB` / `14.58 GB`，磁盘队列为 `0.0` / `1.0`。项目归属进程为 `0`，因此本轮没有启动 Codex、Playwright、浏览器、服务器或测试进程，也没有生成替代真实联合门的 fixture。
+- 宠物仍整体延期，葫芦仍取消；本轮未修改、安装、打包、验证或删除相关文件。下一步仍必须等连续绿色样本后，用唯一临时受管窗口取得 queue/goal、短卷输入器、统一环境卡与完整原生页面同态证据，随后立即恢复原生并证明 root/owner/端口归零。
+
 ### V47 暂停恢复与联合整页门资源闸口
 
 - 用户明确恢复工作后，重新核对 `main`、`origin/main`、当前 Store 包和来源锁：HEAD 仍为 `bc66ebb`，`OpenAI.Codex 26.715.2305.0` 与 `201143773` 字节 ASAR 基线一致；项目归属的临时 Codex、Node、watcher 和监听端口均为 `0`。

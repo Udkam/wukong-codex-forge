@@ -1,6 +1,6 @@
 # Wukong final acceptance state
 
-Updated: 2026-08-08
+Updated: 2026-08-08 (V48 lifecycle audit)
 
 ## Active scope
 
@@ -12,10 +12,12 @@ Updated: 2026-08-08
 ## Authoritative checkpoint
 
 - Branch: `main`
-- HEAD / `origin/main`: `bc66ebb82ad60a5bc7cd5f53ef269a737f98a785`
+- Last pushed checkpoint before this V48 note: `54aefc43ca5a7330fb2b9ab4d4b2f4da4de33f4d`; local `main` and `origin/main` were equal after the successful push.
 - Store package: `OpenAI.Codex 26.715.2305.0`
 - ASAR size baseline: `201143773` bytes, matching `docs/native-asar-provenance.json`
 - Retained candidate: `0.13.0-20260803-191843`
+- The live launch-adapter verifier passes for that retained candidate. Both Start Menu entries point to the same Codex-embedded-Node bridge, the bridge is event-driven and non-PowerShell, and the release marker resolves to the expected append-only app root.
+- Repository and installed copies have identical SHA-256 for `runtime/host.mjs`, `runtime/injection-plan-v13.mjs`, `runtime/forge-background-v13.css`, `themes/active.json`, `themes/native-wukong.json`, and `pets/release-policy.json`.
 - Capture script uses a focused native ProseMirror editor and plain `Enter`, then fails closed unless the input clears and a real `.forge-composer-queue-item` appears.
 - Targeted syntax and lifecycle checks pass: `node --check scripts/capture-live-playwright.mjs`; `node --test tests/lifecycle-contract.test.mjs` (13/13).
 
@@ -35,7 +37,7 @@ Only after that visual gate passes, re-run the non-PowerShell launch-adapter, na
 
 ## Resource gate and next batch
 
-The 2026-08-08 resume sample was not green: CPU stayed between `89.8%` and `93.3%`, available RAM was about `18.8 GB`, and disk queue reached `2.0`. No project-owned Codex, Node, watcher, or listener remained.
+The 2026-08-08 V48 resume sample was still red: CPU was `95.0%` and then `95.3%`, available RAM was `15.58 GB` and then `14.58 GB`, and disk queue was `0.0` and then `1.0`. No project-owned Codex, Node, watcher, or listener remained, so no debug window or test runner was started.
 
 Next batch:
 
