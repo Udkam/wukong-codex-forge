@@ -41,4 +41,4 @@ Cleanup recorded native restoration and watcher confirmation, then released the 
 
 ## Completion boundary
 
-V50 implementation, documentation/source consistency, the real-page technical gate, and supplemental non-pet regression are complete. Remaining release work is limited to exact diff and staged-content review, commit, and push. Pets remain deferred and the gourd remains cancelled; do not restart periodic resource sampling or leave a debug host running.
+V50 implementation, documentation/source consistency, the real-page technical gate, supplemental non-pet regression, exact staged-content review, commit, and push are complete. At handoff the tracked worktree is clean and local `main` matches `origin/main`. Pets remain deferred and the gourd remains cancelled; do not restart periodic resource sampling or leave a debug host running.
