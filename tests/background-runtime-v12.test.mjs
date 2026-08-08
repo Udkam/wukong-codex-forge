@@ -22,6 +22,12 @@ import {
 const styleSheet = fs.readFileSync(new URL('../runtime/forge-background-v12.css', import.meta.url), 'utf8');
 const payload = payloadFromThemeFile(fileURLToPath(new URL('../themes/active.json', import.meta.url)));
 const expression = makeApplyExpression({ styleSheet, variables: payload.variables });
+const payloadSceneIds = name => {
+  const value = payload.variables.match(new RegExp(`${name}:([^;]+)`))?.[1] || '';
+  return value.trim().split(/\s+/).filter(Boolean);
+};
+const battleSceneIds = payloadSceneIds('--forge-battle-scenes');
+const scenerySceneIds = payloadSceneIds('--forge-scenery-scenes');
 
 const nativeSurfaceStyle = page => page.evaluate(() => {
   const read = selector => {
@@ -120,7 +126,7 @@ test('V12 changes only the full-window background carriers and preserves native 
   const authored = await enterThreadState(page);
   await page.waitForTimeout(760);
   assert.equal(await page.locator('html').getAttribute('data-forge-mode'), 'scenery');
-  assert.equal(await page.locator('html').getAttribute('data-forge-scene'), '6');
+  assert.equal(await page.locator('html').getAttribute('data-forge-scene'), scenerySceneIds[0]);
   assert.deepEqual(await geometry(page), beforeGeometry);
   assert.deepEqual(await nativeSurfaceStyle(page), beforeStyle);
   assert.deepEqual(await conversationGeometry(page), authored.geometry);
@@ -133,7 +139,7 @@ test('V12 changes only the full-window background carriers and preserves native 
   assert.deepEqual(await nativeSurfaceStyle(page), beforeStyle);
 });
 
-test('V12 rotates through every battle and scenery image in separate state pools', async t => {
+test('V12 rotates through every active battle and scenery image in separate state pools', async t => {
   const browser = await chromium.launch({ headless: true });
   t.after(() => browser.close());
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
@@ -143,26 +149,31 @@ test('V12 rotates through every battle and scenery image in separate state pools
   const battleScenes = [await page.locator('html').getAttribute('data-forge-scene')];
   const sceneryScenes = [];
   const activeLayers = [await page.locator('#wukong-forge-background').getAttribute('data-forge-active-layer')];
-  for (let index = 0; index < 5; index += 1) {
+  const transitionCount = Math.max(battleSceneIds.length - 1, scenerySceneIds.length);
+  for (let index = 0; index < transitionCount; index += 1) {
     await enterThreadState(page);
     await page.waitForTimeout(760);
-    sceneryScenes.push(await page.locator('html').getAttribute('data-forge-scene'));
+    if (sceneryScenes.length < scenerySceneIds.length) {
+      sceneryScenes.push(await page.locator('html').getAttribute('data-forge-scene'));
+    }
     activeLayers.push(await page.locator('#wukong-forge-background').getAttribute('data-forge-active-layer'));
 
     await page.locator('[aria-label="新建任务"]').click();
     await installLanding(page);
     await page.waitForTimeout(760);
-    battleScenes.push(await page.locator('html').getAttribute('data-forge-scene'));
+    if (battleScenes.length < battleSceneIds.length) {
+      battleScenes.push(await page.locator('html').getAttribute('data-forge-scene'));
+    }
     activeLayers.push(await page.locator('#wukong-forge-background').getAttribute('data-forge-active-layer'));
   }
 
-  assert.deepEqual(battleScenes, ['0', '1', '2', '3', '4', '5']);
-  assert.deepEqual(sceneryScenes, ['6', '7', '8', '9', '10']);
+  assert.deepEqual(battleScenes, battleSceneIds);
+  assert.deepEqual(sceneryScenes, scenerySceneIds);
   for (let index = 1; index < activeLayers.length; index += 1) {
     assert.notEqual(activeLayers[index], activeLayers[index - 1], 'background layer did not crossfade');
   }
-  assert.equal(new Set(battleScenes).size, 6);
-  assert.equal(new Set(sceneryScenes).size, 5);
+  assert.equal(new Set(battleScenes).size, battleSceneIds.length);
+  assert.equal(new Set(sceneryScenes).size, scenerySceneIds.length);
 });
 
 test('V12 transition is disabled for reduced motion and background is inert in forced colors', async t => {

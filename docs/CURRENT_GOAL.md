@@ -4,15 +4,15 @@
 
 本文件是本项目当前唯一执行基线。后续旧方案、旧截图和旧文档若与本文件冲突，以本文件为准。
 
-## V50 范围冻结与完成状态（2026-08-08）
+## V50.1 范围冻结与启动链热修复状态（2026-08-08）
 
 - 本轮完成标准只包含非宠物主题、背景/过渡/覆盖、输入区与相邻原生状态、侧栏/顶部/环境卡、资源预算、正式生命周期、定向测试、文档与分段推送。
 - 小天命人和小八戒整体延期：不修改造型、动作、武器、图集、发布策略或本地安装状态，也不再阻塞本轮完成。
 - 葫芦保持取消，不进入活动主题、运行包或验收。
-- 正式生命周期已经实现为 `Codex embedded Node -> append-only bridge -> runtime/host.mjs -> official ChatGPT.exe`，并完成 V50 保留式安装：当前 append-only release 为 `0.13.0-20260808-121354`，两个开始菜单入口均指向 Codex 内置 Node 与同一 bridge；仓库和当前安装副本的 CSS、注入计划 SHA-256 一致。旧 `0.13.0-20260803-191843` 中曾用于验收同步的两份 runtime 文本已按其安装时 Git 检查点恢复原始 SHA，不再把原地修改冒充 append-only 发布。
-- 当前 V50 定向合同为 45/45，`releasedPetIds` 为空且安装阶段对宠物无操作。V50 已在一个临时受管实例的 `2050×1106 @ 125%` 完整页中同时确认原生顶部菜单、侧栏 selected 纸带、工作区风景、真实 queue、活动 goal、长方形四角纸张输入器与 300px 环境卡；主题前后主 surface 均为 `736×98px`，surface、editor shell、editor、footer 与 6 个底栏按钮最大坐标差为 `0`，布局属性完全相同且四角纸面仍保留。截图后原生恢复、watcher 确认、精确 root/host 与回环监听全部释放，本轮非宠物联合门完成。
+- 正式生命周期已经实现为 `Codex embedded Node -> append-only bridge -> runtime/host.mjs -> official ChatGPT.exe`，并完成 V50.1 保留式安装：当前 append-only release 为 `0.13.0-20260808-171808`，两个开始菜单入口均指向 Codex 内置 Node 与同一 bridge。host 以受管 profile 的回环 DevTools 通道和浏览器身份为生命周期真值，不再绑定 Windows Store 很快退出的中转 PID；遗留活动通道可由新 host 重新接管。旧 release 和快捷方式全部 append-only 保留，旧 `0.13.0-20260803-191843` 仍保持其安装时原始 SHA。
+- V50 的视觉与原生几何门保持有效，`releasedPetIds` 为空且安装阶段对宠物无操作。V50.1 新增中转 PID、活动通道重接管和 browser-channel 生命周期回归；当前聚焦生命周期/保留安装合同 26/26 通过。新 release 已重新接管当前真实 renderer：单一 Codex target、`active=true`、style/runtime/background ready 均为真，输入器仍为 `736×98px`、editor 为 `712×44px`，四角纸面 `pointer-events:none`。
 - 2026-08-01 后续两次单实例尝试均按 fail-closed 处理：一次在 renderer 刚就绪时撞到外层时限，另一次在整机 CPU 越过 90% 红线时主动中止；两次均得到 `disabled-verified` 且精确 root、host 与专用端口归零，没有生成 PNG，也不冒充最终视觉验收。
-- 当前已打开的非受管 Codex 窗口不被强制关闭或改写；受管开始菜单入口在下一次完整启动生效。直接 WindowsApps/AUMID/协议/第三方入口可能绕过受管链，必须如实披露。
+- 当前已打开且没有受管回环通道的非受管 Codex 窗口不被强制关闭或改写；已有有效受管 Codex 通道但 host 意外退出时，新入口会核对 Codex target 后重新接管。直接 WindowsApps/AUMID/协议/第三方入口仍可能绕过受管链，必须如实披露。
 
 ## 最终目标
 
@@ -84,9 +84,9 @@
 
 正式实现与保留式安装已经完成；宠物延期不再阻断本阶段。
 
-- 当前受管链使用 Codex 内置 Node、append-only bridge 与事件驱动 host，不保留 PowerShell watcher，也不通过固定周期轮询 renderer。
+- 当前受管链使用 Codex 内置 Node、append-only bridge 与事件驱动 host，不保留 PowerShell watcher，也不通过固定周期轮询 renderer；Store 中转 PID 只记录为 launch PID，不再控制 host 的退出。
 - 保留式主题 marker 存在时进入主题 host；marker 或主题目录不存在时，同一 bridge 在下一次受管启动直接运行官方 `ChatGPT.exe`。
-- 当前已打开的非受管窗口不强制改写；最终还需把一次真实受管窗口的完整页视觉与启停/资源归零证据合并为同一验收记录。
+- 当前已打开且没有 DevTools 通道的非受管窗口不强制改写；有效受管通道允许新 host 在确认 Codex target 后重新附着。浏览器通道断开后使用 4 秒有界重连，随后 host 自行退出。
 
 ## 不可违反的约束
 
@@ -164,3 +164,4 @@
 - V50 根据用户最终澄清撤销 `184:25 / 96–120px` 主题几何：仍保留长方形悟空纸张和四个切角，但 surface、editor shell、editor、footer、按钮、padding 与锚点全部逐项沿用原生。四角只画在同一矩形内的 `pointer-events:none` 伪元素上，宿主维持完整矩形命中区。
 - V50 为 thread footer 渐变、真实 Motion wrapper 内 progress fade，以及 portal 外 queue/goal stack 增加首帧原生直达规则；新 DOM 不再先出现黑带或原生灰面再等待 observer。生产拓扑、forced-colors 和停用恢复均由定向合同覆盖。
 - V50 真实联合取证在 `2050×1106 @ 125%` 下同时出现真实 queue/goal、`300px` 环境卡与主题 composer。原生和主题 surface 均为 `736×98px`，完整几何比较最大差为 `0`、按钮身份与布局属性一致、四角纸面保留，thread footer 渐变为 `none`。隐私相关原图与原始报告只留本机；取证后原生恢复、watcher、精确 root/host 与回环监听释放全部通过。
+- V50.1 根据用户“启动后没有主题”的实机反馈定位到 Store 进程交接：17:08 启动记录只有 `starting-event-host`，中转 root PID 与旧 host 均已退出，而正式 ChatGPT renderer 和 `DevToolsActivePort` 继续存活，因而主题从未进入 apply。host 现跨越该中转进程，按浏览器通道维持事件驱动生命周期，并可重接管仍存活的同 profile Codex target；新 release `0.13.0-20260808-171808` 已在当前窗口达到 `renderer-verified` 与 `watching-event-driven`。

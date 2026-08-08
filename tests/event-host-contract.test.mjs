@@ -8,9 +8,11 @@ import {
   controlPipeName,
   createHostSignals,
   deriveOfficialPaths,
+  findReusableDevToolsPort,
   parseHostArgs,
   resolveHostPaths,
-  runEventWatcher
+  runEventWatcher,
+  waitForDevToolsPort
 } from '../runtime/host.mjs';
 import {
   ACTIVE_PROBE_EXPRESSION,
@@ -110,6 +112,107 @@ test('event host arguments, official path derivation and pipe ownership are dete
     webSocketDebuggerUrl: 'ws://127.0.0.1:17777/devtools/browser/stable'
   }), /Codex\/test/);
   assert.throws(() => browserIdentity({ webSocketDebuggerUrl: 'ws://example.com/devtools/browser/a' }), /non-loopback/);
+});
+
+test('startup follows the managed DevTools channel after the short-lived Store relay exits', async () => {
+  const profilePath = path.join(os.tmpdir(), `wukong-event-host-relay-${process.pid}-${Date.now()}`);
+  fs.mkdirSync(profilePath, { recursive: false });
+  const relayExit = Promise.resolve({ code: 0, signal: null });
+  setTimeout(() => {
+    fs.writeFileSync(
+      path.join(profilePath, 'DevToolsActivePort'),
+      '17776\n/devtools/browser/relay-handoff\n',
+      { encoding: 'utf8', flag: 'wx' }
+    );
+  }, 20);
+
+  const port = await waitForDevToolsPort({
+    profilePath,
+    rootExit: relayExit,
+    timeoutMs: 1_000
+  });
+
+  assert.equal(port, 17776);
+});
+
+test('an orphaned event host can safely reattach to the live Codex profile channel', async () => {
+  const profilePath = path.join(os.tmpdir(), `wukong-event-host-reattach-${process.pid}-${Date.now()}`);
+  fs.mkdirSync(profilePath, { recursive: false });
+  fs.writeFileSync(
+    path.join(profilePath, 'DevToolsActivePort'),
+    '17775\n/devtools/browser/live-codex\n',
+    { encoding: 'utf8', flag: 'wx' }
+  );
+
+  const reusable = await findReusableDevToolsPort({
+    profilePath,
+    dependencies: {
+      getBrowserVersion: async () => ({
+        Browser: 'Chrome/test',
+        webSocketDebuggerUrl: 'ws://127.0.0.1:17775/devtools/browser/live-codex'
+      }),
+      getTargets: async () => [{ id: 'page-1', type: 'page', url: 'app://-/index.html' }],
+      isCodexTarget: () => true
+    }
+  });
+
+  assert.deepEqual(reusable, {
+    port: 17775,
+    identity: 'Chrome/test\nws://127.0.0.1:17775/devtools/browser/live-codex',
+    targets: 1
+  });
+});
+
+test('event watcher is bound to the browser channel rather than the Store relay PID', async () => {
+  const runRoot = path.join(os.tmpdir(), `wukong-event-host-channel-${process.pid}-${Date.now()}`);
+  fs.mkdirSync(runRoot, { recursive: false });
+  const markerPath = path.join(runRoot, 'package.json');
+  fs.writeFileSync(markerPath, '{"name":"wukong-codex-forge"}\n', { encoding: 'utf8', flag: 'wx' });
+  const signals = createHostSignals();
+  const never = new Promise(() => {});
+  let themed = false;
+
+  const result = await runEventWatcher({
+    port: 17774,
+    expression: 'APPLY',
+    disableRequest: '',
+    rootPid: null,
+    markerPath,
+    signals,
+    rootExit: Promise.resolve({ code: 0, signal: null }),
+    onReady: () => { signals.requestTerminate(); },
+    dependencies: {
+      getBrowserVersion: async () => ({
+        Browser: 'Chrome/test',
+        webSocketDebuggerUrl: 'ws://127.0.0.1:17774/devtools/browser/stable'
+      }),
+      getTargets: async () => [{ id: 'page-1', type: 'page', url: 'app://-/index.html' }],
+      isCodexTarget: () => true,
+      connectBrowserEvents: async () => ({
+        closed: never,
+        command: async () => ({}),
+        close: () => {}
+      }),
+      evaluateTarget: async (_target, expression) => {
+        if (expression === 'APPLY') {
+          themed = true;
+          return true;
+        }
+        if (expression === ACTIVE_PROBE_EXPRESSION) return themed;
+        if (expression === THEME_STATE_EXPRESSION) return themed ? activeState : nativeState;
+        if (expression === RESTORE_EXPRESSION) {
+          themed = false;
+          return true;
+        }
+        throw Error(`Unexpected expression: ${expression.slice(0, 24)}`);
+      },
+      targetSettleMs: 0,
+      log: () => {}
+    }
+  });
+
+  assert.equal(result.reason, 'terminated-verified');
+  assert.equal(themed, false);
 });
 
 test('event watcher applies once, verifies active state, and restores before disable completes', async () => {

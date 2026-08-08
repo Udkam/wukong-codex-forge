@@ -22,6 +22,7 @@ export const HOST_MARKER = 'WukongCodexForgeEventHostV1';
 const CONTROL_TIMEOUT_MS = 12_000;
 const STARTUP_TIMEOUT_MS = 45_000;
 const INITIAL_TARGET_SETTLE_MS = 650;
+const EVENT_CHANNEL_DISCONNECT_GRACE_MS = 4_000;
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -293,13 +294,14 @@ export async function runEventWatcher({
   rootPid,
   markerPath,
   signals,
-  rootExit,
   onReady = () => {},
   onProgress = () => {},
   dependencies = {}
 }) {
   if (!Number.isInteger(port) || port < 1024 || port > 65535) throw Error('Port must be 1024..65535');
-  if (!Number.isInteger(rootPid) || rootPid <= 0) throw Error('ChatGPT root PID must be positive');
+  if (rootPid !== null && (!Number.isInteger(rootPid) || rootPid <= 0)) {
+    throw Error('ChatGPT launch PID must be positive when present');
+  }
   if (!signals?.subscribe) throw Error('Lifecycle host signals are required');
 
   const versionFor = dependencies.getBrowserVersion || getBrowserVersion;
@@ -312,6 +314,9 @@ export async function runEventWatcher({
   const pause = dependencies.delay || delay;
   const log = dependencies.log || (message => console.log(message));
   const targetSettleMs = dependencies.targetSettleMs ?? INITIAL_TARGET_SETTLE_MS;
+  const disconnectGraceMs = dependencies.disconnectGraceMs ?? EVENT_CHANNEL_DISCONNECT_GRACE_MS;
+  const connectionStartupTimeoutMs = dependencies.connectionStartupTimeoutMs ?? STARTUP_TIMEOUT_MS;
+  const now = dependencies.now || Date.now;
 
   let expectedIdentity = null;
   let client = null;
@@ -321,6 +326,7 @@ export async function runEventWatcher({
   let reconcileQueued = false;
   let ready = false;
   let restorationInFlight = false;
+  let disconnectedAt = now();
   const settledTargets = new Set();
   let stopResolve;
   const stoppedPromise = new Promise(resolve => { stopResolve = resolve; });
@@ -458,7 +464,6 @@ export async function runEventWatcher({
     throw Error(`Unable to watch the managed lifecycle paths: ${error.message}`);
   }
 
-  const rootExitPromise = Promise.resolve(rootExit).then(() => ({ type: 'root-exit' }));
   try {
     let reconnectDelay = 160;
     while (!stopped) {
@@ -489,31 +494,41 @@ export async function runEventWatcher({
           waitForDebuggerOnStart: false,
           flatten: true
         });
+        disconnectedAt = null;
         reconnectDelay = 160;
         scheduleReconcile();
       } catch (error) {
         if (stopped) break;
         log(`Wukong lifecycle event channel waiting: ${error.message}`);
-        const outcome = await Promise.race([pause(reconnectDelay).then(() => ({ type: 'retry' })), rootExitPromise, stoppedPromise]);
-        if (outcome?.type === 'root-exit') {
-          finish({ reason: 'root-exited-before-event-channel', targets: 0 });
+        if (expectedIdentity !== null && /different browser instance/.test(error.message)) {
+          finish({ reason: 'browser-identity-changed', targets: 0 });
           break;
         }
+        if (disconnectedAt === null) disconnectedAt = now();
+        const disconnectedFor = now() - disconnectedAt;
+        if (
+          (expectedIdentity === null && disconnectedFor >= connectionStartupTimeoutMs) ||
+          (expectedIdentity !== null && disconnectedFor >= disconnectGraceMs)
+        ) {
+          finish({
+            reason: expectedIdentity === null ? 'event-channel-timeout' : 'browser-channel-closed',
+            targets: 0
+          });
+          break;
+        }
+        await Promise.race([pause(reconnectDelay), stoppedPromise]);
         reconnectDelay = Math.min(900, Math.ceil(reconnectDelay * 1.7));
         continue;
       }
 
       const outcome = await Promise.race([
         client.closed.then(() => ({ type: 'channel-closed' })),
-        rootExitPromise,
         stoppedPromise
       ]);
-      if (outcome?.type === 'root-exit') {
-        finish({ reason: 'root-exited', targets: 0 });
-        break;
-      }
       if (stopped) break;
+      if (outcome?.type !== 'channel-closed') continue;
       client = null;
+      disconnectedAt = now();
       await pause(reconnectDelay);
       reconnectDelay = Math.min(900, Math.ceil(reconnectDelay * 1.7));
     }
@@ -526,18 +541,19 @@ export async function runEventWatcher({
   return stopResult || { reason: 'stopped', targets: 0 };
 }
 
-export const waitForDevToolsPort = ({ profilePath, notBefore = 0, rootExit, timeoutMs = STARTUP_TIMEOUT_MS }) => {
+export const readDevToolsPort = ({ profilePath, notBefore = 0 }) => {
   const activePortPath = path.join(profilePath, 'DevToolsActivePort');
+  try {
+    const stat = fs.statSync(activePortPath);
+    if (notBefore && stat.mtimeMs < notBefore - 1_000) return null;
+    const port = Number(fs.readFileSync(activePortPath, 'utf8').split(/\r?\n/, 1)[0]);
+    return Number.isInteger(port) && port >= 1024 && port <= 65535 ? port : null;
+  } catch { return null; }
+};
+
+export const waitForDevToolsPort = ({ profilePath, notBefore = 0, timeoutMs = STARTUP_TIMEOUT_MS }) => {
   fs.mkdirSync(profilePath, { recursive: true });
-  const readPort = () => {
-    try {
-      const stat = fs.statSync(activePortPath);
-      if (notBefore && stat.mtimeMs < notBefore - 1_000) return null;
-      const port = Number(fs.readFileSync(activePortPath, 'utf8').split(/\r?\n/, 1)[0]);
-      return Number.isInteger(port) && port >= 1024 && port <= 65535 ? port : null;
-    } catch { return null; }
-  };
-  const current = readPort();
+  const current = readDevToolsPort({ profilePath, notBefore });
   if (current) return Promise.resolve(current);
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -552,12 +568,28 @@ export const waitForDevToolsPort = ({ profilePath, notBefore = 0, rootExit, time
       else resolve(port);
     };
     watcher = fs.watch(profilePath, { persistent: false }, () => {
-      const port = readPort();
+      const port = readDevToolsPort({ profilePath, notBefore });
       if (port) finish(null, port);
     });
     timeout = setTimeout(() => finish(Error('Timed out waiting for the managed loopback channel')), timeoutMs);
-    Promise.resolve(rootExit).then(() => finish(Error('ChatGPT exited before the managed loopback channel became ready')));
   });
+};
+
+export const findReusableDevToolsPort = async ({ profilePath, dependencies = {} }) => {
+  const versionFor = dependencies.getBrowserVersion || getBrowserVersion;
+  const targetsFor = dependencies.getTargets || getTargets;
+  const targetMatches = dependencies.isCodexTarget || isCodexTarget;
+  const port = readDevToolsPort({ profilePath });
+  if (!port) return null;
+  try {
+    const version = await versionFor(port);
+    const identity = browserIdentity(version);
+    const targets = (await targetsFor(port)).filter(targetMatches);
+    if (!targets.length) return null;
+    return { port, identity, targets: targets.length };
+  } catch {
+    return null;
+  }
 };
 
 const spawnOfficialActivation = ({ chatGpt, profilePath, portable }) => {
@@ -670,36 +702,46 @@ export async function runHost({ root, portable = false, signalDisable = false })
   const session = crypto.randomUUID().replaceAll('-', '');
   const disableRequest = path.join(paths.requestDirectory, `disable-${session}.request`);
   const launchStarted = Date.now();
-  const args = [
-    '--remote-debugging-address=127.0.0.1',
-    '--remote-debugging-port=0',
-    ...(portable ? [`--user-data-dir=${paths.profilePath}`] : [])
-  ];
-  const child = spawn(official.chatGpt, args, {
-    detached: false,
-    stdio: 'ignore',
-    windowsHide: false,
-    env: portable ? { ...process.env, CODEX_ELECTRON_USER_DATA_PATH: paths.profilePath } : process.env
-  });
-  const rootExit = new Promise(resolve => child.once('exit', (code, signal) => resolve({ code, signal })));
-  const rootPid = child.pid;
-  if (!Number.isInteger(rootPid) || rootPid <= 0) throw Error('Official ChatGPT root process did not start');
+  const reusable = await findReusableDevToolsPort({ profilePath: paths.profilePath });
+  let port = reusable?.port || null;
+  let rootPid = null;
+  let launchMode = 'reattached-live-channel';
+  if (port) {
+    spawnOfficialActivation({ chatGpt: official.chatGpt, profilePath: paths.profilePath, portable });
+  } else {
+    const args = [
+      '--remote-debugging-address=127.0.0.1',
+      '--remote-debugging-port=0',
+      ...(portable ? [`--user-data-dir=${paths.profilePath}`] : [])
+    ];
+    const child = spawn(official.chatGpt, args, {
+      detached: false,
+      stdio: 'ignore',
+      windowsHide: false,
+      env: portable ? { ...process.env, CODEX_ELECTRON_USER_DATA_PATH: paths.profilePath } : process.env
+    });
+    rootPid = child.pid;
+    launchMode = 'spawned-official';
+    if (!Number.isInteger(rootPid) || rootPid <= 0) throw Error('Official ChatGPT launch process did not start');
+  }
 
   writeRuntimeEvent(paths.eventPath, {
     session,
-    state: 'starting-event-host',
+    state: port ? 'reattaching-event-host' : 'starting-event-host',
     appPath: paths.rootPath,
     profilePath: paths.profilePath,
     profileMode: portable ? 'isolated-portable' : 'native-default',
     rootPid,
     hostPid: process.pid,
     disableRequest,
-    pipeName
+    pipeName,
+    launchMode,
+    ...(port ? { port } : {})
   });
 
   let watcherPromise;
   try {
-    const port = await waitForDevToolsPort({ profilePath: paths.profilePath, notBefore: launchStarted, rootExit });
+    if (!port) port = await waitForDevToolsPort({ profilePath: paths.profilePath, notBefore: launchStarted });
     const expression = makeApplyExpression({
       styleSheet: fs.readFileSync(paths.stylePath, 'utf8'),
       variables: payloadFromThemeFile(paths.themePath).variables
@@ -731,7 +773,6 @@ export async function runHost({ root, portable = false, signalDisable = false })
       rootPid,
       markerPath: paths.markerPath,
       signals,
-      rootExit,
       onReady: readyResolve,
       onProgress: reportProgress
     });

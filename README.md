@@ -1,19 +1,19 @@
 # Wukong Codex Forge
 
-> 当前开发线为 **0.13.0 / V50 verification candidate**。V49 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V50 合同为准。
+> 当前开发线为 **0.13.0 / V50.1 lifecycle hotfix candidate**。V49 及更早实现继续原样保留为可审计历史；与现行行为冲突时，以 `docs/CURRENT_GOAL.md` 及本节的 V50.1 合同为准。
 
-## V50 当前交付边界
+## V50.1 当前交付边界
 
 - **宠物整体延期**：本轮不修改、准备、打包、安装或验收小天命人和小八戒；`releasedPetIds` 保持为空，现有宠物目录、选择、payload 与元数据原样保留。宠物未通过不再阻塞本轮完成。
 - **葫芦已取消**：活动主题、注入器与最小包均不包含葫芦；历史素材只保留，不进入运行链。
-- **正式生命周期不再依赖常驻 PowerShell**：普通受管入口使用 Codex 自带 Node，经过 append-only `.mjs` bridge 启动 `runtime/host.mjs`，再启动官方 `ChatGPT.exe`。host 通过浏览器 Target/Page/Runtime 事件与文件系统 marker 事件工作，不做 1700ms target 轮询，并跟随官方根进程退出。
+- **正式生命周期不再依赖常驻 PowerShell**：普通受管入口使用 Codex 自带 Node，经过 append-only `.mjs` bridge 启动 `runtime/host.mjs`，再启动官方 `ChatGPT.exe`。Windows Store 入口可能先产生一个很快退出的中转 PID，因此 host 不再把该 PID 当作浏览器寿命；它以受管 profile 的回环 DevTools 端口、浏览器身份和 Target/Page/Runtime 事件为真值，浏览器通道消失后只保留 4 秒有界重连，不做 1700ms target 轮询。
 - **移除即回原生**：保留式主题目录或 marker 不存在时，同一 bridge 在下一次受管启动中直接运行官方 `ChatGPT.exe`。不会修改 `ChatGPT.exe`、`app.asar`、WindowsApps 或官方配置；不会强制改写当前已打开的非受管窗口。
 - **适用入口有明确边界**：安装器管理的开始菜单 `ChatGPT` 与 `ChatGPT - Wukong Theme` 进入上述链路；直接运行 WindowsApps、AUMID、协议链接或第三方快捷方式可能绕过它。Store 包升级后需重新运行适配器验证，以刷新版本化的内置 Node 路径。
-- **正式安装与生命周期已落地**：V50 已安装为新的 append-only release `0.13.0-20260808-121354`；两个开始菜单入口均使用 Codex 内置 Node + 同一 bridge，仓库与当前安装副本的 CSS、注入计划和 event host 哈希一致。当前核心联合合同 45/45、非宠物增量合同 19/19、UI 材质/原生几何合同 4/4 通过。
+- **正式安装与生命周期已落地**：V50.1 启动链热修复已安装为新的 append-only release `0.13.0-20260808-171808`；两个开始菜单入口均使用 Codex 内置 Node + 同一 bridge。该 release 可在中转 PID 先退出时继续等待正式 DevTools 通道，也可在旧 host 意外结束但 Codex 通道仍存活时安全重新接管；安装后已在当前真实 Codex renderer 到达 `watching-event-driven`，主题状态与四角纸面均验证为 active。
 - **环境卡实机整页门已通过**：V42 定向环境卡回归 1/1、最小包 1/1 通过；单个临时受管实例的完整页截图确认 `环境信息`、`子智能体`、`后台进程`、`来源` 四个标题直接显露同一外层纸面，没有独立深条，300px 卡片及原生分隔仍保留。截图后 root、launcher、项目 Node 与随机回环端口全部归零。
 - **真实非宠物联合门已完成**：V50 在一个临时受管实例中取得 `2050×1106 @ 125%` 完整页，原生顶部菜单、侧栏 selected 纸带、风景背景、真实 queue、活动 goal、`300px` 环境卡与长方形四角纸张输入器同屏。输入器在原生和主题状态下均为 `736×98px`，surface、editor shell、editor、footer 与 6 个原生底栏按钮的最大坐标差均为 `0`，布局属性完全一致，同时 `::before` 四角纸面仍存在。截图后原生恢复、watcher 确认、精确 root/host 与回环监听释放全部通过。原图因含本地工作区信息只保留在本机，不进入 Git；宠物与葫芦仍不在本轮门内。
 
-## V15–V50 实现与审计演进
+## V15–V50.1 实现与审计演进
 
 - **活动范围是全窗背景 + 原生表面 paint 替换**：当前 landing 以原 56×56 图标位为锚点，在不改变其 DOMRect 与热区的前提下绘制三倍大小的官方“悟空”书法与朱印，并在原题字位显示“此去，欲破何局？”。原生“新建任务”和描述说明仅视觉透明，DOM、文本、布局与停用恢复保留；不新增卡片、栏位、按钮或 emoji。
 - **不完全覆盖已按官方 UI 源修复**：只读审计 `OpenAI.Codex 26.715.2305.0` 的 `app.asar`，确认中间黑块来自 `<main class="main-surface">` 的实体底色，顶部另有 `[data-app-shell-main-content-top-fade]`。V13.1 只清除二者的背景绘制，保留原生圆角、阴影、裁切、尺寸与命中区。
@@ -34,7 +34,7 @@
 - **Hatch Pet 分开验收**：当前重新建立 `little-wukong-v5-yaksha-shenfeng-canonical-rebuild-20260725` 与 `little-bajie-v4-inart-game-motion` 两条 run；待审批 id 分别为 `little-wukong-v5-yaksha-shenfeng` 与 `little-bajie-v4-inart-game-motion`。基础候选已通过完整神锋/双足和成年猪妖/完整九齿钉耙的本地门，仍须先由用户分别审定母版，未通过前不扩展动作。
 - **宠物发布三态受单一策略保护**：`releasedPetIds` 当前为空；两个新候选只在 `pendingPetIds`，两个被否决旧包只在 `frozenPetIds`，三集合强制两两互斥。仓库旧文件、用户 discovery 目录与当前宠物选择均保留；准备、打包和安装不读取、不复制、不迁移或升级待审批/冻结包。
 - **最小包只携带现行定义**：`themes/active.json` 是页面 payload 的唯一活动清单，`themes/native-wukong.json` 只承担原生外观预览；含退役葫芦与旧宠物引用的 `themes/ink-mountain.json` 原位保留为历史文件，但不会进入正式运行包。
-- **最终随 Codex 启动集成（V50 已完成本轮验证）**：受管入口、事件 host、原生恢复、真实联合完整页、输入器原生坐标证明和精确资源释放均已通过；现行正式候选链以本页顶部 V50 合同为准。
+- **最终随 Codex 启动集成（V50.1 已修复 Store 中转进程交接）**：受管入口、事件 host、原生恢复、真实联合完整页、输入器原生坐标证明和精确资源释放均已通过；现行正式候选链以本页顶部 V50.1 合同为准。
 - **本地素材只读**：`E:\GameRecord\Black Myth Wukong` 与 `D:\SteamLibrary\steamapps\common\BlackMythWukong` 可用于索引、比对和复制式抽帧；项目不得删除、移动或覆盖其中任何原文件。
 
 当前定向合同覆盖 `cover` 全窗、首帧解码门控、持久表面首帧、DOMRect 约束、稳态单纹理、单请求解码、9 图像素预算、当前定义与最小包排除门禁。真实 Codex 独立调试包只在一次性取证期间临时启动并已关闭；输入框/queue/goal/环境卡联合完整页已通过实机技术验收，延期宠物不再是本轮发布门槛。

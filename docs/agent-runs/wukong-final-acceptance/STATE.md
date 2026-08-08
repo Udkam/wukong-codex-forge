@@ -1,6 +1,6 @@
 # Wukong final acceptance state
 
-Updated: 2026-08-08 (V50 native-geometry parchment and real-page acceptance)
+Updated: 2026-08-08 (V50.1 Store relay lifecycle hotfix)
 
 ## Active scope
 
@@ -12,18 +12,24 @@ Updated: 2026-08-08 (V50 native-geometry parchment and real-page acceptance)
 ## Authoritative checkpoint
 
 - Branch: `main`
-- V50 starts from pushed checkpoint `fa938cf4d1812929c7245094e2b2cb0c337bc5a2`; local `main` and `origin/main` were equal before this implementation.
+- V50.1 starts from pushed checkpoint `c7dab122783c0a776f937d9dd0bfbb1b684a6664`; local `main` and `origin/main` were equal before this hotfix.
 - Store package: `OpenAI.Codex 26.715.2305.0`
 - ASAR size baseline: `201143773` bytes, matching `docs/native-asar-provenance.json`
-- Retained candidate: `0.13.0-20260808-121354`
-- The live launch-adapter verifier passes for that retained candidate. Both Start Menu entries point to the same Codex-embedded-Node bridge, the bridge is event-driven and non-PowerShell, and the release marker resolves to the expected append-only app root. The two runtime files previously synchronized into `0.13.0-20260803-191843` were restored byte-for-byte from its installation-time Git checkpoint before release closeout.
-- Repository and installed copies have identical current SHA-256 for the changed runtime files: CSS `7A64BF22733B3615E005F49FB1A2B9EEE28DC2F22B5F84E9EE6E181154B0E3D0`; injection plan `5E5A2D36E41682A5A69853C97ADC8417B4CE002A7405040F08997D9B067C506B`.
+- Retained candidate: `0.13.0-20260808-171808`
+- The live launch-adapter verifier passes for that retained candidate. Both Start Menu entries point to the same Codex-embedded-Node bridge, the bridge is event-driven and non-PowerShell, and the release marker resolves to the expected append-only app root. Older releases and both prior shortcuts were retained; the pet installer returned before changing any pet state.
+- Repository and installed copies have identical SHA-256 for the changed event host: `669E52D2774527EBA397FB27905790AAC19E08A8E23DF5E8D761D6E1DA8F8E83`.
+- Root cause: Store launch PID `10564` and host PID `15988` exited after the 17:08 launch while the real ChatGPT renderer continued on port `12906`. The lifecycle had incorrectly equated the Store relay PID with browser ownership, so it never applied the theme.
+- The host now uses the profile-scoped loopback DevTools port plus browser identity as ownership. A Store relay exit cannot terminate startup or the event watcher; an orphaned live Codex target can be reattached; a closed browser channel gets only a four-second bounded reconnect grace before host exit. No WMI/CIM or fixed target polling was added.
 - Capture script re-resolves the visible native ProseMirror editor, verifies focus without mutating the draft, uses plain `Enter`, and fails closed on missing requested queue/goal state. Its V50 geometry mode temporarily removes only the theme root class, compares native/themed composer and every footer button, and separately requires the four-corner parchment paint to remain.
 - Runtime CSS directly targets stable native composer, submit, environment card/row, and explicit sidebar selected attributes. These high-frequency surfaces therefore receive theme paint during the first style calculation after React remount; runtime marker classes remain a fallback for dynamic/contextual surfaces.
 - Composer surface, editor shell, editor, footer, buttons, padding, anchors, and responsive dimensions use native geometry without a theme height or spacing exception. The Wukong parchment remains a long rectangle with four 8px corners on a non-interactive pseudo-element inside those exact bounds.
 - Thread-footer fade, portal-excluded queue/goal panels, and the production `host -> Motion wrapper -> progress fade` topology have direct first-paint coverage, with marker fallback and forced-colors restoration retained.
 - Background scenes are pinned once per renderer and mode. Same-mode task/history/hash changes and streaming text do not switch or decode a scene; landing/thread changes use a 220 ms transition. Hidden documents defer refresh and merge one update on resume.
-- Current verification passes: focused runtime/lifecycle/install 45/45, supplemental non-pet ASAR/pixel/scene/native-apply 19/19, and UI material/native-geometry contracts 4/4. Exact staged-content review remains before commit/push.
+- Current hotfix verification passes: event-host tests 9/9, focused lifecycle/install/package tests 26/26, native theme validation, and the complete repository test command with 78 passed, 9 contractually skipped, 0 failed. The two initially failing historical V12 assertions were confirmed as 2026-07-23 hard-coded 6/5 scene IDs that had drifted from the current 4/5 active payload; the historical test now derives both pools from the packaged CSS variables and passes without changing runtime behavior. Exact staged-content review remains before commit/push.
+
+## V50.1 live lifecycle proof
+
+The new release reattached to the already-running real Codex target without restarting the app. Event records progressed through `reattaching-event-host -> renderer-found -> renderer-settling -> renderer-applying -> renderer-verified -> watching-event-driven` on port `12906`, with one target. A one-shot CDP proof returned `active=true`, injected style present, runtime V13 active, background ready, composer `736×98px`, editor `712×44px`, and the four-corner parchment pseudo-element present with `pointer-events:none`.
 
 ## Real-page release gate
 
@@ -41,4 +47,4 @@ Cleanup recorded native restoration and watcher confirmation, then released the 
 
 ## Completion boundary
 
-V50 implementation, documentation/source consistency, the real-page technical gate, supplemental non-pet regression, exact staged-content review, commit, and push are complete. At handoff the tracked worktree is clean and local `main` matches `origin/main`. Pets remain deferred and the gourd remains cancelled; do not restart periodic resource sampling or leave a debug host running.
+V50 visual implementation and the prior real-page technical gate remain complete. V50.1 lifecycle code, tests, retained install, adapter verification, live reattachment, and broader regression are complete; exact staged-content review, commit, and push remain. Pets remain deferred and the gourd remains cancelled; do not restart periodic resource sampling. The single event host attached to the user's current themed Codex window is intentional runtime ownership, not a transient debug host.
