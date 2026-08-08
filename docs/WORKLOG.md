@@ -2,6 +2,27 @@
 
 ## 2026-08-08
 
+### V50 原生坐标四角纸面与切换首帧收口
+
+- 根据用户最终澄清，撤销 V20–V49 的 `184:25 / 96–120px` 主题高度例外：悟空输入器仍是长方形纸张并保留四个 8px 切角，但 surface、editor shell、editor、footer、按钮、padding、锚点和响应式结果全部使用原生实时几何。四角只存在于同一矩形内的 `pointer-events:none` `::before` paint 层，宿主仍是完整矩形热区。
+- composer、submit、环境卡/行与显式 selected/current 侧栏行继续使用稳定原生直达规则；thread footer 渐变、portal 外 queue/goal stack 以及真实 Motion wrapper 内的 progress fade 也补齐生产拓扑直达规则。新挂载 DOM 在 observer 运行前即可取得主题 paint 或清除黑色渐变，顶部“文件/编辑/视图/帮助”仍完全保留官方 paint。
+- 夹具把 progress fade 改为当前生产的 `host -> Motion wrapper -> fade` 结构，注入器只向下一层 wrapper 做有界查找；queue/goal 直达规则显式排除 above-composer portal。原生表面测试逐项比较完整 DOMRect 与 layout，并在移除所有 marker、同步克隆重挂载后立即验证纸面、发送箭头、环境卡、侧栏、queue/goal 与渐变状态。
+- 当前定向联合测试 45/45 通过；生命周期静态合同禁止重新引入 `184:25`、`96–120px` 或 composer 额外 8px padding。仓库与 retained release 的 CSS SHA-256 均为 `7A64BF22733B3615E005F49FB1A2B9EEE28DC2F22B5F84E9EE6E181154B0E3D0`，注入计划 SHA-256 均为 `5E5A2D36E41682A5A69853C97ADC8417B4CE002A7405040F08997D9B067C506B`。
+- 严格非宠物增量门 19/19 与 UI 材质/原生几何合同 4/4 通过，其中当前 ASAR 合同真实执行而非环境跳过。新 append-only release `0.13.0-20260808-121354` 已由保留式安装器创建并通过双开始菜单入口 verifier；空宠物批准集合在触碰既有宠物目录前无操作返回。旧 `0.13.0-20260803-191843` 中曾为验收同步覆盖的 CSS/plan 已从其安装时 Git 检查点逐字节恢复，原始 SHA-256 分别为 `FEACCDC47B94BB6C0BF1630D6743073093236FB06A0CE5F8FD5B1049227D0E42` 与 `AD50C622A8488CF2C9E698703E6F849BBDEF85120E239CCCC2FEA2BA149CB080`；没有删除旧 release 或历史文件。
+- 两次前置实机尝试均 fail closed：一次暴露捕获失败清理路径的变量作用域错误，一次遇到正在消失的全访问提示按钮；修正后均未生成伪 PNG，原生恢复和精确 owner/端口清理成立，失败目录原位保留且未删除。
+- 捕获报告不再保存 composer 纸张或祖先伪元素的完整 computed data URL：几何/拓扑诊断只记录 `present/kind` 摘要，Node 侧在写盘和 stdout 前递归替换任何残余 `data:image/` 字符串，并由生命周期静态合同锁定，避免报告膨胀和素材载荷外泄。
+- 随后的唯一临时受管实例完成真实 `2050×1106 @ 125%` 联合整页：原生顶部栏、侧栏 selected 纸带、scenery 背景、真实 queue、活动 goal、`300px` 环境卡与四角长方形输入器同屏。主题前后 surface 均为 `736×98px`，editor shell/editor 均为 `712×44px`；surface、editor shell、editor、footer 和 6 个原生底栏按钮的最大 DOMRect 差为 `0`，按钮身份与布局属性一致，四角纸面保留。thread footer 渐变的 `background-image` 为 `none`、`opacity` 为 `0`；progress 嵌套渐变由生产拓扑夹具与源码合同覆盖，未把本次页面不存在的节点冒充实机证明。
+- 隐私相关完整图与原始报告只留本机且不进入 Git；PNG SHA-256 为 `4FF7F5B276BFC46E3DB9AB944E9CCA145354D88141BA5D0027ADC1A37D9EA92F`，报告 SHA-256 为 `E72AC6F3B6FD1E07D21FCFB35A595D5CB539DE72F35E8EE064EA99A1E3FBF376`。捕获后原生恢复、watcher 确认、精确 root/host 与回环监听释放全部通过；全程未使用 WMI/CIM、周期资源轮询、第二个调试窗口，也未触及延期宠物或已取消葫芦。
+
+### V49 持久表面、低占用背景与真实联合整页门
+
+- composer、editor 壳、footer 内原生 submit、300px 环境外卡/行和显式 selected/current 侧栏行新增稳定原生 CSS 直达规则。测试在移除全部运行时标记并同步替换 DOM 后、MutationObserver 尚未执行前即检查纸面、内距、清晰箭头、环境分隔和侧栏选中带；旧选中行即使暂留 class 也不残影。顶部“文件/编辑/视图/帮助”继续完全使用官方 paint。
+- 背景改为每个 renderer 会话各固定一张 battle 与 scenery；同模式 task/history/hash 变化不换图，200 次流式文本 mutation 不增加 refresh/render，100 次 history 变化保持一个已解码场景。只有 landing/thread 模式变化使用 220 ms 淡变；隐藏文档暂停刷新并在恢复时只合并一次，解码 URL 可复用，过期请求立即取消，follow-up timer 上限为 2。
+- 定向验证通过：背景状态机 14/14、原生表面 13/13、生命周期/恢复/最小包 24/24；额外 ASAR、像素预算、原生主题与场景检查 15 项通过，7 项历史 `test.skip` 保持跳过。`node --check` 与 `git diff --check` 通过。没有运行会触及延期宠物的安装器或宠物测试。
+- 只把 `runtime/forge-background-v13.css` 与 `runtime/injection-plan-v13.mjs` 同步到已核验 retained release；仓库/安装副本 SHA-256 分别为 `3F99BB155712D7E0FCB51213A210382901C439121E9AA8830D54F5D202A160BB` 与 `A9EB31B3064026EC42DB9B2A0522E6595C477CBB45642B52D05CAB3574C61220`，逐项一致。
+- 唯一临时受管实例完成真实 `2050×1106 @ 125%` 联合整页：原生顶部栏、侧栏 selected 纸带、scenery 背景、真实 queue、活动 goal、`736×100px` 主输入纸面与 `300px` 环境卡同屏；原生提交门的 editor focus、input prepared、input cleared、queue observed 均为 true。完整图已人工从磁盘检查，因含本地工作区和来源信息只留本机；PNG SHA-256 为 `03649FBA5353BCA8A0BA94A1643BA7792D70BA0757C4DCDC48C52231126BEEEA`。
+- 捕获后 `disabled-verified` 与原生状态 1/1 成立，唯一 root/host 均释放；CDP endpoint 不再接受连接，端口无 LISTENING，仅短暂保留系统 TIME_WAIT。全程没有使用 WMI/CIM，也没有周期资源轮询、第二个调试窗口或遗留项目监听器。
+
 ### V48 正式生命周期只读复核与上游同步
 
 - 从 V47 检查点继续后，先核对目标、Git、正式候选和资源归属。`54aefc4` 已成功推送到 `origin/main`，此前本地领先 1 个提交的问题已消除；工作区受跟踪文件保持干净，未碰触用户既有未跟踪素材。

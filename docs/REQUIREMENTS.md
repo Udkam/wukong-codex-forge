@@ -1,13 +1,13 @@
 # 大圣归来 Codex 样式层 — 需求与验收
 
-> **V38 现行发布合同。** 下表延续 V15 的视觉/几何编号；V13.3 及更早内容作为历史保留，冲突处以 `CURRENT_GOAL.md`、V15-32 至 V15-37 和本表为准。
+> **V50 现行发布合同。** 下表延续 V15 的视觉/几何编号；V49 及更早证据作为历史保留，冲突处以 `CURRENT_GOAL.md`、V15-01、V15-04、V15-17、V15-40 至 V15-42 和本表为准。
 
 | ID | V15 需求 | 验收方法 |
 | --- | --- | --- |
-| V15-01 | 除 V15-17 明确授权的主输入器外框高度与轮廓外，所有布局几何来自本机 `ChatGPT.exe 26.715.2305.0` 的只读 `app.asar`：toolbar、sidebar、row、thread、composer controls、间距与响应式公式不得从审稿图反推 | `native-asar-ui-contract` 直接读取当前安装包并与 fixture baseline 对照；对非例外组件做主题前后 DOMRect/命中区全等比较 |
+| V15-01 | 包括主输入器在内的所有布局几何来自本机 `ChatGPT.exe 26.715.2305.0` 的只读 `app.asar` 与真实 renderer：toolbar、sidebar、row、thread、composer surface/editor/footer/buttons、间距与响应式公式不得从审稿图反推；主题轮廓只属于不参与布局的 paint | `native-asar-ui-contract` 直接读取当前安装包并与 fixture baseline 对照；对全部组件做主题前后 DOMRect/命中区全等比较 |
 | V15-02 | 用户最终三张输入器参考允许直接实现；主输入器及所有相邻纸面统一使用第一张参考图的底纹、角纹、云纹和色阶，文本与控件仍由原生 DOM 绘制 | 1×/125% 宽窄与多行 fixture、像素对照、文本/ARIA/按钮尺寸深比较 |
 | V15-03 | 一级侧栏条目映射项目条和无项目对话；二级条目映射项目下对话。默认、hover、focus、selected、expanded、disabled、unread/running 必须各有明确且一致的目录状态 | 结构优先选择器测试、动态状态矩阵、真实 sidebar 截图 |
-| V15-04 | “新建任务 / 拉取请求 / 站点 / 已安排 / 插件”和“文件 / 编辑 / 视图 / 帮助”只换材质与状态，不改文字、图标、DOM 顺序、原生尺寸或菜单行为 | 官方 topbar class/ARIA 锚点、open/close/hover/focus 测试与几何前后对照 |
+| V15-04 | “新建任务 / 拉取请求 / 站点 / 已安排 / 插件”可按既有 renderer 映射只换材质与状态；“文件 / 编辑 / 视图 / 帮助”四个应用菜单触发器及菜单内容完全保留官方 paint。两类都不得改变文字、图标、DOM 顺序、原生尺寸或菜单行为 | 官方 topbar class/ARIA 锚点、open/close/hover/focus 测试、官方菜单 paint 断言与几何前后对照 |
 | V15-05 | 新建页保留原生 56×56 槽位；卡通短棍、微缩武器和生成物均已否决，当前使用官方“悟空”书法与朱印的深/浅双资产；视觉层至少为旧版三倍、可见约 141×96 px，且不得遮挡杨戬头部或其他画面焦点 | 官方源 SHA、336×336 双资产像素/体积/边界合同、168×168 绘制层、场景 0/1/2/3 构图审查、槽位 DOMRect/原节点/restore 合同与用户实机验收 |
 | V15-06 | 不实现葫芦；活动主题定义、运行包、注入器和后续视觉提案均不得引用葫芦。含退役葫芦/旧宠物引用的 `themes/ink-mountain.json` 只作历史保留，不得进入最小运行包 | active theme 深比较、package 白名单/反向排除断言与 DOM 标记清单 |
 | V15-07 | 助手回答保持无框；提示词、回答、placeholder、项目名、菜单名和按钮可访问名称逐字不改 | 注入前后文本/ARIA 深比较 |
@@ -20,7 +20,7 @@
 | V15-14 | 活动背景与 UI 位图除压缩字节上限外必须有解码像素硬门：单背景 ≤12,000,000 px、图库唯一文件总计 ≤32,000,000 px、任意两张最大背景合计 ≤16,000,000 px、单 UI/装饰位图 ≤4,194,304 px；尺寸头无效或超限时必须在 payload 组装前失败 | JPEG/PNG/WebP 头解析、实际 9 图与 8 UI 资产统计、内存内 100,000×100,000 PNG 拒绝测试、最小包导入测试 |
 | V15-15 | 用户否决的 `destined-afterimage.jpg` 与 `yaksha-king-rift.jpg` 必须从 active/default/native preview/最小包全部撤下，但本地文件不得删除；活动图库固定为 2 主战斗 + 2 次级战斗 + 5 风景 | active/default 深比较、最小包排除断言、真实 Codex 截图 |
 | V15-16 | 新建页只保留“悟空”字标与“此去，欲破何局？”；原生“新建任务”和描述说明在主题激活时视觉透明，但 DOM、文本、ARIA、布局占位和停用恢复不得改变 | 首帧自动标记、computed opacity、前后 DOMRect/innerText、延迟挂载与 restore 测试 |
-| V15-17 | 主输入器高度受限但不直接套原生框：宽度与底部锚点保持原生，外框按 `184:25` 响应并钳制为 `96–120px`；最大原生列宽 `736px` 时 surface 约为 `100px`，不得回到 120px 偏高版或套用高大概念稿。editor wrapper 只保留 12px 原生横向内距与 8px 纸面顶部安全区，footer 恢复原生 8px 横向内距和底距；五类按钮的尺寸、坐标、文本、ARIA、状态拓扑和命中区不得改变 | 360/400/560/736/1600 宽度公式测试、用户最新 `736×约100px` 原生截图、按钮完整 DOMRect 与语义深比较、forced-colors 回退 |
+| V15-17 | 主输入器的 surface、editor shell、editor、footer、按钮、padding、宽高、底部锚点和响应式结果全部沿用原生实时布局，不得声明主题比例、高度或安全内距。悟空纸张仍保持长方形，只在同一原生矩形内由 `pointer-events:none` 的 `::before` 裁出四个 8px 角；宿主不裁切，矩形命中区不变 | 360/400/560/736/1600 响应式全 DOMRect 比较、真实 renderer 主题开关前后最大差 `0`、按钮身份/layout 深比较、四角 paint 与 forced-colors 回退 |
 | V15-18 | 排队消息与进行中目标必须保留官方 above-composer stack 的真实生产拓扑：一个外层 queue panel 内含 N 个 internal queue item，再接一个外层 goal panel。只有整组首个外层 panel 拥有左上/右上两个外部角；后续外层 panel 直边承接。每个内部消息拥有独立纸纹与原生 1px 接缝，不得提升为独立外层卡片，也不得把一张总背景按条目数拉长。独立计划/变更进度 pill 仍为四周圆角 | 当前 ASAR 解包源码、guided/multi-guided fixture、outer panel / internal item 数量、固定顶饰高度、原生 gap、pill radius、相邻行与控件 DOMRect 全等 |
 | V15-19 | 当前 Codex 内部 editor class/role 漂移不得导致输入框漏替换；官方 `.composer-surface-chrome` 是主 surface 身份，内部 editor 仅作可选语义辅助；主题不得伪造 editor、contenteditable 或 ARIA | 删除 ProseMirror/role 的漂移回归测试、真实 Codex DOM audit、主题化覆盖率与 restore |
 | V15-20 | composer component、above-composer portal、queue 外层 panel、内部 message wrapper、goal 外层 panel 与独立 progress pill 的对应关系必须从当前安装包的生产结构推导；fixture 不得用测试属性或每条消息一个 outer panel 的简化结构伪造 component 身份。内部 message wrapper 只能通过完整生产 class token 识别，不得猜本地化文案 | 当前 ASAR 只读源码核对、root 直属子节点关系、queue list / message row 生产 class 签名、portal/component 互斥、guided/multi-guided 数量与重映射定向断言 |
@@ -29,12 +29,12 @@
 | V15-23 | 已缓存或 data URL 背景即使在赋值后同步报告 `Image.complete=true`，也必须等待同一图像的 `decode()` 门完成后才能公开 ready；稳定页面刷新必须差量对账主题标记，禁止通过每轮全量移除/重加 class 或重复写入相同 ARIA 触发 ResizeObserver/MutationObserver 自循环 | 同步 complete + 悬挂 decode 门禁、ready 前原生 paint、稳定 2.2 秒 refreshCount 不增长、停用恢复与项目资源归零 |
 | V15-24 | 未经用户明确通过的新宠物母版不得进入准备、最小包或安装链路；发布集合由单一策略文件控制，空集合必须在任何 Codex 用户目录写入前无操作退出。旧包、既有 discovery 目录、当前选择与事件记录全部只保留、不迁移、不升级、不覆盖 | 策略一致性、准备前后目录 hash、最小包缺失断言、CodexHome 不存在/已存在两态字节级不变测试 |
 | V15-25 | 新母版候选必须使用与旧冻结包不同的独立 pet id，并在策略中处于 `pending`，不得借用旧包 id 伪装为可发布版本；`released`、`pending`、`frozen` 三集合必须两两互斥。小天命人 v2 图集仍保留 schema 所需 row 4，但动作语义改为双足着地、身体高度稳定的原地移步反应，不得出现跳跃 | 策略三态互斥校验、候选 request id / verdict / 留白与透明边缘合同、最小包排除断言、row 4 语义与禁跳说明测试 |
-| V15-26 | README、便携说明、需求、设计、分工与工作日志必须区分现行 V15、历史版本和未完成门槛；文档引用的 V23/V24 完整页及 JSON 必须被 Git 跟踪并在文件内声明 fixture-only，禁止把无头证据写成真实 Codex 窗口或用户视觉通过 | 证据路径/PNG 尺寸/JSON source 与覆盖状态定向合同、最小包便携说明真值断言、Git 精确暂存审计 |
-| V15-27 | 当前本机 `app.asar` 是非例外组件几何与结构的唯一真值；包目录名、文件长度或 SHA-256 任一变化必须使原生合同失效即停，禁止静默使用旧 fixture。哈希计算必须有固定内存上限，不得把约 192 MiB 归档一次性读入内存 | `docs/native-asar-provenance.json`、1 MiB 分块 SHA-256、当前安装包目录/长度/哈希断言与清晰漂移错误 |
+| V15-26 | README、便携说明、需求、设计、分工与工作日志必须区分现行 V50、历史版本和未完成门槛；文档引用的 V23/V24 完整页及 JSON 必须被 Git 跟踪并在文件内声明 fixture-only，禁止把无头证据写成真实 Codex 窗口或用户视觉通过 | 证据路径/PNG 尺寸/JSON source 与覆盖状态定向合同、最小包便携说明真值断言、Git 精确暂存审计 |
+| V15-27 | 当前本机 `app.asar` 是全部组件几何与结构的原生真值；包目录名、文件长度或 SHA-256 任一变化必须使原生合同失效即停，禁止静默使用旧 fixture。哈希计算必须有固定内存上限，不得把约 192 MiB 归档一次性读入内存 | `docs/native-asar-provenance.json`、1 MiB 分块 SHA-256、当前安装包目录/长度/哈希断言与清晰漂移错误 |
 | V15-28 | 真实 Codex 整页验收不得在启动 Logo / preloader 阶段截图；必须先出现原生 app shell 与 landing 或 composer 实体，再确认 V13 根节点和背景 overlay 都已 ready，最后等待短稳定期。捕获失败或超时仍须只回收明确归属的临时实例 | 单实例完整页截图、原生 shell/surface 与背景 ready 前置等待、CDP browser/launcher/disable request 三重归属、root/owner/port/project-process 四项归零 |
 | V15-29 | 真实 renderer 截图若含本地项目名、账号或其他用户工作区标识，不得直接提交到公开仓库；应本地保留原图，提交去标识化几何、状态、资源、清理摘要及原图/报告哈希。landing 技术预验收不得冒充 queue/goal、环境卡、宠物或最终生命周期通过 | 本地完整页 PNG、tracked `acceptance.json`、SHA-256、原生/主题几何与四项资源归零、明确 acceptance boundary |
 | V15-30 | 显式受管的临时真实 Codex 捕获无论成功，还是在选任务、等待稳定或截图前失败，都必须走同一清理路径：先验证 CDP browser PID、launcher 与唯一 disable request，再恢复原生 DOM、等待 watcher 确认、关闭该精确 browser，并证明 root/launcher/port 归零。失败不得制造 PNG；含临时 PID/端口的原始报告只本地保留 | 故意打开不存在任务的真实 renderer 超时回归、`capture-failed` 报告、无 PNG、原生恢复/watcher 确认、三项归零与生命周期定向合同 |
-| V15-31 | 当前安装包的 progress 底部渐隐绘制层即使 Tailwind 渐变、方向或颜色 token 漂移，也不得在 queue/goal 上方残留黑带。兼容识别只能命中 progress host 的直属、无子元素、无交互、底缘贴合 paint layer，不能误命中承载原生 pill 的交互 carrier；主题只撤下该层 paint，不改 DOM、几何或命中区 | 移除历史 token 后刷新运行时、唯一 fade 标记、pill carrier 排除、fade/host 相对 DOMRect 前后全等、透明 paint 与 focused joined-stack 回归 |
+| V15-31 | 当前安装包的 thread/progress 底部渐隐绘制层即使 Tailwind 渐变、方向或颜色 token 漂移，也不得在 queue/goal 或输入器上方残留黑带。progress 兼容识别只允许在来源锁定的 host 直属子层或当前生产 `host -> Motion wrapper -> fade` 一层嵌套中命中无交互、底缘贴合 paint layer，不能误命中承载原生 pill 的交互 carrier；主题只撤下 paint，不改 DOM、几何或命中区 | 首帧原生直达规则、移除历史 token 后刷新运行时、唯一 fade 标记、pill carrier 排除、fade/host DOMRect 前后全等、透明 paint 与 focused joined-stack 回归 |
 | V15-32 | 用户已将两只 Hatch Pet 整体延期；当前交付不得继续修改其造型、动作、武器、图集、发布策略或本地安装状态，也不得用宠物未通过阻断其余非宠物主题与最终生命周期验收 | Git 精确路径审计、宠物目录与策略无本轮 diff、当前目标/分工/工作日志一致性 |
 | V15-33 | 正式受管启动链不得保留 PowerShell 进程或依赖固定周期 renderer target 轮询；必须使用官方包内 Node、append-only bridge 与事件驱动 host，并跟随官方 ChatGPT 根进程退出 | 快捷方式 target/arguments、bridge 源码、Target/Page/Runtime 事件合同、根进程退出、项目 host/端口归零 |
 | V15-34 | 移除保留式主题包或 package marker 后，受管 bridge 必须在下一次启动直接回退官方 `ChatGPT.exe`；恢复失败必须 fail closed，不得把残留主题写成成功 | 隔离 marker 移除/恢复、原生状态验证、无主题 DOM 标记、无残留 host/监听端口 |
@@ -43,16 +43,19 @@
 | V15-37 | 环境卡只能由最外层绘制一张连续纸面；`环境信息`、`子智能体`、`后台进程`、`来源` 标题不得另画深色标题条、阴影或独立圆角。当前 `data-thread-scroll-footer` 只允许清除其内层渐隐 paint，不得删除 sticky footer、滚动障碍或命中区 | 当前 ASAR 来源锁、7 行/3 分区/主标题 + 3 分区标题映射、标题 computed paint 透明断言、卡片/行/按钮/footer DOMRect 前后全等与整页 fixture |
 | V15-38 | 真实整页验收只能在原生侧栏范围内点击指定任务；截图前必须再次同时证明该任务仍为 current/selected，且 thread/scenery/queue/goal 门仍成立，禁止因同名工作区文本或旧任务状态生成伪通过截图 | 取证脚本静态合同、侧栏 scoped locator、截图前最终双重门禁顺序断言、失败/成功共享归零路径 |
 | V15-39 | 环境卡主标题的原生 paint 可能位于标题本体或其 `bg-token-dropdown-background` 祖先承载层；运行时必须只沿已定位标题到官方卡片的分支清除这些承载层，并同时清除主标题及三个官方 Section 直属 header 的 `::before` / `::after` paint。不得扩大到卡内其他节点，也不得改变 300px 外卡、Section、行、按钮、折叠、滚动、ARIA 或命中区 | 当前 ASAR 结构来源、带独立标题承载层与伪元素的回归夹具、注入前深色 paint 先验断言、注入后基础层/双伪元素透明断言、全部 DOMRect 与按钮命中前后全等、真实完整页复验 |
+| V15-40 | composer、submit、环境卡/行和显式 selected/current 侧栏行必须由稳定原生选择器首帧直达；React 重挂载后不得先出现原生灰面、错误选中宽度或旧选中残影，再等待 observer 修复 | 移除所有 marker 后同步克隆/重挂载，在同一 JS turn 比较 paper、箭头、环境分隔、单/多对话 selected 宽度和旧行状态 |
+| V15-41 | 每个 renderer 每种模式固定一张场景；同模式 task/project/history/hash 与流式文本变化不得换图、重解码或交叉淡变。只在 landing/thread 模式变化时执行 220ms 过渡，隐藏页面暂停刷新，恢复时合并一次 | 200 次流式 mutation、100 次 history 变化、隐藏/恢复、单请求取消、解码 URL 复用、最多两个 follow-up timer 与稳态单纹理测试 |
+| V15-42 | 正式发布必须新建时间戳 append-only release，不能用原地同步替代版本化安装；安装后两个开始菜单入口、bridge、marker 和仓库/安装 runtime 哈希必须通过 verifier。宠物批准集合为空时不得触碰既有宠物目录或状态 | `package-runtime` 目标已存在即拒绝、保留式安装输出、双入口 verifier、旧 release 原始 SHA 恢复、新 release CSS/plan SHA、宠物 no-op 输出 |
 
-V42 当前证据边界：保留式 release `0.13.0-20260803-191843` 是已安装基线，两个受管开始菜单入口均指向 Codex 内置 Node 与同一 append-only bridge，仓库/安装 CSS、注入计划和 host 哈希一致；生命周期与恢复合同 23/23、最小包合同 1/1。环境标题承载层定向回归与真实完整页专项复验已经通过，四个标题与唯一外层纸面一体；同一个真实任务中同时包含 queue/goal 与环境卡的最终联合门仍待完成。不包含两只延期宠物或已取消葫芦。
+V50 当前证据边界：保留式 release `0.13.0-20260808-121354` 已新建并通过双入口 verifier；仓库与安装副本的 CSS/注入计划 SHA-256 一致，旧 `0.13.0-20260803-191843` 中曾用于验收同步的两份文件已按其安装时 Git 检查点恢复原始 SHA。同一个真实 `2050×1106 @ 125%` 任务中已同时出现 queue/goal、300px 环境卡与四角长方形输入器；原生/主题 surface 均为 `736×98px`，完整比较最大 DOMRect 差为 `0`，四角 paint 保留。核心联合合同 45/45、非宠物增量 19/19、UI 材质 4/4 通过。不包含两只延期宠物或已取消葫芦。
 
-当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 合同、7 项原生表面测试和 Windows forced-colors 组合态测试；最新证据目录为 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/`。Electron 原生下拉菜单本体不在 renderer DOM 中，当前验收范围只包含四个原生触发页签；不得把夹具中的页面元素当作下拉本体交付。
+当前技术状态（不等于用户视觉验收）：V15-03 / V15-04 的 renderer 状态矩阵已通过本机 ASAR 与 Windows forced-colors 合同。Electron 四个应用菜单触发页签和原生下拉菜单本体全部保留官方 paint；下拉本体不在 renderer DOM 中，不得把夹具中的页面元素当作应用菜单交付。
 
 V15-05 / V15-16 当前技术候选使用官方“悟空”书法生成 336×336 深/浅透明 WebP，分别约 25–34 KiB；以原生 56×56 槽位为锚点绘制 168×168 视觉层，有效边界约为 141×96 px。官方源 SHA、四边透明、上移量、深浅场景映射、原生 host 几何不变、两行原生文本视觉隐藏与最小包门禁进入定向测试；最新四战斗场景无头证据为 `artifacts/test-runs/v16-landing-threefold-20260728T3/`，仍待用户实机视觉验收。
 
 V15-14 / V15-15 当前实测：9 张唯一活动背景共 19,258,880 px，最大两张合计 4,743,680 px；8 张活动 UI WebP 单张最大 580,608 px。除用户指定的 2560×1043 杨戬超宽构图外，其余活动背景均至少 1920×1080；低分辨率 `great-sage-return.jpg`、被否决候选与夜叉王裂焰图均不进入运行包。
 
-V15-17 至 V15-20 当前技术候选已通过定向运行时合同。用户最新两张原生截图复核把最大宽主纸面锁定为约 `736×100px`；V22 又按当前 ASAR 生产源码把 joined stack 校正为“一个 queue 外层面板 + N 个内部消息叶片 + 一个 goal 外层面板”。guided / multi-guided 夹具证明新增消息只增加内部纸纹叶片，整组首个外层面板才拥有两个上角，后续目标层直边承接，独立 pill 全圆；所有原生行与按钮 DOMRect 前后全等。证据位于 `artifacts/test-runs/v22-native-composer-stack-2026-07-31T00-40-21-809Z/`。V17 的 `736×120px` 与 V21 的“每条消息一个 outer panel”继续保留为被本轮取代的历史证据；这些技术证据仍不等于用户实机视觉验收。
+V50 输入器当前技术候选已通过定向运行时与真实 renderer 几何合同：surface、editor shell、editor、footer、按钮和 padding 完全沿用原生，只在同一矩形内绘制四个角。V22 joined stack 的“一个 queue 外层面板 + N 个内部消息叶片 + 一个 goal 外层面板”生产拓扑继续有效；guided / multi-guided 夹具证明新增消息只增加内部纸纹叶片，整组首个外层面板才拥有两个上角，后续目标层直边承接，独立 pill 全圆。V17/V20 的主题高度比例与 V21 的“每条消息一个 outer panel”继续保留为已被取代的历史证据。
 
 > **0.12.3 / V13.3 历史验收合同。** 以下内容继续保留；冲突处以 V15 为准。
 
@@ -98,7 +101,7 @@ V15-17 至 V15-20 当前技术候选已通过定向运行时合同。用户最�
 | V12-14 | 小天命人基础角色必须同时具备完整神锋前端、握持段、后棍身与尾端，且双腿/双足均为正确厌火魔足；缺任一项不得扩展动作或进入 canonical | 正/侧/背基础板、武器连续性与双足装备审计 |
 | V12-15 | 被视觉否决的小天命人旧包继续保留，但不得被 V12 准备、打包或新安装；已有 discovery 目录与用户当前选择必须字节级不变 | 三重白名单、最小包缺失断言、预置冻结目录前后 hash |
 
-> **0.10.0 / V11 现行验收合同。** 下方 V10、V9 内容保留为历史；冲突处以本表为准。
+> **0.10.0 / V11 历史验收合同（保留）。** 下方内容只记录 V11 当时对 V10、V9 的替代；冲突处以顶部 V50 合同为准。
 
 | ID | V11 需求 | 验收方法 |
 | --- | --- | --- |
@@ -115,9 +118,9 @@ V15-17 至 V15-20 当前技术候选已通过定向运行时合同。用户最�
 | V11-11 | 主题/宠物发布包不修改 `ChatGPT.exe`、WindowsApps、`app.asar` 或官方配置；公共执行路径不删除任何文件，历史候选原位保留 | 静态脚本合同、安装前后文件审计 |
 | V11-12 | 每轮只运行针对性测试；形成需求、设计、分工、宠物设计和工作日志；精确暂存后 commit/push | 测试记录、文档、Git 远端 SHA |
 
-> **0.9.0 / V10 当前验收补充。** 下方 0.8.0 表格作为历史记录保留；与本节冲突时以本节为准。
+> **0.9.0 / V10 历史验收补充（保留）。** 下方内容只记录 V10 当时对 0.8.0 的替代；冲突处以顶部 V50 合同为准。
 
-| ID | 当前需求 | V10 验收结果 |
+| ID | V10 当时需求 | V10 验收结果 |
 | --- | --- | --- |
 | V10-01 | 普通 ChatGPT 入口启动主题 | 用户开始菜单 `ChatGPT.lnk` 使用 178 字符 `-File` 短入口；真实启动得到独立 `ChatGPT.exe` PID 26812、CDP 38625 与 watcher PID 18296。 |
 | V10-02 | 删除主题即回原生 | 入口桥接脚本位于 append-only 历史目录；主题根目录不存在时只动态启动当前官方 Store `ChatGPT.exe`，不再请求主题运行时。桥接脚本本身保留，不执行删除。 |
@@ -134,7 +137,9 @@ V15-17 至 V15-20 当前技术候选已通过定向运行时合同。用户最�
 
 无法在安全边界内承诺的入口：直接执行 WindowsApps 内可执行文件、Store AUMID、协议或第三方自建快捷方式。覆盖这些入口需要修改官方程序、系统级重定向或进程注入，与 S-01 和稳定性目标冲突，因此不实现。
 
-## 产品目标
+## 0.8.0 历史产品目标（保留）
+
+> 以下 0.8.0 目标、功能表与成本数字只用于追溯当时实现，不是 V50 现行合同；与顶部 V50 表冲突时全部以前者为准。
 
 在不改变 Codex 原生三栏布局、不新增控制栏、不修改官方程序文件的前提下，实现一套可安装、可恢复、可审计的《黑神话：悟空》深度样式层。它必须真正替换背景、新建任务页、侧栏按钮、输入框和环境信息窗口的造型，不得只换颜色 token。
 
@@ -142,7 +147,7 @@ V15-17 至 V15-20 当前技术候选已通过定向运行时合同。用户最�
 
 “下载即用、删除即原生”的可实现定义是：解压后双击包内 `start-theme.cmd` 启动主题 Codex；双击 `stop-theme.cmd` 后关闭该窗口，用户可自行删除整个解压目录。所有 profile、请求、事件和运行状态均写在包内 `.wukong-runtime`，普通 Codex 入口不加载 CSS。0.8.0 不写官方程序、`config.toml` 或目录外快捷方式。按用户最高约束，本轮实现、测试和发布不得删除任何文件，旧版本与证据采用 append-only 保留。
 
-## 功能验收
+## 0.8.0 历史功能验收（保留）
 
 | ID | 需求 | 验收标准 | 当前状态 |
 | --- | --- | --- | --- |
@@ -160,9 +165,9 @@ V15-17 至 V15-20 当前技术候选已通过定向运行时合同。用户最�
 | F-12 | 下载 / 停用 | 包内启动、包内状态、同生命周期 watcher、经验证的 renderer 恢复；公共脚本不删除或移动文件。 | 便携包与保留合同 |
 | F-13 | 真实窗口审计 | 从受管入口启动后，在真实 Codex renderer 中同时核对样式状态、surface/mode/scene、标记数量、原生几何与截图。 | 0.8.0 真实窗口完成 |
 
-2026-08-03 本轮验收边界：先完成 F-07 的“仅选中态”收口，再修复 active goal 初始动画阶段偶发漏标、composer/queue/goal 原生黑边残留，并完成环境信息窗的分区材质；宠物与磁盘清理均不属于本轮完成条件。
+2026-08-03 V38 当时的验收边界：先完成 F-07 的“仅选中态”收口，再修复 active goal 初始动画阶段偶发漏标、composer/queue/goal 原生黑边残留，并完成环境信息窗的分区材质；这些门已由顶部 V50 合同更新或关闭。
 
-## 稳定性与成本
+## 0.8.0 历史稳定性与成本（保留）
 
 | ID | 约束 | 验收标准 |
 | --- | --- | --- |

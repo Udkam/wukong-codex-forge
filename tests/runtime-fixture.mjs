@@ -610,6 +610,7 @@ export const runtimeFixtureHtml = String.raw`
       background: #c8cac6;
       color: #4a4b48;
     }
+    .opacity-50 { opacity: .5; }
 
     .thread-summary-layer {
       pointer-events: none;
@@ -739,11 +740,12 @@ export const runtimeFixtureHtml = String.raw`
                 <p class="sidebar-section">项目</p>
                 <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-project-row aria-expanded="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>wukong-codex-forge<button type="button" aria-label="项目更多操作" data-app-action-sidebar-project-show-all-toggle data-native-slot="project-internal-control">···</button></div>
                 <div data-app-action-sidebar-project-list-id="wukong-codex-forge">
-                  <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-thread-row data-app-action-sidebar-thread-active="true" aria-current="page" data-native-slot="project-active"><span data-thread-title>重设计黑神话悟空主题</span><span class="native-status-slot" data-native-status="running"><span class="animate-spin"><svg viewBox="0 0 24 24" fill="none"><path opacity=".3" d="M18 12A6 6 0 1 1 12 6" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 8 8" stroke="currentColor" stroke-width="2"/></svg></span></span></div>
+                  <div role="listitem"><div role="button" tabindex="0" aria-disabled="false" aria-roledescription="sortable"><div class="overflow-hidden"><div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-thread-row data-app-action-sidebar-thread-active="true" aria-current="page" data-native-slot="project-active"><span data-thread-title>重设计黑神话悟空主题</span><span class="native-status-slot" data-native-status="running"><span class="animate-spin"><svg viewBox="0 0 24 24" fill="none"><path opacity=".3" d="M18 12A6 6 0 1 1 12 6" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 8 8" stroke="currentColor" stroke-width="2"/></svg></span></span><button type="button" aria-label="任务更多操作" data-native-slot="project-thread-menu" style="width:20px;height:20px">···</button></div></div></div></div>
+                  <div role="listitem"><div role="button" tabindex="0" aria-disabled="false" aria-roledescription="sortable"><div class="overflow-hidden"><div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-thread-row data-native-slot="project-wukong-secondary"><span data-thread-title>主题视觉验收</span></div></div></div></div>
                 </div>
                 <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-project-row aria-expanded="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-temple-run</div>
                 <div data-app-action-sidebar-project-list-id="reproduction-temple-run">
-                  <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-thread-row data-native-slot="project-temple-child"><span data-thread-title>接管 Temple 总控并归档修复</span></div>
+                  <div role="listitem"><div role="button" tabindex="0" aria-disabled="false" aria-roledescription="sortable"><div class="overflow-hidden"><div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-thread-row data-native-slot="project-temple-child"><span data-thread-title>接管 Temple 总控并归档修复</span><button type="button" aria-label="任务更多操作" data-native-slot="project-thread-menu" style="width:20px;height:20px">···</button></div></div></div></div>
                 </div>
                 <div role="button" tabindex="0" aria-disabled="false" data-app-action-sidebar-project-row aria-expanded="false" data-app-action-sidebar-project-collapsed="true"><svg class="icon" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"/></svg>reproduction-tetris</div>
               </section>
@@ -776,7 +778,7 @@ export const runtimeFixtureHtml = String.raw`
 
                   <div class="thread-summary-layer" data-native-slot="right-panel">
                     <div data-pip-obstacle="thread-summary-panel">
-                      <section class="summary-panel-card" data-native-slot="right-card">
+                      <section class="summary-panel-card relative flex max-h-full min-h-0 flex-col overflow-hidden rounded-3xl bg-token-dropdown-background pt-2.5" data-native-slot="right-card">
                         <div class="summary-heading-surface bg-token-dropdown-background">
                           <h2 class="summary-heading">环境信息<button aria-label="添加" data-native-slot="right-add" data-slot="thread-summary-panel-icon-button"><svg class="icon" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button></h2>
                         </div>
@@ -839,7 +841,7 @@ export const runtimeFixtureHtml = String.raw`
                                 data-composer-navigation-target="reasoning">5.6 Terra 极高<svg class="icon" viewBox="0 0 16 16"><path d="m5 6 3 3 3-3"/></svg></button>
                               <button class="icon-only" data-native-slot="composer-voice" aria-label="语音输入"><svg class="icon" viewBox="0 0 16 16"><rect x="5.5" y="2.5" width="5" height="7" rx="2.5"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2"/></svg></button>
                               <button
-                                class="send cursor-interaction size-token-button-composer flex items-center justify-center rounded-full transition-opacity focus-visible:outline-2"
+                                class="send cursor-interaction size-token-button-composer flex items-center justify-center rounded-full transition-opacity focus-visible:outline-2 opacity-50"
                                 type="button" data-native-slot="composer-submit"><svg class="icon" viewBox="0 0 16 16"><path d="M8 13V3M4.5 6.5 8 3l3.5 3.5"/></svg></button>
                             </div>
                           </div>
@@ -1002,8 +1004,8 @@ export const installComposerState = (page, state = 'default') => page.evaluate(
 
       abovePortal.innerHTML = `
         <div class="relative col-start-1 row-start-1 h-8 self-end native-progress-host">
-          <div class="pointer-events-none absolute inset-x-0 -bottom-1 h-7 bg-gradient-to-t from-token-main-surface-primary to-transparent native-progress-gradient"></div>
           <div class="absolute inset-x-0 bottom-1 flex min-h-7 items-center justify-center gap-2 pb-1 native-progress-layer">
+            <div class="pointer-events-none absolute inset-x-0 -bottom-1 h-7 bg-gradient-to-t from-token-main-surface-primary to-transparent native-progress-gradient"></div>
             <div class="flex w-full max-w-(--thread-content-max-width) min-w-0 justify-center native-progress-rail">
               <div class="relative z-10 max-w-full min-w-0 overflow-hidden rounded-3xl native-progress-clip">
                 <div class="flex w-max max-w-full min-w-0 items-center gap-2 rounded-3xl border px-3 py-1.5 native-progress-pill"

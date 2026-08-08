@@ -9,7 +9,7 @@
 :root.forge-ink-mountain {
   --forge-paper: #101210;
   --forge-scene-brightness: 1;
-  --forge-background-transition: 820ms;
+  --forge-background-transition: 220ms;
   --forge-mode-veil:
     linear-gradient(90deg, rgba(8, 10, 9, .34), rgba(12, 14, 13, .18) 30%, rgba(12, 14, 13, .18) 70%, rgba(8, 10, 9, .32)),
     linear-gradient(180deg, rgba(8, 10, 9, .22), rgba(8, 10, 9, .09) 22%, rgba(8, 10, 9, .12) 78%, rgba(8, 10, 9, .28));
@@ -224,83 +224,23 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 /*
- * Native application menu: keep the official labels, spacing and hit boxes.
- * The quiet state uses a dark journal tab; hover/focus/open uses the pale
- * paper selection from the journal so the four platform menus read as a
- * themed surface rather than a color-only override.
+ * The four native application-menu buttons deliberately keep Codex's own
+ * quiet, hover, focus, open and disabled paint. The runtime marker remains a
+ * lifecycle hook only, so restoration can still remove marks from older
+ * injected revisions without restyling these platform controls.
  */
-:root.forge-ink-mountain .forge-topbar-menu-item {
-  --color-token-foreground: #c8c2b9;
-  --color-token-text-primary: #c8c2b9;
-  color: #c8c2b9 !important;
-  background-color: transparent !important;
-  background-image: var(--forge-ui-sidebar-level1) !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: 100% 100% !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-:root.forge-ink-mountain .forge-topbar-menu-item:hover,
-:root.forge-ink-mountain .forge-topbar-menu-item:focus-visible {
-  --color-token-foreground: #2f2822;
-  --color-token-text-primary: #2f2822;
-  color: #2f2822 !important;
-  background-image: var(--forge-ui-sidebar-selected) !important;
-  background-position: center !important;
-  background-size: 100% 100% !important;
-}
-
-:root.forge-ink-mountain .forge-topbar-menu-item:focus-visible {
-  box-shadow:
-    0 0 0 1px rgba(120, 50, 31, .7) inset,
-    0 0 0 1px rgba(222, 208, 190, .2) !important;
-}
-
-:root.forge-ink-mountain .forge-topbar-menu-item[aria-expanded="true"],
-:root.forge-ink-mountain .forge-topbar-menu-item[data-state="open"] {
-  --color-token-foreground: #2f2822;
-  --color-token-text-primary: #2f2822;
-  color: #2f2822 !important;
-  background-image: var(--forge-ui-sidebar-selected) !important;
-  background-position: center !important;
-  background-size: 100% 100% !important;
-}
-
-:root.forge-ink-mountain .forge-topbar-menu-item:active {
-  box-shadow: 0 1px 4px rgba(15, 10, 7, .34) inset !important;
-}
-
-:root.forge-ink-mountain .forge-topbar-menu-item:is(
-  :disabled,
-  [aria-disabled="true"],
-  [data-disabled]:not([data-disabled="false"]),
-  [data-disabled="true"]
-),
-:root.forge-ink-mountain .forge-topbar-menu-item:is(
-  :disabled,
-  [aria-disabled="true"],
-  [data-disabled]:not([data-disabled="false"]),
-  [data-disabled="true"]
-):is(:hover, :focus-visible, [aria-expanded="true"], [data-state="open"]) {
-  --color-token-foreground: #777169;
-  --color-token-text-primary: #777169;
-  color: #777169 !important;
-  cursor: not-allowed !important;
-  opacity: .46;
-  background-image: var(--forge-ui-sidebar-level1) !important;
-  box-shadow: none !important;
-}
 
 /*
  * Ancient-volume composer material. The native component tree, text flow,
- * controls and hit boxes remain intact; only the main paper surface adopts the
- * reviewed compact-scroll proportion and its content insets. The native shell
- * remains the width/bottom anchor while the themed surface is capped.
+ * controls, content coordinates and hit boxes remain intact. The paper is a
+ * paint-only pseudo layer; native width, height, padding and bottom anchoring
+ * remain authoritative so React remounts cannot jump between two geometries.
  */
-:root.forge-ink-mountain .forge-composer-frame {
+:root.forge-ink-mountain :is(
+  .forge-composer-frame,
+  [data-codex-composer-root] .composer-surface-chrome,
+  [data-thread-find-composer="true"] .composer-surface-chrome
+) {
   --color-token-foreground: #080604;
   --color-token-text-primary: #080604;
   --color-token-text-secondary: #2c2015;
@@ -315,9 +255,6 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   isolation: isolate;
   background-color: transparent !important;
   background-image: none !important;
-  aspect-ratio: 184 / 25;
-  min-height: 96px;
-  max-height: 120px;
   border-radius: 0 !important;
   corner-shape: initial !important;
   clip-path: none !important;
@@ -329,7 +266,11 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   box-shadow: none !important;
 }
 
-:root.forge-ink-mountain .forge-composer-frame::before {
+:root.forge-ink-mountain :is(
+  .forge-composer-frame,
+  [data-codex-composer-root] .composer-surface-chrome,
+  [data-thread-find-composer="true"] .composer-surface-chrome
+)::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -359,12 +300,11 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     0 7px 20px rgba(5, 4, 3, .26);
 }
 
-:root.forge-ink-mountain .forge-composer-input-shell {
-  padding-block-start: 8px !important;
-  padding-inline: 12px !important;
-}
-
-:root.forge-ink-mountain .forge-composer-frame:focus-within::before {
+:root.forge-ink-mountain :is(
+  .forge-composer-frame,
+  [data-codex-composer-root] .composer-surface-chrome,
+  [data-thread-find-composer="true"] .composer-surface-chrome
+):focus-within::before {
   box-shadow:
     0 1px 0 rgba(235, 216, 184, .24) inset,
     0 -1px 0 rgba(70, 48, 25, .42) inset,
@@ -372,13 +312,25 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     0 5px 18px rgba(5, 4, 3, .28);
 }
 
-:root.forge-ink-mountain .forge-composer-frame .ProseMirror {
+:root.forge-ink-mountain :is(
+  .forge-composer-frame,
+  [data-codex-composer-root] .composer-surface-chrome,
+  [data-thread-find-composer="true"] .composer-surface-chrome
+) .ProseMirror {
   color: inherit !important;
   text-shadow: 0 1px 0 rgba(224, 204, 172, .12);
 }
 
-:root.forge-ink-mountain .forge-composer-frame .ProseMirror p.is-editor-empty:first-child::before,
-:root.forge-ink-mountain .forge-composer-frame [data-placeholder]::before {
+:root.forge-ink-mountain :is(
+  .forge-composer-frame,
+  [data-codex-composer-root] .composer-surface-chrome,
+  [data-thread-find-composer="true"] .composer-surface-chrome
+) .ProseMirror p.is-editor-empty:first-child::before,
+:root.forge-ink-mountain :is(
+  .forge-composer-frame,
+  [data-codex-composer-root] .composer-surface-chrome,
+  [data-thread-find-composer="true"] .composer-surface-chrome
+) [data-placeholder]::before {
   color: #181008 !important;
 }
 
@@ -539,6 +491,189 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   background: rgba(75, 51, 27, .5);
 }
 
+/*
+ * Production queue/goal aliases. These exact native topology selectors apply
+ * before the observer's compatibility markers, so a newly mounted thread does
+ * not expose its dark native panel borders for one frame.
+ */
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *):has(
+    > .relative.min-w-0.overflow-clip.text-token-foreground
+  ) {
+  --color-token-foreground: #080604;
+  --color-token-text-primary: #080604;
+  --color-token-text-secondary: #2a1f14;
+  --color-token-description-foreground: #332619;
+  --color-token-icon-foreground: #080604;
+  color: #080604 !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  border-image: none !important;
+  outline: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+  > .relative.min-w-0.overflow-clip.text-token-foreground {
+  color: inherit !important;
+  position: relative !important;
+  isolation: isolate;
+  background: transparent !important;
+  border-radius: 0 !important;
+  corner-shape: initial !important;
+  clip-path: none !important;
+  border-color: transparent !important;
+  border-image: none !important;
+  outline: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+  > .relative.min-w-0.overflow-clip.text-token-foreground::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: #87755d;
+  background-image:
+    linear-gradient(
+      to bottom,
+      rgba(75, 51, 27, .62) 0 1px,
+      rgba(235, 216, 184, .1) 1px 2px,
+      transparent 2px
+    ),
+    var(--forge-ui-paper-tile);
+  background-position: center, center;
+  background-repeat: no-repeat, repeat;
+  background-size: 100% 100%, 512px 220px !important;
+  clip-path: none;
+  box-shadow:
+    1px 0 0 rgba(75, 51, 27, .42) inset,
+    -1px 0 0 rgba(75, 51, 27, .42) inset;
+}
+
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+  > .relative.min-w-0.overflow-clip.text-token-foreground:first-child::before {
+  clip-path: polygon(
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% 100%,
+    0 100%,
+    0 8px
+  );
+}
+
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+  > .relative.min-w-0.overflow-clip.text-token-foreground:first-child::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 29px;
+  z-index: -1;
+  pointer-events: none;
+  background-color: transparent;
+  background-image: var(--forge-ui-composer-strip);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 100% 58px !important;
+  clip-path: polygon(
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% 100%,
+    0 100%,
+    0 8px
+  );
+}
+
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+  > .relative.min-w-0.overflow-clip.text-token-foreground
+  .vertical-scroll-fade-mask.hide-scrollbar.flex[class~="max-h-[30dvh]"].flex-col.gap-px.overflow-x-hidden.overflow-y-auto.px-3.py-row-y
+  > .overflow-visible {
+  color: inherit !important;
+  position: relative !important;
+  isolation: isolate;
+  background: transparent !important;
+  border-radius: 0 !important;
+  corner-shape: initial !important;
+  clip-path: none !important;
+  border-color: transparent !important;
+  border-image: none !important;
+  outline: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+  > .relative.min-w-0.overflow-clip.text-token-foreground
+  .vertical-scroll-fade-mask.hide-scrollbar.flex[class~="max-h-[30dvh]"].flex-col.gap-px.overflow-x-hidden.overflow-y-auto.px-3.py-row-y
+  > .overflow-visible::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline: calc((var(--spacing, 4px) * -3) + 1px);
+  z-index: -1;
+  pointer-events: none;
+  background-color: #87755d;
+  background-image: var(--forge-ui-paper-tile);
+  background-position: center;
+  background-repeat: repeat;
+  background-size: 512px 220px !important;
+  clip-path: none;
+  box-shadow: none;
+}
+
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+  > .relative.min-w-0.overflow-clip.text-token-foreground
+  .vertical-scroll-fade-mask.hide-scrollbar.flex[class~="max-h-[30dvh]"].flex-col.gap-px.overflow-x-hidden.overflow-y-auto.px-3.py-row-y
+  > .overflow-visible
+  + .overflow-visible::after {
+  content: "";
+  position: absolute;
+  inset-inline: calc((var(--spacing, 4px) * -3) + 1px);
+  top: -1px;
+  height: 1px;
+  z-index: 0;
+  pointer-events: none;
+  background: rgba(75, 51, 27, .5);
+}
+
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+  > .relative.min-w-0.overflow-clip.text-token-foreground
+  :is(button, [role="button"]) {
+  color: inherit !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
 :root.forge-ink-mountain .forge-composer-context button,
 :root.forge-ink-mountain .forge-composer-context [role="button"],
 :root.forge-ink-mountain .forge-composer-panel button,
@@ -550,7 +685,18 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   box-shadow: none !important;
 }
 
-:root.forge-ink-mountain .forge-composer-progress-fade {
+:root.forge-ink-mountain .forge-composer-progress-fade,
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  [data-above-composer-portal]
+  .relative.col-start-1.row-start-1.h-8.self-end
+  > .absolute.inset-x-0.bottom-1.flex.min-h-7.items-center.justify-center.gap-2.pb-1
+  > .pointer-events-none.absolute.inset-x-0.-bottom-1.h-7.bg-gradient-to-t,
+:root.forge-ink-mountain
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+  [data-above-composer-portal]
+  .relative.col-start-1.row-start-1.h-8.self-end
+  > .pointer-events-none.absolute.inset-x-0.-bottom-1.h-7.bg-gradient-to-t {
   background-color: transparent !important;
   background-image: none !important;
   opacity: 0 !important;
@@ -562,7 +708,11 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
  * Wukong scene already owns that blend, so retain the native node geometry
  * while suppressing only its obsolete solid-surface paint.
  */
-:root.forge-ink-mountain .forge-composer-thread-fade {
+:root.forge-ink-mountain .forge-composer-thread-fade,
+:root.forge-ink-mountain
+  [data-thread-scroll-footer="true"]
+  > .pointer-events-none.absolute.inset-x-0.bottom-0.z-0.flex.h-full.w-full.justify-center.pt-4
+  > .z-0.h-full.bg-gradient-to-t {
   background: none !important;
   box-shadow: none !important;
   filter: none !important;
@@ -596,18 +746,61 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     0 4px 11px rgba(5, 4, 3, .24) !important;
 }
 
-:root.forge-ink-mountain .forge-composer-submit {
-  color: #dfc99e !important;
+:root.forge-ink-mountain :is(
+  .forge-composer-submit,
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .composer-surface-chrome
+    div.select-none[class*="_footer_"]
+    button[class~="cursor-interaction"][class~="size-token-button-composer"]
+) {
+  color: #f7e8c7 !important;
   background-color: #49361f !important;
   background-image: none !important;
   border-color: rgba(47, 32, 17, .72) !important;
+  opacity: 1 !important;
   box-shadow:
     0 1px 0 rgba(255, 226, 169, .18) inset,
     0 2px 7px rgba(21, 14, 8, .32) !important;
 }
 
-:root.forge-ink-mountain .forge-composer-submit:hover,
-:root.forge-ink-mountain .forge-composer-submit:focus-visible {
+:root.forge-ink-mountain :is(
+  .forge-composer-submit,
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .composer-surface-chrome
+    div.select-none[class*="_footer_"]
+    button[class~="cursor-interaction"][class~="size-token-button-composer"]
+) svg {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+:root.forge-ink-mountain :is(
+  .forge-composer-submit,
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .composer-surface-chrome
+    div.select-none[class*="_footer_"]
+    button[class~="cursor-interaction"][class~="size-token-button-composer"]
+) svg [fill="currentColor"] {
+  fill: currentColor !important;
+}
+
+:root.forge-ink-mountain :is(
+  .forge-composer-submit,
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .composer-surface-chrome
+    div.select-none[class*="_footer_"]
+    button[class~="cursor-interaction"][class~="size-token-button-composer"]
+) svg [stroke="currentColor"] {
+  stroke: currentColor !important;
+}
+
+:root.forge-ink-mountain :is(
+  .forge-composer-submit,
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .composer-surface-chrome
+    div.select-none[class*="_footer_"]
+    button[class~="cursor-interaction"][class~="size-token-button-composer"]
+):is(:hover, :focus-visible) {
   color: #f0dab0 !important;
   background-color: #5a4327 !important;
   box-shadow:
@@ -616,12 +809,29 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
     0 2px 8px rgba(21, 14, 8, .36) !important;
 }
 
-:root.forge-ink-mountain .forge-composer-submit:disabled,
-:root.forge-ink-mountain .forge-composer-submit[aria-disabled="true"] {
-  color: #8c7b61 !important;
+:root.forge-ink-mountain :is(
+  .forge-composer-submit,
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .composer-surface-chrome
+    div.select-none[class*="_footer_"]
+    button[class~="cursor-interaction"][class~="size-token-button-composer"]
+):is(:disabled, [aria-disabled="true"]) {
+  color: #f0dfbd !important;
   background-color: #5f5548 !important;
   border-color: rgba(47, 39, 29, .46) !important;
+  opacity: 1 !important;
   box-shadow: 0 1px 0 rgba(255, 235, 193, .1) inset !important;
+}
+
+:root.forge-ink-mountain :is(
+  .forge-composer-submit,
+  :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .composer-surface-chrome
+    div.select-none[class*="_footer_"]
+    button[class~="cursor-interaction"][class~="size-token-button-composer"]
+):is(:disabled, [aria-disabled="true"]) svg {
+  color: inherit !important;
+  opacity: 1 !important;
 }
 
 /*
@@ -630,7 +840,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
  * lives on a pointer-transparent paint layer so every native control keeps its
  * original position and rectangular hit region.
  */
-:root.forge-ink-mountain #root .forge-right-card {
+:root.forge-ink-mountain #root .forge-right-card,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  :is(div, section).relative.flex.max-h-full.min-h-0.flex-col.overflow-hidden.rounded-3xl.bg-token-dropdown-background.pt-2\.5 {
   --color-token-foreground: #eee2cc;
   --color-token-text-primary: #eee2cc;
   --color-token-text-secondary: #cbbda8;
@@ -650,7 +863,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   clip-path: none !important;
 }
 
-:root.forge-ink-mountain #root .forge-right-card::before {
+:root.forge-ink-mountain #root .forge-right-card::before,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  :is(div, section).relative.flex.max-h-full.min-h-0.flex-col.overflow-hidden.rounded-3xl.bg-token-dropdown-background.pt-2\.5::before {
   content: "";
   position: absolute;
   inset: 2px;
@@ -693,7 +909,15 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 :root.forge-ink-mountain #root :is(
   .forge-right-title-surface,
   .forge-right-section-title
-) {
+),
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  :is(div, section).relative.flex.max-h-full.min-h-0.flex-col.overflow-hidden.rounded-3xl.bg-token-dropdown-background.pt-2\.5
+  > :is(div, header)[class~="bg-token-dropdown-background"]:has(> :is(h1, h2, h3, h4, h5, h6, [role="heading"])),
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  section.relative.z-0.flex.flex-col.pb-3
+  > header.sticky.top-0.z-10.flex.h-7.w-full.bg-token-dropdown-background {
   background-color: transparent !important;
   background-image: none !important;
   border-color: transparent !important;
@@ -710,7 +934,23 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 :root.forge-ink-mountain #root :is(
   .forge-right-title-surface,
   .forge-right-section-title
-)::after {
+)::after,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  :is(div, section).relative.flex.max-h-full.min-h-0.flex-col.overflow-hidden.rounded-3xl.bg-token-dropdown-background.pt-2\.5
+  > :is(div, header)[class~="bg-token-dropdown-background"]:has(> :is(h1, h2, h3, h4, h5, h6, [role="heading"]))::before,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  :is(div, section).relative.flex.max-h-full.min-h-0.flex-col.overflow-hidden.rounded-3xl.bg-token-dropdown-background.pt-2\.5
+  > :is(div, header)[class~="bg-token-dropdown-background"]:has(> :is(h1, h2, h3, h4, h5, h6, [role="heading"]))::after,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  section.relative.z-0.flex.flex-col.pb-3
+  > header.sticky.top-0.z-10.flex.h-7.w-full.bg-token-dropdown-background::before,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  section.relative.z-0.flex.flex-col.pb-3
+  > header.sticky.top-0.z-10.flex.h-7.w-full.bg-token-dropdown-background::after {
   background-color: transparent !important;
   background-image: none !important;
   border-color: transparent !important;
@@ -718,13 +958,19 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   backdrop-filter: none !important;
 }
 
-:root.forge-ink-mountain #root .forge-right-section {
+:root.forge-ink-mountain #root .forge-right-section,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  section.relative.z-0.flex.flex-col.pb-3 {
   position: relative !important;
   background-color: transparent !important;
   background-image: none !important;
 }
 
-:root.forge-ink-mountain #root .forge-right-section::after {
+:root.forge-ink-mountain #root .forge-right-section::after,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  section.relative.z-0.flex.flex-col.pb-3::after {
   background-image: linear-gradient(
     90deg,
     rgba(218, 193, 153, .04),
@@ -734,7 +980,11 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   ) !important;
 }
 
-:root.forge-ink-mountain #root .forge-right-section-title {
+:root.forge-ink-mountain #root .forge-right-section-title,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  section.relative.z-0.flex.flex-col.pb-3
+  > header.sticky.top-0.z-10.flex.h-7.w-full.bg-token-dropdown-background {
   --color-token-foreground: #efe2cc;
   --color-token-text-primary: #efe2cc;
   --color-token-text-secondary: #d2c3ac;
@@ -744,7 +994,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   text-shadow: 0 1px 0 rgba(13, 9, 6, .62);
 }
 
-:root.forge-ink-mountain #root .forge-right-row {
+:root.forge-ink-mountain #root .forge-right-row,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  [data-slot="thread-summary-panel-item"] {
   color: inherit !important;
   position: relative !important;
   background-color: transparent !important;
@@ -753,7 +1006,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   box-shadow: none !important;
 }
 
-:root.forge-ink-mountain #root .forge-right-row::after {
+:root.forge-ink-mountain #root .forge-right-row::after,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  [data-slot="thread-summary-panel-item"]::after {
   content: "";
   position: absolute;
   inset-inline: 1px;
@@ -770,7 +1026,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   );
 }
 
-:root.forge-ink-mountain #root .forge-right-row:is(:hover, :focus-within) {
+:root.forge-ink-mountain #root .forge-right-row:is(:hover, :focus-within),
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  [data-slot="thread-summary-panel-item"]:is(:hover, :focus-within) {
   background-color: rgba(235, 218, 187, .075) !important;
 }
 
@@ -778,7 +1037,12 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   button,
   [role="button"],
   a[href]
-):focus-visible {
+):focus-visible,
+:root.forge-ink-mountain #root
+  [data-pip-obstacle="thread-summary-panel"]
+  :is(div, section).relative.flex.max-h-full.min-h-0.flex-col.overflow-hidden.rounded-3xl.bg-token-dropdown-background.pt-2\.5
+  :is(button, [role="button"], a[href])
+:focus-visible {
   outline: 1px solid rgba(235, 210, 169, .82) !important;
   outline-offset: -1px !important;
 }
@@ -788,7 +1052,10 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
  * row state is the source-backed current selection, matching Codex's own
  * state model instead of turning the directory into a stack of cards.
  */
-:root.forge-ink-mountain .forge-sidebar-shell {
+:root.forge-ink-mountain :is(
+  .forge-sidebar-shell,
+  aside.app-shell-left-panel
+) {
   --color-token-side-bar-background: rgba(9, 8, 6, .66);
   --color-token-foreground: #d2cdc5;
   --color-token-text-primary: #d2cdc5;
@@ -833,16 +1100,26 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
 }
 
 :root.forge-ink-mountain
-  :is(.forge-sidebar-action-active, .forge-sidebar-selected)
+  :is(
+    .forge-sidebar-action-active,
+    .forge-sidebar-selected:not([data-app-action-sidebar-thread-row], [data-app-action-sidebar-project-row]),
+    [data-app-action-sidebar-thread-row][data-app-action-sidebar-thread-active="true"],
+    [data-app-action-sidebar-thread-row][aria-current="page"],
+    [data-app-action-sidebar-thread-row][aria-selected="true"],
+    [data-app-action-sidebar-project-row][aria-current="page"],
+    [data-app-action-sidebar-project-row][aria-selected="true"]
+  )
   :where(*):not([data-native-status], [data-native-status] *) {
   color: #2f2822 !important;
 }
 
-:root.forge-ink-mountain .forge-sidebar-selected,
-:root.forge-ink-mountain .forge-sidebar-selected:hover,
-:root.forge-ink-mountain .forge-sidebar-selected:is(
-  :focus-visible,
-  :has(:focus-visible)
+:root.forge-ink-mountain :is(
+  .forge-sidebar-selected:not([data-app-action-sidebar-thread-row], [data-app-action-sidebar-project-row]),
+  [data-app-action-sidebar-thread-row][data-app-action-sidebar-thread-active="true"],
+  [data-app-action-sidebar-thread-row][aria-current="page"],
+  [data-app-action-sidebar-thread-row][aria-selected="true"],
+  [data-app-action-sidebar-project-row][aria-current="page"],
+  [data-app-action-sidebar-project-row][aria-selected="true"]
 ) {
   --forge-sidebar-row-material: var(--forge-ui-sidebar-selected);
   --vscode-textLink-foreground: #853823;
@@ -861,13 +1138,44 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   box-shadow: none !important;
 }
 
-:root.forge-ink-mountain .forge-sidebar-selected:hover {
+/*
+ * Runtime mapping guarantees that only the explicit native thread row owns
+ * selected paper, never its singleton sortable/animation wrappers. Keep the
+ * native row geometry and hit target untouched; normalize paint origin only.
+ */
+:root.forge-ink-mountain
+  [data-app-action-sidebar-project-list-id]
+  :is(
+    .forge-sidebar-selected:not([data-app-action-sidebar-thread-row], [data-app-action-sidebar-project-row]),
+    [data-app-action-sidebar-thread-row][data-app-action-sidebar-thread-active="true"],
+    [data-app-action-sidebar-thread-row][aria-current="page"],
+    [data-app-action-sidebar-thread-row][aria-selected="true"]
+  )[data-app-action-sidebar-thread-row] {
+  background-origin: border-box !important;
+  background-clip: border-box !important;
+}
+
+:root.forge-ink-mountain :is(
+  .forge-sidebar-selected:not([data-app-action-sidebar-thread-row], [data-app-action-sidebar-project-row]),
+  [data-app-action-sidebar-thread-row][data-app-action-sidebar-thread-active="true"],
+  [data-app-action-sidebar-thread-row][aria-current="page"],
+  [data-app-action-sidebar-thread-row][aria-selected="true"],
+  [data-app-action-sidebar-project-row][aria-current="page"],
+  [data-app-action-sidebar-project-row][aria-selected="true"]
+):hover {
   background-image:
     linear-gradient(rgba(255, 250, 239, .035), rgba(255, 250, 239, .035)),
     var(--forge-ui-sidebar-selected) !important;
 }
 
-:root.forge-ink-mountain .forge-sidebar-selected:is(
+:root.forge-ink-mountain :is(
+  .forge-sidebar-selected:not([data-app-action-sidebar-thread-row], [data-app-action-sidebar-project-row]),
+  [data-app-action-sidebar-thread-row][data-app-action-sidebar-thread-active="true"],
+  [data-app-action-sidebar-thread-row][aria-current="page"],
+  [data-app-action-sidebar-thread-row][aria-selected="true"],
+  [data-app-action-sidebar-project-row][aria-current="page"],
+  [data-app-action-sidebar-project-row][aria-selected="true"]
+):is(
   :focus-visible,
   :has(:focus-visible)
 ) {
@@ -883,11 +1191,23 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
  * paint without treating mere expansion as selection.
  */
 :root.forge-ink-mountain
-  .forge-sidebar-selected[data-app-action-sidebar-project-row],
+  :is(
+    .forge-sidebar-selected:not([data-app-action-sidebar-thread-row], [data-app-action-sidebar-project-row]),
+    [data-app-action-sidebar-project-row][aria-current="page"],
+    [data-app-action-sidebar-project-row][aria-selected="true"]
+  )[data-app-action-sidebar-project-row],
 :root.forge-ink-mountain
-  .forge-sidebar-selected[data-app-action-sidebar-project-row]:hover,
+  :is(
+    .forge-sidebar-selected:not([data-app-action-sidebar-thread-row], [data-app-action-sidebar-project-row]),
+    [data-app-action-sidebar-project-row][aria-current="page"],
+    [data-app-action-sidebar-project-row][aria-selected="true"]
+  )[data-app-action-sidebar-project-row]:hover,
 :root.forge-ink-mountain
-  .forge-sidebar-selected[data-app-action-sidebar-project-row]:is(
+  :is(
+    .forge-sidebar-selected:not([data-app-action-sidebar-thread-row], [data-app-action-sidebar-project-row]),
+    [data-app-action-sidebar-project-row][aria-current="page"],
+    [data-app-action-sidebar-project-row][aria-selected="true"]
+  )[data-app-action-sidebar-project-row]:is(
     :focus-visible,
     :has(:focus-visible)
   ) {
@@ -960,7 +1280,51 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :root.forge-ink-mountain #root .forge-right-title-surface,
   :root.forge-ink-mountain #root .forge-right-section,
   :root.forge-ink-mountain #root .forge-right-section-title,
-  :root.forge-ink-mountain #root .forge-right-row {
+  :root.forge-ink-mountain #root .forge-right-row,
+  :root.forge-ink-mountain #root :is([data-codex-composer-root], [data-thread-find-composer="true"]) .composer-surface-chrome,
+  :root.forge-ink-mountain #root
+    :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *):has(
+      > .relative.min-w-0.overflow-clip.text-token-foreground
+    ),
+  :root.forge-ink-mountain #root
+    :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+    > .relative.min-w-0.overflow-clip.text-token-foreground,
+  :root.forge-ink-mountain #root
+    :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+    > .relative.min-w-0.overflow-clip.text-token-foreground
+    .vertical-scroll-fade-mask.hide-scrollbar.flex[class~="max-h-[30dvh]"].flex-col.gap-px.overflow-x-hidden.overflow-y-auto.px-3.py-row-y
+    > .overflow-visible,
+  :root.forge-ink-mountain #root :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .composer-surface-chrome div.select-none[class*="_footer_"]
+    button[class~="cursor-interaction"][class~="size-token-button-composer"],
+  :root.forge-ink-mountain #root aside.app-shell-left-panel,
+  :root.forge-ink-mountain #root :is(
+    [data-app-action-sidebar-thread-row][data-app-action-sidebar-thread-active="true"],
+    [data-app-action-sidebar-thread-row][aria-current="page"],
+    [data-app-action-sidebar-thread-row][aria-selected="true"],
+    [data-app-action-sidebar-project-row][aria-current="page"],
+    [data-app-action-sidebar-project-row][aria-selected="true"]
+  ),
+  :root.forge-ink-mountain #root
+    [data-pip-obstacle="thread-summary-panel"]
+    :is(div, section).relative.flex.max-h-full.min-h-0.flex-col.overflow-hidden.rounded-3xl.bg-token-dropdown-background.pt-2\.5,
+  :root.forge-ink-mountain #root
+    [data-pip-obstacle="thread-summary-panel"]
+    :is(div, section).relative.flex.max-h-full.min-h-0.flex-col.overflow-hidden.rounded-3xl.bg-token-dropdown-background.pt-2\.5
+    > :is(div, header)[class~="bg-token-dropdown-background"]:has(> :is(h1, h2, h3, h4, h5, h6, [role="heading"])),
+  :root.forge-ink-mountain #root
+    [data-pip-obstacle="thread-summary-panel"]
+    section.relative.z-0.flex.flex-col.pb-3,
+  :root.forge-ink-mountain #root
+    [data-pip-obstacle="thread-summary-panel"]
+    section.relative.z-0.flex.flex-col.pb-3
+    > header.sticky.top-0.z-10.flex.h-7.w-full.bg-token-dropdown-background,
+  :root.forge-ink-mountain #root
+    [data-pip-obstacle="thread-summary-panel"]
+    [data-slot="thread-summary-panel-item"] {
     --color-token-foreground: CanvasText;
     --color-token-text-primary: CanvasText;
     --color-token-text-secondary: CanvasText;
@@ -981,7 +1345,22 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   }
 
   :root.forge-ink-mountain #root .forge-composer-progress-fade,
-  :root.forge-ink-mountain #root .forge-composer-thread-fade {
+  :root.forge-ink-mountain #root .forge-composer-thread-fade,
+  :root.forge-ink-mountain #root
+    :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    [data-above-composer-portal]
+    .relative.col-start-1.row-start-1.h-8.self-end
+    > .absolute.inset-x-0.bottom-1.flex.min-h-7.items-center.justify-center.gap-2.pb-1
+    > .pointer-events-none.absolute.inset-x-0.-bottom-1.h-7.bg-gradient-to-t,
+  :root.forge-ink-mountain #root
+    :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    [data-above-composer-portal]
+    .relative.col-start-1.row-start-1.h-8.self-end
+    > .pointer-events-none.absolute.inset-x-0.-bottom-1.h-7.bg-gradient-to-t,
+  :root.forge-ink-mountain #root
+    [data-thread-scroll-footer="true"]
+    > .pointer-events-none.absolute.inset-x-0.bottom-0.z-0.flex.h-full.w-full.justify-center.pt-4
+    > .z-0.h-full.bg-gradient-to-t {
     background: none !important;
     opacity: 0 !important;
     forced-color-adjust: none;
@@ -998,8 +1377,41 @@ html:root.forge-ink-mountain[data-forge-scene="0"] {
   :root.forge-ink-mountain #root .forge-right-card::before,
   :root.forge-ink-mountain #root .forge-right-card::after,
   :root.forge-ink-mountain #root .forge-right-section::after,
-  :root.forge-ink-mountain #root .forge-right-row::after {
+  :root.forge-ink-mountain #root .forge-right-row::after,
+  :root.forge-ink-mountain #root :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .composer-surface-chrome::before,
+  :root.forge-ink-mountain #root
+    :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+    > .relative.min-w-0.overflow-clip.text-token-foreground::before,
+  :root.forge-ink-mountain #root
+    :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+    > .relative.min-w-0.overflow-clip.text-token-foreground::after,
+  :root.forge-ink-mountain #root
+    :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+    > .relative.min-w-0.overflow-clip.text-token-foreground
+    .vertical-scroll-fade-mask.hide-scrollbar.flex[class~="max-h-[30dvh]"].flex-col.gap-px.overflow-x-hidden.overflow-y-auto.px-3.py-row-y
+    > .overflow-visible::before,
+  :root.forge-ink-mountain #root
+    :is([data-codex-composer-root], [data-thread-find-composer="true"])
+    .order-2.flex.min-w-0.flex-col:not([data-above-composer-portal] *)
+    > .relative.min-w-0.overflow-clip.text-token-foreground
+    .vertical-scroll-fade-mask.hide-scrollbar.flex[class~="max-h-[30dvh]"].flex-col.gap-px.overflow-x-hidden.overflow-y-auto.px-3.py-row-y
+    > .overflow-visible::after,
+  :root.forge-ink-mountain #root
+    [data-pip-obstacle="thread-summary-panel"]
+    :is(div, section).relative.flex.max-h-full.min-h-0.flex-col.overflow-hidden.rounded-3xl.bg-token-dropdown-background.pt-2\.5::before,
+  :root.forge-ink-mountain #root
+    [data-pip-obstacle="thread-summary-panel"]
+    section.relative.z-0.flex.flex-col.pb-3::after,
+  :root.forge-ink-mountain #root
+    [data-pip-obstacle="thread-summary-panel"]
+    [data-slot="thread-summary-panel-item"]::after {
     content: none !important;
+    background: none !important;
+    box-shadow: none !important;
   }
 
   :root.forge-ink-mountain #root :is(

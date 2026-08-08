@@ -1,20 +1,20 @@
 # 多对话分工与交付边界
 
-## V34 当前交付拆解
+## V50 当前交付拆解
 
 | 工作项 | 范围 | 完成证据 |
 | --- | --- | --- |
-| 非宠物视觉收口 | 背景、过渡、landing、侧栏/顶部、composer/queue/goal、progress、环境卡 | 定向合同 + 一个临时真实 Codex 完整页；fixture 不冒充实机 |
-| 正式生命周期 | 内置 Node、append-only bridge、事件 host、官方根进程跟随、移除回原生 | `0.13.0-20260801-144611` 已保留式安装；双快捷方式与 host 哈希已核验，23/23 生命周期/恢复合同通过 |
-| 资源与发布 | 稳态单纹理、过渡双纹理、无常驻 PowerShell/服务/轮询、精确暂存与 push | 资源采样、focused tests、gitleaks、远端 SHA |
+| 非宠物视觉收口 | 背景、过渡、landing、侧栏/顶部、composer/queue/goal、progress、环境卡 | 真实 `2050×1106 @ 125%` 完整页；composer 原生/主题 surface 均 `736×98px`，全部坐标最大差 `0` 且四角纸面保留 |
+| 正式生命周期 | 内置 Node、append-only bridge、事件 host、官方根进程跟随、移除回原生 | `0.13.0-20260808-121354` 已新建并通过双入口 verifier；仓库/安装 runtime 哈希一致，旧 release 的验收同步文件已恢复原始 SHA |
+| 资源与发布 | 稳态单纹理、过渡双纹理、无常驻 PowerShell/服务/轮询、精确暂存与 push | 核心 45/45 + 非宠物增量 19/19 + UI 材质 4/4；剩余 staged-content 审计、commit、push 与远端 SHA |
 | 宠物 | 整体延期，保持现状 | 本轮宠物/策略/安装状态零修改；不作为完成阻断项 |
 | 葫芦 | 取消 | 活动包与运行时不存在引用 |
 
-> **V15 当前分工。** 旧分工继续保留为历史。
+> **以下为 V15–V49 历史分工。** 旧尺寸、旧 release 与当时未完成门槛仅用于追溯；当前结论只以上方 V50 表和 `CURRENT_GOAL.md` 为准。
 
 | 工作流 | 本轮责任 | 当前结论 / 门槛 |
 | --- | --- | --- |
-| 主对话 · native geometry | 只读解析当前 `ChatGPT.exe/app.asar`，把官方 token、class 结构和响应式公式写入 fixture/漂移合同 | 已完成 composer/topbar/基础 sidebar baseline；除用户明确授权的主输入器外框外，任何尺寸改动必须先有本机源码证据 |
+| 主对话 · native geometry | 只读解析当前 `ChatGPT.exe/app.asar`，把官方 token、class 结构和响应式公式写入 fixture/漂移合同 | V15 当时曾保留主输入器外框例外；该例外已被 V50 取消，现行合同要求包括 composer 在内的所有尺寸、padding 与坐标使用原生值 |
 | `background_first_frame_audit` | 只读复核首屏探针、延迟挂载、背景解码与 overlay 自修复竞态 | 定位 120/420 ms 探针折叠、既有外壳内部挂载、透明旧 hero 路由优先级、首图 ready 和 overlay generation 风险；主对话已逐项修复并写入 10 项背景状态机门禁 |
 | `background_contract_tests_audit` | 只读复核全窗、首帧、分类、过渡、恢复与静止期测试合同 | 确认旧 fixture 未覆盖真实 viewport DOMRect 与透明 hero/可见 thread 重叠；主对话已增加初始/resize 全视口、<300 ms 延迟挂载、内部挂载及路由重叠用例 |
 | `background_resource_audit` | 只读量化活动图库、CDP 注入、双层纹理、观察器、watcher 与调试实例成本 | 当前 9 图共 19,258,880 解码像素，最大两图 4,743,680；稳态/过渡持图策略合理。主对话已把单图/图库/双图过渡/UI 的解码像素门禁写入 payload 组装前；Blob/分批注册须先过 CSP 与逐像素等价验证，未贸然集成 |
@@ -26,8 +26,8 @@
 | 主对话 · sidebar/topbar states | 实现完整 paint 状态、动态刷新、几何/热区/ARIA 门禁和状态截图 | headless 7/7、相关背景/原生主题/最小包 11/11 通过；独立状态截图已生成，用户实机视觉仍待验收 |
 | 主对话 · V15 materials | 将用户最终输入器三图和游记目录素材裁成统一纸面/深墨/浅纸 nine-slice | 已把四类输入纸面统一暗化到目标中位色；活动 composer 已切回完整山水/云纹源，不再使用中央透明的错误 mask，真实 Codex 视觉仍待多轮验收 |
 | `asar_composer_contract` | 只读核对正式注入链、当前 ASAR composer/stack/pill 拓扑、原生尺寸和命中区风险 | 确认正式链为 `forge-background-v13.css`；queue/goal 只有上角、progress 独立全圆；指出活体宿主 `clip-path` 会削减角部热区，主对话已迁到绘制层 |
-| `composer_visual_mapping_audit` | 只读像素对照用户最新原生 home/guided 截图与 V18/V20 状态截图 | 证明 V18 宽度误差仅 0.22%，但 120px 主框高度偏高约 21%；当前目标为 `736×99–100px`。确认 joined stack 只允许整体两个上角、内部接缝与底边直线，progress 独立全圆 |
-| 主对话 · V20 composer native proportion | 保持原生 DOM、底锚、控件坐标与命中区，把新建对话/运行态主卷页收敛到用户最新截图比例，并锁死 joined stack 角语义 | `184:25` 钳制为 `96–120px`，`736px` 宽时为 `100px`；editor wrapper 恢复原生横向内距，footer 恢复原生坐标。joined stack 只绘制两个上角且不生成下角；定向回归 9/9、相邻背景/包测试 18/18、V20 状态截图通过，等待用户实机视觉审计 |
+| `composer_visual_mapping_audit` | 只读像素对照用户原生 home/guided 截图与 V18/V20 状态截图 | 该历史审计曾把目标收至 `736×99–100px`；其尺寸结论已被 V50 原生全等几何取代。joined stack 只允许整体两个上角、内部接缝与底边直线，progress 独立全圆的拓扑结论继续有效 |
+| 主对话 · V20 composer native proportion（历史） | 保持原生 DOM、底锚、控件坐标与命中区，把新建对话/运行态主卷页收敛到当时截图比例，并锁死 joined stack 角语义 | V20 的 `184:25 / 96–120px / 736×100px` 与额外顶部安全区已被 V50 取消；只保留 joined stack 两上角、无下角的历史拓扑结论 |
 | 主对话 · V22 native queue leaf stack | 只读解包当前 Codex 的 above-composer / queued-message 生产模块，按真实 outer panel 与 internal message wrapper 拓扑修正夹具、映射和连续叠页 | 已纠正 V21“每条消息一个 outer panel”的错误简化：一个 queue panel 内含 N 个 message leaf，再接一个 goal panel；仅首个 outer panel 有两个外部上角，每个内部消息独占纸纹与原生 1px 接缝，后续 goal 直边承接。静态材质 4/4、单项 Playwright、三状态短捕获及 DOMRect/命中区门禁通过；仍待用户实机视觉审计 |
 | 主对话 · V23 environment panel | 依据当前 ASAR 的 panel obstacle、固定宽度、内容宿主与稳定 slot，把环境信息卡改成只绘制、不裁宿主的经卷表面 | 官方 `300px` 卡、标题、四行与加号几何/热区前后全等；纸面层不接收事件，黑色进度渐隐保持清除。完整页 fixture 已归档，真实 Codex 视觉仍待验收 |
 | 主对话 · V24 background transition | 在同一原生结构页面中证明战斗稳态、转入风景、风景稳态和返回战斗四阶段的覆盖与资源边界 | 四张 `2000×1125` 完整页面与 JSON 已归档；CSS 视口为 `1600×900`，四层逐边覆盖，持图 `1 → 2 → 1 → 1`、预取 0、无全屏 filter / 永久 `will-change`。只关闭背景技术门，不替代正式窗口验收 |
@@ -98,7 +98,7 @@
 
 所有子工作流只能创建追加式候选与证据；共享正式目录、安装、精确暂存、commit 和 push 只由主对话执行。任何被否决文件原位保留。
 
-> **0.10.0 / V11 当前分工。** V10、V9 分工继续保留为历史。
+> **0.10.0 / V11 历史分工（保留）。** V10、V9 分工同样只作历史记录。
 
 ## V11 并行工作流
 
@@ -220,4 +220,4 @@ V11 并行工作流已闭环：`bajie_v2_finish` 交付 INART 结构的小八戒
 - 几何域：不改 300px 外卡、标题、Section、7 行、折叠、滚动、加号、链接、ARIA、DOM 顺序或命中区；唯一纸面仍由外卡绘制。
 - 验证域：夹具先证明标题承载层与伪元素在注入前确实为深色，再证明注入后主标题链、三个分区标题的基础层与双伪元素透明，且所有 DOMRect 和加号命中前后全等；定向环境卡测试 1/1、最小包 1/1 通过。
 - 安装域：append-only release `0.13.0-20260803-191843` 已通过入口 verifier；仓库与安装副本的 CSS、注入计划及 host 哈希一致，旧 release 与全部素材原样保留。
-- 实机域：环境卡专项完整页已确认四个标题直接使用唯一外层纸面，300px 几何和原生分隔保留；截图后 root、launcher、项目 Node 和回环端口均归零。首轮 queue/goal 联合候选未达门且未生成伪截图，因此最终联合门仍待验。
+- 实机域：V42 当时的环境卡专项完整页确认四个标题直接使用唯一外层纸面，300px 几何和原生分隔保留；首轮 queue/goal 联合候选未达门且未生成伪截图。该历史门已由顶部 V50 真实联合完整页关闭。

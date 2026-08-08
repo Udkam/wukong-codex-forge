@@ -80,14 +80,35 @@ test('live capture closes only an explicitly owned transient debug session', () 
   assert.match(capture, /watcherConfirmed/);
   assert.match(capture, /captureError/);
   assert.match(capture, /open-task-candidates/);
+  assert.match(capture, /data-app-action-sidebar-thread-row/);
+  assert.match(capture, /data-app-action-sidebar-thread-title/);
+  assert.match(capture, /data-app-action-sidebar-thread-active/);
   assert.match(capture, /require-queue-goal/);
   assert.match(capture, /dismiss-full-access-warning/);
+  assert.match(
+    capture,
+    /const clicked = await dismiss\.evaluate\(element => \{[\s\S]*?element\.click\(\)/
+  );
+  assert.doesNotMatch(capture, /await dismiss\.click\(/);
+  assert.match(capture, /hasBackgroundImage:\s*paper\.backgroundImage !== 'none'/);
+  assert.doesNotMatch(capture, /themedPaper\s*=\s*\{[\s\S]*?backgroundImage:\s*paper\.backgroundImage/);
+  assert.match(capture, /const sanitizeReportValue = value =>/);
+  assert.match(capture, /\[embedded image omitted\]/);
+  assert.match(capture, /const safePayload = safeReportValue\(payload\)/);
+  assert.match(capture, /report: safeReport/);
+  assert.match(capture, /backgroundImage: summarizeBackgroundImage\(before\.backgroundImage\)/);
+  assert.match(capture, /backgroundImage: summarizeBackgroundImage\(after\.backgroundImage\)/);
+  assert.doesNotMatch(capture, /backgroundImage:\s*(?:before|after)\.backgroundImage/);
   assert.match(capture, /editorInitiallyEmpty/);
   assert.match(capture, /reusedExistingOwnedDraft/);
   assert.match(capture, /editorFocused/);
   assert.match(capture, /inputPrepared/);
   assert.match(capture, /existingEditorText === nativeEnqueueMessage/);
-  assert.match(capture, /await editor\.focus\(\)/);
+  assert.match(capture, /attempt < 8 && !nativeEnqueueProof\.editorFocused/);
+  assert.match(capture, /editor = await findVisibleEditor\(\)/);
+  assert.match(capture, /element\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(capture, /editor\.click\(\{ position: \{ x: 8, y: 8 \} \}\)/);
+  assert.match(capture, /Native composer draft changed while acquiring focus/);
   assert.match(capture, /page\.keyboard\.insertText\(nativeEnqueueMessage\)/);
   assert.match(capture, /await editor\.press\('Enter'\)/);
   assert.doesNotMatch(capture, /page\.keyboard\.press\('Control\+Enter'\)/);
@@ -97,23 +118,28 @@ test('live capture closes only an explicitly owned transient debug session', () 
   assert.match(capture, /querySelectorAll\('\.forge-composer-panel'\)\.length >= 2/);
   assert.match(capture, /querySelectorAll\('\.forge-composer-queue-item'\)\.length >= 1/);
   assert.match(capture, /taskSelectionProof/);
-  assert.match(capture, /selectedTask/);
-  assert.match(capture, /const waitForSelectedTask = async label/);
-  assert.match(capture, /const verifySelectedTaskState = async label/);
-  assert.match(capture, /\.forge-sidebar-selected/);
-  assert.match(
-    capture,
-    /locator\('aside\.app-shell-left-panel'\)[\s\S]*getByText\(label, \{ exact: true \}\)/
-  );
   assert.ok(
-    capture.indexOf('await waitForSelectedTask(label)') <
+    capture.indexOf('const taskSelectionProof = [];') < capture.indexOf('\ntry {'),
+    'capture failure reporting state must be declared outside the cleanup try/catch'
+  );
+  assert.match(capture, /selectedTask/);
+  assert.match(capture, /const waitForSelectedTask = async \(label, threadId = ''\)/);
+  assert.match(capture, /const verifySelectedTaskState = async \(label, threadId = ''\)/);
+  assert.match(capture, /values\['open-task-id'\]/);
+  assert.match(capture, /selectedTaskId/);
+  assert.match(capture, /\.forge-sidebar-selected/);
+  assert.match(capture, /const rows = page\.locator\(/);
+  assert.match(capture, /await task\.evaluate\(element => element\.click\(\)\)/);
+  assert.doesNotMatch(capture, /getByText\(label, \{ exact: true \}\)\s*\.first\(\)/);
+  assert.ok(
+    capture.indexOf('await waitForSelectedTask(label, threadId)') <
       capture.indexOf('await waitForRequestedTaskState()'),
     'capture must prove the requested task is current before accepting a stale thread state'
   );
   assert.ok(
-    capture.lastIndexOf('await verifySelectedTaskState(selectedTask)') <
+    capture.lastIndexOf("await verifySelectedTaskState(selectedTask, selectedTaskId || '')") <
       capture.indexOf("await page.screenshot({ path: output, type: 'png' })") &&
-      capture.lastIndexOf('await verifySelectedTaskState(selectedTask)') >
+      capture.lastIndexOf("await verifySelectedTaskState(selectedTask, selectedTaskId || '')") >
         capture.indexOf('report.selectedTask = selectedTask'),
     'capture must re-prove the selected task and requested queue/goal state immediately before screenshot'
   );
@@ -372,6 +398,8 @@ test('renderer refreshes are structural, throttled, and layout-loop free', () =>
   assert.doesNotMatch(observerConfig, /'class'|'style'|'data-forge-/);
   assert.match(runtime, /nodeTouchesThemeStructure/);
   assert.match(runtime, /nodeIsWithinThemeStructure/);
+  assert.match(runtime, /surfaceSignalSelector/);
+  assert.match(runtime, /recordTouchesSurfaceSignal/);
   assert.match(runtime, /data-local-conversation-final-assistant/);
   assert.match(runtime, /new ResizeObserver\(/);
   assert.match(runtime, /setResizeTargets/);
@@ -385,6 +413,31 @@ test('renderer refreshes are structural, throttled, and layout-loop free', () =>
   assert.match(runtime, /history\.pushState = function/);
   assert.match(runtime, /preloadBackground/);
   assert.match(runtime, /transitionInFlight/);
+  assert.match(runtime, /selectedScenes/);
+  assert.match(runtime, /decodedSources/);
+  assert.match(runtime, /if \(document\.hidden\)/);
+  assert.match(runtime, /addEventListener\('visibilitychange', handleVisibilityChange/);
+  assert.match(runtime, /scheduleRefresh\(composerSignalChanged \? 140 : undefined\)/);
+  assert.doesNotMatch(runtime, /taskIdentity|landingEpoch/);
+  assert.doesNotMatch(runtime, /requestAnimationFrame|setInterval/);
+
+  const style = read('runtime/forge-background-v13.css');
+  assert.match(style, /\[data-codex-composer-root\] \.composer-surface-chrome/);
+  assert.doesNotMatch(
+    style,
+    /aspect-ratio:\s*184\s*\/\s*25|min-height:\s*96px|max-height:\s*120px|padding-block-start:\s*8px\s*!important/,
+    'composer theme paint must not override native geometry or editor insets'
+  );
+  assert.match(style, /\[data-thread-scroll-footer="true"\][\s\S]*\.bg-gradient-to-t/);
+  assert.match(
+    style,
+    /\.order-2\.flex\.min-w-0\.flex-col:not\(\[data-above-composer-portal\] \*\):has\(/
+  );
+  assert.match(style, /\[data-pip-obstacle="thread-summary-panel"\]/);
+  assert.match(style, /\[data-slot="thread-summary-panel-item"\]/);
+  assert.match(style, /\[data-app-action-sidebar-thread-row\]\[data-app-action-sidebar-thread-active="true"\]/);
+  assert.match(style, /@media \(forced-colors: active\)[\s\S]*\[data-codex-composer-root\][\s\S]*\[data-pip-obstacle="thread-summary-panel"\]/);
+  assert.match(style, /@media \(forced-colors: active\)[\s\S]*\[data-thread-scroll-footer="true"\]/);
 
   const watcher = read('runtime/watch.mjs');
   assert.doesNotMatch(watcher, /emptyTargetPasses|targets\.length\s*>=?\s*8/);

@@ -50,6 +50,7 @@ if (closeTransientDebug) {
 }
 const output = path.resolve(values.output);
 const reportPath = output.replace(/\.png$/i, '.json');
+const verifyNativeComposerGeometry = values['verify-native-composer-geometry'] === 'true';
 for (const retainedPath of [output, reportPath]) {
   if (fs.existsSync(retainedPath)) throw Error(`Refusing to overwrite retained evidence: ${retainedPath}`);
 }
@@ -123,12 +124,37 @@ let nativeEnqueueProof = {
 };
 let transientCleanupStarted = false;
 let transientCleanupCompleted = false;
+let composerGeometryProof = { requested: verifyNativeComposerGeometry };
+let transitionProof = null;
+let selectedTask = null;
+let selectedTaskId = null;
+const taskSelectionProof = [];
 
+const sanitizeReportValue = value => {
+  if (typeof value === 'string') {
+    return /data:image\//i.test(value) ? '[embedded image omitted]' : value;
+  }
+  if (Array.isArray(value)) return value.map(sanitizeReportValue);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, sanitizeReportValue(entry)])
+    );
+  }
+  return value;
+};
+const safeReportValue = payload => {
+  const sanitized = sanitizeReportValue(payload);
+  if (/data:image\//i.test(JSON.stringify(sanitized))) {
+    throw Error('Embedded image data was not removed from the capture report.');
+  }
+  return sanitized;
+};
 const persistReportOnce = payload => {
   if (fs.existsSync(reportPath)) return;
+  const safePayload = safeReportValue(payload);
   fs.writeFileSync(
     reportPath,
-    JSON.stringify(payload, null, 2) + '\n',
+    JSON.stringify(safePayload, null, 2) + '\n',
     { encoding: 'utf8', flag: 'wx' }
   );
 };
@@ -269,9 +295,6 @@ try {
     { timeout: 30000 }
   );
   await page.waitForTimeout(650);
-  let transitionProof = null;
-  let selectedTask = null;
-  const taskSelectionProof = [];
   const nativeEnqueueMessage = String(values['enqueue-native-message'] || '').trim();
   nativeEnqueueProof = {
     requested: Boolean(nativeEnqueueMessage),
@@ -320,8 +343,13 @@ try {
       name: /^(?:Don['’]t show again|不再显示)$/i
     }).first();
     if (!await dismiss.isVisible().catch(() => false)) return false;
-    await dismiss.click();
-    await dismiss.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    const clicked = await dismiss.evaluate(element => {
+      if (!element.isConnected) return false;
+      element.click();
+      return true;
+    }).catch(() => false);
+    if (!clicked) return false;
+    await dismiss.waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
     return true;
   };
   const waitForRequestedTaskState = async () => {
@@ -349,12 +377,26 @@ try {
       { timeout: Number(values['task-state-timeout-ms'] || 12000) }
     );
   };
-  const waitForSelectedTask = async label => {
+  const waitForSelectedTask = async (label, threadId = '') => {
     await page.waitForFunction(
-      expectedLabel => {
+      ({ expectedLabel, expectedThreadIds }) => {
         const normalize = value => String(value || '').replace(/\s+/g, ' ').trim();
         const expected = normalize(expectedLabel);
         const ownsExpectedLabel = element => normalize(element?.textContent) === expected;
+        const nativeCurrent = [...document.querySelectorAll(
+          '[data-app-action-sidebar-thread-row][data-app-action-sidebar-thread-active="true"]'
+        )].some(element => (
+          expectedThreadIds.includes(normalize(
+            element.getAttribute('data-app-action-sidebar-thread-id')
+          )) || (
+            expectedThreadIds.length === 0 && (
+              normalize(element.getAttribute('data-app-action-sidebar-thread-title')) === expected ||
+              ownsExpectedLabel(element.querySelector('[data-thread-title]')) ||
+              ownsExpectedLabel(element)
+            )
+          )
+        ));
+        if (nativeCurrent) return true;
         const themedCurrent = [...document.querySelectorAll('.forge-sidebar-selected')]
           .some(ownsExpectedLabel);
         if (themedCurrent) return true;
@@ -364,27 +406,32 @@ try {
           '[data-state="active"]'
         ].join(','))].some(ownsExpectedLabel);
       },
-      label,
+      {
+        expectedLabel: label,
+        expectedThreadIds: threadId
+          ? [threadId, threadId.startsWith('local:') ? threadId.slice(6) : `local:${threadId}`]
+          : []
+      },
       { timeout: Number(values['task-state-timeout-ms'] || 12000) }
     );
   };
   const enqueueNativeFollowUp = async () => {
     if (!nativeEnqueueMessage || nativeEnqueueProof.attempted) return;
-    const surfaces = page.locator('.composer-surface-chrome');
-    let editor = null;
-    for (let index = 0; index < await surfaces.count(); index += 1) {
-      const surface = surfaces.nth(index);
-      if (!await surface.isVisible().catch(() => false)) continue;
-      const candidate = surface.locator([
-        '[contenteditable="true"][role="textbox"]',
-        '.ProseMirror[contenteditable="true"]',
-        '[contenteditable="true"]'
-      ].join(', ')).first();
-      if (await candidate.isVisible().catch(() => false)) {
-        editor = candidate;
-        break;
+    const findVisibleEditor = async () => {
+      const surfaces = page.locator('.composer-surface-chrome');
+      for (let index = 0; index < await surfaces.count(); index += 1) {
+        const surface = surfaces.nth(index);
+        if (!await surface.isVisible().catch(() => false)) continue;
+        const candidate = surface.locator([
+          '[contenteditable="true"][role="textbox"]',
+          '.ProseMirror[contenteditable="true"]',
+          '[contenteditable="true"]'
+        ].join(', ')).first();
+        if (await candidate.isVisible().catch(() => false)) return candidate;
       }
-    }
+      return null;
+    };
+    let editor = await findVisibleEditor();
     if (!editor) throw Error('Selected task has no visible editable native composer');
 
     const readEditorText = async () => String(
@@ -404,12 +451,28 @@ try {
     }
 
     nativeEnqueueProof.attempted = true;
-    await editor.focus();
-    nativeEnqueueProof.editorFocused = await editor.evaluate(element => (
-      element === document.activeElement || element.contains(document.activeElement)
-    ));
+    for (let attempt = 0; attempt < 8 && !nativeEnqueueProof.editorFocused; attempt += 1) {
+      editor = await findVisibleEditor();
+      if (!editor) break;
+      await editor.evaluate(element => {
+        element.focus({ preventScroll: true });
+      }).catch(() => {});
+      nativeEnqueueProof.editorFocused = await editor.evaluate(element => (
+        element === document.activeElement || element.contains(document.activeElement)
+      )).catch(() => false);
+      if (!nativeEnqueueProof.editorFocused) {
+        await editor.click({ position: { x: 8, y: 8 } }).catch(() => {});
+        nativeEnqueueProof.editorFocused = await editor.evaluate(element => (
+          element === document.activeElement || element.contains(document.activeElement)
+        )).catch(() => false);
+      }
+      if (!nativeEnqueueProof.editorFocused) await page.waitForTimeout(120);
+    }
     if (!nativeEnqueueProof.editorFocused) {
       throw Error('Native composer editor did not receive focus');
+    }
+    if (await readEditorText() !== existingEditorText) {
+      throw Error('Native composer draft changed while acquiring focus');
     }
     if (nativeEnqueueProof.editorInitiallyEmpty) {
       // ProseMirror owns its document state. Keyboard insertion exercises its
@@ -445,36 +508,97 @@ try {
       await page.locator('.forge-composer-queue-item').count() >= 1
     ), 5000);
   };
-  const verifySelectedTaskState = async label => {
-    await waitForSelectedTask(label);
+  const verifySelectedTaskState = async (label, threadId = '') => {
+    await waitForSelectedTask(label, threadId);
     await enqueueNativeFollowUp();
     await waitForRequestedTaskState();
-    await waitForSelectedTask(label);
+    await waitForSelectedTask(label, threadId);
   };
-  const openTaskCandidate = async label => {
-    const task = page
-      .locator('aside.app-shell-left-panel')
-      .getByText(label, { exact: true })
-      .first();
-    if (!await task.isVisible().catch(() => false)) {
+  const openTaskCandidate = async (label, threadId = '') => {
+    const normalize = value => String(value || '').replace(/\s+/g, ' ').trim();
+    const expected = normalize(label);
+    const expectedThreadIds = threadId
+      ? [threadId, threadId.startsWith('local:') ? threadId.slice(6) : `local:${threadId}`]
+      : [];
+    await page.waitForFunction(
+      ({ expectedLabel, expectedIds }) => {
+        const normalizeText = value => String(value || '').replace(/\s+/g, ' ').trim();
+        const visible = element => {
+          const rect = element.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && getComputedStyle(element).visibility !== 'hidden';
+        };
+        return [...document.querySelectorAll(
+          'aside.app-shell-left-panel [data-app-action-sidebar-thread-row]'
+        )].some(row => {
+          if (!visible(row)) return false;
+          const rowId = normalizeText(row.getAttribute('data-app-action-sidebar-thread-id'));
+          if (expectedIds.length > 0) return expectedIds.includes(rowId);
+          return [
+            row.getAttribute('data-app-action-sidebar-thread-title'),
+            row.querySelector('[data-thread-title]')?.textContent,
+            row.textContent
+          ].some(value => normalizeText(value) === normalizeText(expectedLabel));
+        });
+      },
+      { expectedLabel: label, expectedIds: expectedThreadIds },
+      { timeout: Number(values['task-state-timeout-ms'] || 12000) }
+    ).catch(() => {});
+    const rows = page.locator(
+      'aside.app-shell-left-panel [data-app-action-sidebar-thread-row]'
+    );
+    let task = null;
+    for (let index = 0; index < await rows.count(); index += 1) {
+      const row = rows.nth(index);
+      if (!await row.isVisible().catch(() => false)) continue;
+      const explicitTitle = normalize(
+        await row.getAttribute('data-app-action-sidebar-thread-title').catch(() => '')
+      );
+      const titleNode = row.locator('[data-thread-title]').first();
+      const semanticTitle = normalize(
+        await titleNode.textContent().catch(() => '')
+      );
+      const rowText = normalize(await row.textContent().catch(() => ''));
+      const rowId = normalize(
+        await row.getAttribute('data-app-action-sidebar-thread-id').catch(() => '')
+      );
+      if (
+        (expectedThreadIds.length > 0 && expectedThreadIds.includes(rowId)) ||
+        (expectedThreadIds.length === 0 && (
+          explicitTitle === expected || semanticTitle === expected || rowText === expected
+        ))
+      ) {
+        task = row;
+        selectedTaskId = rowId || threadId || null;
+        break;
+      }
+    }
+    if (!task) {
       taskSelectionProof.push({ label, visible: false, ready: false });
       return false;
     }
-    await task.evaluate(element => (
-      element.closest('button, a, [role="button"], [role="treeitem"]') || element
-    ).click());
+    // Click the exact native thread row. Text-first lookup can resolve to the
+    // sortable project wrapper when a project has a single thread, which can
+    // navigate to a different task after the asynchronous list settles.
+    await task.evaluate(element => element.click());
     await dismissFullAccessWarning();
     try {
-      await verifySelectedTaskState(label);
-      taskSelectionProof.push({ label, visible: true, ready: true });
+      await verifySelectedTaskState(label, selectedTaskId || threadId);
+      taskSelectionProof.push({
+        label,
+        threadId: selectedTaskId || threadId || null,
+        visible: true,
+        ready: true
+      });
       selectedTask = label;
       return true;
     } catch (error) {
       taskSelectionProof.push({
         label,
+        threadId: selectedTaskId || threadId || null,
         visible: true,
         ready: false,
-        error: String(error?.name || 'Error')
+        error: String(error?.name || 'Error'),
+        message: String(error?.message || error)
       });
       return false;
     }
@@ -492,7 +616,10 @@ try {
     }
     await captureTransition();
   } else if (values['open-task']) {
-    const opened = await openTaskCandidate(values['open-task']);
+    const opened = await openTaskCandidate(
+      values['open-task'],
+      values['open-task-id'] || ''
+    );
     if (!opened) throw Error(`Task did not reach the requested native state: ${values['open-task']}`);
     await captureTransition();
   } else if (values['open-new-task'] === 'true') {
@@ -503,7 +630,7 @@ try {
     ).click());
     await captureTransition();
   }
-  if (selectedTask) await verifySelectedTaskState(selectedTask);
+  if (selectedTask) await verifySelectedTaskState(selectedTask, selectedTaskId || '');
   if (values['scroll-thread-top'] === 'true') {
     await page.evaluate(() => {
       const seed = document.querySelector(
@@ -518,18 +645,186 @@ try {
     });
     await page.waitForTimeout(1400);
   }
+  if (verifyNativeComposerGeometry) {
+    composerGeometryProof = await page.evaluate(() => {
+      const root = document.documentElement;
+      if (!root.classList.contains('forge-ink-mountain')) {
+        throw Error('Theme root is not active for composer geometry verification');
+      }
+      const visible = element => {
+        if (!element) return false;
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+      };
+      const surface = [...document.querySelectorAll('.composer-surface-chrome')].find(visible);
+      if (!surface) throw Error('No visible native composer surface for geometry verification');
+      const editor = [...surface.querySelectorAll([
+        '.ProseMirror[role="textbox"]',
+        '[role="textbox"]',
+        '[contenteditable="true"]',
+        'textarea',
+        '[data-placeholder]'
+      ].join(', '))].find(visible);
+      if (!editor) throw Error('No visible native composer editor for geometry verification');
+      const editorShell = editor.parentElement;
+      const footer = [...surface.querySelectorAll('div')].find(element => (
+        element.classList.contains('select-none') &&
+        [...element.classList].some(token => token.includes('_footer_'))
+      )) || surface.querySelector('[role="toolbar"]');
+      if (!footer) throw Error('No native composer footer for geometry verification');
+
+      const rectOf = element => {
+        const rect = element.getBoundingClientRect();
+        return [rect.x, rect.y, rect.width, rect.height];
+      };
+      const layoutOf = element => {
+        const style = getComputedStyle(element);
+        return {
+          padding: [style.paddingTop, style.paddingRight, style.paddingBottom, style.paddingLeft],
+          margin: [style.marginTop, style.marginRight, style.marginBottom, style.marginLeft],
+          gap: [style.rowGap, style.columnGap],
+          aspectRatio: style.aspectRatio,
+          minHeight: style.minHeight,
+          maxHeight: style.maxHeight
+        };
+      };
+      const buttonIdentity = (button, index) => [
+        index,
+        button.getAttribute('data-native-slot') || '',
+        button.getAttribute('data-composer-navigation-target') || '',
+        button.getAttribute('aria-label') || '',
+        button.getAttribute('type') || ''
+      ].join('|');
+      const read = () => ({
+        rects: {
+          surface: rectOf(surface),
+          editorShell: rectOf(editorShell),
+          editor: rectOf(editor),
+          footer: rectOf(footer)
+        },
+        layout: {
+          surface: layoutOf(surface),
+          editorShell: layoutOf(editorShell),
+          editor: layoutOf(editor),
+          footer: layoutOf(footer)
+        },
+        buttons: [...footer.querySelectorAll('button')].filter(visible).map((button, index) => ({
+          identity: buttonIdentity(button, index),
+          rect: rectOf(button)
+        }))
+      });
+      const compare = (themed, native) => {
+        const deltas = [];
+        for (const name of Object.keys(native.rects)) {
+          native.rects[name].forEach((value, index) => {
+            deltas.push(Math.abs(themed.rects[name][index] - value));
+          });
+        }
+        const buttonIdentityEqual = (
+          themed.buttons.length === native.buttons.length &&
+          themed.buttons.every((button, index) => button.identity === native.buttons[index].identity)
+        );
+        if (buttonIdentityEqual) {
+          themed.buttons.forEach((button, buttonIndex) => {
+            button.rect.forEach((value, rectIndex) => {
+              deltas.push(Math.abs(value - native.buttons[buttonIndex].rect[rectIndex]));
+            });
+          });
+        }
+        return {
+          maxRectDelta: deltas.length ? Math.max(...deltas) : Number.POSITIVE_INFINITY,
+          buttonIdentityEqual,
+          layoutEqual: JSON.stringify(themed.layout) === JSON.stringify(native.layout)
+        };
+      };
+
+      const themedBefore = read();
+      const paper = getComputedStyle(surface, '::before');
+      const themedPaper = {
+        content: paper.content,
+        hasBackgroundImage: paper.backgroundImage !== 'none',
+        clipPath: paper.clipPath,
+        pointerEvents: paper.pointerEvents
+      };
+      let native;
+      try {
+        root.classList.remove('forge-ink-mountain');
+        native = read();
+      } finally {
+        root.classList.add('forge-ink-mountain');
+      }
+      const themedAfter = read();
+      const beforeComparison = compare(themedBefore, native);
+      const afterComparison = compare(themedAfter, native);
+      const threadFade = document.querySelector(
+        '[data-thread-scroll-footer="true"] ' +
+        '> .pointer-events-none.absolute.inset-x-0.bottom-0.z-0.flex.h-full.w-full.justify-center.pt-4 ' +
+        '> .z-0.h-full.bg-gradient-to-t'
+      );
+      const progressFade = document.querySelector([
+        '[data-above-composer-portal] .relative.col-start-1.row-start-1.h-8.self-end',
+        '> .absolute.inset-x-0.bottom-1.flex.min-h-7.items-center.justify-center.gap-2.pb-1',
+        '> .pointer-events-none.absolute.inset-x-0.-bottom-1.h-7.bg-gradient-to-t'
+      ].join(' '));
+      const fadePaint = element => {
+        if (!element) return null;
+        const style = getComputedStyle(element);
+        return { backgroundImage: style.backgroundImage, opacity: style.opacity };
+      };
+      const paperRetained = (
+        themedPaper.content === '""' &&
+        themedPaper.hasBackgroundImage &&
+        themedPaper.clipPath.startsWith('polygon(') &&
+        themedPaper.pointerEvents === 'none'
+      );
+      return {
+        requested: true,
+        beforeComparison,
+        afterComparison,
+        paperRetained,
+        themedPaper,
+        native,
+        themed: themedAfter,
+        threadFade: fadePaint(threadFade),
+        progressFade: fadePaint(progressFade)
+      };
+    });
+    for (const comparison of [
+      composerGeometryProof.beforeComparison,
+      composerGeometryProof.afterComparison
+    ]) {
+      if (
+        comparison.maxRectDelta > 0.25 ||
+        !comparison.buttonIdentityEqual ||
+        !comparison.layoutEqual
+      ) {
+        throw Error(`Theme changed native composer geometry: ${JSON.stringify(comparison)}`);
+      }
+    }
+    if (!composerGeometryProof.paperRetained) {
+      throw Error(`Theme lost its four-corner composer paper: ${JSON.stringify(composerGeometryProof.themedPaper)}`);
+    }
+    await page.waitForTimeout(260);
+  }
   report = await page.evaluate(() => {
     const rect = element => {
       if (!element) return null;
       const box = element.getBoundingClientRect();
       return { x: box.x, y: box.y, width: box.width, height: box.height };
     };
+    const summarizeBackgroundImage = value => {
+      if (!value || value === 'none') return { present: false, kind: 'none' };
+      if (/url\(/i.test(value)) return { present: true, kind: 'image' };
+      if (/gradient\(/i.test(value)) return { present: true, kind: 'gradient' };
+      return { present: true, kind: 'other' };
+    };
     const styleState = element => {
       if (!element) return null;
       const style = getComputedStyle(element);
       return {
         backgroundColor: style.backgroundColor,
-        backgroundImage: style.backgroundImage,
+        backgroundImage: summarizeBackgroundImage(style.backgroundImage),
         borderColor: style.borderColor,
         borderRadius: style.borderRadius,
         boxShadow: style.boxShadow,
@@ -575,7 +870,7 @@ try {
         directChildCount: element.children.length,
         paint: {
           backgroundColor: computed.backgroundColor,
-          backgroundImage: computed.backgroundImage,
+          backgroundImage: summarizeBackgroundImage(computed.backgroundImage),
           borderColor: computed.borderColor,
           borderRadius: computed.borderRadius,
           boxShadow: computed.boxShadow,
@@ -585,13 +880,13 @@ try {
           before: {
             content: before.content,
             backgroundColor: before.backgroundColor,
-            backgroundImage: before.backgroundImage,
+            backgroundImage: summarizeBackgroundImage(before.backgroundImage),
             boxShadow: before.boxShadow
           },
           after: {
             content: after.content,
             backgroundColor: after.backgroundColor,
-            backgroundImage: after.backgroundImage,
+            backgroundImage: summarizeBackgroundImage(after.backgroundImage),
             boxShadow: after.boxShadow
           }
         }
@@ -689,8 +984,10 @@ try {
   report.transitionProof = transitionProof;
   report.taskSelectionProof = taskSelectionProof;
   report.selectedTask = selectedTask;
+  report.selectedTaskId = selectedTaskId;
   report.nativeEnqueueProof = nativeEnqueueProof;
-  if (selectedTask) await verifySelectedTaskState(selectedTask);
+  report.composerGeometryProof = composerGeometryProof;
+  if (selectedTask) await verifySelectedTaskState(selectedTask, selectedTaskId || '');
   await page.screenshot({ path: output, type: 'png' });
 
   if (closeTransientDebug) {
@@ -699,12 +996,17 @@ try {
     report.transientCleanup = { requested: false };
   }
 
-  persistReportOnce(report);
-  console.log(JSON.stringify({ output, reportPath, report }));
+  const safeReport = safeReportValue(report);
+  persistReportOnce(safeReport);
+  console.log(JSON.stringify({ output, reportPath, report: safeReport }));
 } catch (error) {
   if (closeTransientDebug) {
     report ||= {};
     report.nativeEnqueueProof = nativeEnqueueProof;
+    report.composerGeometryProof = composerGeometryProof;
+    report.taskSelectionProof = taskSelectionProof;
+    report.selectedTask = selectedTask;
+    report.selectedTaskId = selectedTaskId;
     report.captureError = {
       name: String(error?.name || 'Error'),
       message: String(error?.message || error)

@@ -114,17 +114,37 @@ class V17FullFieldDarkPaperTest(unittest.TestCase):
         self.assertLessEqual(int(np.max(left_right)), 8)
         self.assertLessEqual(int(np.max(top_bottom)), 8)
 
-    def test_css_preserves_the_reviewed_three_surface_geometry(self) -> None:
+    def test_css_preserves_native_composer_geometry_with_paint_only_corners(self) -> None:
         css = CSS_PATH.read_text(encoding="utf-8")
         main_rule = re.search(
-            r"\.forge-composer-frame\s*\{(?P<body>.*?)\n\}",
+            r":root\.forge-ink-mountain\s+:is\(\s*"
+            r"\.forge-composer-frame,.*?"
+            r"\)\s*\{(?P<body>.*?)\n\}",
             css,
             re.S,
         )
         self.assertIsNotNone(main_rule)
-        self.assertRegex(main_rule.group("body"), r"aspect-ratio:\s*184\s*/\s*25")
-        self.assertRegex(main_rule.group("body"), r"min-height:\s*96px")
-        self.assertRegex(main_rule.group("body"), r"max-height:\s*120px")
+        main_body = main_rule.group("body")
+        self.assertNotRegex(
+            main_body,
+            r"(?:aspect-ratio|min-height|max-height|padding(?:-\w+)?):",
+        )
+        self.assertRegex(main_body, r"clip-path:\s*none\s*!important")
+
+        paper_rule = re.search(
+            r":root\.forge-ink-mountain\s+:is\(\s*"
+            r"\.forge-composer-frame,.*?"
+            r"\)::before\s*\{(?P<body>.*?)\n\}",
+            css,
+            re.S,
+        )
+        self.assertIsNotNone(paper_rule)
+        paper_body = paper_rule.group("body")
+        self.assertRegex(paper_body, r"inset:\s*0")
+        self.assertRegex(paper_body, r"pointer-events:\s*none")
+        self.assertRegex(paper_body, r"background-size:\s*100%\s+100%")
+        self.assertRegex(paper_body, r"clip-path:\s*polygon\(")
+        self.assertIn("calc(100% - 8px)", paper_body)
 
         outer_field_rule = re.search(
             r"\.forge-composer-context::before,\s*"

@@ -1,5 +1,13 @@
 # 大圣归来 · 潇湘双境 — 设计与实现
 
+## V50 原生坐标上的持久四角纸面
+
+composer、编辑器壳、发送键、环境信息外卡/行和显式 selected/current 侧栏行属于任务切换时会被 React 高频重建的表面。V50 延续稳定原生属性和精确 class 组合直达：新 DOM 在首次样式计算时即可得到主题 paint，不必先等待 MutationObserver 添加 `forge-*` class。运行时 class 保留为 queue/goal、动态标题、兼容选择器和上下文判断的补充，而不是这些高频表面的首帧前提。
+
+V50 把输入器的完整 surface、editor shell、editor、footer、按钮与布局属性作为原生坐标合同，不再保留主题高度、比例或额外 padding 例外。悟空长方形纸张仍完整保留，只在同一原生矩形内的 `pointer-events:none` 伪元素上裁出四个 8px 角；宿主、内容坐标和矩形命中区均不变化。侧栏只接受原生 `data-app-action-sidebar-thread-active`、`aria-current` 或 `aria-selected` 的真实外层行，因此单对话和多对话项目共用同一宽度来源；旧节点即使在 React/observer 交界暂留标记，也会立即失去选中 paper。forced-colors 同时撤下直接规则与标记规则的位图/伪元素，主题停用仍由移除注入样式完整恢复原生。
+
+背景在每个 renderer 会话中分别固定一张 battle 与 scenery 场景，选择结果与游标一起保存在 session 状态。同模式的任务、项目、history、hash 与流式回答不会推进场景、创建解码请求或触发淡变；只有 landing/thread 模式真正变化时才以 220 ms 过渡到另一张固定场景。已解码 URL 复用，过期请求立即取消；隐藏文档暂停主题 refresh，恢复前台只合并一次。MutationObserver 只把表面结构变化视为刷新信号，既有对话中的纯文本流式增长不再触发整页重映射。
+
 ## V42 环境卡单一纸面补强
 
 V42 不给 `环境信息`、`子智能体`、`后台进程`、`来源` 添加题签、深条或独立卡片。唯一可见材质来自官方 300px 外卡上的连续纸面，标题、分区、行与分隔继续位于同一原生容器内。
@@ -16,15 +24,15 @@ host 只使用 Node 内建 WebSocket、浏览器 Target/Page/Runtime 事件和 m
 
 两个 Hatch Pet 与葫芦都不属于 V34 发布门。`releasedPetIds` 为空，打包/安装链对宠物 no-op；所有现有宠物文件、选择和历史资产保持原样。V34 的视觉边界仅是已实现的背景、landing、sidebar/topbar、composer/queue/goal、progress pill 与环境卡 paint 替换。
 
-本机保留式安装已落到 append-only release `0.13.0-20260803-191843`。普通与主题两个开始菜单入口均以当前 Codex 包内置 Node 启动同一 bridge；安装副本与仓库的 CSS、注入计划和 `runtime/host.mjs` SHA-256 一致。环境卡专项完整页已经证明四个标题与唯一外层纸面一体，且截图后受管进程和端口归零；最终 queue/goal + 环境卡同态完整页仍需单独取证。
+V34 当时的本机保留式安装落到 append-only release `0.13.0-20260803-191843`。普通与主题两个开始菜单入口均以当前 Codex 包内置 Node 启动同一 bridge；当时环境卡专项完整页已经证明四个标题与唯一外层纸面一体，但 queue/goal + 环境卡同态完整页尚待单独取证。该历史门已由顶部 V50 真实联合证据关闭。
 
-> **V15 现行设计。** V13.3 及更早章节保留为演变记录；冲突处以 `CURRENT_GOAL.md` 和本节为准。
+> **V50 现行设计。** V49 及更早章节保留为演变记录；冲突处以 `CURRENT_GOAL.md` 和顶部 V50 章节为准。
 
 ## V15：本机原生几何上的游记纸面系统
 
 V15 把“高保真复刻”分成两个互不混淆的真值源：
 
-1. **原生几何真值**来自本机 `ChatGPT.exe 26.715.2305.0` 的只读 `app.asar`。除用户明确授权的主输入器卷页外框外，宽高、间距、padding、位置、响应式公式、动态增长和点击热区均由官方 DOM/CSS/JS 决定。
+1. **原生几何真值**来自本机 `ChatGPT.exe 26.715.2305.0` 的只读 `app.asar` 与真实 renderer。包括主输入器在内，宽高、间距、padding、位置、响应式公式、动态增长和点击热区均由官方 DOM/CSS/JS 决定；主题轮廓只属于 paint。
 2. **视觉真值**来自用户最终确认的输入器三图和《黑神话：悟空》“游记”目录参考。纸张纤维、云纹、边角线、深墨条、浅纸选中带、旧金/烟褐/骨纸配色和交互状态由这些参考决定。
 
 ### 当前本机几何基线
@@ -40,7 +48,7 @@ V15 把“高保真复刻”分成两个互不混淆的真值源：
 | composer / send button | `28×28px` |
 | composer 单行 radius token | `22px` |
 
-fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sidebar、topbar 和 composer 内部控件继续由官方几何负责；活动 CSS 只对主输入器 surface 声明经用户授权的响应式高度和绘制层切角轮廓。editor wrapper 仅增加 8px 纸面顶部安全区并保留原生 12px 横向内距，footer 完全恢复原生 8px 横向内距和底距。`tests/native-asar-ui-contract.test.mjs` 直接读取安装包，官方组件拓扑或按钮 token 漂移时 fail closed，而不是继续用旧截图伪装通过。
+fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sidebar、topbar、composer surface、editor wrapper、editor、footer 和内部控件全部由官方几何负责；活动 CSS 不声明主输入器高度、比例、padding 或位置，只在同一 surface 内绘制四角纸面。`tests/native-asar-ui-contract.test.mjs` 直接读取安装包，官方组件拓扑或按钮 token 漂移时 fail closed，而不是继续用旧截图伪装通过。
 
 ### 输入器与纸面层级
 
@@ -51,26 +59,25 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 
 所有材质由用户最终参考的透明合同源确定性重建。V17 活动纸面使用完整实心中央与周期化底纹：主卷和各原生行只在 `pointer-events:none` 静态绘制层缩放一次对应源图，不能把一个绘制层跨多行纵向拉伸。原生 editor、footer、按钮、文字、placeholder、ARIA 和 hit box 均保留。助手回答不套纸框。
 
-### V22 短卷页输入器与原生内层消息叠页
+### V50 原生几何输入器与 V22 内层消息叠页
 
-用户最新授权主输入器不再完全沿用原生高度和圆角框，但要求保持新建对话运行界面的短输入器比例。运行时因此把可见官方 `.composer-surface-chrome` 标记为 `forge-composer-frame`，把可识别 editor 的直属原生外壳标记为 `forge-composer-input-shell`，并用原生结构识别 footer 后标记为 `forge-composer-footer`；不增加替代输入框、按钮或文字节点。当前 Codex 内部 editor 已不稳定保留 `.ProseMirror[role=textbox]`，所以 editor 只作可选辅助，不能再成为整块纸面是否生效的前置条件。composer component 由 `data-codex-composer-root` 的直属子节点关系推导：它必须包含官方 surface，并且不能是直属 above-composer portal；生产和 fixture 都不依赖测试专用组件属性。
+用户最终要求是“替换后的所有位置不变，同时保留长方形四角纸张”。运行时把可见官方 `.composer-surface-chrome` 标记为 `forge-composer-frame`，把可识别 editor 的直属原生外壳标记为 `forge-composer-input-shell`，并用原生结构识别 footer 后标记为 `forge-composer-footer`；不增加替代输入框、按钮或文字节点。当前 Codex 内部 editor 已不稳定保留 `.ProseMirror[role=textbox]`，所以 editor 只作可选辅助，不能再成为整块纸面是否生效的前置条件。composer component 由 `data-codex-composer-root` 的直属子节点关系推导：它必须包含官方 surface，并且不能是直属 above-composer portal；生产和 fixture 都不依赖测试专用组件属性。
 
-- 外框宽度、水平位置与底部锚点继续由原生布局决定。
-- 外框高度为 `clamp(96px, width × 25 / 184, 120px)`；用户最新原生截图的最大宽输入区约为 `922×124` 物理像素，对应 `736×约100` CSS px，因此 `736px` 宽时公式精确给出 `100px`。旧 120px 版本在同宽度下高约 21%，已经退出当前合同。
-- 轮廓使用 8 px 低成本切角 `clip-path: polygon(...)`，并强制取消原生圆角；不使用 SVG filter、持续合成层或逐帧动画。
+- 外框宽度、高度、水平位置、底部锚点和响应式结果全部由原生布局决定；活动 CSS 不再声明 `aspect-ratio`、`min-height` 或 `max-height`。
+- 轮廓在 `::before` paint 层使用 8px 低成本四角 `clip-path: polygon(...)`，形成同一矩形内的长方形卷页；不使用 SVG filter、持续合成层或逐帧动画。
 - `composer-main.webp` 只负责纸面与边饰，不能作为 alpha mask。V17 重建产物已经把中央修成完整不透明纸面；旧中央透明洞版本仅作历史证据，不得回流活动清单。
-- editor 本身仍保持原生零附加 padding；editor wrapper 使用 8px 顶部安全区和原生 12px 横向内距。footer 继续使用原生 grid、8px 横向内距、8px 底距与原生按钮坐标，不再为卷页额外内缩或上移。
+- editor、editor wrapper 与 footer 全部沿用当前原生 padding、grid 和按钮坐标；主题不得为卷页增加安全区、内缩或上移。
 - 四角卷页只绘制在主输入器的 `::before` 静态纸面层；该层不命中鼠标，原生宿主自身保持 `clip-path:none` 与完整矩形热区。焦点阴影也只作用于纸面层，不削减或移动编辑器与五类按钮。
 - Windows forced-colors 取消纸面伪元素、切角和位图，回退系统原生矩形与系统色。
 
-该例外不会扩散到排队、目标、上下文、进度 pill 或环境信息窗口；这些相邻表面只换纸面材质，结构和尺寸继续使用原生值。V21 夹具曾错误地把每条排队消息提升为独立 outer panel，导致每层都像一张互不衔接的卡片；V22 以当前 `OpenAI.Codex 26.715.2305.0` 解包源码重新建立生产拓扑：
+排队、目标、上下文、进度 pill 和环境信息窗口同样只换 paint，结构和尺寸继续使用原生值。主 composer 的 `[data-codex-composer-root] .composer-surface-chrome`、直属 editor 壳与 footer 内官方 submit button 同时拥有稳定原生 CSS 直达规则，因此任务切换重挂载时无需等待运行时 class 才能获得纸面与清晰箭头。V21 夹具曾错误地把每条排队消息提升为独立 outer panel，导致每层都像一张互不衔接的卡片；V22 以当前 `OpenAI.Codex 26.715.2305.0` 解包源码重新建立生产拓扑：
 
 - above-composer wrapper 仍为官方 `order-2 flex min-w-0 flex-col`。
 - 排队区只有一个 `relative min-w-0 overflow-clip text-token-foreground` 外层 panel；其内部 list 保留官方 `vertical-scroll-fade-mask hide-scrollbar flex max-h-[30dvh] flex-col gap-px overflow-x-hidden overflow-y-auto px-3 py-row-y`。
 - 每条排队消息是 list 内的 `overflow-visible` wrapper，内部行继续保留 `group flex min-w-0 items-center justify-between gap-2 py-0.5 text-sm`；进行中目标则是紧随其后的另一个外层 panel，内部行保留 `px-3 py-row-y`。
 - 运行时必须同时命中这些生产 token 才标记 `forge-composer-queue-item`，不得按“引导”“目标”或其他本地化文本猜测。
 
-外层 queue / goal panel 共同提供一块连续、实心的暖灰黄赭纸面；只有 stack 中第一个外层 panel 的绘制层使用两个外部上角。其 29px 顶饰由固定高度 `::after` 单独绘制，`composer-strip.webp` 按 `100% 58px` 取上半部，因此排队项增多时不会拉伸角饰。后续 goal panel 不再重复外部切角或阴影，只通过直边与前层连续衔接。每个内部 queue item 再拥有一层独立 `paper-tile.webp`，按原生 12px list 内距向两侧安全延伸，并用 `gap-px` 形成 1px 接缝；内部叶片本身不裁切、不加卡片阴影、不改变矩形热区。主输入器和独立 progress pill 不属于该叠页：前者仍使用四角短卷页，后者继续使用 `999px` 全圆轮廓。
+外层 queue / goal panel 共同提供一块连续、实心的暖灰黄赭纸面；只有 stack 中第一个外层 panel 的绘制层使用两个外部上角。其 29px 顶饰由固定高度 `::after` 单独绘制，`composer-strip.webp` 按 `100% 58px` 取上半部，因此排队项增多时不会拉伸角饰。后续 goal panel 不再重复外部切角或阴影，只通过直边与前层连续衔接。每个内部 queue item 再拥有一层独立 `paper-tile.webp`，按原生 12px list 内距向两侧安全延伸，并用 `gap-px` 形成 1px 接缝；内部叶片本身不裁切、不加卡片阴影、不改变矩形热区。主输入器和独立 progress pill 不属于该叠页：前者使用原生几何内的四角长方形纸面，后者继续使用 `999px` 全圆轮廓。
 
 用户最新要求把整套输入纸面收进能衔接战斗/风景背景与深墨侧栏的暖灰黄赭范围。V17 生成器以同一 `RGB(135,117,93)` 目标和 `0.86` 纹理对比系数重建；实际 main/strip/pill/tile 中位色落在 `RGB(134–135,117,93–94)`。CSS 回退色统一为 `#87755d`，主墨色为 `#080604`；纸纹无运行时 filter，暗纹理对比度和 forced-colors 回退继续由定向合同锁定。
 
@@ -78,7 +85,7 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 
 右侧环境信息窗口不使用截图尺寸、文本猜测或自建面板。当前 `OpenAI.Codex 26.715.2305.0` 的 `thread-summary-panel-components-t019TZYb.js` 是唯一结构真值：外层以 `data-pip-obstacle="thread-summary-panel"` 标识，卡片固定宽度为 `300px`，内容宿主保留官方 `rounded-3xl`、滚动与最大高度结构；标题、行、操作按钮继续使用 `thread-summary-panel-*` 的原生 `data-slot`。
 
-运行时只在上述官方节点上增加 `forge-right-panel`、`forge-right-card`、`forge-right-title`、`forge-right-section`、`forge-right-section-title` 与 `forge-right-row` 标记。卡片宿主本身保持透明、`clip-path:none` 和原生矩形命中区；暖褐纸纤维、8px 角饰与双层内沿只由卡片的 `pointer-events:none` 静态伪元素绘制。`环境信息` 主标题以及 `子智能体`、`后台进程`、`来源` 三个分区标题的背景、背景图、阴影、圆角裁切和模糊全部透明，让唯一纸面连续贯穿 7 行内容。行高、分隔位置、加号按钮、折叠箭头、链接、键盘焦点、ARIA、滚动和 300px 宽度均不改写；forced-colors 隐藏位图和伪元素并交回系统色。
+官方外卡完整 class token 与 `[data-slot="thread-summary-panel-item"]` 行 slot 由 CSS 直接绘制；运行时继续在同一结构上增加 `forge-right-panel`、`forge-right-card`、`forge-right-title`、`forge-right-section`、`forge-right-section-title` 与 `forge-right-row` 标记，补足动态标题与兼容分支。卡片宿主本身保持透明、`clip-path:none` 和原生矩形命中区；暖褐纸纤维、8px 角饰与双层内沿只由卡片的 `pointer-events:none` 静态伪元素绘制。`环境信息` 主标题以及 `子智能体`、`后台进程`、`来源` 三个分区标题的背景、背景图、阴影、圆角裁切和模糊全部透明，让唯一纸面连续贯穿 7 行内容。行高、分隔位置、加号按钮、折叠箭头、链接、键盘焦点、ARIA、滚动和 300px 宽度均不改写；forced-colors 隐藏位图和伪元素并交回系统色。
 
 `tests/native-asar-ui-contract.test.mjs` 直接锁定本机 300px、宿主 class token 与稳定 slot；`tests/native-surfaces-runtime-v14.test.mjs` 则逐项比较主题前后的面板、卡片、标题、7 行、3 分区和加号九点命中几何。V38 完整无头证据位于 `artifacts/test-runs/v38-environment-unified-20260803-141204/01-full-multi-guided.png`，其中排队、目标、主输入器、侧栏、顶部栏和一体环境卡同屏；该证据仍不等于真实 Codex 用户验收。
 
@@ -97,7 +104,7 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 | 项目条、无项目对话 | 一级深墨目录条 | 默认深墨；hover/focus 提亮纸纤维；expanded 保持一级层级 |
 | 项目下对话 | 二级目录正文行 | 默认无整块底；hover 为窄深墨刷痕；selected 为浅纸选中带 |
 | 新建任务等顶部入口 | 一级目录操作行 | 保留原生图标/文字/30px row，只替换底材与状态 |
-| 文件/编辑/视图/帮助 | 小型目录页签 | 原生菜单 open 状态使用浅纸选中带，关闭后回到深墨 |
+| 文件/编辑/视图/帮助 | 原生菜单触发器 | 完全保留官方 paint 与状态，不做主题替换 |
 
 生产 hierarchy 以当前 ASAR 的稳定属性为锚点：`data-app-action-sidebar-project-row` 是项目条，`data-app-action-sidebar-thread-row` 位于 `data-app-action-sidebar-project-list-id` 内时是项目下对话，位于 `data-app-action-sidebar-section-heading="Tasks"` 且不在项目列表内时是无项目对话。选中态读取 `data-app-action-sidebar-thread-active` / `aria-current`，展开与折叠读取 `aria-expanded` / `data-app-action-sidebar-project-collapsed`；不使用 `nth-child` 或测试专用属性作为生产判断。
 
@@ -105,7 +112,7 @@ fixture 使用 `deviceScaleFactor:1.25`，对应当前 ChatGPT renderer。sideba
 
 交互态只改 paint：focus 使用朱砂内缘替代浏览器矩形默认框；expanded/collapsed 保持一级目录材质但以左缘朱砂、明暗和按压阴影区分；selected 使用浅纸带；disabled 保留所在层级的底材并降墨色。对于“外层 row + 主按钮 + 尾部菜单”的原生结构，只有 surface 本身或直属主操作禁用才会禁用整行，尾部菜单独立禁用不会误伤。未读圆点/计数继续继承 `--vscode-textLink-foreground`，running 只着色原生 24×24 spinner，不制造新徽章。
 
-Windows forced-colors 使用 `#root` 高优先级回退压过 hover/focus/open/expanded/disabled 的 `!important` 组合，移除位图、阴影和主题 opacity，并把焦点轮廓交回系统。当前无头状态矩阵见 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/09-sidebar-state-matrix.png` 与 `10-topbar-state-matrix.png`。Electron 应用菜单的下拉内容由主进程原生菜单绘制，不存在于 renderer DOM；V15 目前只替换四个原生菜单触发页签，后续若要改下拉本体必须另立主进程级可逆方案，不能用伪 DOM 宣称完成。
+Windows forced-colors 使用 `#root` 高优先级回退压过 hover/focus/open/expanded/disabled 的 `!important` 组合，移除位图、阴影和主题 opacity，并把焦点轮廓交回系统。当前无头状态矩阵见 `artifacts/test-runs/v15-native-surfaces-2026-07-25T04-30-21-640Z/09-sidebar-state-matrix.png` 与 `10-topbar-state-matrix.png`。Electron 应用菜单及其四个 renderer 触发器都保持官方 paint；后续若要改菜单必须另立可逆方案，不能用伪 DOM 宣称完成。
 
 ### 新建页印记
 
@@ -119,7 +126,7 @@ V15 当前只组装 9 张背景：`erlang-ink-duel` 与 `great-sage-staff` 为�
 
 收敛后的图库解码总量为 19,258,880 px，交叉淡变最坏两图仍为 4,743,680 px。运行时仍只按需解码当前一图，过渡时最多保留两图；减少场景不会改变原生页面结构、路由判定或全窗 `cover` 合同。
 
-背景 ready 门不把 `Image.complete` 当作已可绘制的替代证据：缓存/data URL 同步 complete 与普通异步 onload 共用唯一 `decode()` 收口，解码完成前继续保留 Codex 原生 carrier paint。结构刷新也改为先生成本轮目标标记集合，再只删除失效 class；稳定 composer 不会在每次 refresh 中从当前 100 px 卷页退回 84 px 原生框再重新扩张。新建页题字的 ARIA 只在值实际改变时写入，避免相同属性写入反复唤醒 MutationObserver。
+背景 ready 门不把 `Image.complete` 当作已可绘制的替代证据：缓存/data URL 同步 complete 与普通异步 onload 共用唯一 `decode()` 收口，解码完成前继续保留 Codex 原生 carrier paint。结构刷新也改为先生成本轮目标标记集合，再只删除失效 class；稳定 composer 的几何始终保持同一组原生值，任务切换时也不会先闪回原生灰色 paint 再重绘纸张。新建页题字的 ARIA 只在值实际改变时写入，避免相同属性写入反复唤醒 MutationObserver。
 
 ### 成本与回退
 
@@ -143,13 +150,13 @@ V13.1 的活动范围只有全窗背景与用户明确授权的新建页题字/�
 
 V13 重写了切换状态机：
 
-1. 读取 session 游标时把负数、字符串和越界状态归一到 `-1`，随后在各自池内安全推进。
+1. 读取 session 状态时把负数、字符串和越界游标归一到 `-1`；battle/scenery 各选择一次并持久保存，renderer 存续期间不因同模式导航继续推进。
 2. 可见且包含 turn 的 thread 优先于只保留布局的旧 landing hero；反向情况下，祖先链上的 `hidden`、`aria-hidden`、`inert`、`display:none`、`visibility:hidden` 或 `opacity≤.01` 会使旧 turn 失效。
-3. 普通侧栏按钮不再触发换图；只有真实新任务、路由/历史变化、任务树导航或 composer 提交安排有限次复核。
-4. 首帧和后续场景都先通过唯一一个 `Image` 加载并尝试 `decode()`；首帧 ready 前保留原生 main/fade paint，成功后才一次性公开背景。后续切换才翻转双层 opacity，进行中只保留最后一个待提交场景。
+3. 路由/历史变化、任务树导航或 composer 提交只安排有限次模式复核；任务身份和 hash 不参与场景选择，同模式复核不会换图。
+4. 首帧和模式切换场景都先通过唯一一个 `Image` 加载并尝试 `decode()`；首帧 ready 前保留原生 main/fade paint，成功后才一次性公开背景。已成功解码的 URL 直接复用，进行中只保留最后一个待提交场景；若目标已是当前可见层，旧待处理请求会立即取消。
 5. 覆盖层缺失或层数不为 2 时先撤销 `background-ready`、恢复原生 paint，再取消旧 generation 的 timer/请求并原位重建；watcher 探针同时检查 style、runtime、ready、两层、活动层和非空活动图。
-6. ResizeObserver 只在 workspace 身份变化时重绑，不在每次 refresh 中断开再观察；稳定页面必须达到 refresh quiescence。
-7. 杨戬白场使用更高 specificity 的 veil，避免被后置主题变量覆盖；forced-colors 下背景隐藏并恢复系统 `Canvas`。
+6. ResizeObserver 只在 workspace 身份变化时重绑，不在每次 refresh 中断开再观察；MutationObserver 把表面结构信号与普通流式文本分离，稳定回答期间必须达到 refresh quiescence。
+7. 文档隐藏时清除待执行刷新并只记录 dirty；恢复可见后合并一次刷新。杨戬白场使用更高 specificity 的 veil，forced-colors 下背景隐藏并恢复系统 `Canvas`。
 
 ### V13.3 资源硬预算
 
@@ -158,15 +165,15 @@ V13 重写了切换状态机：
 V13.2–V13.3 改为：
 
 1. 首屏只解码目标一张；解码完成前不清除原生 main/fade paint，避免 CSS URL 尚未解码时出现空暗底。
-2. 后续只有真实场景切换才解码目标一张；任意时刻最多一个请求，新请求先取消旧请求。
+2. 后续只有 landing/thread 模式切换才可能解码目标一张；同模式任务变化不换图。任意时刻最多一个请求，新请求先取消旧请求，已解码 URL 可直接复用。
 3. 成功、失败、超时、请求替换和 runtime dispose 共用同一清理路径：清 timeout、事件处理器、`src` 和 in-flight 记录。
 4. 图层行内只保存短 `var(--forge-bg-N)`，不再复制完整 base64 URL。
 5. 过渡结束立即把退场层的图片、veil、位置、亮度与场景数据清空；稳态只有一张图片。
-6. `will-change: opacity` 只在 `data-forge-transitioning=true` 的 820 ms 过渡内存在；全屏 `filter` 与 `scale(1.001)` 被移除，色调只由廉价 veil 完成。
-7. 导航/提交后的有界复核只保留最新一组，新的 route event 会清除旧的 3 个 follow-up timer；快速连续操作不会按事件数累计 timer。
+6. `will-change: opacity` 只在 `data-forge-transitioning=true` 的 220 ms 模式过渡内存在；全屏 `filter` 与 `scale(1.001)` 被移除，色调只由廉价 veil 完成。
+7. 导航/提交后的有界复核只保留最新一组，新的 route event 会清除旧的 2 个 follow-up timer；快速连续操作不会按事件数累计 timer。隐藏页面不执行刷新，流式文本 mutation 不进入表面刷新信号。
 8. payload 组装前直接解析 JPEG SOF、PNG IHDR 与 WebP VP8X/VP8L/VP8 尺寸头；单背景、图库总量、双图过渡和 UI 材质同时受解码像素预算约束，异常尺寸或超限文件不会进入 base64 注入表达式。
 
-资源合同的理论上限是稳态约 7.91–10.19 MiB RGBA，过渡期约 15.82–20.38 MiB；不做相邻场景或跨模式预取。静态门限为单背景 12,000,000 px、图库唯一文件总计 32,000,000 px、最大两张合计 16,000,000 px、单 UI/装饰图 4,194,304 px。当前 9 图实测总计 19,258,880 px，最大两张合计 4,743,680 px；低分辨率 `great-sage-return.jpg` 与用户否决的候选图仍原位保留，但不进入活动清单或最小包，不能把“文件仍在仓库”混写成“当前发布仍使用”。
+资源合同的稳态单图约为 7.91–10.19 MiB RGBA，当前图库最坏双图过渡约 18.10 MiB；不做相邻场景或跨模式预取。静态门限为单背景 12,000,000 px、图库唯一文件总计 32,000,000 px、最大两张合计 16,000,000 px、单 UI/装饰图 4,194,304 px。当前 9 图实测总计 19,258,880 px，最大两张合计 4,743,680 px；低分辨率 `great-sage-return.jpg` 与用户否决的候选图仍原位保留，但不进入活动清单或最小包，不能把“文件仍在仓库”混写成“当前发布仍使用”。
 
 V13.3 在真实 Codex renderer 稳态采样时为 `loadedLayers=1`、`preloadInFlight=0`、`transitioning=false`，V8 heap 使用约 126.3 MiB。另一个完整调试 Codex 实例会带起 48 个进程，稳定工作集约 2.93 GiB；这不是单张主题背景的占用，却会直接造成双窗口卡顿。因此开发期常态只保留控制窗口：调试实例仅在实机截图与指标采集期间临时启动，完成后立即关闭，并独立核验其 watcher、子进程与专用端口均已释放。
 
@@ -226,7 +233,7 @@ V1–V3 的共性失败是“主体仍为原生圆角框，只在外面贴古风
 
 冻结不通过删除实现。V12 在 `prepare-native-pets.mjs`、`package-runtime.mjs` 与 `install-native-pets.ps1` 三处使用同一显式发布白名单；旧悟空 spec、仓库包、图集、证明、候选和用户已有 discovery 目录全部保留，但不再被读取、复制、迁移、升级或记录。Codex 若已发现旧目录，仍可原样显示；新 V12 不修改用户当前宠物选择。
 
-> **0.10.0 / V11 现行设计。** 下方 V10、V9 章节保留路线演变；冲突处以本节为准。
+> **0.10.0 / V11 历史设计（保留）。** 下方内容只记录 V11 当时的路线演变；冲突处以顶部 V50 设计为准。
 
 ## V11 设计结论
 
@@ -261,7 +268,7 @@ V11 删除活动页面里的静态悟空/八戒 DOM 覆盖层，只保留一个�
 
 主题停用时移除 `forge-*` 标记、V11 样式、运行时状态和单一葫芦层；助手祖先链回到官方 computed style。宠物是 Codex 原生包，不以静态 CSS 假装“宠物”。官方扫描器会过滤顶层 junction，所以启动器创建真实发现目录，并在内部建立 `payload` junction 指向主题包；派生 manifest 只引用词法上仍位于发现目录内的 `payload/spritesheet.webp`。这既通过官方 `Dirent.isDirectory()` 与路径范围检查，又避免复制 atlas。主题载荷目录不存在后 payload 图集不可读，刷新宠物列表即不再加载。整个路径不修改 `ChatGPT.exe`、WindowsApps 或 `app.asar`，内容冲突时不覆盖；早期直接副本迁移前会把原 manifest 保存为 `source-pet.json`，旧 atlas 保留。
 
-> **0.9.0 / V10 当前设计。** 后文 V9 伪元素与固定矿色描述保留作历史，不再代表活动实现。
+> **0.9.0 / V10 历史设计（保留）。** 后文 V9 伪元素与固定矿色描述同样只作历史，不代表活动实现。
 
 ## V10 设计结论
 
@@ -356,7 +363,7 @@ V10 的重点不是给原生界面统一蒙一层深色，而是让每张电影�
 - 侧栏标记只用于定位原生语义，未选中 action/project/thread 即使带有 `forge-sidebar-*` 标记也不获得任何主题颜色、背景、边框、阴影或状态指示覆盖；仅原生 `aria-current`、`aria-selected` 或 `data-app-action-sidebar-thread-active` 对应的真实外层行绘制选中纸面。选中材质以节点实时宽高为基准，四边各留 1 px 安全内缩，避免纹理透明缘越过原生命中区。
 - 不对顶部栏、侧栏、项目树、环境行、消息和输入槽位设置 `width`、`height`、`margin`、`padding`、`gap` 或 `transform`；只有 composer 保留 `position:relative` 作为同行者伪元素坐标系，DOMRect 必须保持一致。
 - composer 只在实际组合框宽 360–960 px、高 58 px 至 `min(480 px, 48vh)` 且位于页面底部时标记；外层过宽 `form` 不再降级命中，长输入也不会突然失去样式。
-- 环境栏只标记面积最大的一个候选容器，防止多层嵌套同时变成卡片。
+- 环境栏运行时只标记面积最大的一个候选容器，防止多层嵌套同时变成卡片；当前 300px 官方外卡和稳定行 slot 另由精确原生选择器直接绘制，保证任务切换后的首帧持久主题。
 - 从实际 `[data-local-conversation-final-assistant]` 开始，只清理到其所属 turn 的真实包装链，去除背景、边框、阴影、outline 和 filter；不越过 turn 污染工作区。代码块可保留独立黑铁表面。
 - 用户气泡只更换不占布局的材质与轮廓。注入前后对话 `innerText` 必须逐字一致。
 - 唯一新增节点是 `head` 内的受管 `<style>`；body 内不新增任何 UI。人物与葫芦分别使用 composer/workspace 的伪元素，不抢占 DOM 或点击命中。

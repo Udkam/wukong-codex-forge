@@ -47,21 +47,6 @@ const variables = [
 
 const expression = makeApplyExpression({ styleSheet, variables });
 
-const composerGeometry = Object.freeze({
-  aspectNumerator: 184,
-  aspectDenominator: 25,
-  minHeight: 96,
-  maxHeight: 120
-});
-
-const expectedComposerHeight = width => Math.min(
-  composerGeometry.maxHeight,
-  Math.max(
-    composerGeometry.minHeight,
-    width * composerGeometry.aspectDenominator / composerGeometry.aspectNumerator
-  )
-);
-
 const selectors = {
   composer: '.composer-surface-chrome',
   editor: '.ProseMirror[role="textbox"]',
@@ -114,11 +99,6 @@ const hitSelectors = [
   selectors.project,
   selectors.childThread
 ];
-
-const composerGeometryNames = new Set([
-  'composer',
-  'editor'
-]);
 
 const snapshot = page => page.evaluate(targets => {
   const read = selector => {
@@ -201,7 +181,7 @@ test.after(async () => {
   await browser?.close();
 });
 
-test('V20 maps the compact scroll material at the corrected native-state proportion', async () => {
+test('V50 maps composer paper without changing native geometry or content coordinates', async () => {
   const page = await browser.newPage({
     viewport: { width: 1600, height: 900 },
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
@@ -213,6 +193,23 @@ test('V20 maps the compact scroll material at the corrected native-state proport
   await page.goto('http://wukong-v14.test/');
 
   const before = await snapshot(page);
+  const nativeComposerLayout = await page.evaluate(() => {
+    const frame = document.querySelector('.composer-surface-chrome');
+    const editor = frame.querySelector('.ProseMirror[role="textbox"]');
+    const editorShell = editor.parentElement;
+    const footer = frame.querySelector('.composer-footer');
+    const frameStyle = getComputedStyle(frame);
+    return {
+      aspectRatio: frameStyle.aspectRatio,
+      minHeight: frameStyle.minHeight,
+      maxHeight: frameStyle.maxHeight,
+      editorPaddingBlockStart: getComputedStyle(editor).paddingBlockStart,
+      inputShellPaddingBlockStart: getComputedStyle(editorShell).paddingBlockStart,
+      inputShellPaddingInlineStart: getComputedStyle(editorShell).paddingInlineStart,
+      footerPaddingInlineStart: getComputedStyle(footer).paddingInlineStart,
+      footerMarginBottom: getComputedStyle(footer).marginBottom
+    };
+  });
   const beforeHits = Object.fromEntries(await Promise.all(
     hitSelectors.map(async selector => [selector, await nativeHitPattern(page, selector)])
   ));
@@ -271,15 +268,10 @@ test('V20 maps the compact scroll material at the corrected native-state proport
   ));
 
   const after = await snapshot(page);
-  assertRectsEqual(after, before, 0.25, composerGeometryNames);
+  assertRectsEqual(after, before);
   assert.equal(await page.locator('.forge-composer-frame').count(), 1);
   assert.equal(await page.locator('.forge-composer-input-shell').count(), 1);
   assert.equal(await page.locator('.forge-composer-footer').count(), 1);
-  const expectedHeight = expectedComposerHeight(after.composer.rect[2]);
-  assert.ok(
-    Math.abs(after.composer.rect[3] - expectedHeight) <= 0.5,
-    `composer height ${after.composer.rect[3]} must follow the constrained custom-scroll ratio`
-  );
   assert.equal(
     await page.locator(
       '[data-native-slot="composer-submit"][type="button"].forge-composer-submit'
@@ -456,9 +448,9 @@ test('V20 maps the compact scroll material at the corrected native-state proport
   );
   assert.equal(paint.composer.pseudoBackgroundRepeat, 'no-repeat, repeat');
   assert.equal(paint.composer.pseudoBackgroundSize, '100% 100%, 512px 220px');
-  assert.equal(paint.composer.aspectRatio, '184 / 25');
-  assert.equal(paint.composer.minHeight, '96px');
-  assert.equal(paint.composer.maxHeight, '120px');
+  assert.equal(paint.composer.aspectRatio, nativeComposerLayout.aspectRatio);
+  assert.equal(paint.composer.minHeight, nativeComposerLayout.minHeight);
+  assert.equal(paint.composer.maxHeight, nativeComposerLayout.maxHeight);
   assert.equal(paint.composer.borderRadius, '0px');
   assert.equal(paint.composer.clipPath, 'none');
   assert.match(paint.composer.pseudoClipPath, /^polygon\(/);
@@ -480,13 +472,22 @@ test('V20 maps the compact scroll material at the corrected native-state proport
   );
   assert.equal(
     paint.composerEditorPaddingBlockStart,
-    '0px',
+    nativeComposerLayout.editorPaddingBlockStart,
     'the editable ProseMirror node itself must keep its native padding'
   );
-  assert.equal(paint.composerInputShellPaddingBlockStart, '8px');
-  assert.equal(paint.composerInputShellPaddingInlineStart, '12px');
-  assert.equal(paint.composerFooterPaddingInlineStart, '8px');
-  assert.equal(paint.composerFooterMarginBottom, '8px');
+  assert.equal(
+    paint.composerInputShellPaddingBlockStart,
+    nativeComposerLayout.inputShellPaddingBlockStart
+  );
+  assert.equal(
+    paint.composerInputShellPaddingInlineStart,
+    nativeComposerLayout.inputShellPaddingInlineStart
+  );
+  assert.equal(
+    paint.composerFooterPaddingInlineStart,
+    nativeComposerLayout.footerPaddingInlineStart
+  );
+  assert.equal(paint.composerFooterMarginBottom, nativeComposerLayout.footerMarginBottom);
   assert.equal(paint.sidebarShell.backgroundColor, 'rgba(0, 0, 0, 0)');
   assert.match(paint.sidebarShell.backgroundImage, /linear-gradient/);
   assert.equal(
@@ -494,7 +495,11 @@ test('V20 maps the compact scroll material at the corrected native-state proport
     'none',
     'the full-window background must show through the sidebar without a GPU blur'
   );
-  assert.match(paint.menu, /data:image\/svg\+xml/);
+  assert.equal(
+    paint.menu,
+    'none',
+    'the four native application-menu buttons must not receive themed paper'
+  );
   assert.equal(paint.action, 'none');
   assert.equal(paint.level1, 'none');
   assert.match(paint.selected, /data:image\/svg\+xml/);
@@ -514,24 +519,26 @@ test('V20 maps the compact scroll material at the corrected native-state proport
   const menuDefaultImage = await menuFile.evaluate(
     element => getComputedStyle(element).backgroundImage
   );
+  assert.equal(menuDefaultImage, 'none');
   await menuFile.hover();
   const menuHover = await menuFile.evaluate(element => ({
     image: getComputedStyle(element).backgroundImage,
     color: getComputedStyle(element).color
   }));
-  assert.notEqual(menuHover.image, menuDefaultImage);
+  assert.equal(menuHover.image, menuDefaultImage);
+  assert.equal(menuHover.color, 'rgb(163, 166, 166)');
   await page.mouse.move(800, 450);
   await menuEdit.focus();
   assert.equal(await menuEdit.evaluate(element => element.matches(':focus-visible')), true);
-  assert.notEqual(
+  assert.equal(
     await menuEdit.evaluate(element => getComputedStyle(element).backgroundImage),
     menuDefaultImage
   );
   await menuView.evaluate(element => element.setAttribute('aria-expanded', 'true'));
-  assert.notEqual(
+  assert.equal(
     await menuView.evaluate(element => getComputedStyle(element).backgroundImage),
     menuDefaultImage,
-    'open menu paint must react directly to aria-expanded without runtime refresh'
+    'open native menus must not receive themed paper'
   );
   await menuView.evaluate(element => element.setAttribute('aria-expanded', 'false'));
 
@@ -676,34 +683,35 @@ test('V35 preserves native unselected sidebar paint and themes only the current 
     image: getComputedStyle(element).backgroundImage,
     color: getComputedStyle(element).color
   }));
-  assert.notEqual(menuHover.image, menuDefault.image);
-  assert.notEqual(menuHover.color, menuDefault.color);
+  assert.equal(menuDefault.image, 'none');
+  assert.equal(menuHover.image, menuDefault.image);
+  assert.equal(menuHover.color, menuDefault.color);
 
   await page.mouse.move(900, 450);
   await menuEdit.focus();
   assert.equal(await menuEdit.evaluate(element => element.matches(':focus-visible')), true);
-  assert.notEqual(
+  assert.equal(
     await menuEdit.evaluate(element => getComputedStyle(element).boxShadow),
     menuDefault.shadow
   );
-  assert.equal(
+  assert.notEqual(
     await menuEdit.evaluate(element => getComputedStyle(element).outlineStyle),
     'none',
-    'native browser focus outline must be replaced by the themed focus paint'
+    'native browser focus outline must remain available'
   );
 
   await menuView.evaluate(element => element.setAttribute('aria-expanded', 'true'));
-  assert.notEqual(
+  assert.equal(
     await menuView.evaluate(element => getComputedStyle(element).backgroundImage),
     menuDefault.image
   );
   await menuView.evaluate(element => element.setAttribute('aria-expanded', 'false'));
 
   await menuHelp.evaluate(element => element.dataset.state = 'open');
-  assert.notEqual(
+  assert.equal(
     await menuHelp.evaluate(element => getComputedStyle(element).backgroundImage),
     menuDefault.image,
-    'data-state=open must use the same selected-paper state as aria-expanded'
+    'data-state=open must retain native menu paint'
   );
   await menuHelp.evaluate(element => delete element.dataset.state);
 
@@ -723,8 +731,8 @@ test('V35 preserves native unselected sidebar paint and themes only the current 
     opacity: getComputedStyle(element).opacity
   }));
   assert.equal(disabledMenu.image, menuDefault.image);
-  assert.equal(disabledMenu.shadow, 'none');
-  assert.equal(disabledMenu.opacity, '0.46');
+  assert.equal(disabledMenu.shadow, menuDefault.shadow);
+  assert.equal(disabledMenu.opacity, '1');
   await menuFile.evaluate(element => element.click());
   assert.equal(await page.evaluate(() => window.__disabledMenuClicks), 0);
   await menuFile.evaluate(element => { element.disabled = false; });
@@ -862,6 +870,11 @@ test('V35 preserves native unselected sidebar paint and themes only the current 
     await page.locator('[data-native-slot="project-internal-control"][data-forge-mark]').count(),
     0
   );
+  assert.equal(
+    await page.locator('[data-native-slot="project-thread-menu"][data-forge-mark]').count(),
+    0,
+    'native thread menus must not become selected-paper surfaces'
+  );
 
   const afterRects = await readRects();
   for (const [name, before] of Object.entries(beforeRects)) {
@@ -872,6 +885,116 @@ test('V35 preserves native unselected sidebar paint and themes only the current 
       );
     });
   }
+
+  const selectedPaperGeometry = slot => page.locator(
+    `[data-native-slot="${slot}"]`
+  ).evaluate(element => {
+    const list = element.closest('[data-app-action-sidebar-project-list-id]');
+    const rect = element.getBoundingClientRect();
+    const listRect = list.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    const ancestorPaint = [];
+    for (let cursor = element.parentElement; cursor; cursor = cursor.parentElement) {
+      ancestorPaint.push({
+        marked: cursor.hasAttribute('data-forge-mark'),
+        selected: cursor.classList.contains('forge-sidebar-selected'),
+        backgroundImage: getComputedStyle(cursor).backgroundImage
+      });
+      if (cursor === list) break;
+    }
+    return {
+      rowCount: list.querySelectorAll('[data-app-action-sidebar-thread-row]').length,
+      rowWidth: rect.width,
+      listWidth: listRect.width,
+      backgroundOrigin: style.backgroundOrigin,
+      backgroundClip: style.backgroundClip,
+      ancestorPaint
+    };
+  });
+  const multiThreadSelection = await selectedPaperGeometry('project-active');
+  assert.equal(multiThreadSelection.rowCount, 2);
+  assert.ok(Math.abs(multiThreadSelection.rowWidth - multiThreadSelection.listWidth) <= .25);
+  assert.equal(
+    await page.locator('.forge-sidebar-selected').count(),
+    1,
+    'only the explicit native row may own selected paper in a multi-thread project'
+  );
+  assert.ok(
+    multiThreadSelection.ancestorPaint.every(ancestor => (
+      !ancestor.marked &&
+      !ancestor.selected &&
+      ancestor.backgroundImage === 'none'
+    )),
+    'multi-thread sortable, animation, listitem, and list wrappers must remain unpainted'
+  );
+
+  const immediatePersistentSelection = await page.evaluate(() => {
+    const multi = document.querySelector('[data-native-slot="project-active"]');
+    const single = document.querySelector('[data-native-slot="project-temple-child"]');
+    multi.removeAttribute('data-app-action-sidebar-thread-active');
+    multi.removeAttribute('aria-current');
+    single.setAttribute('data-app-action-sidebar-thread-active', 'true');
+    single.setAttribute('aria-current', 'page');
+    return {
+      oldMarkerStillPresent: multi.classList.contains('forge-sidebar-selected'),
+      newMarkerNotYetPresent: !single.classList.contains('forge-sidebar-selected'),
+      oldBackgroundImage: getComputedStyle(multi).backgroundImage,
+      newBackgroundImage: getComputedStyle(single).backgroundImage
+    };
+  });
+  assert.equal(immediatePersistentSelection.oldMarkerStillPresent, true);
+  assert.equal(immediatePersistentSelection.newMarkerNotYetPresent, true);
+  assert.equal(immediatePersistentSelection.oldBackgroundImage, 'none');
+  assert.notEqual(immediatePersistentSelection.newBackgroundImage, 'none');
+  await page.waitForFunction(() => (
+    document.querySelector('[data-native-slot="project-temple-child"]')
+      ?.classList.contains('forge-sidebar-selected') &&
+    !document.querySelector('[data-native-slot="project-active"]')
+      ?.classList.contains('forge-sidebar-selected')
+  ));
+  const singleThreadSelection = await selectedPaperGeometry('project-temple-child');
+  assert.equal(singleThreadSelection.rowCount, 1);
+  assert.ok(Math.abs(singleThreadSelection.rowWidth - singleThreadSelection.listWidth) <= .25);
+  assert.equal(
+    await page.locator('.forge-sidebar-selected').count(),
+    1,
+    'a one-thread project must not paint its sortable or animation wrappers'
+  );
+  assert.ok(
+    singleThreadSelection.ancestorPaint.every(ancestor => (
+      !ancestor.marked &&
+      !ancestor.selected &&
+      ancestor.backgroundImage === 'none'
+    )),
+    'single-thread sortable, animation, listitem, and list wrappers must remain unpainted'
+  );
+  assert.ok(
+    Math.abs(singleThreadSelection.rowWidth - multiThreadSelection.rowWidth) <= .25,
+    'single-thread and multi-thread projects must use the same selected-paper width'
+  );
+  assert.deepEqual(
+    {
+      origin: singleThreadSelection.backgroundOrigin,
+      clip: singleThreadSelection.backgroundClip
+    },
+    {
+      origin: multiThreadSelection.backgroundOrigin,
+      clip: multiThreadSelection.backgroundClip
+    }
+  );
+
+  await page.evaluate(() => {
+    const multi = document.querySelector('[data-native-slot="project-active"]');
+    const single = document.querySelector('[data-native-slot="project-temple-child"]');
+    single.removeAttribute('data-app-action-sidebar-thread-active');
+    single.removeAttribute('aria-current');
+    multi.setAttribute('data-app-action-sidebar-thread-active', 'true');
+    multi.setAttribute('aria-current', 'page');
+  });
+  await page.waitForFunction(() => (
+    document.querySelector('[data-native-slot="project-active"]')
+      ?.classList.contains('forge-sidebar-selected')
+  ));
 
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('[data-forge-mark]').count(), 0);
@@ -960,7 +1083,9 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       ),
       stackInsideComponent: component.contains(stack),
       progressInsidePortal: portal.contains(progress),
-      progressFadeInsideHost: progressFade.parentElement === progressHost,
+      progressFadeWithinHost: progressHost.contains(progressFade),
+      progressFadeInsideMotionLayer: progressFade.parentElement
+        ?.classList.contains('native-progress-layer'),
       progressFadeSignature: [
         'pointer-events-none',
         'absolute',
@@ -1028,7 +1153,8 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.equal(nativeStateContract.fixtureDoesNotDeclareComponentIdentity, true);
   assert.equal(nativeStateContract.stackInsideComponent, true);
   assert.equal(nativeStateContract.progressInsidePortal, true);
-  assert.equal(nativeStateContract.progressFadeInsideHost, true);
+  assert.equal(nativeStateContract.progressFadeWithinHost, true);
+  assert.equal(nativeStateContract.progressFadeInsideMotionLayer, true);
   assert.equal(nativeStateContract.progressFadeSignature, true);
   assert.equal(nativeStateContract.progressInsideStack, false);
   assert.equal(nativeStateContract.stackInsidePortal, false);
@@ -1166,7 +1292,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
       document.querySelector('.forge-composer-progress-pill')
     );
     const fade = document.querySelector('.forge-composer-progress-fade');
-    const fadeHost = fade.parentElement;
+    const fadeHost = fade.closest('.native-progress-host');
     const fadeStyle = getComputedStyle(fade);
     const fadeRect = fade.getBoundingClientRect();
     const fadeHostRect = fadeHost.getBoundingClientRect();
@@ -1286,7 +1412,7 @@ test('V16 maps the native guided stack once and remaps context without a resize 
   assert.equal(guidedPaint.fade.opacity, '0');
   const driftedFadeContract = await page.evaluate(() => {
     const fade = document.querySelector('.native-progress-gradient');
-    const host = fade.parentElement;
+    const host = fade.closest('.native-progress-host');
     const before = fade.getBoundingClientRect();
     const hostBefore = host.getBoundingClientRect();
     fade.classList.remove(
@@ -1340,13 +1466,18 @@ test('V16 maps the native guided stack once and remaps context without a resize 
     const rect = element.getBoundingClientRect();
     return [rect.x, rect.y, rect.width, rect.height];
   });
-  assert.ok(
-    Math.abs(
-      themedComposerRect[3] -
-      expectedComposerHeight(themedComposerRect[2])
-    ) <= 0.5,
-    'the themed composer must follow the constrained custom-scroll ratio'
-  );
+  const nativeComposerRect = [
+    nativeStateContract.composer.x,
+    nativeStateContract.composer.y,
+    nativeStateContract.composer.width,
+    nativeStateContract.composer.height
+  ];
+  themedComposerRect.forEach((value, index) => {
+    assert.ok(
+      Math.abs(value - nativeComposerRect[index]) <= .25,
+      `themed composer rect[${index}] changed from ${nativeComposerRect[index]} to ${value}`
+    );
+  });
 
   const adjacentAfter = await page.evaluate(() => Object.fromEntries(
     [...document.querySelectorAll('[data-fixture-surface], [data-fixture-control]')].map(element => {
@@ -1934,6 +2065,47 @@ test('V38 clears only the source-backed thread footer fade without changing nati
     '停止'
   );
 
+  const immediatePersistentFade = await page.evaluate(() => {
+    const oldFooter = document.querySelector('[data-thread-scroll-footer="true"]');
+    const replacement = oldFooter.cloneNode(true);
+    for (const element of [replacement, ...replacement.querySelectorAll('[data-forge-mark]')]) {
+      element.removeAttribute('data-forge-mark');
+      [...element.classList]
+        .filter(className => className.startsWith('forge-'))
+        .forEach(className => element.classList.remove(className));
+    }
+    oldFooter.replaceWith(replacement);
+    const host = replacement.querySelector(':scope > .pointer-events-none');
+    const fade = host.querySelector('.native-thread-footer-gradient');
+    const composer = replacement.querySelector('[data-codex-composer-root]');
+    const hostRect = host.getBoundingClientRect();
+    const fadeRect = fade.getBoundingClientRect();
+    const style = getComputedStyle(fade);
+    return {
+      marker: fade.classList.contains('forge-composer-thread-fade'),
+      relativeRect: [
+        fadeRect.x - hostRect.x,
+        fadeRect.y - hostRect.y,
+        fadeRect.width,
+        fadeRect.height
+      ],
+      composerWidth: composer.getBoundingClientRect().width,
+      backgroundColor: style.backgroundColor,
+      backgroundImage: style.backgroundImage,
+      opacity: style.opacity
+    };
+  });
+  assert.equal(immediatePersistentFade.marker, false);
+  assert.deepEqual(immediatePersistentFade.relativeRect, before.relativeRect);
+  assert.ok(Math.abs(immediatePersistentFade.composerWidth - before.composerWidth) <= .25);
+  assert.equal(immediatePersistentFade.backgroundColor, 'rgba(0, 0, 0, 0)');
+  assert.equal(immediatePersistentFade.backgroundImage, 'none');
+  assert.equal(immediatePersistentFade.opacity, '0');
+  await page.waitForFunction(() => (
+    document.querySelector('.native-thread-footer-gradient')
+      ?.classList.contains('forge-composer-thread-fade')
+  ));
+
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('.forge-composer-thread-fade').count(), 0);
   await page.close();
@@ -2004,6 +2176,75 @@ test('V35 maps a motion-mounted active goal before its first visible frame', asy
   assert.deepEqual(firstFrame.borderColors, Array(4).fill('rgba(0, 0, 0, 0)'));
   assert.equal(firstFrame.backdropFilter, 'none');
   assert.equal(firstFrame.paintContent, '""');
+
+  const immediatePersistentStack = await page.evaluate(() => {
+    const oldStack = document.querySelector('[data-fixture-surface="composer-stack"]');
+    const replacement = oldStack.cloneNode(true);
+    const oldGoal = oldStack.querySelector('[data-fixture-surface="goal-panel"]');
+    const oldStackRect = oldStack.getBoundingClientRect();
+    const oldGoalRect = oldGoal.getBoundingClientRect();
+    const expectedGoalRect = [
+      oldGoalRect.x - oldStackRect.x,
+      oldGoalRect.y - oldStackRect.y,
+      oldGoalRect.width,
+      oldGoalRect.height
+    ];
+    for (const element of [replacement, ...replacement.querySelectorAll('[data-forge-mark]')]) {
+      element.removeAttribute('data-forge-mark');
+      [...element.classList]
+        .filter(className => className.startsWith('forge-'))
+        .forEach(className => element.classList.remove(className));
+    }
+    oldStack.replaceWith(replacement);
+    const queued = replacement.querySelector('[data-fixture-surface="queued-panel"]');
+    const goal = replacement.querySelector('[data-fixture-surface="goal-panel"]');
+    const queueItem = replacement.querySelector('.native-queued-message-wrap');
+    const stackRect = replacement.getBoundingClientRect();
+    const goalRect = goal.getBoundingClientRect();
+    const goalStyle = getComputedStyle(goal);
+    return {
+      markers: {
+        stack: replacement.classList.contains('forge-composer-panel-stack'),
+        queued: queued.classList.contains('forge-composer-panel'),
+        goal: goal.classList.contains('forge-composer-panel'),
+        queueItem: queueItem.classList.contains('forge-composer-queue-item')
+      },
+      expectedGoalRect,
+      goalRect: [
+        goalRect.x - stackRect.x,
+        goalRect.y - stackRect.y,
+        goalRect.width,
+        goalRect.height
+      ],
+      goalBackgroundImage: goalStyle.backgroundImage,
+      goalBorderColors: [
+        goalStyle.borderTopColor,
+        goalStyle.borderRightColor,
+        goalStyle.borderBottomColor,
+        goalStyle.borderLeftColor
+      ],
+      queuedPaperContent: getComputedStyle(queued, '::before').content,
+      queueTopCapContent: getComputedStyle(queued, '::after').content,
+      goalPaperContent: getComputedStyle(goal, '::before').content,
+      queueItemPaperContent: getComputedStyle(queueItem, '::before').content
+    };
+  });
+  assert.deepEqual(immediatePersistentStack.markers, {
+    stack: false,
+    queued: false,
+    goal: false,
+    queueItem: false
+  });
+  assert.deepEqual(immediatePersistentStack.goalRect, immediatePersistentStack.expectedGoalRect);
+  assert.equal(immediatePersistentStack.goalBackgroundImage, 'none');
+  assert.deepEqual(
+    immediatePersistentStack.goalBorderColors,
+    Array(4).fill('rgba(0, 0, 0, 0)')
+  );
+  assert.equal(immediatePersistentStack.queuedPaperContent, '""');
+  assert.equal(immediatePersistentStack.queueTopCapContent, '""');
+  assert.equal(immediatePersistentStack.goalPaperContent, '""');
+  assert.equal(immediatePersistentStack.queueItemPaperContent, '""');
   await page.waitForTimeout(80);
   assert.equal(
     await page.locator('[data-fixture-surface="goal-panel"].forge-composer-panel').count(),
@@ -2072,6 +2313,34 @@ test('V14 selects the visible composer surface and ignores one-button context an
     color: getComputedStyle(element).color,
     disabled: element.disabled
   }));
+  const nativePersistentComposer = await page.evaluate(() => {
+    const rectOf = element => {
+      const rect = element.getBoundingClientRect();
+      return [rect.x, rect.y, rect.width, rect.height];
+    };
+    const frame = document.querySelector('[data-native-slot="composer"]');
+    const editor = frame.querySelector('.ProseMirror[role="textbox"]');
+    const editorShell = editor.parentElement;
+    const footer = frame.querySelector('.composer-footer');
+    const submit = frame.querySelector('[data-native-slot="composer-submit"]');
+    const editorStyle = getComputedStyle(editor);
+    const editorShellStyle = getComputedStyle(editorShell);
+    return {
+      rects: {
+        frame: rectOf(frame),
+        editor: rectOf(editor),
+        editorShell: rectOf(editorShell),
+        footer: rectOf(footer),
+        submit: rectOf(submit)
+      },
+      editorLayout: {
+        paddingBlockStart: editorStyle.paddingBlockStart,
+        paddingInlineStart: editorStyle.paddingInlineStart,
+        shellPaddingBlockStart: editorShellStyle.paddingBlockStart,
+        shellPaddingInlineStart: editorShellStyle.paddingInlineStart
+      }
+    };
+  });
   await page.evaluate(expression);
   await page.waitForFunction(() => (
     document.querySelector('[data-native-slot="composer"]')
@@ -2116,11 +2385,11 @@ test('V14 selects the visible composer surface and ignores one-button context an
     'full-access orange and disabled semantics must survive composer theming'
   );
 
-  await page.evaluate(() => {
+  const immediatePersistentComposer = await page.evaluate(() => {
     const oldSurface = document.querySelector('[data-native-slot="composer"]');
     const replacement = oldSurface.cloneNode(true);
     replacement.dataset.nativeSlot = 'composer-fresh-visible';
-    replacement.querySelectorAll('[data-forge-mark]').forEach(element => {
+    [replacement, ...replacement.querySelectorAll('[data-forge-mark]')].forEach(element => {
       element.removeAttribute('data-forge-mark');
       [...element.classList]
         .filter(className => className.startsWith('forge-'))
@@ -2128,7 +2397,66 @@ test('V14 selects the visible composer surface and ignores one-button context an
     });
     oldSurface.after(replacement);
     oldSurface.style.display = 'none';
+    const rectOf = element => {
+      const rect = element.getBoundingClientRect();
+      return [rect.x, rect.y, rect.width, rect.height];
+    };
+    const editor = replacement.querySelector('.ProseMirror[role="textbox"]');
+    const editorShell = replacement.querySelector('.ProseMirror[role="textbox"]').parentElement;
+    const footer = replacement.querySelector('.composer-footer');
+    const submit = replacement.querySelector('[data-native-slot="composer-submit"]');
+    const misplaced = document.querySelector('[data-fixture-control="misplaced-native-submit"]');
+    const editorStyle = getComputedStyle(editor);
+    const editorShellStyle = getComputedStyle(editorShell);
+    return {
+      frameMarker: replacement.classList.contains('forge-composer-frame'),
+      inputShellMarker: editorShell.classList.contains('forge-composer-input-shell'),
+      submitMarker: submit.classList.contains('forge-composer-submit'),
+      paperContent: getComputedStyle(replacement, '::before').content,
+      paperImage: getComputedStyle(replacement, '::before').backgroundImage,
+      rects: {
+        frame: rectOf(replacement),
+        editor: rectOf(editor),
+        editorShell: rectOf(editorShell),
+        footer: rectOf(footer),
+        submit: rectOf(submit)
+      },
+      editorLayout: {
+        paddingBlockStart: editorStyle.paddingBlockStart,
+        paddingInlineStart: editorStyle.paddingInlineStart,
+        shellPaddingBlockStart: editorShellStyle.paddingBlockStart,
+        shellPaddingInlineStart: editorShellStyle.paddingInlineStart
+      },
+      submitOpacity: getComputedStyle(submit).opacity,
+      submitBackground: getComputedStyle(submit).backgroundColor,
+      misplacedBackground: getComputedStyle(misplaced).backgroundColor
+    };
   });
+  assert.equal(immediatePersistentComposer.frameMarker, false);
+  assert.equal(immediatePersistentComposer.inputShellMarker, false);
+  assert.equal(immediatePersistentComposer.submitMarker, false);
+  assert.equal(immediatePersistentComposer.paperContent, '""');
+  assert.notEqual(immediatePersistentComposer.paperImage, 'none');
+  for (const [name, nativeRect] of Object.entries(nativePersistentComposer.rects)) {
+    immediatePersistentComposer.rects[name].forEach((value, index) => {
+      assert.ok(
+        Math.abs(value - nativeRect[index]) <= .25,
+        `marker-free replacement ${name} rect[${index}] changed from ${nativeRect[index]} to ${value}`
+      );
+    });
+  }
+  assert.deepEqual(
+    immediatePersistentComposer.editorLayout,
+    nativePersistentComposer.editorLayout,
+    'marker-free replacement must keep native editor and input-shell padding'
+  );
+  assert.equal(immediatePersistentComposer.submitOpacity, '1');
+  assert.equal(immediatePersistentComposer.submitBackground, 'rgb(73, 54, 31)');
+  assert.notEqual(
+    immediatePersistentComposer.misplacedBackground,
+    immediatePersistentComposer.submitBackground,
+    'a matching button outside the native footer received persistent submit paint'
+  );
   await page.waitForFunction(() => (
     document.querySelector('[data-native-slot="composer-fresh-visible"]')
       ?.classList.contains('forge-composer-frame') &&
@@ -2155,6 +2483,55 @@ test('V14 selects the visible composer surface and ignores one-button context an
 
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('[data-forge-mark]').count(), 0);
+  await page.close();
+});
+
+test('V15 keeps the empty composer send arrow legible over the native opacity utility', async () => {
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 820 },
+    deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
+  });
+  await page.route('http://wukong-v15-submit-opacity.test/**', route => route.fulfill({
+    body: runtimeFixtureHtml,
+    contentType: 'text/html; charset=utf-8'
+  }));
+  await page.goto('http://wukong-v15-submit-opacity.test/');
+
+  const submit = page.locator('[data-native-slot="composer-submit"]');
+  const native = await submit.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return {
+      opacity: getComputedStyle(element).opacity,
+      rect: [rect.x, rect.y, rect.width, rect.height]
+    };
+  });
+  assert.equal(native.opacity, '0.5');
+
+  await page.evaluate(expression);
+  await page.waitForFunction(() => (
+    document.querySelector('[data-native-slot="composer-submit"]')
+      ?.classList.contains('forge-composer-submit')
+  ));
+
+  const themed = await submit.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    const buttonStyle = getComputedStyle(element);
+    const arrowStyle = getComputedStyle(element.querySelector('svg'));
+    return {
+      opacity: buttonStyle.opacity,
+      color: buttonStyle.color,
+      arrowColor: arrowStyle.color,
+      arrowOpacity: arrowStyle.opacity,
+      rect: [rect.x, rect.y, rect.width, rect.height]
+    };
+  });
+  assert.equal(themed.opacity, '1');
+  assert.equal(themed.color, 'rgb(247, 232, 199)');
+  assert.equal(themed.arrowColor, themed.color);
+  assert.equal(themed.arrowOpacity, '1');
+  assert.deepEqual(themed.rect, native.rect);
+
+  await page.evaluate(RESTORE_EXPRESSION);
   await page.close();
 });
 
@@ -2198,6 +2575,8 @@ test('V15 keeps the native composer material while the editor is read-only', asy
     const frame = document.querySelector('.composer-surface-chrome');
     const editor = frame.querySelector('.ProseMirror[role="textbox"]');
     const submit = frame.querySelector('[data-native-slot="composer-submit"]');
+    const submitStyle = getComputedStyle(submit);
+    const arrowStyle = getComputedStyle(submit.querySelector('svg'));
     const rect = frame.getBoundingClientRect();
     return {
       rect: [rect.x, rect.y, rect.width, rect.height],
@@ -2205,20 +2584,21 @@ test('V15 keeps the native composer material while the editor is read-only', asy
       contenteditable: editor.getAttribute('contenteditable'),
       ariaReadonly: editor.getAttribute('aria-readonly'),
       disabled: submit.disabled,
-      ariaDisabled: submit.getAttribute('aria-disabled')
+      ariaDisabled: submit.getAttribute('aria-disabled'),
+      submitColor: submitStyle.color,
+      submitBackground: submitStyle.backgroundColor,
+      submitOpacity: submitStyle.opacity,
+      arrowColor: arrowStyle.color,
+      arrowOpacity: arrowStyle.opacity
     };
   });
-  assert.deepEqual(
-    [themed.rect[0], themed.rect[2]],
-    [before.rect[0], before.rect[2]]
-  );
-  assert.ok(
-    Math.abs(
-      themed.rect[3] -
-      expectedComposerHeight(themed.rect[2])
-    ) <= 0.5
-  );
+  assert.deepEqual(themed.rect, before.rect);
   assert.match(themed.backgroundImage, /data:image\//);
+  assert.equal(themed.submitColor, 'rgb(240, 223, 189)');
+  assert.equal(themed.submitBackground, 'rgb(95, 85, 72)');
+  assert.equal(themed.submitOpacity, '1');
+  assert.equal(themed.arrowColor, themed.submitColor);
+  assert.equal(themed.arrowOpacity, '1');
   assert.deepEqual(
     {
       contenteditable: themed.contenteditable,
@@ -2293,13 +2673,7 @@ test('V17 keeps the official composer surface themed when the native editor sign
       role: editor.getAttribute('role')
     };
   });
-  assert.deepEqual([themed.rect[0], themed.rect[2]], [before.rect[0], before.rect[2]]);
-  assert.ok(
-    Math.abs(
-      themed.rect[3] -
-      expectedComposerHeight(themed.rect[2])
-    ) <= 0.5
-  );
+  assert.deepEqual(themed.rect, before.rect);
   assert.match(themed.backgroundImage, /data:image\//);
   assert.deepEqual(
     {
@@ -2317,7 +2691,7 @@ test('V17 keeps the official composer surface themed when the native editor sign
   await page.close();
 });
 
-test('V20 keeps the corrected composer ratio responsive while preserving surrounding native geometry', async () => {
+test('V50 keeps exact native composer geometry at every responsive width', async () => {
   const page = await browser.newPage({
     deviceScaleFactor: nativeUiBaseline.rendererDeviceScaleFactor
   });
@@ -2343,12 +2717,7 @@ test('V20 keeps the corrected composer ratio responsive while preserving surroun
       `top menu mapping missing at ${width}px`
     );
     const after = await snapshot(page);
-    assertRectsEqual(after, before, 0.25, composerGeometryNames);
-    const expectedHeight = expectedComposerHeight(after.composer.rect[2]);
-    assert.ok(
-      Math.abs(after.composer.rect[3] - expectedHeight) <= 0.5,
-      `composer ratio mismatch at ${width}px`
-    );
+    assertRectsEqual(after, before);
     for (const name of ['add', 'access', 'model', 'voice', 'send']) {
       assert.deepEqual(
         after[name].rect.slice(2),
@@ -2628,6 +2997,59 @@ test('V23 maps the official 300px environment panel as paint-only scripture pape
   );
   assert.deepEqual(await readContract(), before);
 
+  const immediatePersistentEnvironment = await page.evaluate(() => {
+    const oldCard = document.querySelector('[data-native-slot="right-card"]');
+    const replacement = oldCard.cloneNode(true);
+    [replacement, ...replacement.querySelectorAll('[data-forge-mark]')].forEach(element => {
+      element.removeAttribute('data-forge-mark');
+      [...element.classList]
+        .filter(className => className.startsWith('forge-'))
+        .forEach(className => element.classList.remove(className));
+    });
+    oldCard.replaceWith(replacement);
+
+    const titleSurface = replacement.querySelector('.summary-heading-surface');
+    const sectionTitle = replacement.querySelector('.summary-native-section-title');
+    const row = replacement.querySelector('[data-slot="thread-summary-panel-item"]');
+    const outsidePanel = document.createElement('div');
+    outsidePanel.dataset.pipObstacle = 'unrelated-panel';
+    outsidePanel.innerHTML = '<section class="relative flex max-h-full min-h-0 flex-col overflow-hidden rounded-3xl bg-token-dropdown-background pt-2.5"></section>';
+    document.getElementById('root').append(outsidePanel);
+    const outsideCard = outsidePanel.firstElementChild;
+    const result = {
+      cardMarker: replacement.classList.contains('forge-right-card'),
+      rowMarker: row.classList.contains('forge-right-row'),
+      paperContent: getComputedStyle(replacement, '::before').content,
+      paperImage: getComputedStyle(replacement, '::before').backgroundImage,
+      titleBackground: getComputedStyle(titleSurface).backgroundColor,
+      titleBeforeBackground: getComputedStyle(titleSurface, '::before').backgroundColor,
+      sectionTitleBackground: getComputedStyle(sectionTitle).backgroundColor,
+      rowSeparatorContent: getComputedStyle(row, '::after').content,
+      rowSeparatorImage: getComputedStyle(row, '::after').backgroundImage,
+      unrelatedPaperContent: getComputedStyle(outsideCard, '::before').content
+    };
+    outsidePanel.remove();
+    return result;
+  });
+  assert.equal(immediatePersistentEnvironment.cardMarker, false);
+  assert.equal(immediatePersistentEnvironment.rowMarker, false);
+  assert.equal(immediatePersistentEnvironment.paperContent, '""');
+  assert.notEqual(immediatePersistentEnvironment.paperImage, 'none');
+  assert.equal(immediatePersistentEnvironment.titleBackground, 'rgba(0, 0, 0, 0)');
+  assert.equal(immediatePersistentEnvironment.titleBeforeBackground, 'rgba(0, 0, 0, 0)');
+  assert.equal(immediatePersistentEnvironment.sectionTitleBackground, 'rgba(0, 0, 0, 0)');
+  assert.equal(immediatePersistentEnvironment.rowSeparatorContent, '""');
+  assert.notEqual(immediatePersistentEnvironment.rowSeparatorImage, 'none');
+  assert.equal(immediatePersistentEnvironment.unrelatedPaperContent, 'none');
+
+  await page.waitForFunction(() => (
+    document.querySelector('[data-native-slot="right-card"]')?.classList.contains('forge-right-card') &&
+    document.querySelectorAll('.forge-right-row').length === 7 &&
+    document.querySelectorAll('.forge-right-section').length === 3 &&
+    document.querySelectorAll('.forge-right-section-title').length === 3
+  ));
+  assert.deepEqual(await readContract(), before);
+
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('.forge-right-card').count(), 0);
   assert.equal(await page.locator('.forge-right-title-surface').count(), 0);
@@ -2662,6 +3084,52 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
   await page.waitForFunction(() => (
     document.querySelectorAll('.forge-topbar-menu-item').length === 4 &&
     document.querySelector('.forge-composer-frame')
+  ));
+  const immediateForcedPersistent = await page.evaluate(() => {
+    const stripThemeMarks = root => {
+      for (const element of [root, ...root.querySelectorAll('[data-forge-mark]')]) {
+        element.removeAttribute('data-forge-mark');
+        [...element.classList]
+          .filter(className => className.startsWith('forge-'))
+          .forEach(className => element.classList.remove(className));
+      }
+    };
+    const oldComposer = document.querySelector('[data-native-slot="composer"]');
+    const composer = oldComposer.cloneNode(true);
+    stripThemeMarks(composer);
+    oldComposer.replaceWith(composer);
+    const oldCard = document.querySelector('[data-native-slot="right-card"]');
+    const card = oldCard.cloneNode(true);
+    stripThemeMarks(card);
+    oldCard.replaceWith(card);
+    const submit = composer.querySelector('[data-native-slot="composer-submit"]');
+    const row = card.querySelector('[data-slot="thread-summary-panel-item"]');
+    return {
+      composerMarker: composer.classList.contains('forge-composer-frame'),
+      cardMarker: card.classList.contains('forge-right-card'),
+      composerImage: getComputedStyle(composer).backgroundImage,
+      composerPaperContent: getComputedStyle(composer, '::before').content,
+      composerPaperImage: getComputedStyle(composer, '::before').backgroundImage,
+      submitImage: getComputedStyle(submit).backgroundImage,
+      cardImage: getComputedStyle(card).backgroundImage,
+      cardPaperContent: getComputedStyle(card, '::before').content,
+      cardPaperImage: getComputedStyle(card, '::before').backgroundImage,
+      rowSeparatorContent: getComputedStyle(row, '::after').content
+    };
+  });
+  assert.equal(immediateForcedPersistent.composerMarker, false);
+  assert.equal(immediateForcedPersistent.cardMarker, false);
+  assert.equal(immediateForcedPersistent.composerImage, 'none');
+  assert.equal(immediateForcedPersistent.composerPaperContent, 'none');
+  assert.equal(immediateForcedPersistent.composerPaperImage, 'none');
+  assert.equal(immediateForcedPersistent.submitImage, 'none');
+  assert.equal(immediateForcedPersistent.cardImage, 'none');
+  assert.equal(immediateForcedPersistent.cardPaperContent, 'none');
+  assert.equal(immediateForcedPersistent.cardPaperImage, 'none');
+  assert.equal(immediateForcedPersistent.rowSeparatorContent, 'none');
+  await page.waitForFunction(() => (
+    document.querySelector('[data-native-slot="composer"]')?.classList.contains('forge-composer-frame') &&
+    document.querySelector('[data-native-slot="right-card"]')?.classList.contains('forge-right-card')
   ));
   await page.locator(
     '[data-app-action-sidebar-project-row][aria-expanded="false"]'
@@ -2720,12 +3188,7 @@ test('V15 yields all journal materials to Windows forced-colors mode', async () 
     'none',
     'forced-colors focus must return to the system outline'
   );
-  assertRectsEqual(
-    await snapshot(page),
-    before,
-    0.25,
-    composerGeometryNames
-  );
+  assertRectsEqual(await snapshot(page), before);
 
   await page.evaluate(RESTORE_EXPRESSION);
   assert.equal(await page.locator('[data-forge-mark]').count(), 0);
